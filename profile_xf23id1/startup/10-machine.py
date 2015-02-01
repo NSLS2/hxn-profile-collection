@@ -7,7 +7,7 @@ epu1_gap = PVPositioner('XF:23ID-ID{EPU:1-Ax:Gap}Pos-SP',
                         stop='SR:C23-ID:G1A{EPU:1-Ax:Gap}-Mtr.STOP',
                         stop_val=1,
                         put_complete=True,
-                        name='epu2_gap')
+                        name='epu1_gap')
 
 epu2_gap = PVPositioner('XF:23ID-ID{EPU:2-Ax:Gap}Pos-SP',
                         readback='XF:23ID-ID{EPU:2-Ax:Gap}Pos-I',
@@ -15,6 +15,20 @@ epu2_gap = PVPositioner('XF:23ID-ID{EPU:2-Ax:Gap}Pos-SP',
                         stop_val=1,
                         put_complete=True,
                         name='epu2_gap')
+
+epu1_phase = PVPositioner('XF:23ID-ID{EPU:1-Ax:Phase}Pos-SP',
+                          readback='XF:23ID-ID{EPU:1-Ax:Phase}Pos-I',
+                          stop='SR:C23-ID:G1A{EPU:1-Ax:Phase}-Mtr.STOP',
+                          stop_val=1,
+                          put_complete=True,
+                          name='epu1_phase')
+
+epu2_phase = PVPositioner('XF:23ID-ID{EPU:2-Ax:Phase}Pos-SP',
+                          readback='XF:23ID-ID{EPU:2-Ax:Phase}Pos-I',
+                          stop='SR:C23-ID:G1A{EPU:2-Ax:Phase}-Mtr.STOP',
+                          stop_val=1,
+                          put_complete=True,
+                          name='epu2_phase')
 
 # Front End Slits (Primary Slits)
 

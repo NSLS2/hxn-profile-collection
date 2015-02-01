@@ -23,25 +23,12 @@ temp_b = EpicsSignal('XF:23ID1-ES{TCtrl:1-Chan:B}T-I', rw=False,
                      name='temp_b')
 
 # AreaDetector Beam Instrumentation
+fs1_cam = ProsilicaDetector('XF:23IDA-BI:1{FS:1-Cam:1}')
 diag3_cam = ProsilicaDetector('XF:23ID1-BI{Diag:3-Cam:1}')
-# For now, access as simple 'signals'
-# diag3_cam = EpicsSignal('XF:23ID1-BI{Diag:3-Cam:1}cam1:Acquire_RBV',
-#                         write_pv='XF:23ID1-BI{Diag:3-Cam:1}cam1:Acquire',
-#                         rw=True, name='diag3_cam_trigger')
+diag5_cam = ProsilicaDetector('XF:23ID1-BI{Diag:5-Cam:1}')
+diag6_cam = ProsilicaDetector('XF:23ID1-BI{Diag:6-Cam:1}')
 
-diag5_cam = EpicsSignal('XF:23ID1-BI{Diag:5-Cam:1}cam1:Acquire_RBV',
-                        write_pv='XF:23ID1-BI{Diag:5-Cam:1}cam1:Acquire',
-                        rw=True, name='diag5_cam_trigger')
-
-diag3_tot1 = EpicsSignal('XF:23ID1-BI{Diag:3-Cam:1}Stats1:Total_RBV',
-                         rw=False, name='diag3_tot1')
-diag3_tot5 = EpicsSignal('XF:23ID1-BI{Diag:3-Cam:1}Stats5:Total_RBV',
-                         rw=False, name='diag3_tot5')
-
-diag5_tot1 = EpicsSignal('XF:23ID1-BI{Diag:5-Cam:1}Stats1:Total_RBV',
-                         rw=False, name='diag5_tot1')
-diag5_tot5 = EpicsSignal('XF:23ID1-BI{Diag:5-Cam:1}Stats5:Total_RBV',
-                         rw=False, name='diag5_tot5')
+# Princeton CCD camera
 
 pimte_cam = EpicsSignal('XF:23ID1-ES{Dif-Cam:PIMTE}cam1:Acquire_RBV',
                         write_pv='XF:23ID1-ES{Dif-Cam:PIMTE}cam1:Acquire',
