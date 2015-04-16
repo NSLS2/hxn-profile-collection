@@ -1,11 +1,15 @@
 # vim: sw=4 ts=4 sts expandtab smartab
 
 from ophyd.userapi.scan_api import Scan, AScan, DScan, Count
+from hxntools.ophyd_tools import HXNDScan, HXNAScan
+
 
 scan = Scan()
+# ascan = HXNAScan()
 ascan = AScan()
-ascan.default_triggers = [sclr_trig]
-ascan.default_detectors = [ion0, ion1, ionN, ion3]
+ascan.default_detectors = [det_xrf_erase, det_xrf_trig, det_sclr2, 
+                           ion0, ion1, ionN, ion3, Pt_ch1, Pt_ch2, Pt_ch3]
+# dscan = HXNDScan()
 dscan = DScan()
 
 dscan.default_detectors = ascan.default_detectors

@@ -1,9 +1,13 @@
 from ophyd.controls import ProsilicaDetector, EpicsSignal, EpicsScaler
+from ophyd.controls import SignalDetector
 
 # 3IDC RG:C4 VME scalers
 sclr1 = EpicsScaler('XF:03IDC-ES{Sclr:1}', name='sclr1')
 sclr2 = EpicsScaler('XF:03IDC-ES{Sclr:2}', name='sclr2')
+
 sclr_trig = EpicsSignal('XF:03IDC-ES{Sclr:2}.CNT', rw=True, name='sclr_trig')
+det_sclr2 = SignalDetector()
+det_sclr2.add_acquire_signal(sclr_trig)
 
 # Ion chamber
 ion0 = EpicsSignal('XF:03IDC-ES{Sclr:2}_cts1.B', name='ion0')
@@ -42,3 +46,7 @@ Pt_ch3 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C3_ROI1:Value_RBV', name='Pt_ch3')
 xrf_erase = EpicsSignal('XF:03IDC-ES{Xsp:1}:ERASE', rw=True, name='xrf_erase')
 xrf_trig = EpicsSignal('XF:03IDC-ES{Xsp:1}:Acquire', rw=True, name='xrf_trig')
 
+det_xrf_erase = SignalDetector()
+det_xrf_erase.add_acquire_signal(xrf_erase)
+det_xrf_trig = SignalDetector()
+det_xrf_trig.add_acquire_signal(xrf_trig)
