@@ -1,94 +1,20 @@
 # vim: sw=4 ts=4 sts expandtab smarttab
 
-import os
-import time
+from hxntools.scans import (HXNDScan, HXNAScan, HXNCount)
 
-from ophyd.userapi.scan_api import Scan, AScan, DScan, Count
-from hxntools.ophyd_tools import HXNDScan, HXNAScan
+from hxnfly import fly1d, fly2d
 
+ct = HXNCount()
 
-# Use ct as a count which is a single scan.
-ct = Count()
+ascan = HXNAScan()
+ascan.default_detectors = [det_sclr1,
+                           ion0, ion1, ion3, Pt_ch1, Pt_ch2, Pt_ch3,
+                           ssx_rbv, ssy_rbv, ssz_rbv]
 
+ascan.user_detectors = [xspress3.filestore, timepix1.filestore]
 
-def setup_xrfscan(scan):
-    # TODO: wrap this up in a subclassed SignalDetector
-    # Stop acquiring
-    xrf_acquire.put(0)
-    xrf_erase.put(1)
-    
-    nfs_path = '/data/%s/scan%.5d/' % (time.strftime('%Y%m%d'), scan.scan_id)
-
-    if False:  # when software trigger decides to work...
-        xrf_acquire.put(1)
-        xrf_save.put(1)
-        xrf_num_images.put(scan.npts + 1)
-    else:
-        # internal triggering
-        xrf_num_images.put(1)
-        xrf_trig_mode.put('Internal')
-        xrf_path = os.path.join(nfs_path, 'xspress')
-        try:
-            os.makedirs(xrf_path)
-        except OSError:
-            pass
-
-        xrf_filepath.put(xrf_path)
-        xrf_filename.put('scan_%.5d_' % scan.scan_id)
-        xrf_filenumber.put(1)
-   
-    tpx1_path = os.path.join(nfs_path, 'timepix1')
-
-    try:
-        os.makedirs(tpx1_path)
-    except OSError:
-        pass
-
-    tpx1_filepath.put(tpx1_path)
-    tpx1_filename.put('scan_%.5d' % scan.scan_id)
-    tpx1_filenumber.put(0)
-    tpx1_autosave.put(1)
-
-
-def teardown_xrfscan(scan):
-    tpx1_autosave.put(0)
-
-
-class HXN_XRFDScan(HXNDScan):
-    def pre_scan(self):
-        super(HXNDScan, self).pre_scan()
-        setup_xrfscan(self)
-    
-    def post_scan(self):
-        super(HXNDScan, self).post_scan()
-        teardown_xrfscan(self)
-
-
-
-class HXN_XRFAScan(HXNAScan):
-    def pre_scan(self):
-        super(HXNAScan, self).pre_scan()
-        setup_xrfscan(self)
-    
-    def post_scan(self):
-        super(HXNAScan, self).post_scan()
-        teardown_xrfscan(self)
-
-
-# scan = Scan()
-ascan = HXN_XRFAScan()
-ascan.default_detectors = [det_xrf_erase, det_xrf_save, det_xrf_acquire, det_sclr2, det_tpx1_acquire, 
-                           ion0, ion1, ion3, Pt_ch1, Pt_ch2, Pt_ch3, ssx_rbv, ssy_rbv, ssz_rbv, tpx1_filenumber]
-
-# example with saving:
-# ascan.default_detectors = [det_xrf_save, det_xrf_acquire, det_sclr2, 
-#                            ion0, ion1, ionN, ion3, Pt_ch1, Pt_ch2, Pt_ch3]
-# example without saving:
-# ascan.default_detectors = [det_xrf_acquire, det_sclr2, 
-#                            ion0, ion1, ionN, ion3, Pt_ch1, Pt_ch2, Pt_ch3]
-
-dscan = HXN_XRFDScan()
-dscan.default_detectors = ascan.default_detectors
+dscan = HXNDScan()
+# Detectors are shared among the scans
 
 
 def synchronize(detectors, integration_time):
@@ -102,6 +28,17 @@ def synchronize(detectors, integration_time):
             except AttributeError:
                 pass
             # TODO Raise better.
+
+    # For a step scan using the zebra or scaler 1, the scaler is the master
+    # Scaler LNE -> Zebra IN1_TTL -> Pulse1 -> fanout
+    if zebra in detectors or det_sclr1 in detectors:
+        sclr1._preset_time.put(integration_time)
+        zebra.preset_time = integration_time
+
+    for tpx in [timepix1, timepix2]:
+        if tpx.filestore in detectors:
+            tpx.acquire_time.put(integration_time)
+            tpx.acquire_period.put(integration_time)
 
 
 def sync_dscan(positioners, start, stop, step, acquisition_time):
@@ -153,7 +90,7 @@ def mesh_scan(*args):
     '''
     args = list(args)
     steps = args.pop()  # The last argument is the number of steps.
-   
+
     args = [list(lst) for lst in zip(*args)]
     args = _elements_to_singlets(args)
     args.append(steps)
@@ -199,5 +136,3 @@ def movr_ssz(d):
     dz_n = d * cos(15.*pi/180.)
     movr(ssx, dx_n)
     movr(ssz, dz_n)
-
-
