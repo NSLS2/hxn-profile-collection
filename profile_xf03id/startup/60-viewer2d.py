@@ -15,7 +15,7 @@ def plot2d(scan, name,row,col):
         plt.figure()
         det = getattr(dscan.data[scan], name)
         data = np.reshape(det, (row, col))
-        plt.imshow(data)
+        plt.imshow(data,interpolation='None')
     # return data
 
 
@@ -102,3 +102,6 @@ def plot2dfly(row, col,l,h,sid):
     plt.imshow(data, interpolation='none')
     plt.show()
     '''
+def export(sid):
+    data = StepScan[sid]
+    np.savetxt('/data/txt/scan_'+np.str(sid)+'.txt',data,fmt='%1.5e')
