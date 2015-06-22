@@ -79,7 +79,8 @@ def plotfly(namex):
 data_cache = {}
 
 #todo change l, h to clim which defaults to 'auto'
-def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', clim=None, fill_events=False, as_image=True, cmap='CMRmap'):
+def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', clim=None, 
+              fill_events=False, cmap='Oranges'):
     """Plot the results of a 2d fly scan
 
     Parameters
@@ -98,6 +99,9 @@ def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', clim=None, fill_events=False, a
     fill_events : bool, optional
         Fill the events with data from filestore
         Defaults to False (and is much much faster)
+    cmap : str, optional
+        Defaults to "Oranges"
+        The colormap to use. See the pyplot.cm module for valid color maps
     """
     
     title = 'Scan id %s. ' % scan_id
@@ -105,7 +109,8 @@ def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', clim=None, fill_events=False, a
         df = data_cache[scan_id]
     else:
         hdr = DataBroker[scan_id]
-        if hdr.scan_id in data_cache:
+        scan_id = hdr.scan_id
+        if scan_id in data_cache:
             df = data_cache[scan_id]
         else:
             data = DataBroker.fetch_events(hdr, fill=fill_events)
@@ -148,7 +153,7 @@ def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', clim=None, fill_events=False, a
     fig.savefig(folder + 'data_scan_'+np.str(scan_id)+'.png')
     np.savetxt(folder + 'data_scan_'+np.str(scan_id), spectrum2)
     np.savetxt(folder + 'data_x_y_ch_'+np.str(scan_id),
-               np.vstack((x_data, y_data, spectrum)))
+               np.vstack((x_data, y_data, spectrum)).T)
     
     '''
     plt.figure()
