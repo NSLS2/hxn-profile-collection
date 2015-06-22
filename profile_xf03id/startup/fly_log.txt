@@ -1,0 +1,2039 @@
+2015-04-27 13:50:15,365 - fly1d/INFO: Motor y moved to start position: 2.519419
+2015-04-27 13:50:15,413 - _mds_start/INFO: Scan ID: 1168
+2015-04-27 13:50:15,413 - _mds_start/INFO: Time: 2015-04-27T13:50:15.406927
+2015-04-27 13:50:15,413 - _mds_start/INFO: uid: da820d9c-69d5-43ff-be79-967a245ce59d
+2015-04-27 13:50:15,658 - fly1d/DEBUG: distance: 0.500000
+2015-04-27 13:50:15,659 - fly1d/DEBUG: per point was 0.045455 subtracting dead distance 0.003000 = 0.042455
+2015-04-27 13:50:15,659 - fly1d/DEBUG: points: 11.000000
+2015-04-27 13:50:15,660 - fly1d/DEBUG: distance: 0.500000
+2015-04-27 13:50:15,660 - fly1d/DEBUG: per_point: 0.042455
+2015-04-27 13:50:15,660 - fly1d/DEBUG: dead_dist: 0.003000
+2015-04-27 13:50:15,661 - fly1d/DEBUG: line_time: 1.204500
+2015-04-27 13:50:15,661 - fly1d/DEBUG: feed_rate: 0.415110 units/s
+2015-04-27 13:50:15,661 - fly1d/DEBUG: dead time: 0.007000 s
+2015-04-27 13:50:15,662 - ppmac_send_program/DEBUG: Sending script: /nfs/xf03id/ppmac/scripts/soft_1d.txt
+2015-04-27 13:50:15,666 - ppmac_send_program/DEBUG: Script line: close all buffers
+2015-04-27 13:50:15,667 - ppmac_send_program/DEBUG: Script line: open prog 50
+2015-04-27 13:50:15,668 - ppmac_send_program/DEBUG: Script line: // MoveModes:
+2015-04-27 13:50:15,668 - ppmac_send_program/DEBUG: Script line: // 0 Linear mode: trapezoidal/triangular profiles, straight-line paths in Cartesian space
+2015-04-27 13:50:15,669 - ppmac_send_program/DEBUG: Script line: //   Circle mode: sinusoidal velocity profiles, arc paths in Cartesian space
+2015-04-27 13:50:15,669 - ppmac_send_program/DEBUG: Script line: // 1 Spline mode: parabolic velocity profiles, cubic B-spline paths
+2015-04-27 13:50:15,670 - ppmac_send_program/DEBUG: Script line: // 2 PVT mode: parabolic velocity profiles, Hermite-spline paths
+2015-04-27 13:50:15,670 - ppmac_send_program/DEBUG: Script line: // 3 Rapid mode: trapezoidal/triangular profiles, minimum-time point-to-point moves
+2015-04-27 13:50:15,671 - ppmac_send_program/DEBUG: Script line: // Move time extended to slowest motor:
+2015-04-27 13:50:15,672 - ppmac_send_program/DEBUG: Script line: Coord[5].RapidVelCtrl=1
+2015-04-27 13:50:15,673 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 13:50:15,673 - ppmac_send_program/DEBUG: Script line: gather.addr[0]=Sys.ServoCount.a
+2015-04-27 13:50:15,674 - ppmac_send_program/DEBUG: Script line: gather.addr[1]=Sys.M[100].a
+2015-04-27 13:50:15,674 - ppmac_send_program/DEBUG: Script line: gather.addr[2]=Motor[3].Pos.a
+2015-04-27 13:50:15,675 - ppmac_send_program/DEBUG: Script line: gather.addr[3]=Motor[4].Pos.a
+2015-04-27 13:50:15,675 - ppmac_send_program/DEBUG: Script line: // gather.addr[4]=card_chan:s.PhaseCapt.a
+2015-04-27 13:50:15,676 - ppmac_send_program/DEBUG: Script line: // gather.addr[5]=card_chan:s.CompA.a
+2015-04-27 13:50:15,676 - ppmac_send_program/DEBUG: Script line: // gather.addr[6]=card_chan:s.CompB.a
+2015-04-27 13:50:15,676 - ppmac_send_program/DEBUG: Script line: gather.items=4
+2015-04-27 13:50:15,677 - ppmac_send_program/DEBUG: Script line: gather.Period=8
+2015-04-27 13:50:15,677 - ppmac_send_program/DEBUG: Script line: gather.enable=1
+2015-04-27 13:50:15,677 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 13:50:15,678 - ppmac_send_program/DEBUG: Script line: gather.MaxSamples=gather.maxlines
+2015-04-27 13:50:15,678 - ppmac_send_program/DEBUG: Script line: rapid
+2015-04-27 13:50:15,679 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 13:50:15,680 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 13:50:15,681 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 13:50:15,682 - ppmac_send_program/DEBUG: Script line: TA0.1
+2015-04-27 13:50:15,683 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 13:50:15,683 - ppmac_send_program/DEBUG: Script line: F(0.415110)
+2015-04-27 13:50:15,686 - ppmac_send_program/DEBUG: Script line: X0.001
+2015-04-27 13:50:15,687 - ppmac_send_program/DEBUG: Script line: Y0.001
+2015-04-27 13:50:15,687 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 13:50:15,688 - ppmac_send_program/DEBUG: Script line: // TODO: it seems that this won't work on the first move in the coordinate
+2015-04-27 13:50:15,689 - ppmac_send_program/DEBUG: Script line: //       system:
+2015-04-27 13:50:15,689 - ppmac_send_program/DEBUG: Script line: dwell 1.0
+2015-04-27 13:50:15,690 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 13:50:15,691 - ppmac_send_program/DEBUG: Script line: F1.0
+2015-04-27 13:50:15,691 - ppmac_send_program/DEBUG: Script line: y(2.367125)
+2015-04-27 13:50:15,692 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 13:50:15,693 - ppmac_send_program/DEBUG: Script line: dwell 100
+2015-04-27 13:50:15,694 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 13:50:15,695 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 13:50:15,696 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 13:50:15,696 - ppmac_send_program/DEBUG: Script line: TA0.5
+2015-04-27 13:50:15,697 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 13:50:15,698 - ppmac_send_program/DEBUG: Script line: F(0.415110)
+2015-04-27 13:50:15,699 - ppmac_send_program/DEBUG: Script line: // LNE bit 0 (M100)
+2015-04-27 13:50:15,700 - ppmac_send_program/DEBUG: Script line: // M101
+2015-04-27 13:50:15,701 - ppmac_send_program/DEBUG: Script line: // M102 hooked up to scaler channel 2
+2015-04-27 13:50:15,702 - ppmac_send_program/DEBUG: Script line: // M108 is whole byte
+2015-04-27 13:50:15,703 - ppmac_send_program/DEBUG: Script line: // so, count start is M100 from 1->0
+2015-04-27 13:50:15,703 - ppmac_send_program/DEBUG: Script line: // DXP is set to mca mapping, inverted input logic polarity, ignore gate off
+2015-04-27 13:50:15,704 - ppmac_send_program/DEBUG: Script line: //               pixel advance gate, ...
+2015-04-27 13:50:15,704 - ppmac_send_program/DEBUG: Script line: //
+2015-04-27 13:50:15,705 - ppmac_send_program/DEBUG: Script line: // SIS3820 channel advance=external, --> input mode 2 <--
+2015-04-27 13:50:15,705 - ppmac_send_program/DEBUG: Script line: //
+2015-04-27 13:50:15,706 - ppmac_send_program/DEBUG: Script line: //  Input 1: External next pulse <-- connect to i/o 0 (M100)
+2015-04-27 13:50:15,707 - ppmac_send_program/DEBUG: Script line: //  Input 2: External user bit 1
+2015-04-27 13:50:15,708 - ppmac_send_program/DEBUG: Script line: //  Input 3: Inhibit counting    <-- connect to inverted output
+2015-04-27 13:50:15,708 - ppmac_send_program/DEBUG: Script line: //  Input 4: Inhibit next pulse
+2015-04-27 13:50:15,709 - ppmac_send_program/DEBUG: Script line: //
+2015-04-27 13:50:15,710 - ppmac_send_program/DEBUG: Script line: //  scaler only accepts 'load next event' -- this means that it's not a true
+2015-04-27 13:50:15,711 - ppmac_send_program/DEBUG: Script line: //  gate input, and 2 signals are necessary -- LNE and inhibit counting.
+2015-04-27 13:50:15,712 - ppmac_send_program/DEBUG: Script line: // Now, arduino filter does inversion and level conversion for timepix
+2015-04-27 13:50:15,713 - ppmac_send_program/DEBUG: Script line: // So only a single gate signal is required.
+2015-04-27 13:50:15,713 - ppmac_send_program/DEBUG: Script line: //  Counting off, inhibit on
+2015-04-27 13:50:15,714 - ppmac_send_program/DEBUG: Script line: M100=1
+2015-04-27 13:50:15,715 - ppmac_send_program/DEBUG: Script line: // Ensure motors are at the starting position
+2015-04-27 13:50:15,715 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 13:50:15,716 - ppmac_send_program/DEBUG: Script line: dwell 50
+2015-04-27 13:50:15,716 - ppmac_send_program/DEBUG: Script line: gather.enable=2
+2015-04-27 13:50:15,717 - ppmac_send_program/DEBUG: Script line: dwell 1
+2015-04-27 13:50:15,718 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 13:50:15,718 - ppmac_send_program/DEBUG: Script line: F(0.415110)
+2015-04-27 13:50:15,718 - ppmac_send_program/DEBUG: Script line: L1=0
+2015-04-27 13:50:15,719 - ppmac_send_program/DEBUG: Script line: while(L1 < 11) {
+2015-04-27 13:50:15,719 - ppmac_send_program/DEBUG: Script line:     // Inhibit off, start counting
+2015-04-27 13:50:15,720 - ppmac_send_program/DEBUG: Script line:     M100=0
+2015-04-27 13:50:15,720 - ppmac_send_program/DEBUG: Script line:     y(0.042455)
+2015-04-27 13:50:15,721 - ppmac_send_program/DEBUG: Script line:     // Ensure the position is reached:
+2015-04-27 13:50:15,721 - ppmac_send_program/DEBUG: Script line:     dwell 0
+2015-04-27 13:50:15,722 - ppmac_send_program/DEBUG: Script line:     // Inhibit on, counting off
+2015-04-27 13:50:15,722 - ppmac_send_program/DEBUG: Script line:     M100=1
+2015-04-27 13:50:15,723 - ppmac_send_program/DEBUG: Script line:     // dwell for the dead time
+2015-04-27 13:50:15,723 - ppmac_send_program/DEBUG: Script line:     dwell 7.000000
+2015-04-27 13:50:15,724 - ppmac_send_program/DEBUG: Script line:     L1=L1+1
+2015-04-27 13:50:15,724 - ppmac_send_program/DEBUG: Script line: }
+2015-04-27 13:50:15,725 - ppmac_send_program/DEBUG: Script line: // rapid
+2015-04-27 13:50:15,726 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 13:50:15,726 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 13:50:15,727 - ppmac_send_program/DEBUG: Script line: F0.5
+2015-04-27 13:50:15,727 - ppmac_send_program/DEBUG: Script line: // tm(1 * 7.000000)
+2015-04-27 13:50:15,728 - ppmac_send_program/DEBUG: Script line: // F(2 * 11 * 0.415110)
+2015-04-27 13:50:15,729 - ppmac_send_program/DEBUG: Script line: y(2.617125)
+2015-04-27 13:50:15,729 - ppmac_send_program/DEBUG: Script line: dwell 50
+2015-04-27 13:50:15,730 - ppmac_send_program/DEBUG: Script line: // NOTE: can't use scaler in regular mode while still in input mode 2,
+2015-04-27 13:50:15,731 - ppmac_send_program/DEBUG: Script line: // so re-enable counting after it's all done:
+2015-04-27 13:50:15,732 - ppmac_send_program/DEBUG: Script line: // Inhibit off, start counting
+2015-04-27 13:50:15,732 - ppmac_send_program/DEBUG: Script line: // M100=0
+2015-04-27 13:50:15,734 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 13:50:15,734 - ppmac_send_program/DEBUG: Script line: close
+2015-04-27 13:50:18,762 - _teardown/INFO: timepix2 acquired 0 images (tiff1)
+2015-04-27 13:50:18,763 - _teardown/INFO: xspress3 acquired 11 spectra
+2015-04-27 13:50:18,778 - _aggregate_line/DEBUG: HDF5 file: /xspress3_data/20150427/fly01168/xspress/fly_01168_1.hdf5
+2015-04-27 13:50:18,872 - process_data/DEBUG: setup time 1121.458054 ms
+2015-04-27 13:50:18,872 - process_data/DEBUG: run time 1707.213576 ms (estimated 1204.500000 ms)
+2015-04-27 13:50:18,872 - process_data/DEBUG: aggregate time 65.543175 ms
+2015-04-27 13:50:18,874 - process_data/DEBUG: total alive time: 1.14404561231
+2015-04-27 13:50:18,875 - process_data/DEBUG: total dead time: 0.563167963875
+2015-04-27 13:50:18,875 - process_data/DEBUG: alive+dead sum: 1.70721357618
+2015-04-27 13:50:18,875 - process_data/DEBUG: total run time: 1.70721357618
+2015-04-27 13:50:18,895 - process_data/DEBUG: created event_descriptor: {'_dynamic_lock': False, '_changed_fields': [], '_fields_ordered': ('id', 'run_start', 'uid', 'time', 'data_keys', 'time_as_datetime'), 'time_as_datetime': datetime.datetime(2015, 4, 27, 13, 50, 18, 878914), '_initialised': True, '_dynamic_fields': SON([('time_as_datetime', <mongoengine.fields.DynamicField object at 0x7fd25be573d0>)]), '_created': False, '_data': {'uid': '9c67681e-8c42-433d-b4e9-a498d3e9420d', 'data_keys': {u'sclr1_ch2': <DataKey: DataKey object>, u'sclr1_ch3': <DataKey: DataKey object>, u'alive[s]': <DataKey: DataKey object>, u'Ch2 [930:960]': <DataKey: DataKey object>, u'ssy[um]': <DataKey: DataKey object>, u'scaler_alive[ms]': <DataKey: DataKey object>, u'Ch1 [930:960]': <DataKey: DataKey object>, u'dead[s]': <DataKey: DataKey object>, u'ssx[um]': <DataKey: DataKey object>, u'Ch3 [930:960]': <DataKey: DataKey object>, u'sclr1_ch8': <DataKey: DataKey object>, u'Ch4 [930:960]': <DataKey: DataKey object>}, 'time_as_datetime': datetime.datetime(2015, 4, 27, 13, 50, 18, 878914), 'run_start': <RunStart: RunStart object>, 'time': 1430157018.878914, 'id': ObjectId('553e76dae97f4e5ca7a6cbf9')}}
+2015-04-27 13:50:18,895 - process_data/DEBUG: metadatastore insert event 0
+2015-04-27 13:51:48,477 - fly2d/INFO: Motor x moved to start position: -1.502453
+2015-04-27 13:51:48,552 - fly2d/INFO: Motor y moved to start position: 2.617637
+2015-04-27 13:51:48,582 - _mds_start/INFO: Scan ID: 1169
+2015-04-27 13:51:48,582 - _mds_start/INFO: Time: 2015-04-27T13:51:48.580833
+2015-04-27 13:51:48,582 - _mds_start/INFO: uid: f6df4cc3-718c-45f7-a928-5a57dbaedb32
+2015-04-27 13:51:48,804 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 13:51:48,807 - fly2d/DEBUG: per point was 0.0454545454545 subtracting dead distance 0.003 = 0.0424545454545
+2015-04-27 13:51:48,808 - fly2d/DEBUG: points: [11 11]
+2015-04-27 13:51:48,811 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 13:51:48,813 - fly2d/DEBUG: per_points: [ 0.04245455  0.04545455]
+2015-04-27 13:51:48,817 - fly2d/DEBUG: dead_dist: 0.003
+2015-04-27 13:51:48,817 - fly2d/DEBUG: line_time: 1.2045
+2015-04-27 13:51:48,817 - fly2d/DEBUG: feed_rates: [ 0.41511  0.41511] units/s
+2015-04-27 13:51:48,819 - fly2d/DEBUG: dead time: 0.007 s
+2015-04-27 13:51:48,820 - ppmac_send_program/DEBUG: Sending script: /nfs/xf03id/ppmac/scripts/soft_2d.txt
+2015-04-27 13:51:48,822 - ppmac_send_program/DEBUG: Script line: close all buffers
+2015-04-27 13:51:48,822 - ppmac_send_program/DEBUG: Script line: open prog 50
+2015-04-27 13:51:48,823 - ppmac_send_program/DEBUG: Script line: // MoveModes:
+2015-04-27 13:51:48,823 - ppmac_send_program/DEBUG: Script line: // 0 Linear mode: trapezoidal/triangular profiles, straight-line paths in Cartesian space
+2015-04-27 13:51:48,824 - ppmac_send_program/DEBUG: Script line: //   Circle mode: sinusoidal velocity profiles, arc paths in Cartesian space
+2015-04-27 13:51:48,825 - ppmac_send_program/DEBUG: Script line: // 1 Spline mode: parabolic velocity profiles, cubic B-spline paths
+2015-04-27 13:51:48,827 - ppmac_send_program/DEBUG: Script line: // 2 PVT mode: parabolic velocity profiles, Hermite-spline paths
+2015-04-27 13:51:48,828 - ppmac_send_program/DEBUG: Script line: // 3 Rapid mode: trapezoidal/triangular profiles, minimum-time point-to-point moves
+2015-04-27 13:51:48,829 - ppmac_send_program/DEBUG: Script line: // Move time extended to slowest motor:
+2015-04-27 13:51:48,831 - ppmac_send_program/DEBUG: Script line: Coord[5].RapidVelCtrl=1
+2015-04-27 13:51:48,832 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 13:51:48,834 - ppmac_send_program/DEBUG: Script line: gather.addr[0]=Sys.ServoCount.a
+2015-04-27 13:51:48,835 - ppmac_send_program/DEBUG: Script line: gather.addr[1]=Sys.M[100].a
+2015-04-27 13:51:48,835 - ppmac_send_program/DEBUG: Script line: gather.addr[2]=Motor[3].Pos.a
+2015-04-27 13:51:48,836 - ppmac_send_program/DEBUG: Script line: gather.addr[3]=Motor[4].Pos.a
+2015-04-27 13:51:48,837 - ppmac_send_program/DEBUG: Script line: // gather.addr[4]=Motor[5].Pos.a
+2015-04-27 13:51:48,838 - ppmac_send_program/DEBUG: Script line: // gather.addr[5]=acc24e3[1].chan[0].servocapt.a
+2015-04-27 13:51:48,839 - ppmac_send_program/DEBUG: Script line: gather.items=4
+2015-04-27 13:51:48,840 - ppmac_send_program/DEBUG: Script line: gather.Period=8
+2015-04-27 13:51:48,840 - ppmac_send_program/DEBUG: Script line: gather.enable=1
+2015-04-27 13:51:48,841 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 13:51:48,842 - ppmac_send_program/DEBUG: Script line: gather.MaxSamples=gather.maxlines
+2015-04-27 13:51:48,842 - ppmac_send_program/DEBUG: Script line: rapid
+2015-04-27 13:51:48,843 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 13:51:48,843 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 13:51:48,843 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 13:51:48,844 - ppmac_send_program/DEBUG: Script line: TA0.1
+2015-04-27 13:51:48,844 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 13:51:48,844 - ppmac_send_program/DEBUG: Script line: F(0.415110)
+2015-04-27 13:51:48,844 - ppmac_send_program/DEBUG: Script line: X0.001
+2015-04-27 13:51:48,845 - ppmac_send_program/DEBUG: Script line: Y0.001
+2015-04-27 13:51:48,845 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 13:51:48,847 - ppmac_send_program/DEBUG: Script line: // TODO: it seems that this won't work on the first move in the coordinate
+2015-04-27 13:51:48,847 - ppmac_send_program/DEBUG: Script line: //       system:
+2015-04-27 13:51:48,848 - ppmac_send_program/DEBUG: Script line: dwell 1.0
+2015-04-27 13:51:48,849 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 13:51:48,849 - ppmac_send_program/DEBUG: Script line: F1.0
+2015-04-27 13:51:48,850 - ppmac_send_program/DEBUG: Script line: x(-1.752438)
+2015-04-27 13:51:48,851 - ppmac_send_program/DEBUG: Script line: y(2.367497)
+2015-04-27 13:51:48,852 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 13:51:48,853 - ppmac_send_program/DEBUG: Script line: dwell 1000
+2015-04-27 13:51:48,854 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 13:51:48,855 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 13:51:48,855 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 13:51:48,856 - ppmac_send_program/DEBUG: Script line: TA0.5
+2015-04-27 13:51:48,857 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 13:51:48,857 - ppmac_send_program/DEBUG: Script line: F(0.415110)
+2015-04-27 13:51:48,858 - ppmac_send_program/DEBUG: Script line: // ** see connection notes in soft_1d.txt
+2015-04-27 13:51:48,858 - ppmac_send_program/DEBUG: Script line: //  Counting off, inhibit on
+2015-04-27 13:51:48,859 - ppmac_send_program/DEBUG: Script line: M100=1
+2015-04-27 13:51:48,859 - ppmac_send_program/DEBUG: Script line: // Ensure motors are at the starting position
+2015-04-27 13:51:48,860 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 13:51:48,860 - ppmac_send_program/DEBUG: Script line: dwell 50
+2015-04-27 13:51:48,861 - ppmac_send_program/DEBUG: Script line: gather.enable=2
+2015-04-27 13:51:48,861 - ppmac_send_program/DEBUG: Script line: dwell 1
+2015-04-27 13:51:48,862 - ppmac_send_program/DEBUG: Script line: L2=0
+2015-04-27 13:51:48,862 - ppmac_send_program/DEBUG: Script line: while(L2 < 11) {
+2015-04-27 13:51:48,862 - ppmac_send_program/DEBUG: Script line:     inc
+2015-04-27 13:51:48,862 - ppmac_send_program/DEBUG: Script line:     F(0.415110)
+2015-04-27 13:51:48,863 - ppmac_send_program/DEBUG: Script line:     L1=0
+2015-04-27 13:51:48,863 - ppmac_send_program/DEBUG: Script line:     while(L1 < 11) {
+2015-04-27 13:51:48,864 - ppmac_send_program/DEBUG: Script line:         // Inhibit off, start counting
+2015-04-27 13:51:48,864 - ppmac_send_program/DEBUG: Script line:         M100=0
+2015-04-27 13:51:48,865 - ppmac_send_program/DEBUG: Script line:         x(0.042455)
+2015-04-27 13:51:48,865 - ppmac_send_program/DEBUG: Script line:         // Ensure the position is reached:
+2015-04-27 13:51:48,866 - ppmac_send_program/DEBUG: Script line:         dwell 0
+2015-04-27 13:51:48,866 - ppmac_send_program/DEBUG: Script line:         // Inhibit on, counting off
+2015-04-27 13:51:48,867 - ppmac_send_program/DEBUG: Script line:         M100=1
+2015-04-27 13:51:48,867 - ppmac_send_program/DEBUG: Script line:         // dwell for the dead time
+2015-04-27 13:51:48,867 - ppmac_send_program/DEBUG: Script line:         dwell 7.000000
+2015-04-27 13:51:48,868 - ppmac_send_program/DEBUG: Script line:         L1=L1+1
+2015-04-27 13:51:48,868 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 13:51:48,869 - ppmac_send_program/DEBUG: Script line:     if (L2 < (11 - 1)) {
+2015-04-27 13:51:48,869 - ppmac_send_program/DEBUG: Script line:         // rapid
+2015-04-27 13:51:48,869 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 13:51:48,869 - ppmac_send_program/DEBUG: Script line:         abs
+2015-04-27 13:51:48,870 - ppmac_send_program/DEBUG: Script line:         F0.5
+2015-04-27 13:51:48,870 - ppmac_send_program/DEBUG: Script line:         // tm(1 * 7.000000)
+2015-04-27 13:51:48,870 - ppmac_send_program/DEBUG: Script line:         // F(2 * 11 * 0.415110)
+2015-04-27 13:51:48,871 - ppmac_send_program/DEBUG: Script line:         L3 = 2.367497 + (0.045455 * (L2 + 1))
+2015-04-27 13:51:48,872 - ppmac_send_program/DEBUG: Script line:         x(-1.752438) y(L3)
+2015-04-27 13:51:48,873 - ppmac_send_program/DEBUG: Script line:         // dwell 0
+2015-04-27 13:51:48,873 - ppmac_send_program/DEBUG: Script line:         dwell 150
+2015-04-27 13:51:48,874 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 13:51:48,874 - ppmac_send_program/DEBUG: Script line:         inc
+2015-04-27 13:51:48,874 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 13:51:48,875 - ppmac_send_program/DEBUG: Script line:     L2=L2+1
+2015-04-27 13:51:48,875 - ppmac_send_program/DEBUG: Script line: }
+2015-04-27 13:51:48,876 - ppmac_send_program/DEBUG: Script line: // NOTE: can't use scaler in regular mode while still in input mode 2,
+2015-04-27 13:51:48,876 - ppmac_send_program/DEBUG: Script line: // so re-enable counting after it's all done:
+2015-04-27 13:51:48,876 - ppmac_send_program/DEBUG: Script line: // Inhibit off, start counting
+2015-04-27 13:51:48,877 - ppmac_send_program/DEBUG: Script line: // M100=0
+2015-04-27 13:51:48,877 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 13:51:48,878 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 13:51:48,879 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 13:51:48,879 - ppmac_send_program/DEBUG: Script line: x(-1.502438)
+2015-04-27 13:51:48,879 - ppmac_send_program/DEBUG: Script line: y(2.617497)
+2015-04-27 13:51:48,880 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 13:51:48,880 - ppmac_send_program/DEBUG: Script line: close
+2015-04-27 13:52:17,028 - _teardown/INFO: timepix2 acquired 0 images (tiff1)
+2015-04-27 13:52:17,029 - _teardown/INFO: xspress3 acquired 121 spectra
+2015-04-27 13:52:17,080 - _aggregate_line/DEBUG: HDF5 file: /xspress3_data/20150427/fly01169/xspress/fly_01169_1.hdf5
+2015-04-27 13:52:17,510 - process_data/DEBUG: setup time 1162.940025 ms
+2015-04-27 13:52:17,511 - process_data/DEBUG: run time 24343.732176 ms (estimated 13249.500000 ms)
+2015-04-27 13:52:17,511 - process_data/DEBUG: aggregate time 439.033985 ms
+2015-04-27 13:52:17,524 - process_data/DEBUG: total alive time: 12.5845017345
+2015-04-27 13:52:17,524 - process_data/DEBUG: total dead time: 11.7592304418
+2015-04-27 13:52:17,524 - process_data/DEBUG: alive+dead sum: 24.3437321762
+2015-04-27 13:52:17,524 - process_data/DEBUG: total run time: 24.3437321762
+2015-04-27 13:52:17,531 - process_data/DEBUG: created event_descriptor: {'_dynamic_lock': False, '_changed_fields': [], '_fields_ordered': ('id', 'run_start', 'uid', 'time', 'data_keys', 'time_as_datetime'), 'time_as_datetime': datetime.datetime(2015, 4, 27, 13, 52, 17, 526896), '_initialised': True, '_dynamic_fields': SON([('time_as_datetime', <mongoengine.fields.DynamicField object at 0x7fd25bd70a10>)]), '_created': False, '_data': {'uid': 'aad89a6d-2cc4-4e50-9ab8-68f92393c330', 'data_keys': {u'sclr1_ch2': <DataKey: DataKey object>, u'sclr1_ch3': <DataKey: DataKey object>, u'alive[s]': <DataKey: DataKey object>, u'Ch2 [930:960]': <DataKey: DataKey object>, u'ssy[um]': <DataKey: DataKey object>, u'scaler_alive[ms]': <DataKey: DataKey object>, u'Ch1 [930:960]': <DataKey: DataKey object>, u'dead[s]': <DataKey: DataKey object>, u'ssx[um]': <DataKey: DataKey object>, u'Ch3 [930:960]': <DataKey: DataKey object>, u'sclr1_ch8': <DataKey: DataKey object>, u'Ch4 [930:960]': <DataKey: DataKey object>}, 'time_as_datetime': datetime.datetime(2015, 4, 27, 13, 52, 17, 526896), 'run_start': <RunStart: RunStart object>, 'time': 1430157137.526896, 'id': ObjectId('553e7751e97f4e5ca7a6cc08')}}
+2015-04-27 13:52:17,532 - process_data/DEBUG: metadatastore insert event 0
+2015-04-27 13:53:44,281 - fly2d/INFO: Motor x moved to start position: -1.503387
+2015-04-27 13:53:44,384 - fly2d/INFO: Motor y moved to start position: 2.615969
+2015-04-27 13:53:44,410 - _mds_start/INFO: Scan ID: 1170
+2015-04-27 13:53:44,410 - _mds_start/INFO: Time: 2015-04-27T13:53:44.409227
+2015-04-27 13:53:44,410 - _mds_start/INFO: uid: 58be82b3-e0a6-4b33-9338-613fbdd460fe
+2015-04-27 13:53:44,622 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 13:53:44,624 - fly2d/DEBUG: per point was 0.0049504950495 subtracting dead distance 0.001 = 0.0039504950495
+2015-04-27 13:53:44,625 - fly2d/DEBUG: points: [101 101]
+2015-04-27 13:53:44,627 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 13:53:44,630 - fly2d/DEBUG: per_points: [ 0.0039505  0.0049505]
+2015-04-27 13:53:44,632 - fly2d/DEBUG: dead_dist: 0.001
+2015-04-27 13:53:44,633 - fly2d/DEBUG: line_time: 5.88325
+2015-04-27 13:53:44,633 - fly2d/DEBUG: feed_rates: [ 0.08498704  0.08498704] units/s
+2015-04-27 13:53:44,636 - fly2d/DEBUG: dead time: 0.007 s
+2015-04-27 13:53:44,636 - ppmac_send_program/DEBUG: Sending script: /nfs/xf03id/ppmac/scripts/soft_2d.txt
+2015-04-27 13:53:44,638 - ppmac_send_program/DEBUG: Script line: close all buffers
+2015-04-27 13:53:44,638 - ppmac_send_program/DEBUG: Script line: open prog 50
+2015-04-27 13:53:44,639 - ppmac_send_program/DEBUG: Script line: // MoveModes:
+2015-04-27 13:53:44,639 - ppmac_send_program/DEBUG: Script line: // 0 Linear mode: trapezoidal/triangular profiles, straight-line paths in Cartesian space
+2015-04-27 13:53:44,640 - ppmac_send_program/DEBUG: Script line: //   Circle mode: sinusoidal velocity profiles, arc paths in Cartesian space
+2015-04-27 13:53:44,640 - ppmac_send_program/DEBUG: Script line: // 1 Spline mode: parabolic velocity profiles, cubic B-spline paths
+2015-04-27 13:53:44,640 - ppmac_send_program/DEBUG: Script line: // 2 PVT mode: parabolic velocity profiles, Hermite-spline paths
+2015-04-27 13:53:44,641 - ppmac_send_program/DEBUG: Script line: // 3 Rapid mode: trapezoidal/triangular profiles, minimum-time point-to-point moves
+2015-04-27 13:53:44,641 - ppmac_send_program/DEBUG: Script line: // Move time extended to slowest motor:
+2015-04-27 13:53:44,642 - ppmac_send_program/DEBUG: Script line: Coord[5].RapidVelCtrl=1
+2015-04-27 13:53:44,642 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 13:53:44,643 - ppmac_send_program/DEBUG: Script line: gather.addr[0]=Sys.ServoCount.a
+2015-04-27 13:53:44,643 - ppmac_send_program/DEBUG: Script line: gather.addr[1]=Sys.M[100].a
+2015-04-27 13:53:44,643 - ppmac_send_program/DEBUG: Script line: gather.addr[2]=Motor[3].Pos.a
+2015-04-27 13:53:44,644 - ppmac_send_program/DEBUG: Script line: gather.addr[3]=Motor[4].Pos.a
+2015-04-27 13:53:44,644 - ppmac_send_program/DEBUG: Script line: // gather.addr[4]=Motor[5].Pos.a
+2015-04-27 13:53:44,645 - ppmac_send_program/DEBUG: Script line: // gather.addr[5]=acc24e3[1].chan[0].servocapt.a
+2015-04-27 13:53:44,645 - ppmac_send_program/DEBUG: Script line: gather.items=4
+2015-04-27 13:53:44,645 - ppmac_send_program/DEBUG: Script line: gather.Period=8
+2015-04-27 13:53:44,646 - ppmac_send_program/DEBUG: Script line: gather.enable=1
+2015-04-27 13:53:44,646 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 13:53:44,647 - ppmac_send_program/DEBUG: Script line: gather.MaxSamples=gather.maxlines
+2015-04-27 13:53:44,648 - ppmac_send_program/DEBUG: Script line: rapid
+2015-04-27 13:53:44,649 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 13:53:44,649 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 13:53:44,650 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 13:53:44,650 - ppmac_send_program/DEBUG: Script line: TA0.1
+2015-04-27 13:53:44,651 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 13:53:44,651 - ppmac_send_program/DEBUG: Script line: F(0.084987)
+2015-04-27 13:53:44,652 - ppmac_send_program/DEBUG: Script line: X0.001
+2015-04-27 13:53:44,653 - ppmac_send_program/DEBUG: Script line: Y0.001
+2015-04-27 13:53:44,653 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 13:53:44,654 - ppmac_send_program/DEBUG: Script line: // TODO: it seems that this won't work on the first move in the coordinate
+2015-04-27 13:53:44,654 - ppmac_send_program/DEBUG: Script line: //       system:
+2015-04-27 13:53:44,655 - ppmac_send_program/DEBUG: Script line: dwell 1.0
+2015-04-27 13:53:44,655 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 13:53:44,655 - ppmac_send_program/DEBUG: Script line: F1.0
+2015-04-27 13:53:44,655 - ppmac_send_program/DEBUG: Script line: x(-1.753294)
+2015-04-27 13:53:44,656 - ppmac_send_program/DEBUG: Script line: y(2.366153)
+2015-04-27 13:53:44,656 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 13:53:44,657 - ppmac_send_program/DEBUG: Script line: dwell 1000
+2015-04-27 13:53:44,657 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 13:53:44,657 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 13:53:44,658 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 13:53:44,658 - ppmac_send_program/DEBUG: Script line: TA0.5
+2015-04-27 13:53:44,658 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 13:53:44,658 - ppmac_send_program/DEBUG: Script line: F(0.084987)
+2015-04-27 13:53:44,659 - ppmac_send_program/DEBUG: Script line: // ** see connection notes in soft_1d.txt
+2015-04-27 13:53:44,660 - ppmac_send_program/DEBUG: Script line: //  Counting off, inhibit on
+2015-04-27 13:53:44,660 - ppmac_send_program/DEBUG: Script line: M100=1
+2015-04-27 13:53:44,660 - ppmac_send_program/DEBUG: Script line: // Ensure motors are at the starting position
+2015-04-27 13:53:44,661 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 13:53:44,661 - ppmac_send_program/DEBUG: Script line: dwell 50
+2015-04-27 13:53:44,662 - ppmac_send_program/DEBUG: Script line: gather.enable=2
+2015-04-27 13:53:44,662 - ppmac_send_program/DEBUG: Script line: dwell 1
+2015-04-27 13:53:44,663 - ppmac_send_program/DEBUG: Script line: L2=0
+2015-04-27 13:53:44,663 - ppmac_send_program/DEBUG: Script line: while(L2 < 101) {
+2015-04-27 13:53:44,663 - ppmac_send_program/DEBUG: Script line:     inc
+2015-04-27 13:53:44,663 - ppmac_send_program/DEBUG: Script line:     F(0.084987)
+2015-04-27 13:53:44,664 - ppmac_send_program/DEBUG: Script line:     L1=0
+2015-04-27 13:53:44,664 - ppmac_send_program/DEBUG: Script line:     while(L1 < 101) {
+2015-04-27 13:53:44,665 - ppmac_send_program/DEBUG: Script line:         // Inhibit off, start counting
+2015-04-27 13:53:44,665 - ppmac_send_program/DEBUG: Script line:         M100=0
+2015-04-27 13:53:44,666 - ppmac_send_program/DEBUG: Script line:         x(0.003950)
+2015-04-27 13:53:44,666 - ppmac_send_program/DEBUG: Script line:         // Ensure the position is reached:
+2015-04-27 13:53:44,667 - ppmac_send_program/DEBUG: Script line:         dwell 0
+2015-04-27 13:53:44,667 - ppmac_send_program/DEBUG: Script line:         // Inhibit on, counting off
+2015-04-27 13:53:44,668 - ppmac_send_program/DEBUG: Script line:         M100=1
+2015-04-27 13:53:44,668 - ppmac_send_program/DEBUG: Script line:         // dwell for the dead time
+2015-04-27 13:53:44,669 - ppmac_send_program/DEBUG: Script line:         dwell 7.000000
+2015-04-27 13:53:44,670 - ppmac_send_program/DEBUG: Script line:         L1=L1+1
+2015-04-27 13:53:44,670 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 13:53:44,672 - ppmac_send_program/DEBUG: Script line:     if (L2 < (101 - 1)) {
+2015-04-27 13:53:44,673 - ppmac_send_program/DEBUG: Script line:         // rapid
+2015-04-27 13:53:44,673 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 13:53:44,673 - ppmac_send_program/DEBUG: Script line:         abs
+2015-04-27 13:53:44,674 - ppmac_send_program/DEBUG: Script line:         F0.5
+2015-04-27 13:53:44,674 - ppmac_send_program/DEBUG: Script line:         // tm(1 * 7.000000)
+2015-04-27 13:53:44,675 - ppmac_send_program/DEBUG: Script line:         // F(2 * 101 * 0.084987)
+2015-04-27 13:53:44,675 - ppmac_send_program/DEBUG: Script line:         L3 = 2.366153 + (0.004950 * (L2 + 1))
+2015-04-27 13:53:44,676 - ppmac_send_program/DEBUG: Script line:         x(-1.753294) y(L3)
+2015-04-27 13:53:44,676 - ppmac_send_program/DEBUG: Script line:         // dwell 0
+2015-04-27 13:53:44,677 - ppmac_send_program/DEBUG: Script line:         dwell 150
+2015-04-27 13:53:44,677 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 13:53:44,678 - ppmac_send_program/DEBUG: Script line:         inc
+2015-04-27 13:53:44,678 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 13:53:44,678 - ppmac_send_program/DEBUG: Script line:     L2=L2+1
+2015-04-27 13:53:44,679 - ppmac_send_program/DEBUG: Script line: }
+2015-04-27 13:53:44,679 - ppmac_send_program/DEBUG: Script line: // NOTE: can't use scaler in regular mode while still in input mode 2,
+2015-04-27 13:53:44,680 - ppmac_send_program/DEBUG: Script line: // so re-enable counting after it's all done:
+2015-04-27 13:53:44,680 - ppmac_send_program/DEBUG: Script line: // Inhibit off, start counting
+2015-04-27 13:53:44,680 - ppmac_send_program/DEBUG: Script line: // M100=0
+2015-04-27 13:53:44,681 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 13:53:44,681 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 13:53:44,682 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 13:53:44,682 - ppmac_send_program/DEBUG: Script line: x(-1.503294)
+2015-04-27 13:53:44,682 - ppmac_send_program/DEBUG: Script line: y(2.616153)
+2015-04-27 13:53:44,683 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 13:53:44,683 - ppmac_send_program/DEBUG: Script line: close
+2015-04-27 14:04:51,473 - _teardown/INFO: timepix2 acquired 0 images (tiff1)
+2015-04-27 14:04:51,473 - _teardown/INFO: xspress3 acquired 6014 spectra
+2015-04-27 14:04:51,474 - _teardown/WARNING: xspress3 didn't acquire all frames; stopping acquisition/file saving
+2015-04-27 14:04:52,948 - _aggregate_line/DEBUG: HDF5 file: /xspress3_data/20150427/fly01170/xspress/fly_01170_1.hdf5
+2015-04-27 14:05:11,135 - process_data/DEBUG: setup time 1114.840031 ms
+2015-04-27 14:05:11,136 - process_data/DEBUG: run time 618992.431086 ms (estimated 594208.250000 ms)
+2015-04-27 14:05:11,137 - process_data/DEBUG: aggregate time 19504.534006 ms
+2015-04-27 14:05:11,903 - process_data/DEBUG: total alive time: 461.932324017
+2015-04-27 14:05:11,904 - process_data/DEBUG: total dead time: 157.060107069
+2015-04-27 14:05:11,907 - process_data/DEBUG: alive+dead sum: 618.992431086
+2015-04-27 14:05:11,908 - process_data/DEBUG: total run time: 618.992431086
+2015-04-27 14:05:11,909 - process_data/ERROR: Failed to aggregate together: (ValueError) arrays must all be same length
+Traceback (most recent call last):
+  File "/home/xf03id/ipython_ophyd/profile_xf03id/startup/51-fly1d.py", line 567, in process_data
+    df_data.update(roi_data)
+  File "/nfs/xf03id/mc/envs/ophyd_dev/lib/python2.7/site-packages/pandas/core/frame.py", line 208, in __init__
+    mgr = self._init_dict(data, index, columns, dtype=dtype)
+  File "/nfs/xf03id/mc/envs/ophyd_dev/lib/python2.7/site-packages/pandas/core/frame.py", line 336, in _init_dict
+    dtype=dtype)
+  File "/nfs/xf03id/mc/envs/ophyd_dev/lib/python2.7/site-packages/pandas/core/frame.py", line 4751, in _arrays_to_mgr
+    index = extract_index(arrays)
+  File "/nfs/xf03id/mc/envs/ophyd_dev/lib/python2.7/site-packages/pandas/core/frame.py", line 4799, in extract_index
+    raise ValueError('arrays must all be same length')
+ValueError: arrays must all be same length
+2015-04-27 15:05:16,000 - fly2d/INFO: Motor x moved to start position: -1.503387
+2015-04-27 15:05:16,084 - fly2d/INFO: Motor y moved to start position: 2.615344
+2015-04-27 15:05:16,126 - _mds_start/INFO: Scan ID: 1171
+2015-04-27 15:05:16,126 - _mds_start/INFO: Time: 2015-04-27T15:05:16.118159
+2015-04-27 15:05:16,127 - _mds_start/INFO: uid: 08ad19d2-8d23-4675-b9ed-112b18518a3b
+2015-04-27 15:05:16,610 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 15:05:16,613 - fly2d/DEBUG: per point was 0.0049504950495 subtracting dead distance 0.003 = 0.0019504950495
+2015-04-27 15:05:16,613 - fly2d/DEBUG: points: [101 101]
+2015-04-27 15:05:16,615 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 15:05:16,618 - fly2d/DEBUG: per_points: [ 0.0019505  0.0049505]
+2015-04-27 15:05:16,619 - fly2d/DEBUG: dead_dist: 0.003
+2015-04-27 15:05:16,620 - fly2d/DEBUG: line_time: 1.224625
+2015-04-27 15:05:16,621 - fly2d/DEBUG: feed_rates: [ 0.40828825  0.40828825] units/s
+2015-04-27 15:05:16,622 - fly2d/DEBUG: dead time: 0.007 s
+2015-04-27 15:05:16,623 - ppmac_send_program/DEBUG: Sending script: /nfs/xf03id/ppmac/scripts/soft_2d.txt
+2015-04-27 15:05:16,627 - ppmac_send_program/DEBUG: Script line: close all buffers
+2015-04-27 15:05:16,627 - ppmac_send_program/DEBUG: Script line: open prog 50
+2015-04-27 15:05:16,628 - ppmac_send_program/DEBUG: Script line: // MoveModes:
+2015-04-27 15:05:16,628 - ppmac_send_program/DEBUG: Script line: // 0 Linear mode: trapezoidal/triangular profiles, straight-line paths in Cartesian space
+2015-04-27 15:05:16,629 - ppmac_send_program/DEBUG: Script line: //   Circle mode: sinusoidal velocity profiles, arc paths in Cartesian space
+2015-04-27 15:05:16,630 - ppmac_send_program/DEBUG: Script line: // 1 Spline mode: parabolic velocity profiles, cubic B-spline paths
+2015-04-27 15:05:16,631 - ppmac_send_program/DEBUG: Script line: // 2 PVT mode: parabolic velocity profiles, Hermite-spline paths
+2015-04-27 15:05:16,631 - ppmac_send_program/DEBUG: Script line: // 3 Rapid mode: trapezoidal/triangular profiles, minimum-time point-to-point moves
+2015-04-27 15:05:16,632 - ppmac_send_program/DEBUG: Script line: // Move time extended to slowest motor:
+2015-04-27 15:05:16,633 - ppmac_send_program/DEBUG: Script line: Coord[5].RapidVelCtrl=1
+2015-04-27 15:05:16,634 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:05:16,634 - ppmac_send_program/DEBUG: Script line: gather.addr[0]=Sys.ServoCount.a
+2015-04-27 15:05:16,634 - ppmac_send_program/DEBUG: Script line: gather.addr[1]=Sys.M[100].a
+2015-04-27 15:05:16,635 - ppmac_send_program/DEBUG: Script line: gather.addr[2]=Motor[3].Pos.a
+2015-04-27 15:05:16,635 - ppmac_send_program/DEBUG: Script line: gather.addr[3]=Motor[4].Pos.a
+2015-04-27 15:05:16,635 - ppmac_send_program/DEBUG: Script line: // gather.addr[4]=Motor[5].Pos.a
+2015-04-27 15:05:16,636 - ppmac_send_program/DEBUG: Script line: // gather.addr[5]=acc24e3[1].chan[0].servocapt.a
+2015-04-27 15:05:16,636 - ppmac_send_program/DEBUG: Script line: gather.items=4
+2015-04-27 15:05:16,636 - ppmac_send_program/DEBUG: Script line: gather.Period=8
+2015-04-27 15:05:16,637 - ppmac_send_program/DEBUG: Script line: gather.enable=1
+2015-04-27 15:05:16,637 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:05:16,637 - ppmac_send_program/DEBUG: Script line: gather.MaxSamples=gather.maxlines
+2015-04-27 15:05:16,638 - ppmac_send_program/DEBUG: Script line: rapid
+2015-04-27 15:05:16,638 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:05:16,638 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 15:05:16,638 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 15:05:16,639 - ppmac_send_program/DEBUG: Script line: TA0.1
+2015-04-27 15:05:16,639 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 15:05:16,639 - ppmac_send_program/DEBUG: Script line: F(0.408288)
+2015-04-27 15:05:16,640 - ppmac_send_program/DEBUG: Script line: X0.001
+2015-04-27 15:05:16,640 - ppmac_send_program/DEBUG: Script line: Y0.001
+2015-04-27 15:05:16,640 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:05:16,641 - ppmac_send_program/DEBUG: Script line: // TODO: it seems that this won't work on the first move in the coordinate
+2015-04-27 15:05:16,641 - ppmac_send_program/DEBUG: Script line: //       system:
+2015-04-27 15:05:16,642 - ppmac_send_program/DEBUG: Script line: dwell 1.0
+2015-04-27 15:05:16,642 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 15:05:16,642 - ppmac_send_program/DEBUG: Script line: F1.0
+2015-04-27 15:05:16,643 - ppmac_send_program/DEBUG: Script line: x(-1.753422)
+2015-04-27 15:05:16,643 - ppmac_send_program/DEBUG: Script line: y(2.365484)
+2015-04-27 15:05:16,643 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:05:16,644 - ppmac_send_program/DEBUG: Script line: dwell 1000
+2015-04-27 15:05:16,644 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:05:16,645 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 15:05:16,645 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 15:05:16,645 - ppmac_send_program/DEBUG: Script line: TA0.5
+2015-04-27 15:05:16,646 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 15:05:16,646 - ppmac_send_program/DEBUG: Script line: F(0.408288)
+2015-04-27 15:05:16,646 - ppmac_send_program/DEBUG: Script line: // ** see connection notes in soft_1d.txt
+2015-04-27 15:05:16,647 - ppmac_send_program/DEBUG: Script line: //  Counting off, inhibit on
+2015-04-27 15:05:16,647 - ppmac_send_program/DEBUG: Script line: M100=1
+2015-04-27 15:05:16,648 - ppmac_send_program/DEBUG: Script line: // Ensure motors are at the starting position
+2015-04-27 15:05:16,648 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:05:16,649 - ppmac_send_program/DEBUG: Script line: dwell 50
+2015-04-27 15:05:16,649 - ppmac_send_program/DEBUG: Script line: gather.enable=2
+2015-04-27 15:05:16,650 - ppmac_send_program/DEBUG: Script line: dwell 1
+2015-04-27 15:05:16,650 - ppmac_send_program/DEBUG: Script line: L2=0
+2015-04-27 15:05:16,650 - ppmac_send_program/DEBUG: Script line: while(L2 < 101) {
+2015-04-27 15:05:16,651 - ppmac_send_program/DEBUG: Script line:     inc
+2015-04-27 15:05:16,651 - ppmac_send_program/DEBUG: Script line:     F(0.408288)
+2015-04-27 15:05:16,652 - ppmac_send_program/DEBUG: Script line:     L1=0
+2015-04-27 15:05:16,652 - ppmac_send_program/DEBUG: Script line:     while(L1 < 101) {
+2015-04-27 15:05:16,652 - ppmac_send_program/DEBUG: Script line:         // Inhibit off, start counting
+2015-04-27 15:05:16,653 - ppmac_send_program/DEBUG: Script line:         M100=0
+2015-04-27 15:05:16,653 - ppmac_send_program/DEBUG: Script line:         x(0.001950)
+2015-04-27 15:05:16,654 - ppmac_send_program/DEBUG: Script line:         // Ensure the position is reached:
+2015-04-27 15:05:16,654 - ppmac_send_program/DEBUG: Script line:         dwell 0
+2015-04-27 15:05:16,655 - ppmac_send_program/DEBUG: Script line:         // Inhibit on, counting off
+2015-04-27 15:05:16,655 - ppmac_send_program/DEBUG: Script line:         M100=1
+2015-04-27 15:05:16,655 - ppmac_send_program/DEBUG: Script line:         // dwell for the dead time
+2015-04-27 15:05:16,656 - ppmac_send_program/DEBUG: Script line:         dwell 7.000000
+2015-04-27 15:05:16,656 - ppmac_send_program/DEBUG: Script line:         L1=L1+1
+2015-04-27 15:05:16,656 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 15:05:16,657 - ppmac_send_program/DEBUG: Script line:     if (L2 < (101 - 1)) {
+2015-04-27 15:05:16,657 - ppmac_send_program/DEBUG: Script line:         // rapid
+2015-04-27 15:05:16,658 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 15:05:16,658 - ppmac_send_program/DEBUG: Script line:         abs
+2015-04-27 15:05:16,658 - ppmac_send_program/DEBUG: Script line:         F0.5
+2015-04-27 15:05:16,658 - ppmac_send_program/DEBUG: Script line:         // tm(1 * 7.000000)
+2015-04-27 15:05:16,659 - ppmac_send_program/DEBUG: Script line:         // F(2 * 101 * 0.408288)
+2015-04-27 15:05:16,659 - ppmac_send_program/DEBUG: Script line:         L3 = 2.365484 + (0.004950 * (L2 + 1))
+2015-04-27 15:05:16,659 - ppmac_send_program/DEBUG: Script line:         x(-1.753422) y(L3)
+2015-04-27 15:05:16,660 - ppmac_send_program/DEBUG: Script line:         // dwell 0
+2015-04-27 15:05:16,660 - ppmac_send_program/DEBUG: Script line:         dwell 150
+2015-04-27 15:05:16,661 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 15:05:16,661 - ppmac_send_program/DEBUG: Script line:         inc
+2015-04-27 15:05:16,661 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 15:05:16,662 - ppmac_send_program/DEBUG: Script line:     L2=L2+1
+2015-04-27 15:05:16,662 - ppmac_send_program/DEBUG: Script line: }
+2015-04-27 15:05:16,662 - ppmac_send_program/DEBUG: Script line: // NOTE: can't use scaler in regular mode while still in input mode 2,
+2015-04-27 15:05:16,663 - ppmac_send_program/DEBUG: Script line: // so re-enable counting after it's all done:
+2015-04-27 15:05:16,663 - ppmac_send_program/DEBUG: Script line: // Inhibit off, start counting
+2015-04-27 15:05:16,663 - ppmac_send_program/DEBUG: Script line: // M100=0
+2015-04-27 15:05:16,664 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:05:16,664 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:05:16,664 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 15:05:16,665 - ppmac_send_program/DEBUG: Script line: x(-1.503422)
+2015-04-27 15:05:16,665 - ppmac_send_program/DEBUG: Script line: y(2.615484)
+2015-04-27 15:05:16,665 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:05:16,666 - ppmac_send_program/DEBUG: Script line: close
+2015-04-27 15:08:34,677 - _teardown/INFO: timepix2 acquired 0 images (tiff1)
+2015-04-27 15:08:34,690 - _teardown/INFO: xspress3 acquired 0 spectra
+2015-04-27 15:08:34,691 - _teardown/WARNING: xspress3 didn't acquire all frames; stopping acquisition/file saving
+2015-04-27 15:08:35,121 - _aggregate_line/DEBUG: HDF5 file: /xspress3_data/20150427/fly01171/xspress/fly_01171_1.hdf5
+2015-04-27 15:08:35,188 - process_data/DEBUG: setup time 1357.048035 ms
+2015-04-27 15:08:35,189 - process_data/DEBUG: run time 194555.050882 ms (estimated 123687.125000 ms)
+2015-04-27 15:08:35,189 - process_data/DEBUG: aggregate time 343.508005 ms
+2015-04-27 15:08:36,009 - process_data/DEBUG: total alive time: 67.7466267066
+2015-04-27 15:08:36,011 - process_data/DEBUG: total dead time: 126.808424175
+2015-04-27 15:08:36,015 - process_data/DEBUG: alive+dead sum: 194.555050882
+2015-04-27 15:08:36,015 - process_data/DEBUG: total run time: 194.555050882
+2015-04-27 15:08:36,047 - process_data/DEBUG: created event_descriptor: {'_dynamic_lock': False, '_changed_fields': [], '_fields_ordered': ('id', 'run_start', 'uid', 'time', 'data_keys', 'time_as_datetime'), 'time_as_datetime': datetime.datetime(2015, 4, 27, 15, 8, 36, 34154), '_initialised': True, '_dynamic_fields': SON([('time_as_datetime', <mongoengine.fields.DynamicField object at 0x7f392b933a10>)]), '_created': False, '_data': {'uid': '47a81299-8493-4331-ac97-92616d015727', 'data_keys': {u'sclr1_ch2': <DataKey: DataKey object>, u'sclr1_ch3': <DataKey: DataKey object>, u'alive[s]': <DataKey: DataKey object>, u'Ch2 [930:960]': <DataKey: DataKey object>, u'ssy[um]': <DataKey: DataKey object>, u'scaler_alive[ms]': <DataKey: DataKey object>, u'Ch1 [930:960]': <DataKey: DataKey object>, u'dead[s]': <DataKey: DataKey object>, u'ssx[um]': <DataKey: DataKey object>, u'Ch3 [930:960]': <DataKey: DataKey object>, u'sclr1_ch8': <DataKey: DataKey object>, u'Ch4 [930:960]': <DataKey: DataKey object>}, 'time_as_datetime': datetime.datetime(2015, 4, 27, 15, 8, 36, 34154), 'run_start': <RunStart: RunStart object>, 'time': 1430161716.034154, 'id': ObjectId('553e8934e97f4e34c48fb359')}}
+2015-04-27 15:08:36,048 - process_data/DEBUG: metadatastore insert event 0
+2015-04-27 15:10:42,103 - fly2d/INFO: Motor x moved to start position: -1.502569
+2015-04-27 15:10:42,166 - fly2d/INFO: Motor y moved to start position: 2.614278
+2015-04-27 15:10:42,216 - _mds_start/INFO: Scan ID: 1172
+2015-04-27 15:10:42,217 - _mds_start/INFO: Time: 2015-04-27T15:10:42.196969
+2015-04-27 15:10:42,217 - _mds_start/INFO: uid: c50a87ea-b700-45e0-a03b-d5203c5b39fb
+2015-04-27 15:10:42,765 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 15:10:42,767 - fly2d/DEBUG: per point was 0.0049504950495 subtracting dead distance 0.003 = 0.0019504950495
+2015-04-27 15:10:42,767 - fly2d/DEBUG: points: [101 101]
+2015-04-27 15:10:42,768 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 15:10:42,769 - fly2d/DEBUG: per_points: [ 0.0019505  0.0049505]
+2015-04-27 15:10:42,770 - fly2d/DEBUG: dead_dist: 0.003
+2015-04-27 15:10:42,770 - fly2d/DEBUG: line_time: 1.74225
+2015-04-27 15:10:42,770 - fly2d/DEBUG: feed_rates: [ 0.28698522  0.28698522] units/s
+2015-04-27 15:10:42,771 - fly2d/DEBUG: dead time: 0.007 s
+2015-04-27 15:10:42,772 - ppmac_send_program/DEBUG: Sending script: /nfs/xf03id/ppmac/scripts/soft_2d.txt
+2015-04-27 15:10:42,774 - ppmac_send_program/DEBUG: Script line: close all buffers
+2015-04-27 15:10:42,775 - ppmac_send_program/DEBUG: Script line: open prog 50
+2015-04-27 15:10:42,775 - ppmac_send_program/DEBUG: Script line: // MoveModes:
+2015-04-27 15:10:42,775 - ppmac_send_program/DEBUG: Script line: // 0 Linear mode: trapezoidal/triangular profiles, straight-line paths in Cartesian space
+2015-04-27 15:10:42,776 - ppmac_send_program/DEBUG: Script line: //   Circle mode: sinusoidal velocity profiles, arc paths in Cartesian space
+2015-04-27 15:10:42,777 - ppmac_send_program/DEBUG: Script line: // 1 Spline mode: parabolic velocity profiles, cubic B-spline paths
+2015-04-27 15:10:42,777 - ppmac_send_program/DEBUG: Script line: // 2 PVT mode: parabolic velocity profiles, Hermite-spline paths
+2015-04-27 15:10:42,778 - ppmac_send_program/DEBUG: Script line: // 3 Rapid mode: trapezoidal/triangular profiles, minimum-time point-to-point moves
+2015-04-27 15:10:42,779 - ppmac_send_program/DEBUG: Script line: // Move time extended to slowest motor:
+2015-04-27 15:10:42,780 - ppmac_send_program/DEBUG: Script line: Coord[5].RapidVelCtrl=1
+2015-04-27 15:10:42,781 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:10:42,781 - ppmac_send_program/DEBUG: Script line: gather.addr[0]=Sys.ServoCount.a
+2015-04-27 15:10:42,782 - ppmac_send_program/DEBUG: Script line: gather.addr[1]=Sys.M[100].a
+2015-04-27 15:10:42,782 - ppmac_send_program/DEBUG: Script line: gather.addr[2]=Motor[3].Pos.a
+2015-04-27 15:10:42,783 - ppmac_send_program/DEBUG: Script line: gather.addr[3]=Motor[4].Pos.a
+2015-04-27 15:10:42,784 - ppmac_send_program/DEBUG: Script line: // gather.addr[4]=Motor[5].Pos.a
+2015-04-27 15:10:42,784 - ppmac_send_program/DEBUG: Script line: // gather.addr[5]=acc24e3[1].chan[0].servocapt.a
+2015-04-27 15:10:42,785 - ppmac_send_program/DEBUG: Script line: gather.items=4
+2015-04-27 15:10:42,785 - ppmac_send_program/DEBUG: Script line: gather.Period=8
+2015-04-27 15:10:42,786 - ppmac_send_program/DEBUG: Script line: gather.enable=1
+2015-04-27 15:10:42,786 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:10:42,786 - ppmac_send_program/DEBUG: Script line: gather.MaxSamples=gather.maxlines
+2015-04-27 15:10:42,787 - ppmac_send_program/DEBUG: Script line: rapid
+2015-04-27 15:10:42,787 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:10:42,787 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 15:10:42,788 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 15:10:42,788 - ppmac_send_program/DEBUG: Script line: TA0.1
+2015-04-27 15:10:42,788 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 15:10:42,789 - ppmac_send_program/DEBUG: Script line: F(0.286985)
+2015-04-27 15:10:42,789 - ppmac_send_program/DEBUG: Script line: X0.001
+2015-04-27 15:10:42,789 - ppmac_send_program/DEBUG: Script line: Y0.001
+2015-04-27 15:10:42,790 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:10:42,790 - ppmac_send_program/DEBUG: Script line: // TODO: it seems that this won't work on the first move in the coordinate
+2015-04-27 15:10:42,790 - ppmac_send_program/DEBUG: Script line: //       system:
+2015-04-27 15:10:42,791 - ppmac_send_program/DEBUG: Script line: dwell 1.0
+2015-04-27 15:10:42,791 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 15:10:42,791 - ppmac_send_program/DEBUG: Script line: F1.0
+2015-04-27 15:10:42,791 - ppmac_send_program/DEBUG: Script line: x(-1.752503)
+2015-04-27 15:10:42,792 - ppmac_send_program/DEBUG: Script line: y(2.364653)
+2015-04-27 15:10:42,792 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:10:42,792 - ppmac_send_program/DEBUG: Script line: dwell 1000
+2015-04-27 15:10:42,793 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:10:42,793 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 15:10:42,794 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 15:10:42,794 - ppmac_send_program/DEBUG: Script line: TA0.5
+2015-04-27 15:10:42,794 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 15:10:42,794 - ppmac_send_program/DEBUG: Script line: F(0.286985)
+2015-04-27 15:10:42,795 - ppmac_send_program/DEBUG: Script line: // ** see connection notes in soft_1d.txt
+2015-04-27 15:10:42,795 - ppmac_send_program/DEBUG: Script line: //  Counting off, inhibit on
+2015-04-27 15:10:42,796 - ppmac_send_program/DEBUG: Script line: M100=1
+2015-04-27 15:10:42,796 - ppmac_send_program/DEBUG: Script line: // Ensure motors are at the starting position
+2015-04-27 15:10:42,797 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:10:42,797 - ppmac_send_program/DEBUG: Script line: dwell 50
+2015-04-27 15:10:42,798 - ppmac_send_program/DEBUG: Script line: gather.enable=2
+2015-04-27 15:10:42,798 - ppmac_send_program/DEBUG: Script line: dwell 1
+2015-04-27 15:10:42,799 - ppmac_send_program/DEBUG: Script line: L2=0
+2015-04-27 15:10:42,799 - ppmac_send_program/DEBUG: Script line: while(L2 < 101) {
+2015-04-27 15:10:42,800 - ppmac_send_program/DEBUG: Script line:     inc
+2015-04-27 15:10:42,800 - ppmac_send_program/DEBUG: Script line:     F(0.286985)
+2015-04-27 15:10:42,800 - ppmac_send_program/DEBUG: Script line:     L1=0
+2015-04-27 15:10:42,801 - ppmac_send_program/DEBUG: Script line:     while(L1 < 101) {
+2015-04-27 15:10:42,801 - ppmac_send_program/DEBUG: Script line:         // Inhibit off, start counting
+2015-04-27 15:10:42,801 - ppmac_send_program/DEBUG: Script line:         M100=0
+2015-04-27 15:10:42,802 - ppmac_send_program/DEBUG: Script line:         x(0.001950)
+2015-04-27 15:10:42,802 - ppmac_send_program/DEBUG: Script line:         // Ensure the position is reached:
+2015-04-27 15:10:42,803 - ppmac_send_program/DEBUG: Script line:         dwell 0
+2015-04-27 15:10:42,803 - ppmac_send_program/DEBUG: Script line:         // Inhibit on, counting off
+2015-04-27 15:10:42,803 - ppmac_send_program/DEBUG: Script line:         M100=1
+2015-04-27 15:10:42,804 - ppmac_send_program/DEBUG: Script line:         // dwell for the dead time
+2015-04-27 15:10:42,804 - ppmac_send_program/DEBUG: Script line:         dwell 7.000000
+2015-04-27 15:10:42,805 - ppmac_send_program/DEBUG: Script line:         L1=L1+1
+2015-04-27 15:10:42,805 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 15:10:42,806 - ppmac_send_program/DEBUG: Script line:     if (L2 < (101 - 1)) {
+2015-04-27 15:10:42,806 - ppmac_send_program/DEBUG: Script line:         // rapid
+2015-04-27 15:10:42,807 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 15:10:42,807 - ppmac_send_program/DEBUG: Script line:         abs
+2015-04-27 15:10:42,807 - ppmac_send_program/DEBUG: Script line:         F0.5
+2015-04-27 15:10:42,807 - ppmac_send_program/DEBUG: Script line:         // tm(1 * 7.000000)
+2015-04-27 15:10:42,808 - ppmac_send_program/DEBUG: Script line:         // F(2 * 101 * 0.286985)
+2015-04-27 15:10:42,808 - ppmac_send_program/DEBUG: Script line:         L3 = 2.364653 + (0.004950 * (L2 + 1))
+2015-04-27 15:10:42,809 - ppmac_send_program/DEBUG: Script line:         x(-1.752503) y(L3)
+2015-04-27 15:10:42,809 - ppmac_send_program/DEBUG: Script line:         // dwell 0
+2015-04-27 15:10:42,809 - ppmac_send_program/DEBUG: Script line:         dwell 150
+2015-04-27 15:10:42,810 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 15:10:42,810 - ppmac_send_program/DEBUG: Script line:         inc
+2015-04-27 15:10:42,811 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 15:10:42,812 - ppmac_send_program/DEBUG: Script line:     L2=L2+1
+2015-04-27 15:10:42,812 - ppmac_send_program/DEBUG: Script line: }
+2015-04-27 15:10:42,813 - ppmac_send_program/DEBUG: Script line: // NOTE: can't use scaler in regular mode while still in input mode 2,
+2015-04-27 15:10:42,813 - ppmac_send_program/DEBUG: Script line: // so re-enable counting after it's all done:
+2015-04-27 15:10:42,813 - ppmac_send_program/DEBUG: Script line: // Inhibit off, start counting
+2015-04-27 15:10:42,814 - ppmac_send_program/DEBUG: Script line: // M100=0
+2015-04-27 15:10:42,814 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:10:42,814 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:10:42,815 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 15:10:42,815 - ppmac_send_program/DEBUG: Script line: x(-1.502503)
+2015-04-27 15:10:42,815 - ppmac_send_program/DEBUG: Script line: y(2.614653)
+2015-04-27 15:10:42,816 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:10:42,816 - ppmac_send_program/DEBUG: Script line: close
+2015-04-27 15:10:59,567 - _teardown/INFO: timepix2 acquired 0 images (tiff1)
+2015-04-27 15:10:59,571 - _teardown/INFO: xspress3 acquired 0 spectra
+2015-04-27 15:10:59,571 - _teardown/WARNING: xspress3 didn't acquire all frames; stopping acquisition/file saving
+2015-04-27 15:10:59,744 - _aggregate_line/DEBUG: HDF5 file: /xspress3_data/20150427/fly01172/xspress/fly_01172_1.hdf5
+2015-04-27 15:10:59,802 - process_data/DEBUG: setup time 1452.015877 ms
+2015-04-27 15:10:59,803 - process_data/DEBUG: run time 14468.812155 ms (estimated 175967.250000 ms)
+2015-04-27 15:10:59,803 - process_data/DEBUG: aggregate time 77.930927 ms
+2015-04-27 15:10:59,861 - process_data/DEBUG: total alive time: 5.92920233693
+2015-04-27 15:10:59,862 - process_data/DEBUG: total dead time: 8.53960981785
+2015-04-27 15:10:59,862 - process_data/DEBUG: alive+dead sum: 14.4688121548
+2015-04-27 15:10:59,862 - process_data/DEBUG: total run time: 14.4688121548
+2015-04-27 15:10:59,863 - process_data/WARNING: Padding data from "start[s]" (length=705 expected=10201)
+2015-04-27 15:13:35,416 - fly2d/INFO: Motor x moved to start position: -1.559672
+2015-04-27 15:13:35,479 - fly2d/INFO: Motor y moved to start position: 2.393400
+2015-04-27 15:13:35,523 - _mds_start/INFO: Scan ID: 1173
+2015-04-27 15:13:35,523 - _mds_start/INFO: Time: 2015-04-27T15:13:35.511526
+2015-04-27 15:13:35,523 - _mds_start/INFO: uid: 3bf35481-f2e5-4bd5-a98b-dcc246e9c112
+2015-04-27 15:13:36,078 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 15:13:36,079 - fly2d/DEBUG: per point was 0.0049504950495 subtracting dead distance 0.003 = 0.0019504950495
+2015-04-27 15:13:36,080 - fly2d/DEBUG: points: [101 101]
+2015-04-27 15:13:36,081 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 15:13:36,082 - fly2d/DEBUG: per_points: [ 0.0019505  0.0049505]
+2015-04-27 15:13:36,083 - fly2d/DEBUG: dead_dist: 0.003
+2015-04-27 15:13:36,083 - fly2d/DEBUG: line_time: 1.74225
+2015-04-27 15:13:36,083 - fly2d/DEBUG: feed_rates: [ 0.28698522  0.28698522] units/s
+2015-04-27 15:13:36,084 - fly2d/DEBUG: dead time: 0.007 s
+2015-04-27 15:13:36,085 - ppmac_send_program/DEBUG: Sending script: /nfs/xf03id/ppmac/scripts/soft_2d.txt
+2015-04-27 15:13:36,086 - ppmac_send_program/DEBUG: Script line: close all buffers
+2015-04-27 15:13:36,087 - ppmac_send_program/DEBUG: Script line: open prog 50
+2015-04-27 15:13:36,087 - ppmac_send_program/DEBUG: Script line: // MoveModes:
+2015-04-27 15:13:36,087 - ppmac_send_program/DEBUG: Script line: // 0 Linear mode: trapezoidal/triangular profiles, straight-line paths in Cartesian space
+2015-04-27 15:13:36,088 - ppmac_send_program/DEBUG: Script line: //   Circle mode: sinusoidal velocity profiles, arc paths in Cartesian space
+2015-04-27 15:13:36,088 - ppmac_send_program/DEBUG: Script line: // 1 Spline mode: parabolic velocity profiles, cubic B-spline paths
+2015-04-27 15:13:36,088 - ppmac_send_program/DEBUG: Script line: // 2 PVT mode: parabolic velocity profiles, Hermite-spline paths
+2015-04-27 15:13:36,089 - ppmac_send_program/DEBUG: Script line: // 3 Rapid mode: trapezoidal/triangular profiles, minimum-time point-to-point moves
+2015-04-27 15:13:36,089 - ppmac_send_program/DEBUG: Script line: // Move time extended to slowest motor:
+2015-04-27 15:13:36,090 - ppmac_send_program/DEBUG: Script line: Coord[5].RapidVelCtrl=1
+2015-04-27 15:13:36,090 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:13:36,091 - ppmac_send_program/DEBUG: Script line: gather.addr[0]=Sys.ServoCount.a
+2015-04-27 15:13:36,091 - ppmac_send_program/DEBUG: Script line: gather.addr[1]=Sys.M[100].a
+2015-04-27 15:13:36,091 - ppmac_send_program/DEBUG: Script line: gather.addr[2]=Motor[3].Pos.a
+2015-04-27 15:13:36,092 - ppmac_send_program/DEBUG: Script line: gather.addr[3]=Motor[4].Pos.a
+2015-04-27 15:13:36,092 - ppmac_send_program/DEBUG: Script line: // gather.addr[4]=Motor[5].Pos.a
+2015-04-27 15:13:36,093 - ppmac_send_program/DEBUG: Script line: // gather.addr[5]=acc24e3[1].chan[0].servocapt.a
+2015-04-27 15:13:36,093 - ppmac_send_program/DEBUG: Script line: gather.items=4
+2015-04-27 15:13:36,093 - ppmac_send_program/DEBUG: Script line: gather.Period=8
+2015-04-27 15:13:36,094 - ppmac_send_program/DEBUG: Script line: gather.enable=1
+2015-04-27 15:13:36,095 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:13:36,096 - ppmac_send_program/DEBUG: Script line: gather.MaxSamples=gather.maxlines
+2015-04-27 15:13:36,097 - ppmac_send_program/DEBUG: Script line: rapid
+2015-04-27 15:13:36,098 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:13:36,099 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 15:13:36,100 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 15:13:36,100 - ppmac_send_program/DEBUG: Script line: TA0.1
+2015-04-27 15:13:36,101 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 15:13:36,101 - ppmac_send_program/DEBUG: Script line: F(0.286985)
+2015-04-27 15:13:36,101 - ppmac_send_program/DEBUG: Script line: X0.001
+2015-04-27 15:13:36,102 - ppmac_send_program/DEBUG: Script line: Y0.001
+2015-04-27 15:13:36,102 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:13:36,103 - ppmac_send_program/DEBUG: Script line: // TODO: it seems that this won't work on the first move in the coordinate
+2015-04-27 15:13:36,103 - ppmac_send_program/DEBUG: Script line: //       system:
+2015-04-27 15:13:36,103 - ppmac_send_program/DEBUG: Script line: dwell 1.0
+2015-04-27 15:13:36,104 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 15:13:36,104 - ppmac_send_program/DEBUG: Script line: F1.0
+2015-04-27 15:13:36,105 - ppmac_send_program/DEBUG: Script line: x(-1.808903)
+2015-04-27 15:13:36,105 - ppmac_send_program/DEBUG: Script line: y(2.143281)
+2015-04-27 15:13:36,106 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:13:36,106 - ppmac_send_program/DEBUG: Script line: dwell 1000
+2015-04-27 15:13:36,106 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:13:36,107 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 15:13:36,107 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 15:13:36,108 - ppmac_send_program/DEBUG: Script line: TA0.5
+2015-04-27 15:13:36,108 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 15:13:36,108 - ppmac_send_program/DEBUG: Script line: F(0.286985)
+2015-04-27 15:13:36,110 - ppmac_send_program/DEBUG: Script line: // ** see connection notes in soft_1d.txt
+2015-04-27 15:13:36,112 - ppmac_send_program/DEBUG: Script line: //  Counting off, inhibit on
+2015-04-27 15:13:36,113 - ppmac_send_program/DEBUG: Script line: M100=1
+2015-04-27 15:13:36,115 - ppmac_send_program/DEBUG: Script line: // Ensure motors are at the starting position
+2015-04-27 15:13:36,116 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:13:36,117 - ppmac_send_program/DEBUG: Script line: dwell 50
+2015-04-27 15:13:36,118 - ppmac_send_program/DEBUG: Script line: gather.enable=2
+2015-04-27 15:13:36,119 - ppmac_send_program/DEBUG: Script line: dwell 1
+2015-04-27 15:13:36,119 - ppmac_send_program/DEBUG: Script line: L2=0
+2015-04-27 15:13:36,120 - ppmac_send_program/DEBUG: Script line: while(L2 < 101) {
+2015-04-27 15:13:36,120 - ppmac_send_program/DEBUG: Script line:     inc
+2015-04-27 15:13:36,121 - ppmac_send_program/DEBUG: Script line:     F(0.286985)
+2015-04-27 15:13:36,121 - ppmac_send_program/DEBUG: Script line:     L1=0
+2015-04-27 15:13:36,122 - ppmac_send_program/DEBUG: Script line:     while(L1 < 101) {
+2015-04-27 15:13:36,122 - ppmac_send_program/DEBUG: Script line:         // Inhibit off, start counting
+2015-04-27 15:13:36,123 - ppmac_send_program/DEBUG: Script line:         M100=0
+2015-04-27 15:13:36,123 - ppmac_send_program/DEBUG: Script line:         x(0.001950)
+2015-04-27 15:13:36,124 - ppmac_send_program/DEBUG: Script line:         // Ensure the position is reached:
+2015-04-27 15:13:36,124 - ppmac_send_program/DEBUG: Script line:         dwell 0
+2015-04-27 15:13:36,125 - ppmac_send_program/DEBUG: Script line:         // Inhibit on, counting off
+2015-04-27 15:13:36,125 - ppmac_send_program/DEBUG: Script line:         M100=1
+2015-04-27 15:13:36,126 - ppmac_send_program/DEBUG: Script line:         // dwell for the dead time
+2015-04-27 15:13:36,126 - ppmac_send_program/DEBUG: Script line:         dwell 7.000000
+2015-04-27 15:13:36,127 - ppmac_send_program/DEBUG: Script line:         L1=L1+1
+2015-04-27 15:13:36,127 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 15:13:36,128 - ppmac_send_program/DEBUG: Script line:     if (L2 < (101 - 1)) {
+2015-04-27 15:13:36,128 - ppmac_send_program/DEBUG: Script line:         // rapid
+2015-04-27 15:13:36,129 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 15:13:36,129 - ppmac_send_program/DEBUG: Script line:         abs
+2015-04-27 15:13:36,129 - ppmac_send_program/DEBUG: Script line:         F0.5
+2015-04-27 15:13:36,130 - ppmac_send_program/DEBUG: Script line:         // tm(1 * 7.000000)
+2015-04-27 15:13:36,130 - ppmac_send_program/DEBUG: Script line:         // F(2 * 101 * 0.286985)
+2015-04-27 15:13:36,131 - ppmac_send_program/DEBUG: Script line:         L3 = 2.143281 + (0.004950 * (L2 + 1))
+2015-04-27 15:13:36,131 - ppmac_send_program/DEBUG: Script line:         x(-1.808903) y(L3)
+2015-04-27 15:13:36,131 - ppmac_send_program/DEBUG: Script line:         // dwell 0
+2015-04-27 15:13:36,132 - ppmac_send_program/DEBUG: Script line:         dwell 150
+2015-04-27 15:13:36,132 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 15:13:36,133 - ppmac_send_program/DEBUG: Script line:         inc
+2015-04-27 15:13:36,133 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 15:13:36,134 - ppmac_send_program/DEBUG: Script line:     L2=L2+1
+2015-04-27 15:13:36,134 - ppmac_send_program/DEBUG: Script line: }
+2015-04-27 15:13:36,135 - ppmac_send_program/DEBUG: Script line: // NOTE: can't use scaler in regular mode while still in input mode 2,
+2015-04-27 15:13:36,135 - ppmac_send_program/DEBUG: Script line: // so re-enable counting after it's all done:
+2015-04-27 15:13:36,135 - ppmac_send_program/DEBUG: Script line: // Inhibit off, start counting
+2015-04-27 15:13:36,136 - ppmac_send_program/DEBUG: Script line: // M100=0
+2015-04-27 15:13:36,136 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:13:36,136 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:13:36,137 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 15:13:36,138 - ppmac_send_program/DEBUG: Script line: x(-1.558903)
+2015-04-27 15:13:36,138 - ppmac_send_program/DEBUG: Script line: y(2.393281)
+2015-04-27 15:13:36,138 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:13:36,139 - ppmac_send_program/DEBUG: Script line: close
+2015-04-27 15:13:45,610 - _teardown/INFO: timepix2 acquired 0 images (tiff1)
+2015-04-27 15:13:45,638 - _teardown/INFO: xspress3 acquired 0 spectra
+2015-04-27 15:13:45,639 - _teardown/WARNING: xspress3 didn't acquire all frames; stopping acquisition/file saving
+2015-04-27 15:13:45,803 - _aggregate_line/DEBUG: HDF5 file: /xspress3_data/20150427/fly01173/xspress/fly_01173_1.hdf5
+2015-04-27 15:13:45,851 - process_data/DEBUG: setup time 1412.673950 ms
+2015-04-27 15:13:45,851 - process_data/DEBUG: run time 7271.596415 ms (estimated 175967.250000 ms)
+2015-04-27 15:13:45,851 - process_data/DEBUG: aggregate time 67.972183 ms
+2015-04-27 15:13:45,883 - process_data/DEBUG: total alive time: 2.90084630559
+2015-04-27 15:13:45,883 - process_data/DEBUG: total dead time: 4.37075010902
+2015-04-27 15:13:45,883 - process_data/DEBUG: alive+dead sum: 7.27159641462
+2015-04-27 15:13:45,883 - process_data/DEBUG: total run time: 7.27159641462
+2015-04-27 15:13:45,884 - process_data/WARNING: Padding data from "start[s]" (length=346 expected=10201)
+2015-04-27 15:14:08,108 - fly2d/INFO: Motor x moved to start position: -1.727587
+2015-04-27 15:14:08,193 - fly2d/INFO: Motor y moved to start position: 2.156947
+2015-04-27 15:14:08,234 - _mds_start/INFO: Scan ID: 1174
+2015-04-27 15:14:08,234 - _mds_start/INFO: Time: 2015-04-27T15:14:08.220174
+2015-04-27 15:14:08,235 - _mds_start/INFO: uid: 9e94d2bf-d67b-4f47-b1c9-0e45729dcd52
+2015-04-27 15:14:08,799 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 15:14:08,801 - fly2d/DEBUG: per point was 0.0049504950495 subtracting dead distance 0.003 = 0.0019504950495
+2015-04-27 15:14:08,801 - fly2d/DEBUG: points: [101 101]
+2015-04-27 15:14:08,803 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 15:14:08,806 - fly2d/DEBUG: per_points: [ 0.0019505  0.0049505]
+2015-04-27 15:14:08,808 - fly2d/DEBUG: dead_dist: 0.003
+2015-04-27 15:14:08,808 - fly2d/DEBUG: line_time: 1.74225
+2015-04-27 15:14:08,809 - fly2d/DEBUG: feed_rates: [ 0.28698522  0.28698522] units/s
+2015-04-27 15:14:08,810 - fly2d/DEBUG: dead time: 0.007 s
+2015-04-27 15:14:08,811 - ppmac_send_program/DEBUG: Sending script: /nfs/xf03id/ppmac/scripts/soft_2d.txt
+2015-04-27 15:14:08,814 - ppmac_send_program/DEBUG: Script line: close all buffers
+2015-04-27 15:14:08,815 - ppmac_send_program/DEBUG: Script line: open prog 50
+2015-04-27 15:14:08,815 - ppmac_send_program/DEBUG: Script line: // MoveModes:
+2015-04-27 15:14:08,816 - ppmac_send_program/DEBUG: Script line: // 0 Linear mode: trapezoidal/triangular profiles, straight-line paths in Cartesian space
+2015-04-27 15:14:08,816 - ppmac_send_program/DEBUG: Script line: //   Circle mode: sinusoidal velocity profiles, arc paths in Cartesian space
+2015-04-27 15:14:08,817 - ppmac_send_program/DEBUG: Script line: // 1 Spline mode: parabolic velocity profiles, cubic B-spline paths
+2015-04-27 15:14:08,817 - ppmac_send_program/DEBUG: Script line: // 2 PVT mode: parabolic velocity profiles, Hermite-spline paths
+2015-04-27 15:14:08,818 - ppmac_send_program/DEBUG: Script line: // 3 Rapid mode: trapezoidal/triangular profiles, minimum-time point-to-point moves
+2015-04-27 15:14:08,819 - ppmac_send_program/DEBUG: Script line: // Move time extended to slowest motor:
+2015-04-27 15:14:08,820 - ppmac_send_program/DEBUG: Script line: Coord[5].RapidVelCtrl=1
+2015-04-27 15:14:08,822 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:14:08,823 - ppmac_send_program/DEBUG: Script line: gather.addr[0]=Sys.ServoCount.a
+2015-04-27 15:14:08,824 - ppmac_send_program/DEBUG: Script line: gather.addr[1]=Sys.M[100].a
+2015-04-27 15:14:08,825 - ppmac_send_program/DEBUG: Script line: gather.addr[2]=Motor[3].Pos.a
+2015-04-27 15:14:08,825 - ppmac_send_program/DEBUG: Script line: gather.addr[3]=Motor[4].Pos.a
+2015-04-27 15:14:08,826 - ppmac_send_program/DEBUG: Script line: // gather.addr[4]=Motor[5].Pos.a
+2015-04-27 15:14:08,826 - ppmac_send_program/DEBUG: Script line: // gather.addr[5]=acc24e3[1].chan[0].servocapt.a
+2015-04-27 15:14:08,826 - ppmac_send_program/DEBUG: Script line: gather.items=4
+2015-04-27 15:14:08,827 - ppmac_send_program/DEBUG: Script line: gather.Period=8
+2015-04-27 15:14:08,827 - ppmac_send_program/DEBUG: Script line: gather.enable=1
+2015-04-27 15:14:08,827 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:14:08,828 - ppmac_send_program/DEBUG: Script line: gather.MaxSamples=gather.maxlines
+2015-04-27 15:14:08,828 - ppmac_send_program/DEBUG: Script line: rapid
+2015-04-27 15:14:08,829 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:14:08,829 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 15:14:08,830 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 15:14:08,830 - ppmac_send_program/DEBUG: Script line: TA0.1
+2015-04-27 15:14:08,831 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 15:14:08,832 - ppmac_send_program/DEBUG: Script line: F(0.286985)
+2015-04-27 15:14:08,832 - ppmac_send_program/DEBUG: Script line: X0.001
+2015-04-27 15:14:08,833 - ppmac_send_program/DEBUG: Script line: Y0.001
+2015-04-27 15:14:08,834 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:14:08,834 - ppmac_send_program/DEBUG: Script line: // TODO: it seems that this won't work on the first move in the coordinate
+2015-04-27 15:14:08,834 - ppmac_send_program/DEBUG: Script line: //       system:
+2015-04-27 15:14:08,835 - ppmac_send_program/DEBUG: Script line: dwell 1.0
+2015-04-27 15:14:08,835 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 15:14:08,836 - ppmac_send_program/DEBUG: Script line: F1.0
+2015-04-27 15:14:08,836 - ppmac_send_program/DEBUG: Script line: x(-1.977544)
+2015-04-27 15:14:08,837 - ppmac_send_program/DEBUG: Script line: y(1.906734)
+2015-04-27 15:14:08,837 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:14:08,838 - ppmac_send_program/DEBUG: Script line: dwell 1000
+2015-04-27 15:14:08,838 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:14:08,839 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 15:14:08,839 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 15:14:08,839 - ppmac_send_program/DEBUG: Script line: TA0.5
+2015-04-27 15:14:08,840 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 15:14:08,841 - ppmac_send_program/DEBUG: Script line: F(0.286985)
+2015-04-27 15:14:08,841 - ppmac_send_program/DEBUG: Script line: // ** see connection notes in soft_1d.txt
+2015-04-27 15:14:08,842 - ppmac_send_program/DEBUG: Script line: //  Counting off, inhibit on
+2015-04-27 15:14:08,843 - ppmac_send_program/DEBUG: Script line: M100=1
+2015-04-27 15:14:08,844 - ppmac_send_program/DEBUG: Script line: // Ensure motors are at the starting position
+2015-04-27 15:14:08,845 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:14:08,846 - ppmac_send_program/DEBUG: Script line: dwell 50
+2015-04-27 15:14:08,847 - ppmac_send_program/DEBUG: Script line: gather.enable=2
+2015-04-27 15:14:08,847 - ppmac_send_program/DEBUG: Script line: dwell 1
+2015-04-27 15:14:08,848 - ppmac_send_program/DEBUG: Script line: L2=0
+2015-04-27 15:14:08,848 - ppmac_send_program/DEBUG: Script line: while(L2 < 101) {
+2015-04-27 15:14:08,849 - ppmac_send_program/DEBUG: Script line:     inc
+2015-04-27 15:14:08,849 - ppmac_send_program/DEBUG: Script line:     F(0.286985)
+2015-04-27 15:14:08,849 - ppmac_send_program/DEBUG: Script line:     L1=0
+2015-04-27 15:14:08,850 - ppmac_send_program/DEBUG: Script line:     while(L1 < 101) {
+2015-04-27 15:14:08,850 - ppmac_send_program/DEBUG: Script line:         // Inhibit off, start counting
+2015-04-27 15:14:08,850 - ppmac_send_program/DEBUG: Script line:         M100=0
+2015-04-27 15:14:08,851 - ppmac_send_program/DEBUG: Script line:         x(0.001950)
+2015-04-27 15:14:08,851 - ppmac_send_program/DEBUG: Script line:         // Ensure the position is reached:
+2015-04-27 15:14:08,851 - ppmac_send_program/DEBUG: Script line:         dwell 0
+2015-04-27 15:14:08,852 - ppmac_send_program/DEBUG: Script line:         // Inhibit on, counting off
+2015-04-27 15:14:08,852 - ppmac_send_program/DEBUG: Script line:         M100=1
+2015-04-27 15:14:08,853 - ppmac_send_program/DEBUG: Script line:         // dwell for the dead time
+2015-04-27 15:14:08,853 - ppmac_send_program/DEBUG: Script line:         dwell 7.000000
+2015-04-27 15:14:08,853 - ppmac_send_program/DEBUG: Script line:         L1=L1+1
+2015-04-27 15:14:08,854 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 15:14:08,854 - ppmac_send_program/DEBUG: Script line:     if (L2 < (101 - 1)) {
+2015-04-27 15:14:08,854 - ppmac_send_program/DEBUG: Script line:         // rapid
+2015-04-27 15:14:08,855 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 15:14:08,855 - ppmac_send_program/DEBUG: Script line:         abs
+2015-04-27 15:14:08,855 - ppmac_send_program/DEBUG: Script line:         F0.5
+2015-04-27 15:14:08,855 - ppmac_send_program/DEBUG: Script line:         // tm(1 * 7.000000)
+2015-04-27 15:14:08,856 - ppmac_send_program/DEBUG: Script line:         // F(2 * 101 * 0.286985)
+2015-04-27 15:14:08,856 - ppmac_send_program/DEBUG: Script line:         L3 = 1.906734 + (0.004950 * (L2 + 1))
+2015-04-27 15:14:08,856 - ppmac_send_program/DEBUG: Script line:         x(-1.977544) y(L3)
+2015-04-27 15:14:08,857 - ppmac_send_program/DEBUG: Script line:         // dwell 0
+2015-04-27 15:14:08,857 - ppmac_send_program/DEBUG: Script line:         dwell 150
+2015-04-27 15:14:08,858 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 15:14:08,858 - ppmac_send_program/DEBUG: Script line:         inc
+2015-04-27 15:14:08,858 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 15:14:08,859 - ppmac_send_program/DEBUG: Script line:     L2=L2+1
+2015-04-27 15:14:08,859 - ppmac_send_program/DEBUG: Script line: }
+2015-04-27 15:14:08,859 - ppmac_send_program/DEBUG: Script line: // NOTE: can't use scaler in regular mode while still in input mode 2,
+2015-04-27 15:14:08,860 - ppmac_send_program/DEBUG: Script line: // so re-enable counting after it's all done:
+2015-04-27 15:14:08,860 - ppmac_send_program/DEBUG: Script line: // Inhibit off, start counting
+2015-04-27 15:14:08,861 - ppmac_send_program/DEBUG: Script line: // M100=0
+2015-04-27 15:14:08,862 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:14:08,862 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:14:08,863 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 15:14:08,864 - ppmac_send_program/DEBUG: Script line: x(-1.727544)
+2015-04-27 15:14:08,865 - ppmac_send_program/DEBUG: Script line: y(2.156734)
+2015-04-27 15:14:08,866 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:14:08,867 - ppmac_send_program/DEBUG: Script line: close
+2015-04-27 15:14:19,843 - _teardown/INFO: timepix2 acquired 0 images (tiff1)
+2015-04-27 15:14:19,847 - _teardown/INFO: xspress3 acquired 0 spectra
+2015-04-27 15:14:19,847 - _teardown/WARNING: xspress3 didn't acquire all frames; stopping acquisition/file saving
+2015-04-27 15:14:20,056 - _aggregate_line/DEBUG: HDF5 file: /xspress3_data/20150427/fly01174/xspress/fly_01174_1.hdf5
+2015-04-27 15:14:20,116 - process_data/DEBUG: setup time 1456.702948 ms
+2015-04-27 15:14:20,116 - process_data/DEBUG: run time 8780.461525 ms (estimated 175967.250000 ms)
+2015-04-27 15:14:20,116 - process_data/DEBUG: aggregate time 114.878178 ms
+2015-04-27 15:14:20,155 - process_data/DEBUG: total alive time: 3.40734327893
+2015-04-27 15:14:20,156 - process_data/DEBUG: total dead time: 5.37311824656
+2015-04-27 15:14:20,157 - process_data/DEBUG: alive+dead sum: 8.78046152549
+2015-04-27 15:14:20,157 - process_data/DEBUG: total run time: 8.78046152549
+2015-04-27 15:14:20,157 - process_data/WARNING: Padding data from "start[s]" (length=405 expected=10201)
+2015-04-27 15:16:18,614 - fly2d/INFO: Motor x moved to start position: -1.976247
+2015-04-27 15:16:18,698 - fly2d/INFO: Motor y moved to start position: 1.925369
+2015-04-27 15:16:18,719 - _mds_start/INFO: Scan ID: 1175
+2015-04-27 15:16:18,719 - _mds_start/INFO: Time: 2015-04-27T15:16:18.718242
+2015-04-27 15:16:18,719 - _mds_start/INFO: uid: 3e318b34-b781-44e7-889b-1833a3ae3446
+2015-04-27 15:16:19,034 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 15:16:19,037 - fly2d/DEBUG: per point was 0.0049504950495 subtracting dead distance 0.003 = 0.0019504950495
+2015-04-27 15:16:19,040 - fly2d/DEBUG: points: [101 101]
+2015-04-27 15:16:19,042 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 15:16:19,044 - fly2d/DEBUG: per_points: [ 0.0019505  0.0049505]
+2015-04-27 15:16:19,046 - fly2d/DEBUG: dead_dist: 0.003
+2015-04-27 15:16:19,046 - fly2d/DEBUG: line_time: 1.74225
+2015-04-27 15:16:19,046 - fly2d/DEBUG: feed_rates: [ 0.28698522  0.28698522] units/s
+2015-04-27 15:16:19,047 - fly2d/DEBUG: dead time: 0.007 s
+2015-04-27 15:16:19,047 - ppmac_send_program/DEBUG: Sending script: /nfs/xf03id/ppmac/scripts/soft_2d.txt
+2015-04-27 15:16:19,049 - ppmac_send_program/DEBUG: Script line: close all buffers
+2015-04-27 15:16:19,049 - ppmac_send_program/DEBUG: Script line: open prog 50
+2015-04-27 15:16:19,049 - ppmac_send_program/DEBUG: Script line: // MoveModes:
+2015-04-27 15:16:19,050 - ppmac_send_program/DEBUG: Script line: // 0 Linear mode: trapezoidal/triangular profiles, straight-line paths in Cartesian space
+2015-04-27 15:16:19,050 - ppmac_send_program/DEBUG: Script line: //   Circle mode: sinusoidal velocity profiles, arc paths in Cartesian space
+2015-04-27 15:16:19,050 - ppmac_send_program/DEBUG: Script line: // 1 Spline mode: parabolic velocity profiles, cubic B-spline paths
+2015-04-27 15:16:19,051 - ppmac_send_program/DEBUG: Script line: // 2 PVT mode: parabolic velocity profiles, Hermite-spline paths
+2015-04-27 15:16:19,051 - ppmac_send_program/DEBUG: Script line: // 3 Rapid mode: trapezoidal/triangular profiles, minimum-time point-to-point moves
+2015-04-27 15:16:19,051 - ppmac_send_program/DEBUG: Script line: // Move time extended to slowest motor:
+2015-04-27 15:16:19,052 - ppmac_send_program/DEBUG: Script line: Coord[5].RapidVelCtrl=1
+2015-04-27 15:16:19,052 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:16:19,052 - ppmac_send_program/DEBUG: Script line: gather.addr[0]=Sys.ServoCount.a
+2015-04-27 15:16:19,053 - ppmac_send_program/DEBUG: Script line: gather.addr[1]=Sys.M[100].a
+2015-04-27 15:16:19,053 - ppmac_send_program/DEBUG: Script line: gather.addr[2]=Motor[3].Pos.a
+2015-04-27 15:16:19,053 - ppmac_send_program/DEBUG: Script line: gather.addr[3]=Motor[4].Pos.a
+2015-04-27 15:16:19,054 - ppmac_send_program/DEBUG: Script line: // gather.addr[4]=Motor[5].Pos.a
+2015-04-27 15:16:19,054 - ppmac_send_program/DEBUG: Script line: // gather.addr[5]=acc24e3[1].chan[0].servocapt.a
+2015-04-27 15:16:19,054 - ppmac_send_program/DEBUG: Script line: gather.items=4
+2015-04-27 15:16:19,055 - ppmac_send_program/DEBUG: Script line: gather.Period=8
+2015-04-27 15:16:19,055 - ppmac_send_program/DEBUG: Script line: gather.enable=1
+2015-04-27 15:16:19,055 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:16:19,055 - ppmac_send_program/DEBUG: Script line: gather.MaxSamples=gather.maxlines
+2015-04-27 15:16:19,056 - ppmac_send_program/DEBUG: Script line: rapid
+2015-04-27 15:16:19,056 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:16:19,057 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 15:16:19,057 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 15:16:19,059 - ppmac_send_program/DEBUG: Script line: TA0.1
+2015-04-27 15:16:19,060 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 15:16:19,061 - ppmac_send_program/DEBUG: Script line: F(0.286985)
+2015-04-27 15:16:19,062 - ppmac_send_program/DEBUG: Script line: X0.001
+2015-04-27 15:16:19,063 - ppmac_send_program/DEBUG: Script line: Y0.001
+2015-04-27 15:16:19,065 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:16:19,066 - ppmac_send_program/DEBUG: Script line: // TODO: it seems that this won't work on the first move in the coordinate
+2015-04-27 15:16:19,068 - ppmac_send_program/DEBUG: Script line: //       system:
+2015-04-27 15:16:19,068 - ppmac_send_program/DEBUG: Script line: dwell 1.0
+2015-04-27 15:16:19,069 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 15:16:19,069 - ppmac_send_program/DEBUG: Script line: F1.0
+2015-04-27 15:16:19,070 - ppmac_send_program/DEBUG: Script line: x(-2.225603)
+2015-04-27 15:16:19,071 - ppmac_send_program/DEBUG: Script line: y(1.675622)
+2015-04-27 15:16:19,071 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:16:19,072 - ppmac_send_program/DEBUG: Script line: dwell 1000
+2015-04-27 15:16:19,073 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:16:19,073 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 15:16:19,075 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 15:16:19,076 - ppmac_send_program/DEBUG: Script line: TA0.5
+2015-04-27 15:16:19,076 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 15:16:19,077 - ppmac_send_program/DEBUG: Script line: F(0.286985)
+2015-04-27 15:16:19,078 - ppmac_send_program/DEBUG: Script line: // ** see connection notes in soft_1d.txt
+2015-04-27 15:16:19,080 - ppmac_send_program/DEBUG: Script line: //  Counting off, inhibit on
+2015-04-27 15:16:19,081 - ppmac_send_program/DEBUG: Script line: M100=1
+2015-04-27 15:16:19,082 - ppmac_send_program/DEBUG: Script line: // Ensure motors are at the starting position
+2015-04-27 15:16:19,082 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:16:19,082 - ppmac_send_program/DEBUG: Script line: dwell 50
+2015-04-27 15:16:19,083 - ppmac_send_program/DEBUG: Script line: gather.enable=2
+2015-04-27 15:16:19,084 - ppmac_send_program/DEBUG: Script line: dwell 1
+2015-04-27 15:16:19,084 - ppmac_send_program/DEBUG: Script line: L2=0
+2015-04-27 15:16:19,085 - ppmac_send_program/DEBUG: Script line: while(L2 < 101) {
+2015-04-27 15:16:19,085 - ppmac_send_program/DEBUG: Script line:     inc
+2015-04-27 15:16:19,085 - ppmac_send_program/DEBUG: Script line:     F(0.286985)
+2015-04-27 15:16:19,086 - ppmac_send_program/DEBUG: Script line:     L1=0
+2015-04-27 15:16:19,086 - ppmac_send_program/DEBUG: Script line:     while(L1 < 101) {
+2015-04-27 15:16:19,087 - ppmac_send_program/DEBUG: Script line:         // Inhibit off, start counting
+2015-04-27 15:16:19,087 - ppmac_send_program/DEBUG: Script line:         M100=0
+2015-04-27 15:16:19,088 - ppmac_send_program/DEBUG: Script line:         x(0.001950)
+2015-04-27 15:16:19,088 - ppmac_send_program/DEBUG: Script line:         // Ensure the position is reached:
+2015-04-27 15:16:19,089 - ppmac_send_program/DEBUG: Script line:         dwell 0
+2015-04-27 15:16:19,089 - ppmac_send_program/DEBUG: Script line:         // Inhibit on, counting off
+2015-04-27 15:16:19,090 - ppmac_send_program/DEBUG: Script line:         M100=1
+2015-04-27 15:16:19,091 - ppmac_send_program/DEBUG: Script line:         // dwell for the dead time
+2015-04-27 15:16:19,092 - ppmac_send_program/DEBUG: Script line:         dwell 7.000000
+2015-04-27 15:16:19,093 - ppmac_send_program/DEBUG: Script line:         L1=L1+1
+2015-04-27 15:16:19,093 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 15:16:19,093 - ppmac_send_program/DEBUG: Script line:     if (L2 < (101 - 1)) {
+2015-04-27 15:16:19,094 - ppmac_send_program/DEBUG: Script line:         // rapid
+2015-04-27 15:16:19,094 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 15:16:19,094 - ppmac_send_program/DEBUG: Script line:         abs
+2015-04-27 15:16:19,095 - ppmac_send_program/DEBUG: Script line:         F0.5
+2015-04-27 15:16:19,095 - ppmac_send_program/DEBUG: Script line:         // tm(1 * 7.000000)
+2015-04-27 15:16:19,095 - ppmac_send_program/DEBUG: Script line:         // F(2 * 101 * 0.286985)
+2015-04-27 15:16:19,095 - ppmac_send_program/DEBUG: Script line:         L3 = 1.675622 + (0.004950 * (L2 + 1))
+2015-04-27 15:16:19,096 - ppmac_send_program/DEBUG: Script line:         x(-2.225603) y(L3)
+2015-04-27 15:16:19,096 - ppmac_send_program/DEBUG: Script line:         // dwell 0
+2015-04-27 15:16:19,096 - ppmac_send_program/DEBUG: Script line:         dwell 150
+2015-04-27 15:16:19,097 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 15:16:19,097 - ppmac_send_program/DEBUG: Script line:         inc
+2015-04-27 15:16:19,098 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 15:16:19,098 - ppmac_send_program/DEBUG: Script line:     L2=L2+1
+2015-04-27 15:16:19,098 - ppmac_send_program/DEBUG: Script line: }
+2015-04-27 15:16:19,099 - ppmac_send_program/DEBUG: Script line: // NOTE: can't use scaler in regular mode while still in input mode 2,
+2015-04-27 15:16:19,099 - ppmac_send_program/DEBUG: Script line: // so re-enable counting after it's all done:
+2015-04-27 15:16:19,099 - ppmac_send_program/DEBUG: Script line: // Inhibit off, start counting
+2015-04-27 15:16:19,100 - ppmac_send_program/DEBUG: Script line: // M100=0
+2015-04-27 15:16:19,100 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:16:19,100 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:16:19,101 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 15:16:19,101 - ppmac_send_program/DEBUG: Script line: x(-1.975603)
+2015-04-27 15:16:19,101 - ppmac_send_program/DEBUG: Script line: y(1.925622)
+2015-04-27 15:16:19,102 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:16:19,102 - ppmac_send_program/DEBUG: Script line: close
+2015-04-27 15:16:26,694 - _teardown/INFO: timepix2 acquired 0 images (tiff1)
+2015-04-27 15:16:26,695 - _teardown/INFO: xspress3 acquired 0 spectra
+2015-04-27 15:16:26,696 - _teardown/WARNING: xspress3 didn't acquire all frames; stopping acquisition/file saving
+2015-04-27 15:16:26,845 - _aggregate_line/DEBUG: HDF5 file: /xspress3_data/20150427/fly01175/xspress/fly_01175_1.hdf5
+2015-04-27 15:16:26,893 - process_data/DEBUG: setup time 1226.774931 ms
+2015-04-27 15:16:26,893 - process_data/DEBUG: run time 5312.905320 ms (estimated 175967.250000 ms)
+2015-04-27 15:16:26,893 - process_data/DEBUG: aggregate time 52.629948 ms
+2015-04-27 15:16:26,912 - process_data/DEBUG: total alive time: 2.14287181327
+2015-04-27 15:16:26,912 - process_data/DEBUG: total dead time: 3.1700335067
+2015-04-27 15:16:26,912 - process_data/DEBUG: alive+dead sum: 5.31290531997
+2015-04-27 15:16:26,913 - process_data/DEBUG: total run time: 5.31290531997
+2015-04-27 15:16:26,913 - process_data/WARNING: Padding data from "start[s]" (length=256 expected=10201)
+2015-04-27 15:17:04,908 - fly2d/INFO: Motor x moved to start position: -2.121169
+2015-04-27 15:17:04,982 - fly2d/INFO: Motor y moved to start position: 1.684291
+2015-04-27 15:17:05,024 - _mds_start/INFO: Scan ID: 1176
+2015-04-27 15:17:05,025 - _mds_start/INFO: Time: 2015-04-27T15:17:04.997652
+2015-04-27 15:17:05,026 - _mds_start/INFO: uid: c2bd069a-1939-4a15-aaf4-7608b3ddd638
+2015-04-27 15:17:05,591 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 15:17:05,593 - fly2d/DEBUG: per point was 0.0049504950495 subtracting dead distance 0.003 = 0.0019504950495
+2015-04-27 15:17:05,593 - fly2d/DEBUG: points: [101 101]
+2015-04-27 15:17:05,594 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 15:17:05,595 - fly2d/DEBUG: per_points: [ 0.0019505  0.0049505]
+2015-04-27 15:17:05,596 - fly2d/DEBUG: dead_dist: 0.003
+2015-04-27 15:17:05,596 - fly2d/DEBUG: line_time: 1.74225
+2015-04-27 15:17:05,596 - fly2d/DEBUG: feed_rates: [ 0.28698522  0.28698522] units/s
+2015-04-27 15:17:05,597 - fly2d/DEBUG: dead time: 0.007 s
+2015-04-27 15:17:05,598 - ppmac_send_program/DEBUG: Sending script: /nfs/xf03id/ppmac/scripts/soft_2d.txt
+2015-04-27 15:17:05,598 - ppmac_send_program/DEBUG: Script line: close all buffers
+2015-04-27 15:17:05,599 - ppmac_send_program/DEBUG: Script line: open prog 50
+2015-04-27 15:17:05,599 - ppmac_send_program/DEBUG: Script line: // MoveModes:
+2015-04-27 15:17:05,599 - ppmac_send_program/DEBUG: Script line: // 0 Linear mode: trapezoidal/triangular profiles, straight-line paths in Cartesian space
+2015-04-27 15:17:05,600 - ppmac_send_program/DEBUG: Script line: //   Circle mode: sinusoidal velocity profiles, arc paths in Cartesian space
+2015-04-27 15:17:05,600 - ppmac_send_program/DEBUG: Script line: // 1 Spline mode: parabolic velocity profiles, cubic B-spline paths
+2015-04-27 15:17:05,600 - ppmac_send_program/DEBUG: Script line: // 2 PVT mode: parabolic velocity profiles, Hermite-spline paths
+2015-04-27 15:17:05,600 - ppmac_send_program/DEBUG: Script line: // 3 Rapid mode: trapezoidal/triangular profiles, minimum-time point-to-point moves
+2015-04-27 15:17:05,601 - ppmac_send_program/DEBUG: Script line: // Move time extended to slowest motor:
+2015-04-27 15:17:05,601 - ppmac_send_program/DEBUG: Script line: Coord[5].RapidVelCtrl=1
+2015-04-27 15:17:05,602 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:17:05,602 - ppmac_send_program/DEBUG: Script line: gather.addr[0]=Sys.ServoCount.a
+2015-04-27 15:17:05,602 - ppmac_send_program/DEBUG: Script line: gather.addr[1]=Sys.M[100].a
+2015-04-27 15:17:05,602 - ppmac_send_program/DEBUG: Script line: gather.addr[2]=Motor[3].Pos.a
+2015-04-27 15:17:05,603 - ppmac_send_program/DEBUG: Script line: gather.addr[3]=Motor[4].Pos.a
+2015-04-27 15:17:05,603 - ppmac_send_program/DEBUG: Script line: // gather.addr[4]=Motor[5].Pos.a
+2015-04-27 15:17:05,603 - ppmac_send_program/DEBUG: Script line: // gather.addr[5]=acc24e3[1].chan[0].servocapt.a
+2015-04-27 15:17:05,604 - ppmac_send_program/DEBUG: Script line: gather.items=4
+2015-04-27 15:17:05,604 - ppmac_send_program/DEBUG: Script line: gather.Period=8
+2015-04-27 15:17:05,604 - ppmac_send_program/DEBUG: Script line: gather.enable=1
+2015-04-27 15:17:05,605 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:17:05,606 - ppmac_send_program/DEBUG: Script line: gather.MaxSamples=gather.maxlines
+2015-04-27 15:17:05,606 - ppmac_send_program/DEBUG: Script line: rapid
+2015-04-27 15:17:05,607 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:17:05,607 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 15:17:05,607 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 15:17:05,608 - ppmac_send_program/DEBUG: Script line: TA0.1
+2015-04-27 15:17:05,608 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 15:17:05,609 - ppmac_send_program/DEBUG: Script line: F(0.286985)
+2015-04-27 15:17:05,609 - ppmac_send_program/DEBUG: Script line: X0.001
+2015-04-27 15:17:05,609 - ppmac_send_program/DEBUG: Script line: Y0.001
+2015-04-27 15:17:05,610 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:17:05,610 - ppmac_send_program/DEBUG: Script line: // TODO: it seems that this won't work on the first move in the coordinate
+2015-04-27 15:17:05,610 - ppmac_send_program/DEBUG: Script line: //       system:
+2015-04-27 15:17:05,611 - ppmac_send_program/DEBUG: Script line: dwell 1.0
+2015-04-27 15:17:05,611 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 15:17:05,612 - ppmac_send_program/DEBUG: Script line: F1.0
+2015-04-27 15:17:05,612 - ppmac_send_program/DEBUG: Script line: x(-2.371431)
+2015-04-27 15:17:05,612 - ppmac_send_program/DEBUG: Script line: y(1.434531)
+2015-04-27 15:17:05,613 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:17:05,613 - ppmac_send_program/DEBUG: Script line: dwell 1000
+2015-04-27 15:17:05,614 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:17:05,614 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 15:17:05,615 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 15:17:05,615 - ppmac_send_program/DEBUG: Script line: TA0.5
+2015-04-27 15:17:05,615 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 15:17:05,616 - ppmac_send_program/DEBUG: Script line: F(0.286985)
+2015-04-27 15:17:05,616 - ppmac_send_program/DEBUG: Script line: // ** see connection notes in soft_1d.txt
+2015-04-27 15:17:05,617 - ppmac_send_program/DEBUG: Script line: //  Counting off, inhibit on
+2015-04-27 15:17:05,617 - ppmac_send_program/DEBUG: Script line: M100=1
+2015-04-27 15:17:05,618 - ppmac_send_program/DEBUG: Script line: // Ensure motors are at the starting position
+2015-04-27 15:17:05,618 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:17:05,618 - ppmac_send_program/DEBUG: Script line: dwell 50
+2015-04-27 15:17:05,619 - ppmac_send_program/DEBUG: Script line: gather.enable=2
+2015-04-27 15:17:05,619 - ppmac_send_program/DEBUG: Script line: dwell 1
+2015-04-27 15:17:05,620 - ppmac_send_program/DEBUG: Script line: L2=0
+2015-04-27 15:17:05,620 - ppmac_send_program/DEBUG: Script line: while(L2 < 101) {
+2015-04-27 15:17:05,620 - ppmac_send_program/DEBUG: Script line:     inc
+2015-04-27 15:17:05,621 - ppmac_send_program/DEBUG: Script line:     F(0.286985)
+2015-04-27 15:17:05,621 - ppmac_send_program/DEBUG: Script line:     L1=0
+2015-04-27 15:17:05,621 - ppmac_send_program/DEBUG: Script line:     while(L1 < 101) {
+2015-04-27 15:17:05,621 - ppmac_send_program/DEBUG: Script line:         // Inhibit off, start counting
+2015-04-27 15:17:05,622 - ppmac_send_program/DEBUG: Script line:         M100=0
+2015-04-27 15:17:05,622 - ppmac_send_program/DEBUG: Script line:         x(0.001950)
+2015-04-27 15:17:05,623 - ppmac_send_program/DEBUG: Script line:         // Ensure the position is reached:
+2015-04-27 15:17:05,623 - ppmac_send_program/DEBUG: Script line:         dwell 0
+2015-04-27 15:17:05,623 - ppmac_send_program/DEBUG: Script line:         // Inhibit on, counting off
+2015-04-27 15:17:05,624 - ppmac_send_program/DEBUG: Script line:         M100=1
+2015-04-27 15:17:05,624 - ppmac_send_program/DEBUG: Script line:         // dwell for the dead time
+2015-04-27 15:17:05,624 - ppmac_send_program/DEBUG: Script line:         dwell 7.000000
+2015-04-27 15:17:05,625 - ppmac_send_program/DEBUG: Script line:         L1=L1+1
+2015-04-27 15:17:05,625 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 15:17:05,626 - ppmac_send_program/DEBUG: Script line:     if (L2 < (101 - 1)) {
+2015-04-27 15:17:05,626 - ppmac_send_program/DEBUG: Script line:         // rapid
+2015-04-27 15:17:05,626 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 15:17:05,627 - ppmac_send_program/DEBUG: Script line:         abs
+2015-04-27 15:17:05,627 - ppmac_send_program/DEBUG: Script line:         F0.5
+2015-04-27 15:17:05,627 - ppmac_send_program/DEBUG: Script line:         // tm(1 * 7.000000)
+2015-04-27 15:17:05,627 - ppmac_send_program/DEBUG: Script line:         // F(2 * 101 * 0.286985)
+2015-04-27 15:17:05,628 - ppmac_send_program/DEBUG: Script line:         L3 = 1.434531 + (0.004950 * (L2 + 1))
+2015-04-27 15:17:05,628 - ppmac_send_program/DEBUG: Script line:         x(-2.371431) y(L3)
+2015-04-27 15:17:05,628 - ppmac_send_program/DEBUG: Script line:         // dwell 0
+2015-04-27 15:17:05,629 - ppmac_send_program/DEBUG: Script line:         dwell 150
+2015-04-27 15:17:05,630 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 15:17:05,630 - ppmac_send_program/DEBUG: Script line:         inc
+2015-04-27 15:17:05,631 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 15:17:05,631 - ppmac_send_program/DEBUG: Script line:     L2=L2+1
+2015-04-27 15:17:05,631 - ppmac_send_program/DEBUG: Script line: }
+2015-04-27 15:17:05,632 - ppmac_send_program/DEBUG: Script line: // NOTE: can't use scaler in regular mode while still in input mode 2,
+2015-04-27 15:17:05,632 - ppmac_send_program/DEBUG: Script line: // so re-enable counting after it's all done:
+2015-04-27 15:17:05,632 - ppmac_send_program/DEBUG: Script line: // Inhibit off, start counting
+2015-04-27 15:17:05,633 - ppmac_send_program/DEBUG: Script line: // M100=0
+2015-04-27 15:17:05,633 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:17:05,633 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:17:05,634 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 15:17:05,634 - ppmac_send_program/DEBUG: Script line: x(-2.121431)
+2015-04-27 15:17:05,634 - ppmac_send_program/DEBUG: Script line: y(1.684531)
+2015-04-27 15:17:05,635 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:17:05,635 - ppmac_send_program/DEBUG: Script line: close
+2015-04-27 15:17:19,442 - _teardown/INFO: timepix2 acquired 0 images (tiff1)
+2015-04-27 15:17:19,458 - _teardown/INFO: xspress3 acquired 0 spectra
+2015-04-27 15:17:19,461 - _teardown/WARNING: xspress3 didn't acquire all frames; stopping acquisition/file saving
+2015-04-27 15:17:19,621 - _aggregate_line/DEBUG: HDF5 file: /xspress3_data/20150427/fly01176/xspress/fly_01176_1.hdf5
+2015-04-27 15:17:19,626 - _aggregate_line/ERROR: Xspress3 failed to open hdf5 file ('Unable to open object (Component not found)')
+2015-04-27 15:17:19,669 - process_data/DEBUG: setup time 1488.546133 ms
+2015-04-27 15:17:19,670 - process_data/DEBUG: run time 11514.836797 ms (estimated 175967.250000 ms)
+2015-04-27 15:17:19,670 - process_data/DEBUG: aggregate time 65.250158 ms
+2015-04-27 15:17:19,714 - process_data/DEBUG: total alive time: 4.61868569162
+2015-04-27 15:17:19,714 - process_data/DEBUG: total dead time: 6.89615110529
+2015-04-27 15:17:19,714 - process_data/DEBUG: alive+dead sum: 11.5148367969
+2015-04-27 15:17:19,714 - process_data/DEBUG: total run time: 11.5148367969
+2015-04-27 15:17:19,715 - process_data/WARNING: Padding data from "start[s]" (length=549 expected=10201)
+2015-04-27 15:17:19,715 - process_data/WARNING: Padding data from "alive[s]" (length=549 expected=10201)
+2015-04-27 15:17:19,715 - process_data/WARNING: Padding data from "dead[s]" (length=549 expected=10201)
+2015-04-27 15:17:19,716 - process_data/WARNING: Padding data from "ssx[um]" (length=549 expected=10201)
+2015-04-27 15:17:19,716 - process_data/WARNING: Padding data from "ssy[um]" (length=549 expected=10201)
+2015-04-27 15:17:19,726 - process_data/DEBUG: created event_descriptor: {'_dynamic_lock': False, '_changed_fields': [], '_fields_ordered': ('id', 'run_start', 'uid', 'time', 'data_keys', 'time_as_datetime'), 'time_as_datetime': datetime.datetime(2015, 4, 27, 15, 17, 19, 718963), '_initialised': True, '_dynamic_fields': SON([('time_as_datetime', <mongoengine.fields.DynamicField object at 0x7f7852ccb0d0>)]), '_created': False, '_data': {'uid': '63535a25-a3d5-4418-9c16-193cc3723bc2', 'data_keys': {u'sclr1_ch2': <DataKey: DataKey object>, u'sclr1_ch3': <DataKey: DataKey object>, u'alive[s]': <DataKey: DataKey object>, u'sclr1_ch8': <DataKey: DataKey object>, u'scaler_alive[ms]': <DataKey: DataKey object>, u'dead[s]': <DataKey: DataKey object>, u'ssx[um]': <DataKey: DataKey object>, u'ssy[um]': <DataKey: DataKey object>}, 'time_as_datetime': datetime.datetime(2015, 4, 27, 15, 17, 19, 718963), 'run_start': <RunStart: RunStart object>, 'time': 1430162239.718963, 'id': ObjectId('553e8b3fe97f4e3dde57a4ab')}}
+2015-04-27 15:17:19,726 - process_data/DEBUG: metadatastore insert event 0
+2015-04-27 15:21:45,085 - fly2d/INFO: Motor x moved to start position: -2.286016
+2015-04-27 15:21:45,159 - fly2d/INFO: Motor y moved to start position: 1.458431
+2015-04-27 15:21:45,189 - _mds_start/INFO: Scan ID: 1177
+2015-04-27 15:21:45,189 - _mds_start/INFO: Time: 2015-04-27T15:21:45.188192
+2015-04-27 15:21:45,189 - _mds_start/INFO: uid: 2ff373a4-5645-43f2-ae06-5d072cc435b2
+2015-04-27 15:21:45,504 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 15:21:45,507 - fly2d/DEBUG: per point was 0.0049504950495 subtracting dead distance 0.003 = 0.0019504950495
+2015-04-27 15:21:45,508 - fly2d/DEBUG: points: [101 101]
+2015-04-27 15:21:45,510 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 15:21:45,513 - fly2d/DEBUG: per_points: [ 0.0019505  0.0049505]
+2015-04-27 15:21:45,516 - fly2d/DEBUG: dead_dist: 0.003
+2015-04-27 15:21:45,517 - fly2d/DEBUG: line_time: 1.74225
+2015-04-27 15:21:45,517 - fly2d/DEBUG: feed_rates: [ 0.28698522  0.28698522] units/s
+2015-04-27 15:21:45,519 - fly2d/DEBUG: dead time: 0.007 s
+2015-04-27 15:21:45,520 - ppmac_send_program/DEBUG: Sending script: /nfs/xf03id/ppmac/scripts/soft_2d.txt
+2015-04-27 15:21:45,522 - ppmac_send_program/DEBUG: Script line: close all buffers
+2015-04-27 15:21:45,523 - ppmac_send_program/DEBUG: Script line: open prog 50
+2015-04-27 15:21:45,523 - ppmac_send_program/DEBUG: Script line: // MoveModes:
+2015-04-27 15:21:45,524 - ppmac_send_program/DEBUG: Script line: // 0 Linear mode: trapezoidal/triangular profiles, straight-line paths in Cartesian space
+2015-04-27 15:21:45,525 - ppmac_send_program/DEBUG: Script line: //   Circle mode: sinusoidal velocity profiles, arc paths in Cartesian space
+2015-04-27 15:21:45,526 - ppmac_send_program/DEBUG: Script line: // 1 Spline mode: parabolic velocity profiles, cubic B-spline paths
+2015-04-27 15:21:45,527 - ppmac_send_program/DEBUG: Script line: // 2 PVT mode: parabolic velocity profiles, Hermite-spline paths
+2015-04-27 15:21:45,528 - ppmac_send_program/DEBUG: Script line: // 3 Rapid mode: trapezoidal/triangular profiles, minimum-time point-to-point moves
+2015-04-27 15:21:45,530 - ppmac_send_program/DEBUG: Script line: // Move time extended to slowest motor:
+2015-04-27 15:21:45,530 - ppmac_send_program/DEBUG: Script line: Coord[5].RapidVelCtrl=1
+2015-04-27 15:21:45,531 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:21:45,532 - ppmac_send_program/DEBUG: Script line: gather.addr[0]=Sys.ServoCount.a
+2015-04-27 15:21:45,532 - ppmac_send_program/DEBUG: Script line: gather.addr[1]=Sys.M[100].a
+2015-04-27 15:21:45,533 - ppmac_send_program/DEBUG: Script line: gather.addr[2]=Motor[3].Pos.a
+2015-04-27 15:21:45,534 - ppmac_send_program/DEBUG: Script line: gather.addr[3]=Motor[4].Pos.a
+2015-04-27 15:21:45,534 - ppmac_send_program/DEBUG: Script line: // gather.addr[4]=Motor[5].Pos.a
+2015-04-27 15:21:45,535 - ppmac_send_program/DEBUG: Script line: // gather.addr[5]=acc24e3[1].chan[0].servocapt.a
+2015-04-27 15:21:45,536 - ppmac_send_program/DEBUG: Script line: gather.items=4
+2015-04-27 15:21:45,536 - ppmac_send_program/DEBUG: Script line: gather.Period=8
+2015-04-27 15:21:45,537 - ppmac_send_program/DEBUG: Script line: gather.enable=1
+2015-04-27 15:21:45,537 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:21:45,538 - ppmac_send_program/DEBUG: Script line: gather.MaxSamples=gather.maxlines
+2015-04-27 15:21:45,539 - ppmac_send_program/DEBUG: Script line: rapid
+2015-04-27 15:21:45,540 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:21:45,541 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 15:21:45,541 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 15:21:45,542 - ppmac_send_program/DEBUG: Script line: TA0.1
+2015-04-27 15:21:45,542 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 15:21:45,542 - ppmac_send_program/DEBUG: Script line: F(0.286985)
+2015-04-27 15:21:45,543 - ppmac_send_program/DEBUG: Script line: X0.001
+2015-04-27 15:21:45,543 - ppmac_send_program/DEBUG: Script line: Y0.001
+2015-04-27 15:21:45,543 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:21:45,544 - ppmac_send_program/DEBUG: Script line: // TODO: it seems that this won't work on the first move in the coordinate
+2015-04-27 15:21:45,544 - ppmac_send_program/DEBUG: Script line: //       system:
+2015-04-27 15:21:45,545 - ppmac_send_program/DEBUG: Script line: dwell 1.0
+2015-04-27 15:21:45,545 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 15:21:45,546 - ppmac_send_program/DEBUG: Script line: F1.0
+2015-04-27 15:21:45,546 - ppmac_send_program/DEBUG: Script line: x(-2.536016)
+2015-04-27 15:21:45,546 - ppmac_send_program/DEBUG: Script line: y(1.208287)
+2015-04-27 15:21:45,547 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:21:45,548 - ppmac_send_program/DEBUG: Script line: dwell 1000
+2015-04-27 15:21:45,548 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:21:45,549 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 15:21:45,550 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 15:21:45,551 - ppmac_send_program/DEBUG: Script line: TA0.5
+2015-04-27 15:21:45,551 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 15:21:45,552 - ppmac_send_program/DEBUG: Script line: F(0.286985)
+2015-04-27 15:21:45,552 - ppmac_send_program/DEBUG: Script line: // ** see connection notes in soft_1d.txt
+2015-04-27 15:21:45,553 - ppmac_send_program/DEBUG: Script line: //  Counting off, inhibit on
+2015-04-27 15:21:45,553 - ppmac_send_program/DEBUG: Script line: M100=1
+2015-04-27 15:21:45,554 - ppmac_send_program/DEBUG: Script line: // Ensure motors are at the starting position
+2015-04-27 15:21:45,554 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:21:45,555 - ppmac_send_program/DEBUG: Script line: dwell 50
+2015-04-27 15:21:45,555 - ppmac_send_program/DEBUG: Script line: gather.enable=2
+2015-04-27 15:21:45,556 - ppmac_send_program/DEBUG: Script line: dwell 1
+2015-04-27 15:21:45,556 - ppmac_send_program/DEBUG: Script line: L2=0
+2015-04-27 15:21:45,556 - ppmac_send_program/DEBUG: Script line: while(L2 < 101) {
+2015-04-27 15:21:45,557 - ppmac_send_program/DEBUG: Script line:     inc
+2015-04-27 15:21:45,557 - ppmac_send_program/DEBUG: Script line:     F(0.286985)
+2015-04-27 15:21:45,557 - ppmac_send_program/DEBUG: Script line:     L1=0
+2015-04-27 15:21:45,558 - ppmac_send_program/DEBUG: Script line:     while(L1 < 101) {
+2015-04-27 15:21:45,558 - ppmac_send_program/DEBUG: Script line:         // Inhibit off, start counting
+2015-04-27 15:21:45,558 - ppmac_send_program/DEBUG: Script line:         M100=0
+2015-04-27 15:21:45,559 - ppmac_send_program/DEBUG: Script line:         x(0.001950)
+2015-04-27 15:21:45,559 - ppmac_send_program/DEBUG: Script line:         // Ensure the position is reached:
+2015-04-27 15:21:45,559 - ppmac_send_program/DEBUG: Script line:         dwell 0
+2015-04-27 15:21:45,560 - ppmac_send_program/DEBUG: Script line:         // Inhibit on, counting off
+2015-04-27 15:21:45,560 - ppmac_send_program/DEBUG: Script line:         M100=1
+2015-04-27 15:21:45,561 - ppmac_send_program/DEBUG: Script line:         // dwell for the dead time
+2015-04-27 15:21:45,561 - ppmac_send_program/DEBUG: Script line:         dwell 7.000000
+2015-04-27 15:21:45,561 - ppmac_send_program/DEBUG: Script line:         L1=L1+1
+2015-04-27 15:21:45,562 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 15:21:45,562 - ppmac_send_program/DEBUG: Script line:     if (L2 < (101 - 1)) {
+2015-04-27 15:21:45,562 - ppmac_send_program/DEBUG: Script line:         // rapid
+2015-04-27 15:21:45,563 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 15:21:45,563 - ppmac_send_program/DEBUG: Script line:         abs
+2015-04-27 15:21:45,563 - ppmac_send_program/DEBUG: Script line:         F0.5
+2015-04-27 15:21:45,563 - ppmac_send_program/DEBUG: Script line:         // tm(1 * 7.000000)
+2015-04-27 15:21:45,564 - ppmac_send_program/DEBUG: Script line:         // F(2 * 101 * 0.286985)
+2015-04-27 15:21:45,564 - ppmac_send_program/DEBUG: Script line:         L3 = 1.208287 + (0.004950 * (L2 + 1))
+2015-04-27 15:21:45,565 - ppmac_send_program/DEBUG: Script line:         x(-2.536016) y(L3)
+2015-04-27 15:21:45,565 - ppmac_send_program/DEBUG: Script line:         // dwell 0
+2015-04-27 15:21:45,566 - ppmac_send_program/DEBUG: Script line:         dwell 150
+2015-04-27 15:21:45,566 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 15:21:45,566 - ppmac_send_program/DEBUG: Script line:         inc
+2015-04-27 15:21:45,567 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 15:21:45,567 - ppmac_send_program/DEBUG: Script line:     L2=L2+1
+2015-04-27 15:21:45,567 - ppmac_send_program/DEBUG: Script line: }
+2015-04-27 15:21:45,568 - ppmac_send_program/DEBUG: Script line: // NOTE: can't use scaler in regular mode while still in input mode 2,
+2015-04-27 15:21:45,568 - ppmac_send_program/DEBUG: Script line: // so re-enable counting after it's all done:
+2015-04-27 15:21:45,569 - ppmac_send_program/DEBUG: Script line: // Inhibit off, start counting
+2015-04-27 15:21:45,569 - ppmac_send_program/DEBUG: Script line: // M100=0
+2015-04-27 15:21:45,570 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:21:45,570 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:21:45,570 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 15:21:45,571 - ppmac_send_program/DEBUG: Script line: x(-2.286016)
+2015-04-27 15:21:45,571 - ppmac_send_program/DEBUG: Script line: y(1.458287)
+2015-04-27 15:21:45,571 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:21:45,572 - ppmac_send_program/DEBUG: Script line: close
+2015-04-27 15:25:22,068 - _teardown/INFO: timepix2 acquired 0 images (tiff1)
+2015-04-27 15:25:22,069 - _teardown/INFO: xspress3 acquired 10201 spectra
+2015-04-27 15:25:22,404 - _aggregate_line/DEBUG: HDF5 file: /xspress3_data/20150427/fly01177/xspress/fly_01177_1.hdf5
+2015-04-27 15:25:22,407 - _aggregate_line/ERROR: Xspress3 failed to open hdf5 file ('Unable to open object (Component not found)')
+2015-04-27 15:25:22,452 - process_data/DEBUG: setup time 1288.377047 ms
+2015-04-27 15:25:22,453 - process_data/DEBUG: run time 212618.928969 ms (estimated 175967.250000 ms)
+2015-04-27 15:25:22,453 - process_data/DEBUG: aggregate time 338.795185 ms
+2015-04-27 15:25:23,310 - process_data/DEBUG: total alive time: 85.8105047919
+2015-04-27 15:25:23,312 - process_data/DEBUG: total dead time: 126.808424178
+2015-04-27 15:25:23,314 - process_data/DEBUG: alive+dead sum: 212.618928969
+2015-04-27 15:25:23,315 - process_data/DEBUG: total run time: 212.618928969
+2015-04-27 15:25:23,334 - process_data/DEBUG: created event_descriptor: {'_dynamic_lock': False, '_changed_fields': [], '_fields_ordered': ('id', 'run_start', 'uid', 'time', 'data_keys', 'time_as_datetime'), 'time_as_datetime': datetime.datetime(2015, 4, 27, 15, 25, 23, 330218), '_initialised': True, '_dynamic_fields': SON([('time_as_datetime', <mongoengine.fields.DynamicField object at 0x7f7855339c90>)]), '_created': False, '_data': {'uid': 'eb5a3ceb-d527-4b1e-8239-ce8c122cc2fa', 'data_keys': {u'sclr1_ch2': <DataKey: DataKey object>, u'sclr1_ch3': <DataKey: DataKey object>, u'alive[s]': <DataKey: DataKey object>, u'sclr1_ch8': <DataKey: DataKey object>, u'scaler_alive[ms]': <DataKey: DataKey object>, u'dead[s]': <DataKey: DataKey object>, u'ssx[um]': <DataKey: DataKey object>, u'ssy[um]': <DataKey: DataKey object>}, 'time_as_datetime': datetime.datetime(2015, 4, 27, 15, 25, 23, 330218), 'run_start': <RunStart: RunStart object>, 'time': 1430162723.330218, 'id': ObjectId('553e8d23e97f4e3dde57cc88')}}
+2015-04-27 15:25:23,336 - process_data/DEBUG: metadatastore insert event 0
+2015-04-27 15:28:30,127 - fly2d/INFO: Motor x moved to start position: -2.285578
+2015-04-27 15:28:30,190 - fly2d/INFO: Motor y moved to start position: 1.457634
+2015-04-27 15:28:30,219 - _mds_start/INFO: Scan ID: 1178
+2015-04-27 15:28:30,219 - _mds_start/INFO: Time: 2015-04-27T15:28:30.217582
+2015-04-27 15:28:30,219 - _mds_start/INFO: uid: ec3d599b-a2ca-4673-82c2-cd2222d94d06
+2015-04-27 15:28:30,539 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 15:28:30,541 - fly2d/DEBUG: per point was 0.0049504950495 subtracting dead distance 0.003 = 0.0019504950495
+2015-04-27 15:28:30,542 - fly2d/DEBUG: points: [101 111]
+2015-04-27 15:28:30,544 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 15:28:30,545 - fly2d/DEBUG: per_points: [ 0.0019505  0.0045045]
+2015-04-27 15:28:30,547 - fly2d/DEBUG: dead_dist: 0.003
+2015-04-27 15:28:30,548 - fly2d/DEBUG: line_time: 1.74225
+2015-04-27 15:28:30,548 - fly2d/DEBUG: feed_rates: [ 0.28698522  0.2611307 ] units/s
+2015-04-27 15:28:30,550 - fly2d/DEBUG: dead time: 0.007 s
+2015-04-27 15:28:30,551 - ppmac_send_program/DEBUG: Sending script: /nfs/xf03id/ppmac/scripts/soft_2d.txt
+2015-04-27 15:28:30,553 - ppmac_send_program/DEBUG: Script line: close all buffers
+2015-04-27 15:28:30,554 - ppmac_send_program/DEBUG: Script line: open prog 50
+2015-04-27 15:28:30,554 - ppmac_send_program/DEBUG: Script line: // MoveModes:
+2015-04-27 15:28:30,555 - ppmac_send_program/DEBUG: Script line: // 0 Linear mode: trapezoidal/triangular profiles, straight-line paths in Cartesian space
+2015-04-27 15:28:30,556 - ppmac_send_program/DEBUG: Script line: //   Circle mode: sinusoidal velocity profiles, arc paths in Cartesian space
+2015-04-27 15:28:30,557 - ppmac_send_program/DEBUG: Script line: // 1 Spline mode: parabolic velocity profiles, cubic B-spline paths
+2015-04-27 15:28:30,558 - ppmac_send_program/DEBUG: Script line: // 2 PVT mode: parabolic velocity profiles, Hermite-spline paths
+2015-04-27 15:28:30,559 - ppmac_send_program/DEBUG: Script line: // 3 Rapid mode: trapezoidal/triangular profiles, minimum-time point-to-point moves
+2015-04-27 15:28:30,562 - ppmac_send_program/DEBUG: Script line: // Move time extended to slowest motor:
+2015-04-27 15:28:30,563 - ppmac_send_program/DEBUG: Script line: Coord[5].RapidVelCtrl=1
+2015-04-27 15:28:30,565 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:28:30,566 - ppmac_send_program/DEBUG: Script line: gather.addr[0]=Sys.ServoCount.a
+2015-04-27 15:28:30,567 - ppmac_send_program/DEBUG: Script line: gather.addr[1]=Sys.M[100].a
+2015-04-27 15:28:30,569 - ppmac_send_program/DEBUG: Script line: gather.addr[2]=Motor[3].Pos.a
+2015-04-27 15:28:30,570 - ppmac_send_program/DEBUG: Script line: gather.addr[3]=Motor[4].Pos.a
+2015-04-27 15:28:30,571 - ppmac_send_program/DEBUG: Script line: // gather.addr[4]=Motor[5].Pos.a
+2015-04-27 15:28:30,572 - ppmac_send_program/DEBUG: Script line: // gather.addr[5]=acc24e3[1].chan[0].servocapt.a
+2015-04-27 15:28:30,573 - ppmac_send_program/DEBUG: Script line: gather.items=4
+2015-04-27 15:28:30,573 - ppmac_send_program/DEBUG: Script line: gather.Period=8
+2015-04-27 15:28:30,575 - ppmac_send_program/DEBUG: Script line: gather.enable=1
+2015-04-27 15:28:30,576 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:28:30,577 - ppmac_send_program/DEBUG: Script line: gather.MaxSamples=gather.maxlines
+2015-04-27 15:28:30,578 - ppmac_send_program/DEBUG: Script line: rapid
+2015-04-27 15:28:30,579 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:28:30,580 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 15:28:30,581 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 15:28:30,582 - ppmac_send_program/DEBUG: Script line: TA0.1
+2015-04-27 15:28:30,584 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 15:28:30,585 - ppmac_send_program/DEBUG: Script line: F(0.286985)
+2015-04-27 15:28:30,586 - ppmac_send_program/DEBUG: Script line: X0.001
+2015-04-27 15:28:30,586 - ppmac_send_program/DEBUG: Script line: Y0.001
+2015-04-27 15:28:30,587 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:28:30,588 - ppmac_send_program/DEBUG: Script line: // TODO: it seems that this won't work on the first move in the coordinate
+2015-04-27 15:28:30,588 - ppmac_send_program/DEBUG: Script line: //       system:
+2015-04-27 15:28:30,589 - ppmac_send_program/DEBUG: Script line: dwell 1.0
+2015-04-27 15:28:30,589 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 15:28:30,590 - ppmac_send_program/DEBUG: Script line: F1.0
+2015-04-27 15:28:30,590 - ppmac_send_program/DEBUG: Script line: x(-2.536087)
+2015-04-27 15:28:30,590 - ppmac_send_program/DEBUG: Script line: y(1.207466)
+2015-04-27 15:28:30,591 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:28:30,591 - ppmac_send_program/DEBUG: Script line: dwell 1000
+2015-04-27 15:28:30,591 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:28:30,592 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 15:28:30,592 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 15:28:30,592 - ppmac_send_program/DEBUG: Script line: TA0.5
+2015-04-27 15:28:30,593 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 15:28:30,593 - ppmac_send_program/DEBUG: Script line: F(0.286985)
+2015-04-27 15:28:30,594 - ppmac_send_program/DEBUG: Script line: // ** see connection notes in soft_1d.txt
+2015-04-27 15:28:30,594 - ppmac_send_program/DEBUG: Script line: //  Counting off, inhibit on
+2015-04-27 15:28:30,594 - ppmac_send_program/DEBUG: Script line: M100=1
+2015-04-27 15:28:30,595 - ppmac_send_program/DEBUG: Script line: // Ensure motors are at the starting position
+2015-04-27 15:28:30,595 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:28:30,596 - ppmac_send_program/DEBUG: Script line: dwell 50
+2015-04-27 15:28:30,596 - ppmac_send_program/DEBUG: Script line: gather.enable=2
+2015-04-27 15:28:30,596 - ppmac_send_program/DEBUG: Script line: dwell 1
+2015-04-27 15:28:30,597 - ppmac_send_program/DEBUG: Script line: L2=0
+2015-04-27 15:28:30,597 - ppmac_send_program/DEBUG: Script line: while(L2 < 111) {
+2015-04-27 15:28:30,597 - ppmac_send_program/DEBUG: Script line:     inc
+2015-04-27 15:28:30,598 - ppmac_send_program/DEBUG: Script line:     F(0.286985)
+2015-04-27 15:28:30,598 - ppmac_send_program/DEBUG: Script line:     L1=0
+2015-04-27 15:28:30,598 - ppmac_send_program/DEBUG: Script line:     while(L1 < 101) {
+2015-04-27 15:28:30,599 - ppmac_send_program/DEBUG: Script line:         // Inhibit off, start counting
+2015-04-27 15:28:30,599 - ppmac_send_program/DEBUG: Script line:         M100=0
+2015-04-27 15:28:30,600 - ppmac_send_program/DEBUG: Script line:         x(0.001950)
+2015-04-27 15:28:30,600 - ppmac_send_program/DEBUG: Script line:         // Ensure the position is reached:
+2015-04-27 15:28:30,600 - ppmac_send_program/DEBUG: Script line:         dwell 0
+2015-04-27 15:28:30,601 - ppmac_send_program/DEBUG: Script line:         // Inhibit on, counting off
+2015-04-27 15:28:30,601 - ppmac_send_program/DEBUG: Script line:         M100=1
+2015-04-27 15:28:30,602 - ppmac_send_program/DEBUG: Script line:         // dwell for the dead time
+2015-04-27 15:28:30,602 - ppmac_send_program/DEBUG: Script line:         dwell 7.000000
+2015-04-27 15:28:30,603 - ppmac_send_program/DEBUG: Script line:         L1=L1+1
+2015-04-27 15:28:30,603 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 15:28:30,604 - ppmac_send_program/DEBUG: Script line:     if (L2 < (111 - 1)) {
+2015-04-27 15:28:30,604 - ppmac_send_program/DEBUG: Script line:         // rapid
+2015-04-27 15:28:30,605 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 15:28:30,605 - ppmac_send_program/DEBUG: Script line:         abs
+2015-04-27 15:28:30,605 - ppmac_send_program/DEBUG: Script line:         F0.5
+2015-04-27 15:28:30,605 - ppmac_send_program/DEBUG: Script line:         // tm(1 * 7.000000)
+2015-04-27 15:28:30,606 - ppmac_send_program/DEBUG: Script line:         // F(2 * 101 * 0.286985)
+2015-04-27 15:28:30,606 - ppmac_send_program/DEBUG: Script line:         L3 = 1.207466 + (0.004505 * (L2 + 1))
+2015-04-27 15:28:30,607 - ppmac_send_program/DEBUG: Script line:         x(-2.536087) y(L3)
+2015-04-27 15:28:30,607 - ppmac_send_program/DEBUG: Script line:         // dwell 0
+2015-04-27 15:28:30,608 - ppmac_send_program/DEBUG: Script line:         dwell 150
+2015-04-27 15:28:30,608 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 15:28:30,608 - ppmac_send_program/DEBUG: Script line:         inc
+2015-04-27 15:28:30,609 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 15:28:30,609 - ppmac_send_program/DEBUG: Script line:     L2=L2+1
+2015-04-27 15:28:30,609 - ppmac_send_program/DEBUG: Script line: }
+2015-04-27 15:28:30,610 - ppmac_send_program/DEBUG: Script line: // NOTE: can't use scaler in regular mode while still in input mode 2,
+2015-04-27 15:28:30,610 - ppmac_send_program/DEBUG: Script line: // so re-enable counting after it's all done:
+2015-04-27 15:28:30,611 - ppmac_send_program/DEBUG: Script line: // Inhibit off, start counting
+2015-04-27 15:28:30,611 - ppmac_send_program/DEBUG: Script line: // M100=0
+2015-04-27 15:28:30,611 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:28:30,612 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:28:30,612 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 15:28:30,612 - ppmac_send_program/DEBUG: Script line: x(-2.286087)
+2015-04-27 15:28:30,613 - ppmac_send_program/DEBUG: Script line: y(1.457466)
+2015-04-27 15:28:30,613 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:28:30,613 - ppmac_send_program/DEBUG: Script line: close
+2015-04-27 15:32:28,132 - _teardown/INFO: timepix2 acquired 0 images (tiff1)
+2015-04-27 15:32:28,136 - _teardown/INFO: xspress3 acquired 11211 spectra
+2015-04-27 15:32:28,469 - _aggregate_line/DEBUG: HDF5 file: /xspress3_data/20150427/fly01178/xspress/fly_01178_1.hdf5
+2015-04-27 15:32:59,785 - process_data/DEBUG: setup time 1268.065929 ms
+2015-04-27 15:32:59,785 - process_data/DEBUG: run time 233725.330837 ms (estimated 193389.750000 ms)
+2015-04-27 15:32:59,785 - process_data/DEBUG: aggregate time 31594.033003 ms
+2015-04-27 15:33:00,726 - process_data/DEBUG: total alive time: 94.307611367
+2015-04-27 15:33:00,728 - process_data/DEBUG: total dead time: 139.417719471
+2015-04-27 15:33:00,731 - process_data/DEBUG: alive+dead sum: 233.725330837
+2015-04-27 15:33:00,732 - process_data/DEBUG: total run time: 233.725330837
+2015-04-27 15:33:00,756 - process_data/DEBUG: created event_descriptor: {'_dynamic_lock': False, '_changed_fields': [], '_fields_ordered': ('id', 'run_start', 'uid', 'time', 'data_keys', 'time_as_datetime'), 'time_as_datetime': datetime.datetime(2015, 4, 27, 15, 33, 0, 749408), '_initialised': True, '_dynamic_fields': SON([('time_as_datetime', <mongoengine.fields.DynamicField object at 0x7f7854affc90>)]), '_created': False, '_data': {'uid': '8e040755-87b8-4182-b93f-e5636dd8c1f1', 'data_keys': {u'sclr1_ch2': <DataKey: DataKey object>, u'sclr1_ch3': <DataKey: DataKey object>, u'alive[s]': <DataKey: DataKey object>, u'Ch2 [930:960]': <DataKey: DataKey object>, u'ssy[um]': <DataKey: DataKey object>, u'scaler_alive[ms]': <DataKey: DataKey object>, u'Ch1 [930:960]': <DataKey: DataKey object>, u'dead[s]': <DataKey: DataKey object>, u'ssx[um]': <DataKey: DataKey object>, u'Ch3 [930:960]': <DataKey: DataKey object>, u'sclr1_ch8': <DataKey: DataKey object>, u'Ch4 [930:960]': <DataKey: DataKey object>}, 'time_as_datetime': datetime.datetime(2015, 4, 27, 15, 33, 0, 749408), 'run_start': <RunStart: RunStart object>, 'time': 1430163180.749408, 'id': ObjectId('553e8eece97f4e3dde57f465')}}
+2015-04-27 15:33:00,757 - process_data/DEBUG: metadatastore insert event 0
+2015-04-27 15:44:22,899 - fly2d/INFO: Motor x moved to start position: -2.285841
+2015-04-27 15:44:22,972 - fly2d/INFO: Motor y moved to start position: 1.456806
+2015-04-27 15:44:23,001 - _mds_start/INFO: Scan ID: 1179
+2015-04-27 15:44:23,002 - _mds_start/INFO: Time: 2015-04-27T15:44:23.000561
+2015-04-27 15:44:23,002 - _mds_start/INFO: uid: 44e778c7-15e6-4201-b1c7-16ddcf240d21
+2015-04-27 15:44:23,353 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 15:44:23,355 - fly2d/DEBUG: per point was 0.0454545454545 subtracting dead distance 0.019 = 0.0264545454545
+2015-04-27 15:44:23,356 - fly2d/DEBUG: points: [11 11]
+2015-04-27 15:44:23,359 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 15:44:23,361 - fly2d/DEBUG: per_points: [ 0.02645455  0.04545455]
+2015-04-27 15:44:23,364 - fly2d/DEBUG: dead_dist: 0.019
+2015-04-27 15:44:23,366 - fly2d/DEBUG: line_time: 0.18975
+2015-04-27 15:44:23,368 - fly2d/DEBUG: feed_rates: [ 2.63504611  2.63504611] units/s
+2015-04-27 15:44:23,369 - fly2d/DEBUG: dead time: 0.007 s
+2015-04-27 15:44:23,370 - ppmac_send_program/DEBUG: Sending script: /nfs/xf03id/ppmac/scripts/soft_2d.txt
+2015-04-27 15:44:23,375 - ppmac_send_program/DEBUG: Script line: close all buffers
+2015-04-27 15:44:23,375 - ppmac_send_program/DEBUG: Script line: open prog 50
+2015-04-27 15:44:23,376 - ppmac_send_program/DEBUG: Script line: // MoveModes:
+2015-04-27 15:44:23,377 - ppmac_send_program/DEBUG: Script line: // 0 Linear mode: trapezoidal/triangular profiles, straight-line paths in Cartesian space
+2015-04-27 15:44:23,378 - ppmac_send_program/DEBUG: Script line: //   Circle mode: sinusoidal velocity profiles, arc paths in Cartesian space
+2015-04-27 15:44:23,379 - ppmac_send_program/DEBUG: Script line: // 1 Spline mode: parabolic velocity profiles, cubic B-spline paths
+2015-04-27 15:44:23,380 - ppmac_send_program/DEBUG: Script line: // 2 PVT mode: parabolic velocity profiles, Hermite-spline paths
+2015-04-27 15:44:23,381 - ppmac_send_program/DEBUG: Script line: // 3 Rapid mode: trapezoidal/triangular profiles, minimum-time point-to-point moves
+2015-04-27 15:44:23,382 - ppmac_send_program/DEBUG: Script line: // Move time extended to slowest motor:
+2015-04-27 15:44:23,383 - ppmac_send_program/DEBUG: Script line: Coord[5].RapidVelCtrl=1
+2015-04-27 15:44:23,384 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:44:23,384 - ppmac_send_program/DEBUG: Script line: gather.addr[0]=Sys.ServoCount.a
+2015-04-27 15:44:23,385 - ppmac_send_program/DEBUG: Script line: gather.addr[1]=Sys.M[100].a
+2015-04-27 15:44:23,386 - ppmac_send_program/DEBUG: Script line: gather.addr[2]=Motor[3].Pos.a
+2015-04-27 15:44:23,386 - ppmac_send_program/DEBUG: Script line: gather.addr[3]=Motor[4].Pos.a
+2015-04-27 15:44:23,387 - ppmac_send_program/DEBUG: Script line: // gather.addr[4]=Motor[5].Pos.a
+2015-04-27 15:44:23,387 - ppmac_send_program/DEBUG: Script line: // gather.addr[5]=acc24e3[1].chan[0].servocapt.a
+2015-04-27 15:44:23,388 - ppmac_send_program/DEBUG: Script line: gather.items=4
+2015-04-27 15:44:23,389 - ppmac_send_program/DEBUG: Script line: gather.Period=8
+2015-04-27 15:44:23,389 - ppmac_send_program/DEBUG: Script line: gather.enable=1
+2015-04-27 15:44:23,390 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:44:23,390 - ppmac_send_program/DEBUG: Script line: gather.MaxSamples=gather.maxlines
+2015-04-27 15:44:23,391 - ppmac_send_program/DEBUG: Script line: rapid
+2015-04-27 15:44:23,392 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:44:23,392 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 15:44:23,393 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 15:44:23,394 - ppmac_send_program/DEBUG: Script line: TA0.1
+2015-04-27 15:44:23,395 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 15:44:23,395 - ppmac_send_program/DEBUG: Script line: F(2.635046)
+2015-04-27 15:44:23,396 - ppmac_send_program/DEBUG: Script line: X0.001
+2015-04-27 15:44:23,397 - ppmac_send_program/DEBUG: Script line: Y0.001
+2015-04-27 15:44:23,398 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:44:23,401 - ppmac_send_program/DEBUG: Script line: // TODO: it seems that this won't work on the first move in the coordinate
+2015-04-27 15:44:23,402 - ppmac_send_program/DEBUG: Script line: //       system:
+2015-04-27 15:44:23,403 - ppmac_send_program/DEBUG: Script line: dwell 1.0
+2015-04-27 15:44:23,403 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 15:44:23,404 - ppmac_send_program/DEBUG: Script line: F1.0
+2015-04-27 15:44:23,404 - ppmac_send_program/DEBUG: Script line: x(-2.535647)
+2015-04-27 15:44:23,405 - ppmac_send_program/DEBUG: Script line: y(1.206831)
+2015-04-27 15:44:23,406 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:44:23,406 - ppmac_send_program/DEBUG: Script line: dwell 1000
+2015-04-27 15:44:23,406 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:44:23,407 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 15:44:23,407 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 15:44:23,407 - ppmac_send_program/DEBUG: Script line: TA0.5
+2015-04-27 15:44:23,408 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 15:44:23,408 - ppmac_send_program/DEBUG: Script line: F(2.635046)
+2015-04-27 15:44:23,408 - ppmac_send_program/DEBUG: Script line: // ** see connection notes in soft_1d.txt
+2015-04-27 15:44:23,409 - ppmac_send_program/DEBUG: Script line: //  Counting off, inhibit on
+2015-04-27 15:44:23,409 - ppmac_send_program/DEBUG: Script line: M100=1
+2015-04-27 15:44:23,410 - ppmac_send_program/DEBUG: Script line: // Ensure motors are at the starting position
+2015-04-27 15:44:23,410 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:44:23,410 - ppmac_send_program/DEBUG: Script line: dwell 50
+2015-04-27 15:44:23,411 - ppmac_send_program/DEBUG: Script line: gather.enable=2
+2015-04-27 15:44:23,411 - ppmac_send_program/DEBUG: Script line: dwell 1
+2015-04-27 15:44:23,412 - ppmac_send_program/DEBUG: Script line: L2=0
+2015-04-27 15:44:23,412 - ppmac_send_program/DEBUG: Script line: while(L2 < 11) {
+2015-04-27 15:44:23,412 - ppmac_send_program/DEBUG: Script line:     inc
+2015-04-27 15:44:23,413 - ppmac_send_program/DEBUG: Script line:     F(2.635046)
+2015-04-27 15:44:23,413 - ppmac_send_program/DEBUG: Script line:     L1=0
+2015-04-27 15:44:23,413 - ppmac_send_program/DEBUG: Script line:     while(L1 < 11) {
+2015-04-27 15:44:23,414 - ppmac_send_program/DEBUG: Script line:         // Inhibit off, start counting
+2015-04-27 15:44:23,414 - ppmac_send_program/DEBUG: Script line:         M100=0
+2015-04-27 15:44:23,414 - ppmac_send_program/DEBUG: Script line:         x(0.026455)
+2015-04-27 15:44:23,415 - ppmac_send_program/DEBUG: Script line:         // Ensure the position is reached:
+2015-04-27 15:44:23,415 - ppmac_send_program/DEBUG: Script line:         dwell 0
+2015-04-27 15:44:23,415 - ppmac_send_program/DEBUG: Script line:         // Inhibit on, counting off
+2015-04-27 15:44:23,416 - ppmac_send_program/DEBUG: Script line:         M100=1
+2015-04-27 15:44:23,416 - ppmac_send_program/DEBUG: Script line:         // dwell for the dead time
+2015-04-27 15:44:23,417 - ppmac_send_program/DEBUG: Script line:         dwell 7.000000
+2015-04-27 15:44:23,417 - ppmac_send_program/DEBUG: Script line:         L1=L1+1
+2015-04-27 15:44:23,417 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 15:44:23,418 - ppmac_send_program/DEBUG: Script line:     if (L2 < (11 - 1)) {
+2015-04-27 15:44:23,418 - ppmac_send_program/DEBUG: Script line:         // rapid
+2015-04-27 15:44:23,419 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 15:44:23,419 - ppmac_send_program/DEBUG: Script line:         abs
+2015-04-27 15:44:23,419 - ppmac_send_program/DEBUG: Script line:         F0.5
+2015-04-27 15:44:23,420 - ppmac_send_program/DEBUG: Script line:         // tm(1 * 7.000000)
+2015-04-27 15:44:23,420 - ppmac_send_program/DEBUG: Script line:         // F(2 * 11 * 2.635046)
+2015-04-27 15:44:23,420 - ppmac_send_program/DEBUG: Script line:         L3 = 1.206831 + (0.045455 * (L2 + 1))
+2015-04-27 15:44:23,421 - ppmac_send_program/DEBUG: Script line:         x(-2.535647) y(L3)
+2015-04-27 15:44:23,421 - ppmac_send_program/DEBUG: Script line:         // dwell 0
+2015-04-27 15:44:23,421 - ppmac_send_program/DEBUG: Script line:         dwell 150
+2015-04-27 15:44:23,422 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 15:44:23,422 - ppmac_send_program/DEBUG: Script line:         inc
+2015-04-27 15:44:23,422 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 15:44:23,423 - ppmac_send_program/DEBUG: Script line:     L2=L2+1
+2015-04-27 15:44:23,423 - ppmac_send_program/DEBUG: Script line: }
+2015-04-27 15:44:23,423 - ppmac_send_program/DEBUG: Script line: // NOTE: can't use scaler in regular mode while still in input mode 2,
+2015-04-27 15:44:23,424 - ppmac_send_program/DEBUG: Script line: // so re-enable counting after it's all done:
+2015-04-27 15:44:23,424 - ppmac_send_program/DEBUG: Script line: // Inhibit off, start counting
+2015-04-27 15:44:23,424 - ppmac_send_program/DEBUG: Script line: // M100=0
+2015-04-27 15:44:23,425 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:44:23,426 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:44:23,426 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 15:44:23,426 - ppmac_send_program/DEBUG: Script line: x(-2.285647)
+2015-04-27 15:44:23,427 - ppmac_send_program/DEBUG: Script line: y(1.456831)
+2015-04-27 15:44:23,427 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:44:23,427 - ppmac_send_program/DEBUG: Script line: close
+2015-04-27 15:44:35,984 - _teardown/INFO: timepix2 acquired 0 images (tiff1)
+2015-04-27 15:44:35,985 - _teardown/INFO: xspress3 acquired 121 spectra
+2015-04-27 15:44:36,007 - _aggregate_line/DEBUG: HDF5 file: /xspress3_data/20150427/fly01179/xspress/fly_01179_1.hdf5
+2015-04-27 15:44:36,395 - process_data/DEBUG: setup time 1263.303995 ms
+2015-04-27 15:44:36,396 - process_data/DEBUG: run time 9704.907051 ms (estimated 2087.250000 ms)
+2015-04-27 15:44:36,396 - process_data/DEBUG: aggregate time 366.995811 ms
+2015-04-27 15:44:36,411 - process_data/DEBUG: total alive time: 1.44511024689
+2015-04-27 15:44:36,412 - process_data/DEBUG: total dead time: 8.25979680434
+2015-04-27 15:44:36,412 - process_data/DEBUG: alive+dead sum: 9.70490705123
+2015-04-27 15:44:36,412 - process_data/DEBUG: total run time: 9.70490705123
+2015-04-27 15:44:36,419 - process_data/DEBUG: created event_descriptor: {'_dynamic_lock': False, '_changed_fields': [], '_fields_ordered': ('id', 'run_start', 'uid', 'time', 'data_keys', 'time_as_datetime'), 'time_as_datetime': datetime.datetime(2015, 4, 27, 15, 44, 36, 415212), '_initialised': True, '_dynamic_fields': SON([('time_as_datetime', <mongoengine.fields.DynamicField object at 0x7f7852ccb590>)]), '_created': False, '_data': {'uid': '3236035c-5483-404a-b959-e31ebbf437d8', 'data_keys': {u'sclr1_ch2': <DataKey: DataKey object>, u'sclr1_ch3': <DataKey: DataKey object>, u'alive[s]': <DataKey: DataKey object>, u'Ch2 [930:960]': <DataKey: DataKey object>, u'ssy[um]': <DataKey: DataKey object>, u'scaler_alive[ms]': <DataKey: DataKey object>, u'Ch1 [930:960]': <DataKey: DataKey object>, u'dead[s]': <DataKey: DataKey object>, u'ssx[um]': <DataKey: DataKey object>, u'Ch3 [930:960]': <DataKey: DataKey object>, u'sclr1_ch8': <DataKey: DataKey object>, u'Ch4 [930:960]': <DataKey: DataKey object>}, 'time_as_datetime': datetime.datetime(2015, 4, 27, 15, 44, 36, 415212), 'run_start': <RunStart: RunStart object>, 'time': 1430163876.415212, 'id': ObjectId('553e91a4e97f4e3dde582034')}}
+2015-04-27 15:44:36,420 - process_data/DEBUG: metadatastore insert event 0
+2015-04-27 15:44:44,162 - fly2d/INFO: Motor x moved to start position: -2.285056
+2015-04-27 15:44:44,225 - fly2d/INFO: Motor y moved to start position: 1.456781
+2015-04-27 15:44:44,254 - _mds_start/INFO: Scan ID: 1180
+2015-04-27 15:44:44,254 - _mds_start/INFO: Time: 2015-04-27T15:44:44.252624
+2015-04-27 15:44:44,255 - _mds_start/INFO: uid: ffab1dbc-6ea1-4745-8ee8-f5349bae5935
+2015-04-27 15:44:44,570 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 15:44:44,573 - fly2d/DEBUG: per point was 0.0454545454545 subtracting dead distance 0.019 = 0.0264545454545
+2015-04-27 15:44:44,573 - fly2d/DEBUG: points: [11 21]
+2015-04-27 15:44:44,575 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 15:44:44,577 - fly2d/DEBUG: per_points: [ 0.02645455  0.02380952]
+2015-04-27 15:44:44,579 - fly2d/DEBUG: dead_dist: 0.019
+2015-04-27 15:44:44,579 - fly2d/DEBUG: line_time: 0.18975
+2015-04-27 15:44:44,579 - fly2d/DEBUG: feed_rates: [ 2.63504611  1.38026225] units/s
+2015-04-27 15:44:44,582 - fly2d/DEBUG: dead time: 0.007 s
+2015-04-27 15:44:44,583 - ppmac_send_program/DEBUG: Sending script: /nfs/xf03id/ppmac/scripts/soft_2d.txt
+2015-04-27 15:44:44,587 - ppmac_send_program/DEBUG: Script line: close all buffers
+2015-04-27 15:44:44,587 - ppmac_send_program/DEBUG: Script line: open prog 50
+2015-04-27 15:44:44,588 - ppmac_send_program/DEBUG: Script line: // MoveModes:
+2015-04-27 15:44:44,589 - ppmac_send_program/DEBUG: Script line: // 0 Linear mode: trapezoidal/triangular profiles, straight-line paths in Cartesian space
+2015-04-27 15:44:44,590 - ppmac_send_program/DEBUG: Script line: //   Circle mode: sinusoidal velocity profiles, arc paths in Cartesian space
+2015-04-27 15:44:44,590 - ppmac_send_program/DEBUG: Script line: // 1 Spline mode: parabolic velocity profiles, cubic B-spline paths
+2015-04-27 15:44:44,591 - ppmac_send_program/DEBUG: Script line: // 2 PVT mode: parabolic velocity profiles, Hermite-spline paths
+2015-04-27 15:44:44,592 - ppmac_send_program/DEBUG: Script line: // 3 Rapid mode: trapezoidal/triangular profiles, minimum-time point-to-point moves
+2015-04-27 15:44:44,593 - ppmac_send_program/DEBUG: Script line: // Move time extended to slowest motor:
+2015-04-27 15:44:44,594 - ppmac_send_program/DEBUG: Script line: Coord[5].RapidVelCtrl=1
+2015-04-27 15:44:44,595 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:44:44,595 - ppmac_send_program/DEBUG: Script line: gather.addr[0]=Sys.ServoCount.a
+2015-04-27 15:44:44,596 - ppmac_send_program/DEBUG: Script line: gather.addr[1]=Sys.M[100].a
+2015-04-27 15:44:44,596 - ppmac_send_program/DEBUG: Script line: gather.addr[2]=Motor[3].Pos.a
+2015-04-27 15:44:44,597 - ppmac_send_program/DEBUG: Script line: gather.addr[3]=Motor[4].Pos.a
+2015-04-27 15:44:44,598 - ppmac_send_program/DEBUG: Script line: // gather.addr[4]=Motor[5].Pos.a
+2015-04-27 15:44:44,598 - ppmac_send_program/DEBUG: Script line: // gather.addr[5]=acc24e3[1].chan[0].servocapt.a
+2015-04-27 15:44:44,600 - ppmac_send_program/DEBUG: Script line: gather.items=4
+2015-04-27 15:44:44,604 - ppmac_send_program/DEBUG: Script line: gather.Period=8
+2015-04-27 15:44:44,605 - ppmac_send_program/DEBUG: Script line: gather.enable=1
+2015-04-27 15:44:44,606 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:44:44,606 - ppmac_send_program/DEBUG: Script line: gather.MaxSamples=gather.maxlines
+2015-04-27 15:44:44,607 - ppmac_send_program/DEBUG: Script line: rapid
+2015-04-27 15:44:44,607 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:44:44,608 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 15:44:44,608 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 15:44:44,609 - ppmac_send_program/DEBUG: Script line: TA0.1
+2015-04-27 15:44:44,609 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 15:44:44,610 - ppmac_send_program/DEBUG: Script line: F(2.635046)
+2015-04-27 15:44:44,610 - ppmac_send_program/DEBUG: Script line: X0.001
+2015-04-27 15:44:44,611 - ppmac_send_program/DEBUG: Script line: Y0.001
+2015-04-27 15:44:44,612 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:44:44,612 - ppmac_send_program/DEBUG: Script line: // TODO: it seems that this won't work on the first move in the coordinate
+2015-04-27 15:44:44,613 - ppmac_send_program/DEBUG: Script line: //       system:
+2015-04-27 15:44:44,614 - ppmac_send_program/DEBUG: Script line: dwell 1.0
+2015-04-27 15:44:44,614 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 15:44:44,615 - ppmac_send_program/DEBUG: Script line: F1.0
+2015-04-27 15:44:44,615 - ppmac_send_program/DEBUG: Script line: x(-2.535206)
+2015-04-27 15:44:44,616 - ppmac_send_program/DEBUG: Script line: y(1.206544)
+2015-04-27 15:44:44,617 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:44:44,618 - ppmac_send_program/DEBUG: Script line: dwell 1000
+2015-04-27 15:44:44,618 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:44:44,619 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 15:44:44,620 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 15:44:44,621 - ppmac_send_program/DEBUG: Script line: TA0.5
+2015-04-27 15:44:44,622 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 15:44:44,623 - ppmac_send_program/DEBUG: Script line: F(2.635046)
+2015-04-27 15:44:44,624 - ppmac_send_program/DEBUG: Script line: // ** see connection notes in soft_1d.txt
+2015-04-27 15:44:44,625 - ppmac_send_program/DEBUG: Script line: //  Counting off, inhibit on
+2015-04-27 15:44:44,625 - ppmac_send_program/DEBUG: Script line: M100=1
+2015-04-27 15:44:44,626 - ppmac_send_program/DEBUG: Script line: // Ensure motors are at the starting position
+2015-04-27 15:44:44,626 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:44:44,627 - ppmac_send_program/DEBUG: Script line: dwell 50
+2015-04-27 15:44:44,628 - ppmac_send_program/DEBUG: Script line: gather.enable=2
+2015-04-27 15:44:44,628 - ppmac_send_program/DEBUG: Script line: dwell 1
+2015-04-27 15:44:44,629 - ppmac_send_program/DEBUG: Script line: L2=0
+2015-04-27 15:44:44,629 - ppmac_send_program/DEBUG: Script line: while(L2 < 21) {
+2015-04-27 15:44:44,630 - ppmac_send_program/DEBUG: Script line:     inc
+2015-04-27 15:44:44,630 - ppmac_send_program/DEBUG: Script line:     F(2.635046)
+2015-04-27 15:44:44,631 - ppmac_send_program/DEBUG: Script line:     L1=0
+2015-04-27 15:44:44,631 - ppmac_send_program/DEBUG: Script line:     while(L1 < 11) {
+2015-04-27 15:44:44,631 - ppmac_send_program/DEBUG: Script line:         // Inhibit off, start counting
+2015-04-27 15:44:44,632 - ppmac_send_program/DEBUG: Script line:         M100=0
+2015-04-27 15:44:44,632 - ppmac_send_program/DEBUG: Script line:         x(0.026455)
+2015-04-27 15:44:44,632 - ppmac_send_program/DEBUG: Script line:         // Ensure the position is reached:
+2015-04-27 15:44:44,633 - ppmac_send_program/DEBUG: Script line:         dwell 0
+2015-04-27 15:44:44,633 - ppmac_send_program/DEBUG: Script line:         // Inhibit on, counting off
+2015-04-27 15:44:44,634 - ppmac_send_program/DEBUG: Script line:         M100=1
+2015-04-27 15:44:44,634 - ppmac_send_program/DEBUG: Script line:         // dwell for the dead time
+2015-04-27 15:44:44,634 - ppmac_send_program/DEBUG: Script line:         dwell 7.000000
+2015-04-27 15:44:44,635 - ppmac_send_program/DEBUG: Script line:         L1=L1+1
+2015-04-27 15:44:44,635 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 15:44:44,636 - ppmac_send_program/DEBUG: Script line:     if (L2 < (21 - 1)) {
+2015-04-27 15:44:44,636 - ppmac_send_program/DEBUG: Script line:         // rapid
+2015-04-27 15:44:44,636 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 15:44:44,636 - ppmac_send_program/DEBUG: Script line:         abs
+2015-04-27 15:44:44,637 - ppmac_send_program/DEBUG: Script line:         F0.5
+2015-04-27 15:44:44,637 - ppmac_send_program/DEBUG: Script line:         // tm(1 * 7.000000)
+2015-04-27 15:44:44,637 - ppmac_send_program/DEBUG: Script line:         // F(2 * 11 * 2.635046)
+2015-04-27 15:44:44,638 - ppmac_send_program/DEBUG: Script line:         L3 = 1.206544 + (0.023810 * (L2 + 1))
+2015-04-27 15:44:44,638 - ppmac_send_program/DEBUG: Script line:         x(-2.535206) y(L3)
+2015-04-27 15:44:44,638 - ppmac_send_program/DEBUG: Script line:         // dwell 0
+2015-04-27 15:44:44,639 - ppmac_send_program/DEBUG: Script line:         dwell 150
+2015-04-27 15:44:44,639 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 15:44:44,640 - ppmac_send_program/DEBUG: Script line:         inc
+2015-04-27 15:44:44,640 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 15:44:44,640 - ppmac_send_program/DEBUG: Script line:     L2=L2+1
+2015-04-27 15:44:44,641 - ppmac_send_program/DEBUG: Script line: }
+2015-04-27 15:44:44,641 - ppmac_send_program/DEBUG: Script line: // NOTE: can't use scaler in regular mode while still in input mode 2,
+2015-04-27 15:44:44,641 - ppmac_send_program/DEBUG: Script line: // so re-enable counting after it's all done:
+2015-04-27 15:44:44,642 - ppmac_send_program/DEBUG: Script line: // Inhibit off, start counting
+2015-04-27 15:44:44,642 - ppmac_send_program/DEBUG: Script line: // M100=0
+2015-04-27 15:44:44,643 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:44:44,644 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:44:44,644 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 15:44:44,644 - ppmac_send_program/DEBUG: Script line: x(-2.285206)
+2015-04-27 15:44:44,644 - ppmac_send_program/DEBUG: Script line: y(1.456544)
+2015-04-27 15:44:44,645 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:44:44,645 - ppmac_send_program/DEBUG: Script line: close
+2015-04-27 15:45:06,622 - _teardown/INFO: timepix2 acquired 0 images (tiff1)
+2015-04-27 15:45:06,623 - _teardown/INFO: xspress3 acquired 231 spectra
+2015-04-27 15:45:06,670 - _aggregate_line/DEBUG: HDF5 file: /xspress3_data/20150427/fly01180/xspress/fly_01180_1.hdf5
+2015-04-27 15:45:07,431 - process_data/DEBUG: setup time 1266.625166 ms
+2015-04-27 15:45:07,431 - process_data/DEBUG: run time 19105.207531 ms (estimated 3984.750000 ms)
+2015-04-27 15:45:07,432 - process_data/DEBUG: aggregate time 765.034914 ms
+2015-04-27 15:45:07,455 - process_data/DEBUG: total alive time: 2.75208495569
+2015-04-27 15:45:07,456 - process_data/DEBUG: total dead time: 16.353122575
+2015-04-27 15:45:07,457 - process_data/DEBUG: alive+dead sum: 19.1052075307
+2015-04-27 15:45:07,458 - process_data/DEBUG: total run time: 19.1052075307
+2015-04-27 15:45:07,468 - process_data/DEBUG: created event_descriptor: {'_dynamic_lock': False, '_changed_fields': [], '_fields_ordered': ('id', 'run_start', 'uid', 'time', 'data_keys', 'time_as_datetime'), 'time_as_datetime': datetime.datetime(2015, 4, 27, 15, 45, 7, 462501), '_initialised': True, '_dynamic_fields': SON([('time_as_datetime', <mongoengine.fields.DynamicField object at 0x7f7852ccbb90>)]), '_created': False, '_data': {'uid': 'e8e4a526-e5a5-48f3-b80e-0adb2f0772e6', 'data_keys': {u'sclr1_ch2': <DataKey: DataKey object>, u'sclr1_ch3': <DataKey: DataKey object>, u'alive[s]': <DataKey: DataKey object>, u'Ch2 [930:960]': <DataKey: DataKey object>, u'ssy[um]': <DataKey: DataKey object>, u'scaler_alive[ms]': <DataKey: DataKey object>, u'Ch1 [930:960]': <DataKey: DataKey object>, u'dead[s]': <DataKey: DataKey object>, u'ssx[um]': <DataKey: DataKey object>, u'Ch3 [930:960]': <DataKey: DataKey object>, u'sclr1_ch8': <DataKey: DataKey object>, u'Ch4 [930:960]': <DataKey: DataKey object>}, 'time_as_datetime': datetime.datetime(2015, 4, 27, 15, 45, 7, 462501), 'run_start': <RunStart: RunStart object>, 'time': 1430163907.462501, 'id': ObjectId('553e91c3e97f4e3dde5820b1')}}
+2015-04-27 15:45:07,469 - process_data/DEBUG: metadatastore insert event 0
+2015-04-27 15:45:19,345 - fly2d/INFO: Motor x moved to start position: -2.284594
+2015-04-27 15:45:19,418 - fly2d/INFO: Motor y moved to start position: 1.455541
+2015-04-27 15:45:19,452 - _mds_start/INFO: Scan ID: 1181
+2015-04-27 15:45:19,452 - _mds_start/INFO: Time: 2015-04-27T15:45:19.450670
+2015-04-27 15:45:19,452 - _mds_start/INFO: uid: 00a7cd14-c71b-4384-bfea-459f0918a287
+2015-04-27 15:45:19,773 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 15:45:19,777 - fly2d/DEBUG: per point was 0.00980392156863 subtracting dead distance 0.004 = 0.00580392156863
+2015-04-27 15:45:19,778 - fly2d/DEBUG: points: [51 51]
+2015-04-27 15:45:19,781 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 15:45:19,783 - fly2d/DEBUG: per_points: [ 0.00580392  0.00980392]
+2015-04-27 15:45:19,786 - fly2d/DEBUG: dead_dist: 0.004
+2015-04-27 15:45:19,787 - fly2d/DEBUG: line_time: 0.87975
+2015-04-27 15:45:19,787 - fly2d/DEBUG: feed_rates: [ 0.56834328  0.56834328] units/s
+2015-04-27 15:45:19,790 - fly2d/DEBUG: dead time: 0.007 s
+2015-04-27 15:45:19,790 - ppmac_send_program/DEBUG: Sending script: /nfs/xf03id/ppmac/scripts/soft_2d.txt
+2015-04-27 15:45:19,791 - ppmac_send_program/DEBUG: Script line: close all buffers
+2015-04-27 15:45:19,792 - ppmac_send_program/DEBUG: Script line: open prog 50
+2015-04-27 15:45:19,792 - ppmac_send_program/DEBUG: Script line: // MoveModes:
+2015-04-27 15:45:19,793 - ppmac_send_program/DEBUG: Script line: // 0 Linear mode: trapezoidal/triangular profiles, straight-line paths in Cartesian space
+2015-04-27 15:45:19,795 - ppmac_send_program/DEBUG: Script line: //   Circle mode: sinusoidal velocity profiles, arc paths in Cartesian space
+2015-04-27 15:45:19,796 - ppmac_send_program/DEBUG: Script line: // 1 Spline mode: parabolic velocity profiles, cubic B-spline paths
+2015-04-27 15:45:19,797 - ppmac_send_program/DEBUG: Script line: // 2 PVT mode: parabolic velocity profiles, Hermite-spline paths
+2015-04-27 15:45:19,798 - ppmac_send_program/DEBUG: Script line: // 3 Rapid mode: trapezoidal/triangular profiles, minimum-time point-to-point moves
+2015-04-27 15:45:19,800 - ppmac_send_program/DEBUG: Script line: // Move time extended to slowest motor:
+2015-04-27 15:45:19,801 - ppmac_send_program/DEBUG: Script line: Coord[5].RapidVelCtrl=1
+2015-04-27 15:45:19,803 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:45:19,804 - ppmac_send_program/DEBUG: Script line: gather.addr[0]=Sys.ServoCount.a
+2015-04-27 15:45:19,805 - ppmac_send_program/DEBUG: Script line: gather.addr[1]=Sys.M[100].a
+2015-04-27 15:45:19,806 - ppmac_send_program/DEBUG: Script line: gather.addr[2]=Motor[3].Pos.a
+2015-04-27 15:45:19,806 - ppmac_send_program/DEBUG: Script line: gather.addr[3]=Motor[4].Pos.a
+2015-04-27 15:45:19,807 - ppmac_send_program/DEBUG: Script line: // gather.addr[4]=Motor[5].Pos.a
+2015-04-27 15:45:19,808 - ppmac_send_program/DEBUG: Script line: // gather.addr[5]=acc24e3[1].chan[0].servocapt.a
+2015-04-27 15:45:19,808 - ppmac_send_program/DEBUG: Script line: gather.items=4
+2015-04-27 15:45:19,809 - ppmac_send_program/DEBUG: Script line: gather.Period=8
+2015-04-27 15:45:19,810 - ppmac_send_program/DEBUG: Script line: gather.enable=1
+2015-04-27 15:45:19,810 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:45:19,811 - ppmac_send_program/DEBUG: Script line: gather.MaxSamples=gather.maxlines
+2015-04-27 15:45:19,812 - ppmac_send_program/DEBUG: Script line: rapid
+2015-04-27 15:45:19,812 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:45:19,813 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 15:45:19,813 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 15:45:19,814 - ppmac_send_program/DEBUG: Script line: TA0.1
+2015-04-27 15:45:19,815 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 15:45:19,816 - ppmac_send_program/DEBUG: Script line: F(0.568343)
+2015-04-27 15:45:19,816 - ppmac_send_program/DEBUG: Script line: X0.001
+2015-04-27 15:45:19,817 - ppmac_send_program/DEBUG: Script line: Y0.001
+2015-04-27 15:45:19,818 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:45:19,818 - ppmac_send_program/DEBUG: Script line: // TODO: it seems that this won't work on the first move in the coordinate
+2015-04-27 15:45:19,819 - ppmac_send_program/DEBUG: Script line: //       system:
+2015-04-27 15:45:19,820 - ppmac_send_program/DEBUG: Script line: dwell 1.0
+2015-04-27 15:45:19,820 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 15:45:19,821 - ppmac_send_program/DEBUG: Script line: F1.0
+2015-04-27 15:45:19,822 - ppmac_send_program/DEBUG: Script line: x(-2.534359)
+2015-04-27 15:45:19,823 - ppmac_send_program/DEBUG: Script line: y(1.205428)
+2015-04-27 15:45:19,825 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:45:19,826 - ppmac_send_program/DEBUG: Script line: dwell 1000
+2015-04-27 15:45:19,827 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:45:19,827 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 15:45:19,827 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 15:45:19,828 - ppmac_send_program/DEBUG: Script line: TA0.5
+2015-04-27 15:45:19,828 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 15:45:19,828 - ppmac_send_program/DEBUG: Script line: F(0.568343)
+2015-04-27 15:45:19,829 - ppmac_send_program/DEBUG: Script line: // ** see connection notes in soft_1d.txt
+2015-04-27 15:45:19,829 - ppmac_send_program/DEBUG: Script line: //  Counting off, inhibit on
+2015-04-27 15:45:19,830 - ppmac_send_program/DEBUG: Script line: M100=1
+2015-04-27 15:45:19,830 - ppmac_send_program/DEBUG: Script line: // Ensure motors are at the starting position
+2015-04-27 15:45:19,831 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:45:19,831 - ppmac_send_program/DEBUG: Script line: dwell 50
+2015-04-27 15:45:19,831 - ppmac_send_program/DEBUG: Script line: gather.enable=2
+2015-04-27 15:45:19,832 - ppmac_send_program/DEBUG: Script line: dwell 1
+2015-04-27 15:45:19,832 - ppmac_send_program/DEBUG: Script line: L2=0
+2015-04-27 15:45:19,833 - ppmac_send_program/DEBUG: Script line: while(L2 < 51) {
+2015-04-27 15:45:19,833 - ppmac_send_program/DEBUG: Script line:     inc
+2015-04-27 15:45:19,833 - ppmac_send_program/DEBUG: Script line:     F(0.568343)
+2015-04-27 15:45:19,833 - ppmac_send_program/DEBUG: Script line:     L1=0
+2015-04-27 15:45:19,834 - ppmac_send_program/DEBUG: Script line:     while(L1 < 51) {
+2015-04-27 15:45:19,834 - ppmac_send_program/DEBUG: Script line:         // Inhibit off, start counting
+2015-04-27 15:45:19,834 - ppmac_send_program/DEBUG: Script line:         M100=0
+2015-04-27 15:45:19,835 - ppmac_send_program/DEBUG: Script line:         x(0.005804)
+2015-04-27 15:45:19,835 - ppmac_send_program/DEBUG: Script line:         // Ensure the position is reached:
+2015-04-27 15:45:19,836 - ppmac_send_program/DEBUG: Script line:         dwell 0
+2015-04-27 15:45:19,836 - ppmac_send_program/DEBUG: Script line:         // Inhibit on, counting off
+2015-04-27 15:45:19,836 - ppmac_send_program/DEBUG: Script line:         M100=1
+2015-04-27 15:45:19,837 - ppmac_send_program/DEBUG: Script line:         // dwell for the dead time
+2015-04-27 15:45:19,837 - ppmac_send_program/DEBUG: Script line:         dwell 7.000000
+2015-04-27 15:45:19,837 - ppmac_send_program/DEBUG: Script line:         L1=L1+1
+2015-04-27 15:45:19,838 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 15:45:19,838 - ppmac_send_program/DEBUG: Script line:     if (L2 < (51 - 1)) {
+2015-04-27 15:45:19,838 - ppmac_send_program/DEBUG: Script line:         // rapid
+2015-04-27 15:45:19,839 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 15:45:19,839 - ppmac_send_program/DEBUG: Script line:         abs
+2015-04-27 15:45:19,840 - ppmac_send_program/DEBUG: Script line:         F0.5
+2015-04-27 15:45:19,840 - ppmac_send_program/DEBUG: Script line:         // tm(1 * 7.000000)
+2015-04-27 15:45:19,840 - ppmac_send_program/DEBUG: Script line:         // F(2 * 51 * 0.568343)
+2015-04-27 15:45:19,841 - ppmac_send_program/DEBUG: Script line:         L3 = 1.205428 + (0.009804 * (L2 + 1))
+2015-04-27 15:45:19,841 - ppmac_send_program/DEBUG: Script line:         x(-2.534359) y(L3)
+2015-04-27 15:45:19,842 - ppmac_send_program/DEBUG: Script line:         // dwell 0
+2015-04-27 15:45:19,842 - ppmac_send_program/DEBUG: Script line:         dwell 150
+2015-04-27 15:45:19,843 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 15:45:19,843 - ppmac_send_program/DEBUG: Script line:         inc
+2015-04-27 15:45:19,843 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 15:45:19,844 - ppmac_send_program/DEBUG: Script line:     L2=L2+1
+2015-04-27 15:45:19,844 - ppmac_send_program/DEBUG: Script line: }
+2015-04-27 15:45:19,845 - ppmac_send_program/DEBUG: Script line: // NOTE: can't use scaler in regular mode while still in input mode 2,
+2015-04-27 15:45:19,845 - ppmac_send_program/DEBUG: Script line: // so re-enable counting after it's all done:
+2015-04-27 15:45:19,845 - ppmac_send_program/DEBUG: Script line: // Inhibit off, start counting
+2015-04-27 15:45:19,846 - ppmac_send_program/DEBUG: Script line: // M100=0
+2015-04-27 15:45:19,846 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:45:19,846 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:45:19,847 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 15:45:19,847 - ppmac_send_program/DEBUG: Script line: x(-2.284359)
+2015-04-27 15:45:19,848 - ppmac_send_program/DEBUG: Script line: y(1.455428)
+2015-04-27 15:45:19,848 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:45:19,848 - ppmac_send_program/DEBUG: Script line: close
+2015-04-27 15:46:49,801 - _teardown/INFO: timepix2 acquired 0 images (tiff1)
+2015-04-27 15:46:49,802 - _teardown/INFO: xspress3 acquired 2601 spectra
+2015-04-27 15:46:49,911 - _aggregate_line/DEBUG: HDF5 file: /xspress3_data/20150427/fly01181/xspress/fly_01181_1.hdf5
+2015-04-27 15:46:57,630 - process_data/DEBUG: setup time 1222.761869 ms
+2015-04-27 15:46:57,631 - process_data/DEBUG: run time 86706.614822 ms (estimated 44867.250000 ms)
+2015-04-27 15:46:57,631 - process_data/DEBUG: aggregate time 7774.958134 ms
+2015-04-27 15:46:57,829 - process_data/DEBUG: total alive time: 31.0911219558
+2015-04-27 15:46:57,830 - process_data/DEBUG: total dead time: 55.6154928667
+2015-04-27 15:46:57,831 - process_data/DEBUG: alive+dead sum: 86.7066148224
+2015-04-27 15:46:57,831 - process_data/DEBUG: total run time: 86.7066148224
+2015-04-27 15:46:57,840 - process_data/DEBUG: created event_descriptor: {'_dynamic_lock': False, '_changed_fields': [], '_fields_ordered': ('id', 'run_start', 'uid', 'time', 'data_keys', 'time_as_datetime'), 'time_as_datetime': datetime.datetime(2015, 4, 27, 15, 46, 57, 836589), '_initialised': True, '_dynamic_fields': SON([('time_as_datetime', <mongoengine.fields.DynamicField object at 0x7f7854aff550>)]), '_created': False, '_data': {'uid': 'aea9b753-c3f3-4096-bb47-429bf49d4857', 'data_keys': {u'sclr1_ch2': <DataKey: DataKey object>, u'sclr1_ch3': <DataKey: DataKey object>, u'alive[s]': <DataKey: DataKey object>, u'Ch2 [930:960]': <DataKey: DataKey object>, u'ssy[um]': <DataKey: DataKey object>, u'scaler_alive[ms]': <DataKey: DataKey object>, u'Ch1 [930:960]': <DataKey: DataKey object>, u'dead[s]': <DataKey: DataKey object>, u'ssx[um]': <DataKey: DataKey object>, u'Ch3 [930:960]': <DataKey: DataKey object>, u'sclr1_ch8': <DataKey: DataKey object>, u'Ch4 [930:960]': <DataKey: DataKey object>}, 'time_as_datetime': datetime.datetime(2015, 4, 27, 15, 46, 57, 836589), 'run_start': <RunStart: RunStart object>, 'time': 1430164017.836589, 'id': ObjectId('553e9231e97f4e3dde58219c')}}
+2015-04-27 15:46:57,840 - process_data/DEBUG: metadatastore insert event 0
+2015-04-27 15:47:38,244 - fly2d/INFO: Motor x moved to start position: -2.283887
+2015-04-27 15:47:38,318 - fly2d/INFO: Motor y moved to start position: 1.454562
+2015-04-27 15:47:38,347 - _mds_start/INFO: Scan ID: 1182
+2015-04-27 15:47:38,348 - _mds_start/INFO: Time: 2015-04-27T15:47:38.345880
+2015-04-27 15:47:38,348 - _mds_start/INFO: uid: 6e14d82a-4ff5-406b-aceb-7d891d0cb6d0
+2015-04-27 15:47:38,666 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 15:47:38,671 - fly2d/DEBUG: per point was 0.0049504950495 subtracting dead distance 0.003 = 0.0019504950495
+2015-04-27 15:47:38,672 - fly2d/DEBUG: points: [101 101]
+2015-04-27 15:47:38,675 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 15:47:38,677 - fly2d/DEBUG: per_points: [ 0.0019505  0.0049505]
+2015-04-27 15:47:38,679 - fly2d/DEBUG: dead_dist: 0.003
+2015-04-27 15:47:38,679 - fly2d/DEBUG: line_time: 1.74225
+2015-04-27 15:47:38,680 - fly2d/DEBUG: feed_rates: [ 0.28698522  0.28698522] units/s
+2015-04-27 15:47:38,682 - fly2d/DEBUG: dead time: 0.007 s
+2015-04-27 15:47:38,682 - ppmac_send_program/DEBUG: Sending script: /nfs/xf03id/ppmac/scripts/soft_2d.txt
+2015-04-27 15:47:38,693 - ppmac_send_program/DEBUG: Script line: close all buffers
+2015-04-27 15:47:38,694 - ppmac_send_program/DEBUG: Script line: open prog 50
+2015-04-27 15:47:38,695 - ppmac_send_program/DEBUG: Script line: // MoveModes:
+2015-04-27 15:47:38,697 - ppmac_send_program/DEBUG: Script line: // 0 Linear mode: trapezoidal/triangular profiles, straight-line paths in Cartesian space
+2015-04-27 15:47:38,697 - ppmac_send_program/DEBUG: Script line: //   Circle mode: sinusoidal velocity profiles, arc paths in Cartesian space
+2015-04-27 15:47:38,698 - ppmac_send_program/DEBUG: Script line: // 1 Spline mode: parabolic velocity profiles, cubic B-spline paths
+2015-04-27 15:47:38,698 - ppmac_send_program/DEBUG: Script line: // 2 PVT mode: parabolic velocity profiles, Hermite-spline paths
+2015-04-27 15:47:38,698 - ppmac_send_program/DEBUG: Script line: // 3 Rapid mode: trapezoidal/triangular profiles, minimum-time point-to-point moves
+2015-04-27 15:47:38,699 - ppmac_send_program/DEBUG: Script line: // Move time extended to slowest motor:
+2015-04-27 15:47:38,699 - ppmac_send_program/DEBUG: Script line: Coord[5].RapidVelCtrl=1
+2015-04-27 15:47:38,700 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:47:38,700 - ppmac_send_program/DEBUG: Script line: gather.addr[0]=Sys.ServoCount.a
+2015-04-27 15:47:38,700 - ppmac_send_program/DEBUG: Script line: gather.addr[1]=Sys.M[100].a
+2015-04-27 15:47:38,701 - ppmac_send_program/DEBUG: Script line: gather.addr[2]=Motor[3].Pos.a
+2015-04-27 15:47:38,701 - ppmac_send_program/DEBUG: Script line: gather.addr[3]=Motor[4].Pos.a
+2015-04-27 15:47:38,701 - ppmac_send_program/DEBUG: Script line: // gather.addr[4]=Motor[5].Pos.a
+2015-04-27 15:47:38,702 - ppmac_send_program/DEBUG: Script line: // gather.addr[5]=acc24e3[1].chan[0].servocapt.a
+2015-04-27 15:47:38,702 - ppmac_send_program/DEBUG: Script line: gather.items=4
+2015-04-27 15:47:38,702 - ppmac_send_program/DEBUG: Script line: gather.Period=8
+2015-04-27 15:47:38,702 - ppmac_send_program/DEBUG: Script line: gather.enable=1
+2015-04-27 15:47:38,703 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:47:38,703 - ppmac_send_program/DEBUG: Script line: gather.MaxSamples=gather.maxlines
+2015-04-27 15:47:38,704 - ppmac_send_program/DEBUG: Script line: rapid
+2015-04-27 15:47:38,704 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:47:38,704 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 15:47:38,704 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 15:47:38,705 - ppmac_send_program/DEBUG: Script line: TA0.1
+2015-04-27 15:47:38,705 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 15:47:38,705 - ppmac_send_program/DEBUG: Script line: F(0.286985)
+2015-04-27 15:47:38,706 - ppmac_send_program/DEBUG: Script line: X0.001
+2015-04-27 15:47:38,706 - ppmac_send_program/DEBUG: Script line: Y0.001
+2015-04-27 15:47:38,706 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:47:38,707 - ppmac_send_program/DEBUG: Script line: // TODO: it seems that this won't work on the first move in the coordinate
+2015-04-27 15:47:38,707 - ppmac_send_program/DEBUG: Script line: //       system:
+2015-04-27 15:47:38,707 - ppmac_send_program/DEBUG: Script line: dwell 1.0
+2015-04-27 15:47:38,708 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 15:47:38,708 - ppmac_send_program/DEBUG: Script line: F1.0
+2015-04-27 15:47:38,708 - ppmac_send_program/DEBUG: Script line: x(-2.534119)
+2015-04-27 15:47:38,709 - ppmac_send_program/DEBUG: Script line: y(1.204431)
+2015-04-27 15:47:38,709 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:47:38,710 - ppmac_send_program/DEBUG: Script line: dwell 1000
+2015-04-27 15:47:38,710 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:47:38,710 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 15:47:38,711 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 15:47:38,711 - ppmac_send_program/DEBUG: Script line: TA0.5
+2015-04-27 15:47:38,711 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 15:47:38,712 - ppmac_send_program/DEBUG: Script line: F(0.286985)
+2015-04-27 15:47:38,712 - ppmac_send_program/DEBUG: Script line: // ** see connection notes in soft_1d.txt
+2015-04-27 15:47:38,713 - ppmac_send_program/DEBUG: Script line: //  Counting off, inhibit on
+2015-04-27 15:47:38,713 - ppmac_send_program/DEBUG: Script line: M100=1
+2015-04-27 15:47:38,713 - ppmac_send_program/DEBUG: Script line: // Ensure motors are at the starting position
+2015-04-27 15:47:38,714 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:47:38,714 - ppmac_send_program/DEBUG: Script line: dwell 50
+2015-04-27 15:47:38,715 - ppmac_send_program/DEBUG: Script line: gather.enable=2
+2015-04-27 15:47:38,716 - ppmac_send_program/DEBUG: Script line: dwell 1
+2015-04-27 15:47:38,716 - ppmac_send_program/DEBUG: Script line: L2=0
+2015-04-27 15:47:38,717 - ppmac_send_program/DEBUG: Script line: while(L2 < 101) {
+2015-04-27 15:47:38,717 - ppmac_send_program/DEBUG: Script line:     inc
+2015-04-27 15:47:38,717 - ppmac_send_program/DEBUG: Script line:     F(0.286985)
+2015-04-27 15:47:38,718 - ppmac_send_program/DEBUG: Script line:     L1=0
+2015-04-27 15:47:38,718 - ppmac_send_program/DEBUG: Script line:     while(L1 < 101) {
+2015-04-27 15:47:38,718 - ppmac_send_program/DEBUG: Script line:         // Inhibit off, start counting
+2015-04-27 15:47:38,719 - ppmac_send_program/DEBUG: Script line:         M100=0
+2015-04-27 15:47:38,719 - ppmac_send_program/DEBUG: Script line:         x(0.001950)
+2015-04-27 15:47:38,720 - ppmac_send_program/DEBUG: Script line:         // Ensure the position is reached:
+2015-04-27 15:47:38,720 - ppmac_send_program/DEBUG: Script line:         dwell 0
+2015-04-27 15:47:38,721 - ppmac_send_program/DEBUG: Script line:         // Inhibit on, counting off
+2015-04-27 15:47:38,721 - ppmac_send_program/DEBUG: Script line:         M100=1
+2015-04-27 15:47:38,722 - ppmac_send_program/DEBUG: Script line:         // dwell for the dead time
+2015-04-27 15:47:38,722 - ppmac_send_program/DEBUG: Script line:         dwell 7.000000
+2015-04-27 15:47:38,723 - ppmac_send_program/DEBUG: Script line:         L1=L1+1
+2015-04-27 15:47:38,723 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 15:47:38,723 - ppmac_send_program/DEBUG: Script line:     if (L2 < (101 - 1)) {
+2015-04-27 15:47:38,724 - ppmac_send_program/DEBUG: Script line:         // rapid
+2015-04-27 15:47:38,724 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 15:47:38,724 - ppmac_send_program/DEBUG: Script line:         abs
+2015-04-27 15:47:38,724 - ppmac_send_program/DEBUG: Script line:         F0.5
+2015-04-27 15:47:38,725 - ppmac_send_program/DEBUG: Script line:         // tm(1 * 7.000000)
+2015-04-27 15:47:38,725 - ppmac_send_program/DEBUG: Script line:         // F(2 * 101 * 0.286985)
+2015-04-27 15:47:38,725 - ppmac_send_program/DEBUG: Script line:         L3 = 1.204431 + (0.004950 * (L2 + 1))
+2015-04-27 15:47:38,726 - ppmac_send_program/DEBUG: Script line:         x(-2.534119) y(L3)
+2015-04-27 15:47:38,726 - ppmac_send_program/DEBUG: Script line:         // dwell 0
+2015-04-27 15:47:38,726 - ppmac_send_program/DEBUG: Script line:         dwell 150
+2015-04-27 15:47:38,727 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 15:47:38,727 - ppmac_send_program/DEBUG: Script line:         inc
+2015-04-27 15:47:38,727 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 15:47:38,728 - ppmac_send_program/DEBUG: Script line:     L2=L2+1
+2015-04-27 15:47:38,728 - ppmac_send_program/DEBUG: Script line: }
+2015-04-27 15:47:38,729 - ppmac_send_program/DEBUG: Script line: // NOTE: can't use scaler in regular mode while still in input mode 2,
+2015-04-27 15:47:38,729 - ppmac_send_program/DEBUG: Script line: // so re-enable counting after it's all done:
+2015-04-27 15:47:38,729 - ppmac_send_program/DEBUG: Script line: // Inhibit off, start counting
+2015-04-27 15:47:38,730 - ppmac_send_program/DEBUG: Script line: // M100=0
+2015-04-27 15:47:38,730 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:47:38,730 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:47:38,731 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 15:47:38,731 - ppmac_send_program/DEBUG: Script line: x(-2.284119)
+2015-04-27 15:47:38,731 - ppmac_send_program/DEBUG: Script line: y(1.454431)
+2015-04-27 15:47:38,732 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:47:38,732 - ppmac_send_program/DEBUG: Script line: close
+2015-04-27 15:51:15,136 - _teardown/INFO: timepix2 acquired 1 images (tiff1)
+2015-04-27 15:51:15,137 - _teardown/INFO: xspress3 acquired 10201 spectra
+2015-04-27 15:51:15,536 - _aggregate_line/DEBUG: HDF5 file: /xspress3_data/20150427/fly01182/xspress/fly_01182_1.hdf5
+2015-04-27 15:51:45,210 - process_data/DEBUG: setup time 1251.760006 ms
+2015-04-27 15:51:45,210 - process_data/DEBUG: run time 212618.928970 ms (estimated 175967.250000 ms)
+2015-04-27 15:51:45,210 - process_data/DEBUG: aggregate time 30018.336058 ms
+2015-04-27 15:51:45,878 - process_data/DEBUG: total alive time: 85.810504792
+2015-04-27 15:51:45,881 - process_data/DEBUG: total dead time: 126.808424178
+2015-04-27 15:51:45,885 - process_data/DEBUG: alive+dead sum: 212.61892897
+2015-04-27 15:51:45,885 - process_data/DEBUG: total run time: 212.61892897
+2015-04-27 15:51:45,906 - process_data/DEBUG: created event_descriptor: {'_dynamic_lock': False, '_changed_fields': [], '_fields_ordered': ('id', 'run_start', 'uid', 'time', 'data_keys', 'time_as_datetime'), 'time_as_datetime': datetime.datetime(2015, 4, 27, 15, 51, 45, 902389), '_initialised': True, '_dynamic_fields': SON([('time_as_datetime', <mongoengine.fields.DynamicField object at 0x7f7852ccb4d0>)]), '_created': False, '_data': {'uid': '2c844059-9e91-4fd6-9606-347f8effb279', 'data_keys': {u'sclr1_ch2': <DataKey: DataKey object>, u'sclr1_ch3': <DataKey: DataKey object>, u'alive[s]': <DataKey: DataKey object>, u'Ch2 [930:960]': <DataKey: DataKey object>, u'ssy[um]': <DataKey: DataKey object>, u'scaler_alive[ms]': <DataKey: DataKey object>, u'Ch1 [930:960]': <DataKey: DataKey object>, u'dead[s]': <DataKey: DataKey object>, u'ssx[um]': <DataKey: DataKey object>, u'Ch3 [930:960]': <DataKey: DataKey object>, u'sclr1_ch8': <DataKey: DataKey object>, u'Ch4 [930:960]': <DataKey: DataKey object>}, 'time_as_datetime': datetime.datetime(2015, 4, 27, 15, 51, 45, 902389), 'run_start': <RunStart: RunStart object>, 'time': 1430164305.902389, 'id': ObjectId('553e9351e97f4e3dde582bc9')}}
+2015-04-27 15:51:45,907 - process_data/DEBUG: metadatastore insert event 0
+2015-04-27 15:53:24,359 - fly2d/INFO: Motor x moved to start position: -2.283662
+2015-04-27 15:53:24,432 - fly2d/INFO: Motor y moved to start position: 1.453741
+2015-04-27 15:53:24,460 - _mds_start/INFO: Scan ID: 1183
+2015-04-27 15:53:24,461 - _mds_start/INFO: Time: 2015-04-27T15:53:24.447906
+2015-04-27 15:53:24,462 - _mds_start/INFO: uid: cbd6662d-56e5-4277-8995-fb8a863031ba
+2015-04-27 15:53:24,916 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 15:53:24,919 - fly2d/DEBUG: per point was 0.0049504950495 subtracting dead distance 0.003 = 0.0019504950495
+2015-04-27 15:53:24,920 - fly2d/DEBUG: points: [101 101]
+2015-04-27 15:53:24,922 - fly2d/DEBUG: distance: [ 0.5  0.5]
+2015-04-27 15:53:24,924 - fly2d/DEBUG: per_points: [ 0.0019505  0.0049505]
+2015-04-27 15:53:24,926 - fly2d/DEBUG: dead_dist: 0.003
+2015-04-27 15:53:24,926 - fly2d/DEBUG: line_time: 1.74225
+2015-04-27 15:53:24,927 - fly2d/DEBUG: feed_rates: [ 0.28698522  0.28698522] units/s
+2015-04-27 15:53:24,928 - fly2d/DEBUG: dead time: 0.007 s
+2015-04-27 15:53:24,929 - ppmac_send_program/DEBUG: Sending script: /nfs/xf03id/ppmac/scripts/soft_2d.txt
+2015-04-27 15:53:24,931 - ppmac_send_program/DEBUG: Script line: close all buffers
+2015-04-27 15:53:24,932 - ppmac_send_program/DEBUG: Script line: open prog 50
+2015-04-27 15:53:24,932 - ppmac_send_program/DEBUG: Script line: // MoveModes:
+2015-04-27 15:53:24,932 - ppmac_send_program/DEBUG: Script line: // 0 Linear mode: trapezoidal/triangular profiles, straight-line paths in Cartesian space
+2015-04-27 15:53:24,932 - ppmac_send_program/DEBUG: Script line: //   Circle mode: sinusoidal velocity profiles, arc paths in Cartesian space
+2015-04-27 15:53:24,935 - ppmac_send_program/DEBUG: Script line: // 1 Spline mode: parabolic velocity profiles, cubic B-spline paths
+2015-04-27 15:53:24,936 - ppmac_send_program/DEBUG: Script line: // 2 PVT mode: parabolic velocity profiles, Hermite-spline paths
+2015-04-27 15:53:24,936 - ppmac_send_program/DEBUG: Script line: // 3 Rapid mode: trapezoidal/triangular profiles, minimum-time point-to-point moves
+2015-04-27 15:53:24,938 - ppmac_send_program/DEBUG: Script line: // Move time extended to slowest motor:
+2015-04-27 15:53:24,938 - ppmac_send_program/DEBUG: Script line: Coord[5].RapidVelCtrl=1
+2015-04-27 15:53:24,940 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:53:24,941 - ppmac_send_program/DEBUG: Script line: gather.addr[0]=Sys.ServoCount.a
+2015-04-27 15:53:24,942 - ppmac_send_program/DEBUG: Script line: gather.addr[1]=Sys.M[100].a
+2015-04-27 15:53:24,943 - ppmac_send_program/DEBUG: Script line: gather.addr[2]=Motor[3].Pos.a
+2015-04-27 15:53:24,944 - ppmac_send_program/DEBUG: Script line: gather.addr[3]=Motor[4].Pos.a
+2015-04-27 15:53:24,944 - ppmac_send_program/DEBUG: Script line: // gather.addr[4]=Motor[5].Pos.a
+2015-04-27 15:53:24,945 - ppmac_send_program/DEBUG: Script line: // gather.addr[5]=acc24e3[1].chan[0].servocapt.a
+2015-04-27 15:53:24,946 - ppmac_send_program/DEBUG: Script line: gather.items=4
+2015-04-27 15:53:24,946 - ppmac_send_program/DEBUG: Script line: gather.Period=8
+2015-04-27 15:53:24,947 - ppmac_send_program/DEBUG: Script line: gather.enable=1
+2015-04-27 15:53:24,948 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:53:24,949 - ppmac_send_program/DEBUG: Script line: gather.MaxSamples=gather.maxlines
+2015-04-27 15:53:24,951 - ppmac_send_program/DEBUG: Script line: rapid
+2015-04-27 15:53:24,952 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:53:24,953 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 15:53:24,954 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 15:53:24,954 - ppmac_send_program/DEBUG: Script line: TA0.1
+2015-04-27 15:53:24,954 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 15:53:24,955 - ppmac_send_program/DEBUG: Script line: F(0.286985)
+2015-04-27 15:53:24,955 - ppmac_send_program/DEBUG: Script line: X0.001
+2015-04-27 15:53:24,955 - ppmac_send_program/DEBUG: Script line: Y0.001
+2015-04-27 15:53:24,956 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:53:24,956 - ppmac_send_program/DEBUG: Script line: // TODO: it seems that this won't work on the first move in the coordinate
+2015-04-27 15:53:24,956 - ppmac_send_program/DEBUG: Script line: //       system:
+2015-04-27 15:53:24,957 - ppmac_send_program/DEBUG: Script line: dwell 1.0
+2015-04-27 15:53:24,957 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 15:53:24,957 - ppmac_send_program/DEBUG: Script line: F1.0
+2015-04-27 15:53:24,958 - ppmac_send_program/DEBUG: Script line: x(-2.534200)
+2015-04-27 15:53:24,958 - ppmac_send_program/DEBUG: Script line: y(1.203859)
+2015-04-27 15:53:24,959 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:53:24,959 - ppmac_send_program/DEBUG: Script line: dwell 1000
+2015-04-27 15:53:24,960 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:53:24,961 - ppmac_send_program/DEBUG: Script line: inc
+2015-04-27 15:53:24,961 - ppmac_send_program/DEBUG: Script line: TS0
+2015-04-27 15:53:24,962 - ppmac_send_program/DEBUG: Script line: TA0.5
+2015-04-27 15:53:24,962 - ppmac_send_program/DEBUG: Script line: TS0.0
+2015-04-27 15:53:24,962 - ppmac_send_program/DEBUG: Script line: F(0.286985)
+2015-04-27 15:53:24,963 - ppmac_send_program/DEBUG: Script line: // ** see connection notes in soft_1d.txt
+2015-04-27 15:53:24,963 - ppmac_send_program/DEBUG: Script line: //  Counting off, inhibit on
+2015-04-27 15:53:24,963 - ppmac_send_program/DEBUG: Script line: M100=1
+2015-04-27 15:53:24,964 - ppmac_send_program/DEBUG: Script line: // Ensure motors are at the starting position
+2015-04-27 15:53:24,964 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:53:24,965 - ppmac_send_program/DEBUG: Script line: dwell 50
+2015-04-27 15:53:24,965 - ppmac_send_program/DEBUG: Script line: gather.enable=2
+2015-04-27 15:53:24,966 - ppmac_send_program/DEBUG: Script line: dwell 1
+2015-04-27 15:53:24,966 - ppmac_send_program/DEBUG: Script line: L2=0
+2015-04-27 15:53:24,967 - ppmac_send_program/DEBUG: Script line: while(L2 < 101) {
+2015-04-27 15:53:24,967 - ppmac_send_program/DEBUG: Script line:     inc
+2015-04-27 15:53:24,968 - ppmac_send_program/DEBUG: Script line:     F(0.286985)
+2015-04-27 15:53:24,968 - ppmac_send_program/DEBUG: Script line:     L1=0
+2015-04-27 15:53:24,969 - ppmac_send_program/DEBUG: Script line:     while(L1 < 101) {
+2015-04-27 15:53:24,969 - ppmac_send_program/DEBUG: Script line:         // Inhibit off, start counting
+2015-04-27 15:53:24,970 - ppmac_send_program/DEBUG: Script line:         M100=0
+2015-04-27 15:53:24,971 - ppmac_send_program/DEBUG: Script line:         x(0.001950)
+2015-04-27 15:53:24,972 - ppmac_send_program/DEBUG: Script line:         // Ensure the position is reached:
+2015-04-27 15:53:24,972 - ppmac_send_program/DEBUG: Script line:         dwell 0
+2015-04-27 15:53:24,973 - ppmac_send_program/DEBUG: Script line:         // Inhibit on, counting off
+2015-04-27 15:53:24,973 - ppmac_send_program/DEBUG: Script line:         M100=1
+2015-04-27 15:53:24,974 - ppmac_send_program/DEBUG: Script line:         // dwell for the dead time
+2015-04-27 15:53:24,974 - ppmac_send_program/DEBUG: Script line:         dwell 7.000000
+2015-04-27 15:53:24,975 - ppmac_send_program/DEBUG: Script line:         L1=L1+1
+2015-04-27 15:53:24,975 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 15:53:24,976 - ppmac_send_program/DEBUG: Script line:     if (L2 < (101 - 1)) {
+2015-04-27 15:53:24,977 - ppmac_send_program/DEBUG: Script line:         // rapid
+2015-04-27 15:53:24,977 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 15:53:24,978 - ppmac_send_program/DEBUG: Script line:         abs
+2015-04-27 15:53:24,978 - ppmac_send_program/DEBUG: Script line:         F0.5
+2015-04-27 15:53:24,978 - ppmac_send_program/DEBUG: Script line:         // tm(1 * 7.000000)
+2015-04-27 15:53:24,979 - ppmac_send_program/DEBUG: Script line:         // F(2 * 101 * 0.286985)
+2015-04-27 15:53:24,979 - ppmac_send_program/DEBUG: Script line:         L3 = 1.203859 + (0.004950 * (L2 + 1))
+2015-04-27 15:53:24,979 - ppmac_send_program/DEBUG: Script line:         x(-2.534200) y(L3)
+2015-04-27 15:53:24,980 - ppmac_send_program/DEBUG: Script line:         // dwell 0
+2015-04-27 15:53:24,980 - ppmac_send_program/DEBUG: Script line:         dwell 150
+2015-04-27 15:53:24,981 - ppmac_send_program/DEBUG: Script line:         linear
+2015-04-27 15:53:24,981 - ppmac_send_program/DEBUG: Script line:         inc
+2015-04-27 15:53:24,981 - ppmac_send_program/DEBUG: Script line:     }
+2015-04-27 15:53:24,982 - ppmac_send_program/DEBUG: Script line:     L2=L2+1
+2015-04-27 15:53:24,982 - ppmac_send_program/DEBUG: Script line: }
+2015-04-27 15:53:24,983 - ppmac_send_program/DEBUG: Script line: // NOTE: can't use scaler in regular mode while still in input mode 2,
+2015-04-27 15:53:24,983 - ppmac_send_program/DEBUG: Script line: // so re-enable counting after it's all done:
+2015-04-27 15:53:24,984 - ppmac_send_program/DEBUG: Script line: // Inhibit off, start counting
+2015-04-27 15:53:24,985 - ppmac_send_program/DEBUG: Script line: // M100=0
+2015-04-27 15:53:24,985 - ppmac_send_program/DEBUG: Script line: gather.enable=0
+2015-04-27 15:53:24,986 - ppmac_send_program/DEBUG: Script line: linear
+2015-04-27 15:53:24,986 - ppmac_send_program/DEBUG: Script line: abs
+2015-04-27 15:53:24,986 - ppmac_send_program/DEBUG: Script line: x(-2.284200)
+2015-04-27 15:53:24,987 - ppmac_send_program/DEBUG: Script line: y(1.453859)
+2015-04-27 15:53:24,987 - ppmac_send_program/DEBUG: Script line: dwell 0
+2015-04-27 15:53:24,987 - ppmac_send_program/DEBUG: Script line: close
+2015-04-27 15:57:01,370 - _teardown/INFO: timepix1 acquired 1 images (tiff1)
+2015-04-27 15:57:01,400 - _teardown/INFO: xspress3 acquired 10201 spectra
+2015-04-27 15:57:01,918 - _aggregate_line/DEBUG: HDF5 file: /xspress3_data/20150427/fly01183/xspress/fly_01183_1.hdf5
+2015-04-27 15:57:30,845 - process_data/DEBUG: setup time 1382.624865 ms
+2015-04-27 15:57:30,846 - process_data/DEBUG: run time 212618.928970 ms (estimated 175967.250000 ms)
+2015-04-27 15:57:30,847 - process_data/DEBUG: aggregate time 29400.321007 ms
+2015-04-27 15:57:31,717 - process_data/DEBUG: total alive time: 85.8105047919
+2015-04-27 15:57:31,719 - process_data/DEBUG: total dead time: 126.808424178
+2015-04-27 15:57:31,721 - process_data/DEBUG: alive+dead sum: 212.61892897
+2015-04-27 15:57:31,722 - process_data/DEBUG: total run time: 212.61892897
+2015-04-27 15:57:31,745 - process_data/DEBUG: created event_descriptor: {'_dynamic_lock': False, '_changed_fields': [], '_fields_ordered': ('id', 'run_start', 'uid', 'time', 'data_keys', 'time_as_datetime'), 'time_as_datetime': datetime.datetime(2015, 4, 27, 15, 57, 31, 736395), '_initialised': True, '_dynamic_fields': SON([('time_as_datetime', <mongoengine.fields.DynamicField object at 0x7f8b2a6e8ad0>)]), '_created': False, '_data': {'uid': '6c7a5354-0e44-4d1c-8c03-bc96cd8e7716', 'data_keys': {u'sclr1_ch2': <DataKey: DataKey object>, u'sclr1_ch3': <DataKey: DataKey object>, u'alive[s]': <DataKey: DataKey object>, u'Ch2 [930:960]': <DataKey: DataKey object>, u'ssy[um]': <DataKey: DataKey object>, u'scaler_alive[ms]': <DataKey: DataKey object>, u'Ch1 [930:960]': <DataKey: DataKey object>, u'dead[s]': <DataKey: DataKey object>, u'ssx[um]': <DataKey: DataKey object>, u'Ch3 [930:960]': <DataKey: DataKey object>, u'sclr1_ch8': <DataKey: DataKey object>, u'Ch4 [930:960]': <DataKey: DataKey object>}, 'time_as_datetime': datetime.datetime(2015, 4, 27, 15, 57, 31, 736395), 'run_start': <RunStart: RunStart object>, 'time': 1430164651.736395, 'id': ObjectId('553e94abe97f4e54b2d09934')}}
+2015-04-27 15:57:31,746 - process_data/DEBUG: metadatastore insert event 0

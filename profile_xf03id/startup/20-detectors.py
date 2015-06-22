@@ -10,7 +10,6 @@ from hxntools.detectors.zebra import HXNZebra
 FLY_XSPRESS3_ROI = [Xspress3ROI(chan=1, ev_low=9300, ev_high=9600),
                     Xspress3ROI(chan=2, ev_low=9300, ev_high=9600),
                     Xspress3ROI(chan=3, ev_low=9300, ev_high=9600),
-                    Xspress3ROI(chan=4, ev_low=9300, ev_high=9600),
                     ]
 
 # Scaler 1 MCA channels numbers to record with fly scans
@@ -46,19 +45,18 @@ sclr1_mca = [EpicsSignal('XF:03IDC-ES{Sclr:1}Mca:%d' % (i, ))
              for i in range(1, n_scaler_mca + 1)]
 
 sclr1_trig = EpicsSignal('XF:03IDC-ES{Sclr:1}.CNT', rw=True, name='sclr1_trig')
-det_sclr1 = SignalDetector()
+det_sclr1 = SignalDetector(name='det_sclr1')
 det_sclr1.add_acquire_signal(sclr1_trig)
 
 sclr2_trig = EpicsSignal('XF:03IDC-ES{Sclr:2}.CNT', rw=True, name='sclr2_trig')
-det_sclr2 = SignalDetector()
+det_sclr2 = SignalDetector(name='det_sclr2')
 det_sclr2.add_acquire_signal(sclr2_trig)
 
 # Ion chamber
 ion0 = EpicsSignal('XF:03IDC-ES{Sclr:2}_cts1.B', name='ion0')
 ion1 = EpicsSignal('XF:03IDC-ES{Sclr:2}_cts1.C', name='ion1')
 ionN = EpicsSignal('XF:03IDC-ES{Sclr:2}_calc4.VAL', name='ionN')
-
-ion3 = EpicsSignal('XF:03IDC-ES{Sclr:2}_cts2.D', name='ion3')
+ion3 = EpicsSignal('XF:03IDC-ES{Sclr:2}_cts1.D', name='ion3')
 
 # X-ray eye camera sigma X/sigma Y
 sigx = EpicsSignal('XF:03IDB-BI{Xeye-CAM:1}Stats1:SigmaX_RBV', name='sigx')
