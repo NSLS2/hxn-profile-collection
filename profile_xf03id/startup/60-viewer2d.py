@@ -104,7 +104,6 @@ def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', clim=None,
         The colormap to use. See the pyplot.cm module for valid color maps
     """
     
-    title = 'Scan id %s. ' % scan_id
     if scan_id > 0 and scan_id in data_cache:
         df = data_cache[scan_id]
     else:
@@ -117,6 +116,7 @@ def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', clim=None,
             dm = DataMuxer.from_events(data)
             df = dm.to_sparse_dataframe()
             data_cache[scan_id] = df
+    title = 'Scan id %s. ' % scan_id
     rois = [ch for ch in list(df) if ch.startswith('Ch')]
     spectrum = np.sum([getattr(df, roi) for roi in rois], axis=0)
     x_data = df[x]
