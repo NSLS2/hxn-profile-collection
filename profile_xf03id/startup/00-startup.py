@@ -8,7 +8,9 @@ fmt = logging.Formatter("%(asctime)-15s [%(name)5s:%(levelname)s] %(message)s")
 handler.setFormatter(fmt)
 logging.getLogger('hxntools').addHandler(handler)
 logging.getLogger('hxnfly').addHandler(handler)
+
 logging.getLogger('hxnfly').setLevel(logging.INFO)
+logging.getLogger('hxntools').setLevel(logging.INFO)
 logging.getLogger('ppmac').setLevel(logging.INFO)
 
 try:
