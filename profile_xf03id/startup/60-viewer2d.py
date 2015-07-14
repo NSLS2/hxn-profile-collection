@@ -50,7 +50,7 @@ def dev(scan,namex,namey):
     
     #return data
 
-def plot(namex,namey):
+def plot(namex,namey,norm):
     plt.figure()
     plt.clf()
     if namey == "Pt":
@@ -61,8 +61,15 @@ def plot(namex,namey):
     else:
         data = getattr(dscan.data[-1], namey)
     x =  getattr(dscan.data[-1], namex)
-    plt.plot(x,data)
-    plt.plot(x,data,'bo')
+    
+    if norm != 'None':
+        norm_v = getattr(dscan.data[-1], norm)
+        plt.plot(x,data/(norm_v+1.e-8))
+        plt.plot(x,data/(norm_v+1.e-8),'bo')
+    else:
+        plt.plot(x,data)
+        plt.plot(x,data,'bo')
+
     plt.show()
 
 def plotfly(namex):
