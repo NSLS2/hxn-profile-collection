@@ -9,7 +9,8 @@ ct = HXNCount()
 ascan = HXNAScan()
 ascan.default_detectors = [det_sclr1,
                            ion0, ion1, ion3, Pt_ch1, Pt_ch2, Pt_ch3,
-                           ssx_rbv, ssy_rbv, ssz_rbv]
+                           ssx_rbv, ssy_rbv, ssz_rbv,
+                           t_base, t_sample, t_vlens, t_hlens]
 
 ascan.user_detectors = [xspress3.filestore, timepix1.filestore]
 
@@ -41,8 +42,8 @@ def synchronize(detectors, integration_time):
             tpx.acquire_period.put(integration_time)
 
 
-def sync_dscan(positioners, start, stop, step, acquisition_time):
-    """Perform a normal dscan, but first sync acquisition time.
+def sync_dscan(positioners, start, stop, step, exposure_time):
+    """Perform a normal dscan, but first sync exposure_time time.
 
     Parameters
     ----------
@@ -50,9 +51,9 @@ def sync_dscan(positioners, start, stop, step, acquisition_time):
     start : same as dscan
     stop : same as dscan
     step : same as dscan
-    acquisition_time : sensor integration time in seconds
+    exposure_time : sensor integration time in seconds
     """
-    synchronize(dscan.detectors, acquisition_time)
+    synchronize(dscan.detectors, exposure_time)
     return dscan(positioners, start, stop, step)
 
 
@@ -76,25 +77,28 @@ def d2_scan(*args):
     return dscan(*args)
 
 
-def mesh_scan(*args):
+def mesh(*args):
     '''
     Parameters
     ----------
     args: (positioner, start, stop)
     steps: [size1, size2, ...]
+    exposure_time: float
 
     Example
     -------
-    >>> mesh([sli, 0, 5], [slo, 0, 10], [5, 5])
-    >>> mesh([sli, 0, 5], [slo, 0, 10], [slt, 0, 10], [5, 5, 5])
+    >>> mesh([sli, 0, 5], [slo, 0, 10], [5, 5], 1.0)
+    >>> mesh([sli, 0, 5], [slo, 0, 10], [slt, 0, 10], [5, 5, 5], 0.5)
     '''
     args = list(args)
-    steps = args.pop()  # The last argument is the number of steps.
+    exposure_time = args.pop()
+    steps = args.pop()
 
     args = [list(lst) for lst in zip(*args)]
     args = _elements_to_singlets(args)
     args.append(steps)
-    return dscan(*args)
+    args.append(exposure_time)
+    return sync_dscan(*args)
 
 
 def _elements_to_singlets(a):
