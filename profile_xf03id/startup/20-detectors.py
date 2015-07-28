@@ -7,10 +7,62 @@ from hxntools.detectors import Xspress3ROI
 from hxntools.detectors.zebra import HXNZebra
 
 # Fly scan ROIs to display after the scan
-FLY_XSPRESS3_ROI = [Xspress3ROI(chan=1, ev_low=9300, ev_high=9600),
+#FLY_XSPRESS3_ROI = [Xspress3ROI(chan=1, ev_low=9300, ev_high=9600),
+#                    Xspress3ROI(chan=2, ev_low=9300, ev_high=9600),
+#                    Xspress3ROI(chan=3, ev_low=9300, ev_high=9600),
+#                    ]
+
+FLY_XSPRESS3_ROI = [Xspress3ROI(chan=1, ev_low=1340, ev_high=1640),
+                    Xspress3ROI(chan=2, ev_low=1340, ev_high=1640),
+                    Xspress3ROI(chan=3, ev_low=1340, ev_high=1640),
+                    Xspress3ROI(chan=1, ev_low=1590, ev_high=1890),
+                    Xspress3ROI(chan=2, ev_low=1590, ev_high=1890),
+                    Xspress3ROI(chan=3, ev_low=1590, ev_high=1890),
+                    Xspress3ROI(chan=1, ev_low=2150, ev_high=2450),
+                    Xspress3ROI(chan=2, ev_low=2150, ev_high=2450),
+                    Xspress3ROI(chan=3, ev_low=2150, ev_high=2450),
+                    Xspress3ROI(chan=1, ev_low=2810, ev_high=3110),
+                    Xspress3ROI(chan=2, ev_low=2810, ev_high=3110),
+                    Xspress3ROI(chan=3, ev_low=2810, ev_high=3110),
+                    Xspress3ROI(chan=1, ev_low=3540, ev_high=3840),
+                    Xspress3ROI(chan=2, ev_low=3540, ev_high=3840),
+                    Xspress3ROI(chan=3, ev_low=3540, ev_high=3840),
+                    Xspress3ROI(chan=1, ev_low=4360, ev_high=4660),
+                    Xspress3ROI(chan=2, ev_low=4360, ev_high=4660),
+                    Xspress3ROI(chan=3, ev_low=4360, ev_high=4660),
+                    Xspress3ROI(chan=1, ev_low=4800, ev_high=5100),
+                    Xspress3ROI(chan=2, ev_low=4800, ev_high=5100),
+                    Xspress3ROI(chan=3, ev_low=4800, ev_high=5100),
+                    Xspress3ROI(chan=1, ev_low=5270, ev_high=5570),
+                    Xspress3ROI(chan=2, ev_low=5270, ev_high=5570),
+                    Xspress3ROI(chan=3, ev_low=5270, ev_high=5570),
+                    Xspress3ROI(chan=1, ev_low=5750, ev_high=6050),
+                    Xspress3ROI(chan=2, ev_low=5750, ev_high=6050),
+                    Xspress3ROI(chan=3, ev_low=5750, ev_high=6050),
+                    Xspress3ROI(chan=1, ev_low=6250, ev_high=6550),
+                    Xspress3ROI(chan=2, ev_low=6250, ev_high=6550),
+                    Xspress3ROI(chan=3, ev_low=6250, ev_high=6550),
+                    Xspress3ROI(chan=1, ev_low=6780, ev_high=7080),
+                    Xspress3ROI(chan=2, ev_low=6780, ev_high=7080),
+                    Xspress3ROI(chan=3, ev_low=6780, ev_high=7080),
+                    Xspress3ROI(chan=1, ev_low=7330, ev_high=7630),
+                    Xspress3ROI(chan=2, ev_low=7330, ev_high=7630),
+                    Xspress3ROI(chan=3, ev_low=7330, ev_high=7630),
+                    Xspress3ROI(chan=1, ev_low=7900, ev_high=8200),
+                    Xspress3ROI(chan=2, ev_low=7900, ev_high=8200),
+                    Xspress3ROI(chan=3, ev_low=7900, ev_high=8200),
+                    Xspress3ROI(chan=1, ev_low=8490, ev_high=8790),
+                    Xspress3ROI(chan=2, ev_low=8490, ev_high=8790),
+                    Xspress3ROI(chan=3, ev_low=8490, ev_high=8790),
+                    Xspress3ROI(chan=1, ev_low=1970, ev_high=2270),
+                    Xspress3ROI(chan=2, ev_low=1970, ev_high=2270),
+                    Xspress3ROI(chan=3, ev_low=1970, ev_high=2270),
+                    Xspress3ROI(chan=1, ev_low=9300, ev_high=9600),
                     Xspress3ROI(chan=2, ev_low=9300, ev_high=9600),
                     Xspress3ROI(chan=3, ev_low=9300, ev_high=9600),
                     ]
+
+
 
 # Scaler 1 MCA channels numbers to record with fly scans
 # (if above 8, be sure to modify n_scaler_mca below)
@@ -87,6 +139,66 @@ int_vy = EpicsSignal('XF:03IDC-ES{FPS:2-Chan1}Pos-I', name='int_vy')
 # int_5ch2 = EpicsSignal('XF:03IDC-ES{FPS:5-Chan2}Pos-I', name='int_5ch2')
 
 # Fluorescence detectors
+Al_ch1 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C1_ROI10:Value_RBV', name='Al_ch1')
+Al_ch2 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C2_ROI10:Value_RBV', name='Al_ch2')
+Al_ch3 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C3_ROI10:Value_RBV', name='Al_ch3')
+
+Si_ch1 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C1_ROI16:Value_RBV', name='Si_ch1')
+Si_ch2 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C2_ROI16:Value_RBV', name='Si_ch2')
+Si_ch3 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C3_ROI16:Value_RBV', name='Si_ch3')
+
+S_ch1 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C1_ROI3:Value_RBV', name='S_ch1')
+S_ch2 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C2_ROI3:Value_RBV', name='S_ch2')
+S_ch3 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C3_ROI3:Value_RBV', name='S_ch3')
+
+Ar_ch1 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C1_ROI4:Value_RBV', name='Ar_ch1')
+Ar_ch2 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C2_ROI4:Value_RBV', name='Ar_ch2')
+Ar_ch3 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C3_ROI4:Value_RBV', name='Ar_ch3')
+
+Ca_ch1 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C1_ROI5:Value_RBV', name='Ca_ch1')
+Ca_ch2 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C2_ROI5:Value_RBV', name='Ca_ch2')
+Ca_ch3 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C3_ROI5:Value_RBV', name='Ca_ch3')
+
+Ti_ch1 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C1_ROI6:Value_RBV', name='Ti_ch1')
+Ti_ch2 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C2_ROI6:Value_RBV', name='Ti_ch2')
+Ti_ch3 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C3_ROI6:Value_RBV', name='Ti_ch3')
+
+V_ch1 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C1_ROI7:Value_RBV', name='V_ch1')
+V_ch2 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C2_ROI7:Value_RBV', name='V_ch2')
+V_ch3 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C3_ROI7:Value_RBV', name='V_ch3')
+
+Cr_ch1 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C1_ROI8:Value_RBV', name='Cr_ch1')
+Cr_ch2 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C2_ROI8:Value_RBV', name='Cr_ch2')
+Cr_ch3 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C3_ROI8:Value_RBV', name='Cr_ch3')
+
+Mn_ch1 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C1_ROI9:Value_RBV', name='Mn_ch1')
+Mn_ch2 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C2_ROI9:Value_RBV', name='Mn_ch2')
+Mn_ch3 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C3_ROI9:Value_RBV', name='Mn_ch3')
+
+Fe_ch1 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C1_ROI2:Value_RBV', name='Fe_ch1')
+Fe_ch2 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C2_ROI2:Value_RBV', name='Fe_ch2')
+Fe_ch3 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C3_ROI2:Value_RBV', name='Fe_ch3')
+
+Co_ch1 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C1_ROI11:Value_RBV', name='Co_ch1')
+Co_ch2 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C2_ROI11:Value_RBV', name='Co_ch2')
+Co_ch3 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C3_ROI11:Value_RBV', name='Co_ch3')
+
+Ni_ch1 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C1_ROI12:Value_RBV', name='Ni_ch1')
+Ni_ch2 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C2_ROI12:Value_RBV', name='Ni_ch2')
+Ni_ch3 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C3_ROI12:Value_RBV', name='Ni_ch3')
+
+Cu_ch1 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C1_ROI13:Value_RBV', name='Cu_ch1')
+Cu_ch2 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C2_ROI13:Value_RBV', name='Cu_ch2')
+Cu_ch3 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C3_ROI13:Value_RBV', name='Cu_ch3')
+
+Zn_ch1 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C1_ROI14:Value_RBV', name='Zn_ch1')
+Zn_ch2 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C2_ROI14:Value_RBV', name='Zn_ch2')
+Zn_ch3 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C3_ROI14:Value_RBV', name='Zn_ch3')
+
+Au_ch1 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C1_ROI15:Value_RBV', name='Au_ch1')
+Au_ch2 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C2_ROI15:Value_RBV', name='Au_ch2')
+Au_ch3 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C3_ROI15:Value_RBV', name='Au_ch3')
+
 Pt_ch1 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C1_ROI1:Value_RBV', name='Pt_ch1')
 Pt_ch2 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C2_ROI1:Value_RBV', name='Pt_ch2')
 Pt_ch3 = EpicsSignal('XF:03IDC-ES{Xsp:1}:C3_ROI1:Value_RBV', name='Pt_ch3')

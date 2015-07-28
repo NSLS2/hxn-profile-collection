@@ -60,7 +60,7 @@ def plot(namex,namey,norm):
         data = data1 + data2 + data3
     else:
         data = getattr(dscan.data[-1], namey)
-    x =  getattr(dscan.data[-1], namex)
+    x = getattr(dscan.data[-1], namex)
     
     if norm != 'None':
         norm_v = getattr(dscan.data[-1], norm)
@@ -69,19 +69,30 @@ def plot(namex,namey,norm):
     else:
         plt.plot(x,data)
         plt.plot(x,data,'bo')
-
+        plt.figure()
+        plt.plot(x[:-1],data[1:]-data[:-1])
+        plt.plot(x[:-1],data[1:]-data[:-1],'bo')
+        plt.title('derivative')
     plt.show()
 
 def plotfly(namex):
     plt.figure()
     x = fly_data[namex]
-    data1 = fly_data['Ch1 [9300:9600]']
-    data2 = fly_data['Ch2 [9300:9600]']
-    data3 = fly_data['Ch3 [9300:9600]']
+    data1 = fly_data['Ch15_1 [9300:9600]']
+    data2 = fly_data['Ch15_2 [9300:9600]']
+    data3 = fly_data['Ch15_3 [9300:9600]']
     Pt = data1 + data2 + data3
     Pt[0] = Pt[1]
+    Pt = np.array(Pt)
+
+    plt.subplot(121)
     plt.plot(x,Pt)
     plt.plot(x,Pt,'bo')
+
+    plt.subplot(122)
+    plt.plot(x[1:],Pt[1:]-Pt[:-1])
+    plt.plot(x[1:],Pt[1:]-Pt[:-1],'bo')
+
     plt.show()
 
 
@@ -135,7 +146,7 @@ def _load_scan(scan_id, fill_events=False):
     return df
 
 #todo change l, h to clim which defaults to 'auto'
-def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', clim=None, 
+def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', elem='Pt', clim=None, 
               fill_events=False, cmap='Oranges', shift_zeros=False, cols=None):
     """Plot the results of a 2d fly scan
 
@@ -167,11 +178,19 @@ def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', clim=None,
     
     df = _load_scan(scan_id, fill_events=fill_events)
 
-    title = 'Scan id %s. ' % scan_id
-    rois = [ch for ch in list(df) if ch.startswith('Ch')]
+    elem_list = np.array(['Al','Si','S','Ar','Ca','Ti','V','Cr','Mn','Fe','Co','Ni','Cu','Zn','Au','Pt'])
+    elem_index = np.where(elem_list == elem) 
+
+    title = 'Scan id %s. ' % scan_id + elem
+
+    rois = [ch for ch in list(df) if ch.startswith('Ch'+np.str(elem_index[0][0])+'_')]
+    #print(rois)
     spectrum = np.sum([getattr(df, roi) for roi in rois], axis=0)
+    #print(spectrum)
     x_data = df[x]
     y_data = df[y]
+    #print(x_data)
+    #print(y_data)
 
     if cols is None:
         prev_x = x_data[0]
@@ -205,6 +224,9 @@ def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', clim=None,
         ax2 = plt.subplot(111)
     else:
         print('Reshaped to %s' % (spectrum2.shape, ))
+        print(np.shape(spectrum2))
+        plt.figure()
+        plt.imshow(spectrum2)
         fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(10,5))
         fig.set_tight_layout(True)
 
