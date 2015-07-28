@@ -6,6 +6,7 @@ from xray_vision.backend.mpl.cross_section_2d import CrossSection
 from datetime import datetime
 import os
 
+
 def plot2d(scan, name,row,col):
     num_det = 4;
     if name == "all":
@@ -23,8 +24,8 @@ def plot2d(scan, name,row,col):
     # return data
 
 
-def dev(scan,namex,namey):
-    dety  = getattr(dscan.data[scan], namey)
+def dev(scan, namex, namey):
+    dety = getattr(dscan.data[scan], namey)
     d = 3.13559
 
     if namex == "energy":
@@ -49,6 +50,7 @@ def dev(scan,namex,namey):
     plt.plot(data[:,0],data[:,1])
     
     #return data
+
 
 def plot(namex,namey,norm):
     plt.figure()
@@ -75,23 +77,27 @@ def plot(namex,namey,norm):
         plt.title('derivative')
     plt.show()
 
-def plotfly(namex):
+
+def plotfly(namex, elem='Pt', channels=None):
+    if channels is None:
+        channels = [1, 2, 3]
+
     plt.figure()
     x = fly_data[namex]
-    data1 = fly_data['Ch15_1 [9300:9600]']
-    data2 = fly_data['Ch15_2 [9300:9600]']
-    data3 = fly_data['Ch15_3 [9300:9600]']
-    Pt = data1 + data2 + data3
+    Pt = np.sum(fly_data['Det%d_%s' % (chan, elem)] 
+                for chan in channels)
     Pt[0] = Pt[1]
     Pt = np.array(Pt)
 
     plt.subplot(121)
     plt.plot(x,Pt)
     plt.plot(x,Pt,'bo')
+    plt.title(elem)
 
     plt.subplot(122)
     plt.plot(x[1:],Pt[1:]-Pt[:-1])
     plt.plot(x[1:],Pt[1:]-Pt[:-1],'bo')
+    plt.title('%s (deriv)' % elem)
 
     plt.show()
 
@@ -127,6 +133,7 @@ def _shift_zeros(df, spectrum):
 
     return np.array(spectrum, dtype=float)
 
+
 def _load_scan(scan_id, fill_events=False):
     '''Load scan from databroker by scan id'''
 
@@ -143,11 +150,13 @@ def _load_scan(scan_id, fill_events=False):
             df = dm.to_sparse_dataframe()
             data_cache[scan_id] = df
 
-    return df
+    return scan_id, df
 
-#todo change l, h to clim which defaults to 'auto'
+
+# TODO: change l, h to clim which defaults to 'auto'
 def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', elem='Pt', clim=None, 
-              fill_events=False, cmap='Oranges', shift_zeros=False, cols=None):
+              fill_events=False, cmap='Oranges', shift_zeros=False, cols=None,
+              channels=None):
     """Plot the results of a 2d fly scan
 
     Parameters
@@ -160,6 +169,9 @@ def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', elem='Pt', clim=None,
     y : str
         The data key that corresponds to the y axis
         Defaults to 'ssy[um]'
+    elem : str
+        The element to display
+        Defaults to 'Pt'
     clim : tuple, optional
         formtted as (min, max)
         If None, defaults to min/max of the data
@@ -174,23 +186,25 @@ def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', elem='Pt', clim=None,
         related bug only]
     cols : int, optional
         The number of columns in the scan. Automatically detected when possible
+    channels : list, optional
+        The channels to use (defaults to 1 to 3)
     """
     
-    df = _load_scan(scan_id, fill_events=fill_events)
+    if channels is None:
+        channels = range(1, 4)
 
-    elem_list = np.array(['Al','Si','S','Ar','Ca','Ti','V','Cr','Mn','Fe','Co','Ni','Cu','Zn','Au','Pt'])
-    elem_index = np.where(elem_list == elem) 
+    scan_id, df = _load_scan(scan_id, fill_events=fill_events)
 
     title = 'Scan id %s. ' % scan_id + elem
+    roi_keys = ['Det%d_%s' % (chan, elem) for chan in channels]
+    
+    for key in roi_keys:
+        if key not in df:
+            raise KeyError('ROI %s not found' % (key, ))
 
-    rois = [ch for ch in list(df) if ch.startswith('Ch'+np.str(elem_index[0][0])+'_')]
-    #print(rois)
-    spectrum = np.sum([getattr(df, roi) for roi in rois], axis=0)
-    #print(spectrum)
+    spectrum = np.sum([getattr(df, roi) for roi in roi_keys], axis=0)
     x_data = df[x]
     y_data = df[y]
-    #print(x_data)
-    #print(y_data)
 
     if cols is None:
         prev_x = x_data[0]
@@ -225,8 +239,6 @@ def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', elem='Pt', clim=None,
     else:
         print('Reshaped to %s' % (spectrum2.shape, ))
         print(np.shape(spectrum2))
-        plt.figure()
-        plt.imshow(spectrum2)
         fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(10,5))
         fig.set_tight_layout(True)
 
@@ -249,17 +261,6 @@ def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', elem='Pt', clim=None,
     np.savetxt(folder + 'data_x_y_ch_'+np.str(scan_id),
                np.vstack((x_data, y_data, spectrum)).T)
     
-    '''
-    plt.figure()
-    data1 = fly_data['Ch1 [930:960]'].reshape(row, col)
-    data2 = fly_data['Ch2 [930:960]'].reshape(row, col)
-    data3 = fly_data['Ch3 [930:960]'].reshape(row, col)
-    data = data1 + data2 + data3
-    data[0,0] = data[0,1]
-    plt.imshow(data, interpolation='none')
-    plt.show()
-    '''
-
 
 def export(sid):
     data = StepScan[sid]
@@ -297,7 +298,8 @@ def _fly2d_points_from_olog(scan_id):
 
 
 def flyimshow(scan_id, x='ssx[um]', y='ssy[um]', clim=None, 
-              fill_events=False, cmap='Oranges', shift_zeros=False):
+              fill_events=False, cmap='Oranges', shift_zeros=False,
+              elem='Pt', channels=None):
     """Use imshow to plot all of the tiles of a 2d flyscan
 
     Parameters
@@ -310,6 +312,9 @@ def flyimshow(scan_id, x='ssx[um]', y='ssy[um]', clim=None,
     y : str
         The data key that corresponds to the y axis
         Defaults to 'ssy[um]'
+    elem : str
+        The element to display
+        Defaults to 'Pt'
     clim : tuple, optional
         formtted as (min, max)
         If None, defaults to min/max of the data
@@ -322,19 +327,34 @@ def flyimshow(scan_id, x='ssx[um]', y='ssy[um]', clim=None,
     shift_zeros : bool, optional
         Shift all zeros in the scan [NOTE: this is for the detector triggering-
         related bug only]
+    channels : list, optional
+        The channels to use (defaults to 1 to 3)
     """
-    df = _load_scan(scan_id, fill_events=False)
 
-    rois = [ch for ch in df.keys() if ch.startswith('Ch')]
-    spectrum = np.sum([getattr(df, roi) for roi in rois], axis=0)
+    if channels is None:
+        channels = range(1, 4)
+
+    scan_id, df = _load_scan(scan_id, fill_events=False)
+
+    roi_keys = ['Det%d_%s' % (chan, elem) ]
+    
+    for key in roi_keys:
+        if key not in df:
+            raise KeyError('ROI %s not found' % (key, ))
+
+    spectrum = np.sum([getattr(df, roi) for roi in roi_keys], axis=0)
+
     x_data = df[x]
     y_data = df[y]
    
     if shift_zeros:
         spectrum = _shift_zeros(df, spectrum)
     
+    title = 'Scan id %s. ' % scan_id + elem
+
     fig = plt.figure()
     ax = plt.subplot(111)
+    ax.set_title(title)
 
     if clim is None:
         clim = (np.nanmin(spectrum), np.nanmax(spectrum))
