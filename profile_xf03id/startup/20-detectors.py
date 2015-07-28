@@ -7,62 +7,30 @@ from hxntools.detectors import Xspress3ROI
 from hxntools.detectors.zebra import HXNZebra
 
 # Fly scan ROIs to display after the scan
-#FLY_XSPRESS3_ROI = [Xspress3ROI(chan=1, ev_low=9300, ev_high=9600),
-#                    Xspress3ROI(chan=2, ev_low=9300, ev_high=9600),
-#                    Xspress3ROI(chan=3, ev_low=9300, ev_high=9600),
-#                    ]
+roi_elements = [(1340, 1640, 'Al'),
+                (1590, 1890, 'Si'),
+                (2150, 2450, 'S'),
+                (2810, 3110, 'Ar'),
+                (3540, 3840, 'Ca'),
+                (4360, 4660, 'Ti'),
+                (4800, 5100, 'V'),
+                (5270, 5570, 'Cr'),
+                (5750, 6050, 'Mn'),
+                (6250, 6550, 'Fe'),
+                (6780, 7080, 'Co'),
+                (7330, 7630, 'Ni'),
+                (7900, 8200, 'Cu'),
+                (8490, 8790, 'Zn'),
+                (1970, 2270, 'Au'),
+                (9300, 9600, 'Pt'),
+                ]
 
-FLY_XSPRESS3_ROI = [Xspress3ROI(chan=1, ev_low=1340, ev_high=1640),
-                    Xspress3ROI(chan=2, ev_low=1340, ev_high=1640),
-                    Xspress3ROI(chan=3, ev_low=1340, ev_high=1640),
-                    Xspress3ROI(chan=1, ev_low=1590, ev_high=1890),
-                    Xspress3ROI(chan=2, ev_low=1590, ev_high=1890),
-                    Xspress3ROI(chan=3, ev_low=1590, ev_high=1890),
-                    Xspress3ROI(chan=1, ev_low=2150, ev_high=2450),
-                    Xspress3ROI(chan=2, ev_low=2150, ev_high=2450),
-                    Xspress3ROI(chan=3, ev_low=2150, ev_high=2450),
-                    Xspress3ROI(chan=1, ev_low=2810, ev_high=3110),
-                    Xspress3ROI(chan=2, ev_low=2810, ev_high=3110),
-                    Xspress3ROI(chan=3, ev_low=2810, ev_high=3110),
-                    Xspress3ROI(chan=1, ev_low=3540, ev_high=3840),
-                    Xspress3ROI(chan=2, ev_low=3540, ev_high=3840),
-                    Xspress3ROI(chan=3, ev_low=3540, ev_high=3840),
-                    Xspress3ROI(chan=1, ev_low=4360, ev_high=4660),
-                    Xspress3ROI(chan=2, ev_low=4360, ev_high=4660),
-                    Xspress3ROI(chan=3, ev_low=4360, ev_high=4660),
-                    Xspress3ROI(chan=1, ev_low=4800, ev_high=5100),
-                    Xspress3ROI(chan=2, ev_low=4800, ev_high=5100),
-                    Xspress3ROI(chan=3, ev_low=4800, ev_high=5100),
-                    Xspress3ROI(chan=1, ev_low=5270, ev_high=5570),
-                    Xspress3ROI(chan=2, ev_low=5270, ev_high=5570),
-                    Xspress3ROI(chan=3, ev_low=5270, ev_high=5570),
-                    Xspress3ROI(chan=1, ev_low=5750, ev_high=6050),
-                    Xspress3ROI(chan=2, ev_low=5750, ev_high=6050),
-                    Xspress3ROI(chan=3, ev_low=5750, ev_high=6050),
-                    Xspress3ROI(chan=1, ev_low=6250, ev_high=6550),
-                    Xspress3ROI(chan=2, ev_low=6250, ev_high=6550),
-                    Xspress3ROI(chan=3, ev_low=6250, ev_high=6550),
-                    Xspress3ROI(chan=1, ev_low=6780, ev_high=7080),
-                    Xspress3ROI(chan=2, ev_low=6780, ev_high=7080),
-                    Xspress3ROI(chan=3, ev_low=6780, ev_high=7080),
-                    Xspress3ROI(chan=1, ev_low=7330, ev_high=7630),
-                    Xspress3ROI(chan=2, ev_low=7330, ev_high=7630),
-                    Xspress3ROI(chan=3, ev_low=7330, ev_high=7630),
-                    Xspress3ROI(chan=1, ev_low=7900, ev_high=8200),
-                    Xspress3ROI(chan=2, ev_low=7900, ev_high=8200),
-                    Xspress3ROI(chan=3, ev_low=7900, ev_high=8200),
-                    Xspress3ROI(chan=1, ev_low=8490, ev_high=8790),
-                    Xspress3ROI(chan=2, ev_low=8490, ev_high=8790),
-                    Xspress3ROI(chan=3, ev_low=8490, ev_high=8790),
-                    Xspress3ROI(chan=1, ev_low=1970, ev_high=2270),
-                    Xspress3ROI(chan=2, ev_low=1970, ev_high=2270),
-                    Xspress3ROI(chan=3, ev_low=1970, ev_high=2270),
-                    Xspress3ROI(chan=1, ev_low=9300, ev_high=9600),
-                    Xspress3ROI(chan=2, ev_low=9300, ev_high=9600),
-                    Xspress3ROI(chan=3, ev_low=9300, ev_high=9600),
-                    ]
-
-
+FLY_XSPRESS3_ROI = []
+for ev_low, ev_high, name in roi_elements:
+    for chan in range(1, 4):
+        roi = Xspress3ROI(chan=chan, ev_low=ev_low, ev_high=ev_high, 
+                          name='Det%d_%s' % (chan, name))
+        FLY_XSPRESS3_ROI.append(roi)
 
 # Scaler 1 MCA channels numbers to record with fly scans
 # (if above 8, be sure to modify n_scaler_mca below)
@@ -71,6 +39,7 @@ FLY_SCALER1_CHANS = [2, 3, 8]
 # Flyscan results are shown using pandas. Maximum rows/columns to use when printing the table:
 pd.options.display.width = 180
 pd.options.display.max_rows = None
+pd.options.display.max_columns = None
 
 timepix1 = TimepixDetector('XF:03IDC-ES{Tpx:1}', files=['TIFF1:'], name='timepix1',
                            file_path='/data', ioc_file_path='/data')
