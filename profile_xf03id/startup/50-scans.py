@@ -7,24 +7,15 @@ from hxnfly import fly1d, fly2d
 ct = HXNCount()
 
 ascan = HXNAScan()
-'''
 ascan.default_detectors = [det_sclr1,
-                           ion0, ion1, ion3, Pt_ch1, Pt_ch2, Pt_ch3,
-                           ssx_rbv, ssy_rbv, ssz_rbv,
-                           t_base, t_sample, t_vlens, t_hlens]
-'''
-ascan.default_detectors = [det_sclr1,
-                           ion0, ion1, ion3, Pt_ch1, Pt_ch2, Pt_ch3,
-                           Al_ch1, Al_ch2, Al_ch3,Si_ch1, Si_ch2, Si_ch3,
-                           S_ch1, S_ch2, S_ch3,Ar_ch1, Ar_ch2, Ar_ch3,
-                           Ca_ch1, Ca_ch2, Ca_ch3,Ti_ch1, Ti_ch2, Ti_ch3,
-                           V_ch1, V_ch2, V_ch3,Cr_ch1, Cr_ch2, Cr_ch3,
-                           Mn_ch1, Mn_ch2, Mn_ch3,Fe_ch1, Fe_ch2, Fe_ch3,
-                           Co_ch1, Co_ch2, Co_ch3,Ni_ch1, Ni_ch2, Ni_ch3,
-                           Cu_ch1, Cu_ch2, Cu_ch3,Zn_ch1, Zn_ch2, Zn_ch3,
-                           Au_ch1, Au_ch2, Au_ch3,
-                           ssx_rbv, ssy_rbv, ssz_rbv,
-                           t_base, t_sample, t_vlens, t_hlens]
+                           sclr1_ch2, sclr1_ch3, sclr1_ch4,
+                           det1_Pt, det2_Pt, det3_Pt, det1_Al, det2_Al, det3_Al, det1_Si, det2_Si,
+                           det3_Si, det1_S, det2_S, det3_S, det1_Ar, det2_Ar, det3_Ar, det1_Ca, det2_Ca,
+                           det3_Ca, det1_Ti, det2_Ti, det3_Ti, det1_V, det2_V, det3_V, det1_Cr, det2_Cr,
+                           det3_Cr, det1_Mn, det2_Mn, det3_Mn, det1_Fe, det2_Fe, det3_Fe, det1_Co,
+                           det2_Co, det3_Co, det1_Ni, det2_Ni, det3_Ni, det1_Cu, det2_Cu, det3_Cu,
+                           det1_Zn, det2_Zn, det3_Zn, det1_Au, det2_Au, det3_Au,
+                           ssx_rbv, ssy_rbv, ssz_rbv, t_base, t_sample, t_vlens, t_hlens]
 
 
 ascan.user_detectors = [xspress3.filestore, timepix1.filestore]

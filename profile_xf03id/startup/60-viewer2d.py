@@ -8,21 +8,27 @@ import os
 
 
 def plot2d(scan, name,row,col):
-    num_det = 4;
+    det = getattr(dscan.data[scan], 'Det1_'+name)+getattr(dscan.data[scan], 'Det2_'+name)+getattr(dscan.data[scan], 'Det3_'+name)
+    plt.figure()
+    data = np.reshape(det, (row, col))
+    plt.imshow(data,interpolation='None')
+    plt.colorbar()
+    '''
+    num_det = 1;
     if name == "all":
         for i in range(num_det):
-            det_name = dscan.detectors[i].name
-            det = getattr(dscan.data[scan], det_name)
+            #det_name = dscan.detectors[i].name
+            det = getattr(dscan.data[scan], 'Fe_ch1')+getattr(dscan.data[scan], 'Fe_ch2')+getattr(dscan.data[scan], 'Fe_ch3')
             plt.figure(i)
             data = np.reshape(det, (row, col))
-            plt.imshow(data)
+            plt.imshow(data,interpolation='None')
     else:
         plt.figure()
         det = getattr(dscan.data[scan], name)
         data = np.reshape(det, (row, col))
         plt.imshow(data,interpolation='None')
     # return data
-
+    '''
 
 def dev(scan, namex, namey):
     dety = getattr(dscan.data[scan], namey)
@@ -55,13 +61,36 @@ def dev(scan, namex, namey):
 def plot(namex,namey,norm):
     plt.figure()
     plt.clf()
+    
     if namey == "Pt":
-        data1 = dscan.data[-1].Pt_ch1
-        data2 = dscan.data[-1].Pt_ch2
-        data3 = dscan.data[-1].Pt_ch3
+        data1 = dscan.data[-1].Det1_Pt
+        data2 = dscan.data[-1].Det2_Pt
+        data3 = dscan.data[-1].Det3_Pt
+        data = data1 + data2 + data3
+    elif namey == "Fe":
+	data1 = dscan.data[-1].Det1_Fe
+        data2 = dscan.data[-1].Det2_Fe
+	data3 = dscan.data[-1].Det3_Fe
+	data = data1 + data2 + data3
+    elif namey == "Zn":
+	data1 = dscan.data[-1].Det1_Zn
+        data2 = dscan.data[-1].Det2_Zn
+        data3 = dscan.data[-1].Det3_Zn
+	data = data1 + data2 + data3
+    elif namey == "Cu":
+	data1 = dscan.data[-1].Det1_Cu
+	data2 = dscan.data[-1].Det2_Cu
+	data3 = dscan.data[-1].Det3_Cu
+	data = data1 + data2 + data3
+    elif namey == "Ca":
+        data1 = dscan.data[-1].Det1_Ca
+        data2 = dscan.data[-1].Det2_Ca
+        data3 = dscan.data[-1].Det3_Ca
         data = data1 + data2 + data3
     else:
         data = getattr(dscan.data[-1], namey)
+    
+
     x = getattr(dscan.data[-1], namex)
     
     if norm != 'None':
@@ -203,6 +232,7 @@ def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', elem='Pt', clim=None,
             raise KeyError('ROI %s not found' % (key, ))
 
     spectrum = np.sum([getattr(df, roi) for roi in roi_keys], axis=0)
+    spectrum[0] = spectrum[1]
     x_data = df[x]
     y_data = df[y]
 
@@ -231,7 +261,8 @@ def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', elem='Pt', clim=None,
         os.makedirs(folder)
     
     try:
-        spectrum2 = spectrum.reshape((-1, cols))
+        spectrum2 = spectrum.copy()
+        spectrum2 = spectrum2.reshape((-1, cols))
     except Exception as ex:
         print('Unable to reshape data to width: %d (%s: %s)' % (cols, ex.__class__.__name__, ex))
         fig = plt.figure()
@@ -241,6 +272,9 @@ def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', elem='Pt', clim=None,
         print(np.shape(spectrum2))
         fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(10,5))
         fig.set_tight_layout(True)
+  #      rows = np.size(spectrum2)/cols
+  #      for row in range(1, rows, 2):
+  #          spectrum2[row, :] = spectrum2[row, ::-1]
 
         im = ax1.imshow(spectrum2, extent=extent, interpolation='None', cmap=cmap, 
                         vmin=clim[0], vmax=clim[1])
@@ -271,6 +305,7 @@ def _fly2d_points_from_olog(scan_id):
     '''Messy way to get fly2d tile scan points from olog
 
     Need to improve olog properties in the future to simplify this.
+    -- Well, really, this belongs in mds...
     '''
 
     cmd = None
@@ -283,18 +318,27 @@ def _fly2d_points_from_olog(scan_id):
     
     if cmd is None:
         raise ValueError('Fly scan not found in olog')
+    
+    # TODO: figure out why olog properties can't be changed after attempt #2
+    scan_info_key = 'scans'
+    if scan_info_key in log['properties']:
+        scan_info = log['properties'][scan_info_key]
+        points = eval(scan_info['scans'])
+        print('Scan points in olog: %s' % (points, ))
+    else:
+        # Scan points weren't originally put in the property list in olog
+        def _get_args(x_motor, x1, x2, total_pointsx,
+                      y_motor, y1, y2, total_pointsy,
+                      *args, **kwargs):
+            return (x1, x2, total_pointsx,
+                    y1, y2, total_pointsy)
 
-    # ugh, put these in the properties list...
-    def _get_args(x_motor, x1, x2, total_pointsx,
-                  y_motor, y1, y2, total_pointsy,
-                  *args, **kwargs):
-        return (x1, x2, total_pointsx,
-                y1, y2, total_pointsy)
+        point_args = eval(cmd, {'fly2d': _get_args,
+                                'x': None, 'y': None, 'z': None})
+        from hxnfly.fly import _get_scan_points_v1 as get_scan_points
+        points = list(get_scan_points(*point_args))
 
-    point_args = eval(cmd, {'fly2d': _get_args,
-                            'x': None, 'y': None, 'z': None})
-    from hxnfly.fly import _get_scan_points
-    return list(_get_scan_points(*point_args)), log
+    return points, log
 
 
 def flyimshow(scan_id, x='ssx[um]', y='ssy[um]', clim=None, 
