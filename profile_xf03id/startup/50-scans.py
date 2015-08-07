@@ -10,11 +10,11 @@ ascan = HXNAScan()
 ascan.default_detectors = [det_sclr1, det_beamstatus,
                            sclr1_ch2, sclr1_ch3, sclr1_ch4,
                            det1_Pt, det2_Pt, det3_Pt, det1_Al, det2_Al, det3_Al, det1_Si, det2_Si,
-                           det3_Si, det1_S, det2_S, det3_S, det1_Ar, det2_Ar, det3_Ar, det1_Ca, det2_Ca,
+                           det3_Si, det1_Gd, det2_Gd, det3_Gd, det1_YSZ, det2_YSZ, det3_YSZ, det1_Ca, det2_Ca,
                            det3_Ca, det1_Ti, det2_Ti, det3_Ti, det1_V, det2_V, det3_V, det1_Cr, det2_Cr,
                            det3_Cr, det1_Mn, det2_Mn, det3_Mn, det1_Fe, det2_Fe, det3_Fe, det1_Co,
                            det2_Co, det3_Co, det1_Ni, det2_Ni, det3_Ni, det1_Cu, det2_Cu, det3_Cu,
-                           det1_Zn, det2_Zn, det3_Zn, det1_Au, det2_Au, det3_Au,
+                           det1_Ce, det2_Ce, det3_Ce, det1_Au, det2_Au, det3_Au,
                            ssx_rbv, ssy_rbv, ssz_rbv, t_base, t_sample, t_vlens, t_hlens]
 
 

@@ -24,6 +24,10 @@ roi_elements = [(1340, 1640, 'Al'),
                 (8490, 8790, 'Zn'),
                 (1970, 2270, 'Au'),
                 (9300, 9600, 'Pt'),
+                (4610, 5070, 'Ce'),
+                (2000, 2300, 'Zr'),
+                (1900, 2000, 'Y'),
+                (6530, 6940, 'Gd'),
                 ]
 
 FLY_XSPRESS3_ROI = []
@@ -134,13 +138,13 @@ det1_Si = EpicsSignal('XF:03IDC-ES{Xsp:1}:C1_ROI16:Value_RBV', name='Det1_Si')
 det2_Si = EpicsSignal('XF:03IDC-ES{Xsp:1}:C2_ROI16:Value_RBV', name='Det2_Si')
 det3_Si = EpicsSignal('XF:03IDC-ES{Xsp:1}:C3_ROI16:Value_RBV', name='Det3_Si')
 
-det1_S = EpicsSignal('XF:03IDC-ES{Xsp:1}:C1_ROI3:Value_RBV', name='Det1_S')
-det2_S = EpicsSignal('XF:03IDC-ES{Xsp:1}:C2_ROI3:Value_RBV', name='Det2_S')
-det3_S = EpicsSignal('XF:03IDC-ES{Xsp:1}:C3_ROI3:Value_RBV', name='Det3_S')
+det1_Gd = EpicsSignal('XF:03IDC-ES{Xsp:1}:C1_ROI3:Value_RBV', name='Det1_Gd')
+det2_Gd = EpicsSignal('XF:03IDC-ES{Xsp:1}:C2_ROI3:Value_RBV', name='Det2_Gd')
+det3_Gd = EpicsSignal('XF:03IDC-ES{Xsp:1}:C3_ROI3:Value_RBV', name='Det3_Gd')
 
-det1_Ar = EpicsSignal('XF:03IDC-ES{Xsp:1}:C1_ROI4:Value_RBV', name='Det1_Ar')
-det2_Ar = EpicsSignal('XF:03IDC-ES{Xsp:1}:C2_ROI4:Value_RBV', name='Det2_Ar')
-det3_Ar = EpicsSignal('XF:03IDC-ES{Xsp:1}:C3_ROI4:Value_RBV', name='Det3_Ar')
+det1_YSZ = EpicsSignal('XF:03IDC-ES{Xsp:1}:C1_ROI4:Value_RBV', name='Det1_YSZ')
+det2_YSZ = EpicsSignal('XF:03IDC-ES{Xsp:1}:C2_ROI4:Value_RBV', name='Det2_YSZ')
+det3_YSZ = EpicsSignal('XF:03IDC-ES{Xsp:1}:C3_ROI4:Value_RBV', name='Det3_YSZ')
 
 det1_Ca = EpicsSignal('XF:03IDC-ES{Xsp:1}:C1_ROI5:Value_RBV', name='Det1_Ca')
 det2_Ca = EpicsSignal('XF:03IDC-ES{Xsp:1}:C2_ROI5:Value_RBV', name='Det2_Ca')
@@ -178,9 +182,9 @@ det1_Cu = EpicsSignal('XF:03IDC-ES{Xsp:1}:C1_ROI3:Value_RBV', name='Det1_Cu')
 det2_Cu = EpicsSignal('XF:03IDC-ES{Xsp:1}:C2_ROI3:Value_RBV', name='Det2_Cu')
 det3_Cu = EpicsSignal('XF:03IDC-ES{Xsp:1}:C3_ROI3:Value_RBV', name='Det3_Cu')
 
-det1_Zn = EpicsSignal('XF:03IDC-ES{Xsp:1}:C1_ROI4:Value_RBV', name='Det1_Zn')
-det2_Zn = EpicsSignal('XF:03IDC-ES{Xsp:1}:C2_ROI4:Value_RBV', name='Det2_Zn')
-det3_Zn = EpicsSignal('XF:03IDC-ES{Xsp:1}:C3_ROI4:Value_RBV', name='Det3_Zn')
+det1_Ce = EpicsSignal('XF:03IDC-ES{Xsp:1}:C1_ROI4:Value_RBV', name='Det1_Ce')
+det2_Ce = EpicsSignal('XF:03IDC-ES{Xsp:1}:C2_ROI4:Value_RBV', name='Det2_Ce')
+det3_Ce = EpicsSignal('XF:03IDC-ES{Xsp:1}:C3_ROI4:Value_RBV', name='Det3_Ce')
 
 det1_Au = EpicsSignal('XF:03IDC-ES{Xsp:1}:C1_ROI15:Value_RBV', name='Det1_Au')
 det2_Au = EpicsSignal('XF:03IDC-ES{Xsp:1}:C2_ROI15:Value_RBV', name='Det2_Au')
