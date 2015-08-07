@@ -7,7 +7,7 @@ from hxnfly import fly1d, fly2d
 ct = HXNCount()
 
 ascan = HXNAScan()
-ascan.default_detectors = [det_sclr1,
+ascan.default_detectors = [det_sclr1, det_beamstatus,
                            sclr1_ch2, sclr1_ch3, sclr1_ch4,
                            det1_Pt, det2_Pt, det3_Pt, det1_Al, det2_Al, det3_Al, det1_Si, det2_Si,
                            det3_Si, det1_S, det2_S, det3_S, det1_Ar, det2_Ar, det3_Ar, det1_Ca, det2_Ca,
@@ -18,7 +18,11 @@ ascan.default_detectors = [det_sclr1,
                            ssx_rbv, ssy_rbv, ssz_rbv, t_base, t_sample, t_vlens, t_hlens]
 
 
-ascan.user_detectors = [xspress3.filestore, timepix1.filestore]
+ascan.user_detectors = [xspress3.filestore, merlin1.filestore]
+
+fly1d.detectors = [xspress3, merlin1, det_sclr1]
+fly2d.detectors = [xspress3, merlin1, det_sclr1]
+
 
 dscan = HXNDScan()
 # Detectors are shared among the scans
@@ -27,6 +31,8 @@ dscan = HXNDScan()
 def synchronize(detectors, integration_time):
     # EpicsScaler calls it preset_time;
     # AreaDetector calls it exposure_time.
+    integration_time = float(integration_time)
+
     attrs = ['preset_time', 'exposure_time']
     for det in detectors:
         for attr in attrs:
@@ -46,6 +52,11 @@ def synchronize(detectors, integration_time):
         if tpx.filestore in detectors:
             tpx.acquire_time.put(integration_time)
             tpx.acquire_period.put(integration_time)
+
+    for merlin in [merlin1, ]:
+        if merlin.filestore in detectors:
+            merlin.acquire_time.put(integration_time)
+            merlin.acquire_period.put(integration_time + 0.001)
 
 
 def sync_dscan(positioners, start, stop, step, exposure_time):
