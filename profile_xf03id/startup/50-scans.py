@@ -18,7 +18,7 @@ ascan.default_detectors = [det_sclr1, det_beamstatus,
                            ssx_rbv, ssy_rbv, ssz_rbv, t_base, t_sample, t_vlens, t_hlens]
 
 
-ascan.user_detectors = [xspress3.filestore, merlin1.filestore]
+ascan.user_detectors = [xspress3.filestore, timepix1.filestore]
 
 fly1d.detectors = [xspress3, merlin1, det_sclr1]
 fly2d.detectors = [xspress3, merlin1, det_sclr1]
