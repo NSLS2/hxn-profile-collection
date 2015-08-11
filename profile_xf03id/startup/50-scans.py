@@ -23,6 +23,11 @@ ascan.user_detectors = [xspress3.filestore, timepix1.filestore]
 fly1d.detectors = [xspress3, merlin1, det_sclr1]
 fly2d.detectors = [xspress3, merlin1, det_sclr1]
 
+beamline_config_pvs = [ssx_rbv, ssy_rbv, ssz_rbv, t_base, t_sample, t_vlens]
+project_info = 'project_information'
+scan_metadata = {'sample': {'owner': 'bnl',
+                            'name': 'sample_name'}}
+scan_owner = 'xf03id'
 
 dscan = HXNDScan()
 # Detectors are shared among the scans
