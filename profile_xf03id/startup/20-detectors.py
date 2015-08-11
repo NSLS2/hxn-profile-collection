@@ -195,9 +195,9 @@ det2_Pt = EpicsSignal('XF:03IDC-ES{Xsp:1}:C2_ROI1:Value_RBV', name='Det2_Pt')
 det3_Pt = EpicsSignal('XF:03IDC-ES{Xsp:1}:C3_ROI1:Value_RBV', name='Det3_Pt')
 
 # Fine sample stage readbacks
-ssx_rbv = EpicsMotor('XF:03IDC-ES{Ppmac:1-ssx}Mtr.RBV', name='ssx_rbv')
-ssy_rbv = EpicsMotor('XF:03IDC-ES{Ppmac:1-ssy}Mtr.RBV', name='ssy_rbv')
-ssz_rbv = EpicsMotor('XF:03IDC-ES{Ppmac:1-ssz}Mtr.RBV', name='ssz_rbv')
+ssx_rbv = EpicsSignal('XF:03IDC-ES{Ppmac:1-ssx}Mtr.RBV', name='ssx_rbv')
+ssy_rbv = EpicsSignal('XF:03IDC-ES{Ppmac:1-ssy}Mtr.RBV', name='ssy_rbv')
+ssz_rbv = EpicsSignal('XF:03IDC-ES{Ppmac:1-ssz}Mtr.RBV', name='ssz_rbv')
 
 sr_shutter_status = EpicsSignal('SR-EPS{PLC:1}Sts:MstrSh-Sts', rw=False)
 sr_beam_current = EpicsSignal('SR:C03-BI{DCCT:1}I:Real-I', rw=False)
