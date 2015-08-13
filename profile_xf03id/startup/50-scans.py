@@ -2,7 +2,7 @@
 
 from hxntools.scans import (HXNDScan, HXNAScan, HXNCount)
 
-from hxnfly import fly1d, fly2d
+from hxnfly import Fly1D, Fly2D
 
 ct = HXNCount()
 
@@ -20,8 +20,8 @@ ascan.default_detectors = [det_sclr1, det_beamstatus,
 
 ascan.user_detectors = [xspress3.filestore, timepix1.filestore]
 
-fly1d.detectors = [xspress3, merlin1, det_sclr1]
-fly2d.detectors = [xspress3, merlin1, det_sclr1]
+fly1d = Fly1D(detectors=[xspress3, merlin1, det_sclr1])
+fly2d = Fly2D(detectors=[xspress3, merlin1, det_sclr1])
 
 beamline_config_pvs = [ssx_rbv, ssy_rbv, ssz_rbv, t_base, t_sample, t_vlens]
 project_info = 'project_information'
