@@ -9,6 +9,7 @@ fmt = logging.Formatter("%(asctime)-15s [%(name)5s:%(levelname)s] %(message)s")
 handler.setFormatter(fmt)
 logging.getLogger('hxntools').addHandler(handler)
 logging.getLogger('hxnfly').addHandler(handler)
+logging.getLogger('ppmac').addHandler(handler)
 
 logging.getLogger('hxnfly').setLevel(logging.INFO)
 logging.getLogger('hxntools').setLevel(logging.INFO)
@@ -40,7 +41,7 @@ def run_engine_monkeypatch():
     orig_names = RunEngine._demunge_names
 
     skip_names = ['xspress']
-    
+
     def remove_names(names):
         names = list(names)
         to_remove = set()
@@ -52,10 +53,10 @@ def run_engine_monkeypatch():
         for name in to_remove:
             names.remove(name)
         return names
-    
+
     def names(self, names):
         return orig_names(self, remove_names(names))
-        
+
     def values(self, vals, keys):
         return orig_values(self, vals, remove_names(keys))
 
