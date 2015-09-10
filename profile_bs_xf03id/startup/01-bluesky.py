@@ -28,15 +28,18 @@ gs.RE.subscribe('all', HxnScanNumberPrinter())
 
 loop = asyncio.get_event_loop()
 loop.set_debug(False)
-
 # gs.RE.verbose = True
 
+# sr_shutter_status = EpicsSignal('SR-EPS{PLC:1}Sts:MstrSh-Sts', rw=False,
+#                                 name='sr_shutter_status')
+# sr_beam_current = EpicsSignal('SR:C03-BI{DCCT:1}I:Real-I', rw=False,
+#                               name='sr_beam_current')
 
-checklist = partial(basic_checklist, ca_url='http://xf03id-ca.cs.nsls2.local:4800',
+checklist = partial(basic_checklist,
+                    ca_url='http://xf03id-ca.cs.nsls2.local:4800',
                     # disk_storage=[('/', 1e9)],
                     # pv_names=['XF:23ID1-ES{Dif-Ax:SY}Pos-SP'],
                     # pv_conditions=[('XF:23ID-PPS{Sh:FE}Pos-Sts', 'front-end shutter is open', assert_pv_equal, 0),
                     # 		   ('XF:23IDA-PPS:1{PSh}Pos-Sts', 'upstream shutter is open', assert_pv_equal, 0),
                     #                ('XF:23ID1-PPS{PSh}Pos-Sts', 'downstream shutter is open', assert_pv_equal, 0)],
-		   )
-
+		    )
