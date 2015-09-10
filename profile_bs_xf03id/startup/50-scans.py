@@ -1,28 +1,24 @@
 # vim: sw=4 ts=4 sts expandtab smarttab
 
 # TODO: figure this out
+## TODO
 olog_client = None
 
-from bluesky.standard_config import *
-import bluesky
 from bluesky.run_engine import DocumentNames
-from hxnfly.bs import (BSFlyScan1D, Flyer)
+from hxnfly.bs import (FlyScan1D, FlyScan2D)
+from hxnfly.callbacks import FlyLivePlot
 
 
-class HxnScanNumberPrinter:
-    def __init__(self):
-        self._last_start = None
+def _sum_func(*values):
+    return np.sum(values, axis=1)
 
-    def __call__(self, name, doc):
-        if name == DocumentNames.start:
-            self._last_start = doc
-        if self._last_start is None:
-            return
-        if name in (DocumentNames.start, DocumentNames.stop):
-            print('Scan ID: {scan_id} [{uid}]'.format(**self._last_start))
+flyplot = FlyLivePlot(sclr1_mca[:3], data_func=_sum_func,
+                      labels=['Pt'])
+# flyplot = FlyROIPlot(sclr1_mca[:3], data_func=_sum_func,
+#                      labels=['Pt'])
 
-
-gs.RE.subscribe('start', HxnScanNumberPrinter())
+fly1d = FlyScan1D(subs=[flyplot])
+fly2d = FlyScan2D(subs=[flyplot])
 
 
 default_detectors = [det_sclr1, det_beamstatus,
@@ -40,6 +36,9 @@ default_detectors = [det_sclr1, det_beamstatus,
 
 
 user_detectors = [xspress3.filestore, timepix1.filestore]
+
+# gs.RE.ignore_callback_exceptions = False
+gs.DETS = [sclr1]
 
 beamline_config_pvs = [ssx_rbv, ssy_rbv, ssz_rbv, t_base, t_sample, t_vlens]
 project_info = 'project_information'
