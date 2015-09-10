@@ -2,40 +2,10 @@ from ophyd.controls import EpicsSignal, EpicsScaler
 from ophyd.controls import SignalDetector
 import pandas as pd
 
-from hxntools.detectors import (Xspress3Detector, TimepixDetector,
+from hxntools.detectors import (TimepixDetector,
                                 MerlinDetector, BeamStatusDetector)
-from hxntools.detectors import Xspress3ROI
 from hxntools.detectors.zebra import HXNZebra
 
-# Fly scan ROIs to display after the scan
-roi_elements = [(1340, 1640, 'Al'),
-                (1590, 1890, 'Si'),
-                (2150, 2450, 'S'),
-                (2810, 3110, 'Ar'),
-                (3540, 3840, 'Ca'),
-                (4360, 4660, 'Ti'),
-                (4800, 5100, 'V'),
-                (5270, 5570, 'Cr'),
-                (5750, 6050, 'Mn'),
-                (6250, 6550, 'Fe'),
-                (6780, 7080, 'Co'),
-                (7330, 7630, 'Ni'),
-                (7900, 8200, 'Cu'),
-                (8490, 8790, 'Zn'),
-                (1970, 2270, 'Au'),
-                (9300, 9600, 'Pt'),
-                (4610, 5070, 'Ce'),
-                (2000, 2300, 'Zr'),
-                (1900, 2000, 'Y'),
-                (6530, 6940, 'Gd'),
-                ]
-
-FLY_XSPRESS3_ROI = []
-for ev_low, ev_high, name in roi_elements:
-    for chan in range(1, 4):
-        roi = Xspress3ROI(chan=chan, ev_low=ev_low, ev_high=ev_high,
-                          name='Det%d_%s' % (chan, name))
-        FLY_XSPRESS3_ROI.append(roi)
 
 # Scaler 1 MCA channels numbers to record with fly scans
 # (if above 8, be sure to modify n_scaler_mca below)
@@ -53,15 +23,11 @@ timepix1 = TimepixDetector('XF:03IDC-ES{Tpx:1}', files=['TIFF1:'],
 timepix2 = TimepixDetector('XF:03IDC-ES{Tpx:2}', files=['TIFF1:'],
                            name='timepix2',
                            file_path='/data', ioc_file_path='/data')
-xspress3 = Xspress3Detector('XF:03IDC-ES{Xsp:1}:', cam='', files=['HDF5:'],
-                            name='xspress3',
-                            file_path='/xspress3_data/',
-                            ioc_file_path='/xspress3_data/')
 merlin1 = MerlinDetector('XF:03IDC-ES{Merlin:1}', files=['TIFF1:'],
                          name='merlin1',
                          file_path='/data', ioc_file_path='/data')
 
-zebra = HXNZebra('XF:03IDC-ES{Zeb:1}:', name='zebra1')
+zebra = HXNZebra('XF:03IDC-ES{Zeb:1}:', name='zebra')
 
 # 3IDC RG:C4 VME scalers
 sclr1 = EpicsScaler('XF:03IDC-ES{Sclr:1}', name='sclr1')
@@ -203,3 +169,4 @@ sr_shutter_status = EpicsSignal('SR-EPS{PLC:1}Sts:MstrSh-Sts', rw=False)
 sr_beam_current = EpicsSignal('SR:C03-BI{DCCT:1}I:Real-I', rw=False)
 
 det_beamstatus = BeamStatusDetector(min_current=100.0)
+
