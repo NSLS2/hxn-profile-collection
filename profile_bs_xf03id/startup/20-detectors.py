@@ -47,12 +47,7 @@ sclr1_mca = [EpicsSignal('XF:03IDC-ES{Sclr:1}Mca:%d' % (i, ))
              for i in range(1, n_scaler_mca + 1)]
 
 sclr1_trig = EpicsSignal('XF:03IDC-ES{Sclr:1}.CNT', rw=True, name='sclr1_trig')
-det_sclr1 = SignalDetector(name='det_sclr1')
-det_sclr1.add_acquire_signal(sclr1_trig)
-
 sclr2_trig = EpicsSignal('XF:03IDC-ES{Sclr:2}.CNT', rw=True, name='sclr2_trig')
-det_sclr2 = SignalDetector(name='det_sclr2')
-det_sclr2.add_acquire_signal(sclr2_trig)
 
 # Ion chamber
 sclr2_ch2 = EpicsSignal('XF:03IDC-ES{Sclr:2}_cts1.B', name='sclr2_ch2')
@@ -169,4 +164,3 @@ sr_shutter_status = EpicsSignal('SR-EPS{PLC:1}Sts:MstrSh-Sts', rw=False)
 sr_beam_current = EpicsSignal('SR:C03-BI{DCCT:1}I:Real-I', rw=False)
 
 det_beamstatus = BeamStatusDetector(min_current=100.0)
-
