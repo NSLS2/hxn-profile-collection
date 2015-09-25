@@ -7,9 +7,12 @@ from bluesky.broker_callbacks import *
 from bluesky.hardware_checklist import *
 
 
-gs.RE.md['group'] = ''
-gs.RE.md['config'] = {}
-gs.RE.md['beamline_id'] = 'HXN'
+RE = gs.RE
+RE.md['group'] = ''
+RE.md['config'] = {}
+RE.md['beamline_id'] = 'HXN'
+# RE.ignore_callback_exceptions = False
+
 
 class HxnScanNumberPrinter:
     def __init__(self):
@@ -24,11 +27,11 @@ class HxnScanNumberPrinter:
             print('Scan ID: {scan_id} [{uid}]'.format(**self._last_start))
 
 
-gs.RE.subscribe('all', HxnScanNumberPrinter())
+RE.subscribe('all', HxnScanNumberPrinter())
 
 loop = asyncio.get_event_loop()
 loop.set_debug(False)
-# gs.RE.verbose = True
+# RE.verbose = True
 
 # sr_shutter_status = EpicsSignal('SR-EPS{PLC:1}Sts:MstrSh-Sts', rw=False,
 #                                 name='sr_shutter_status')
