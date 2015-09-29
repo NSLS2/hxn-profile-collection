@@ -1,112 +1,105 @@
 from __future__ import print_function
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
-from xray_vision.qt_widgets import CrossSectionMainWindow
-from xray_vision.backend.mpl.cross_section_2d import CrossSection
 from datetime import datetime
 import os
 
+from dataportal import DataBroker, DataMuxer
 
-def plot2d(scan, name,row,col):
+from xray_vision.qt_widgets import CrossSectionMainWindow
+from xray_vision.backend.mpl.cross_section_2d import CrossSection
 
-    det = getattr(dscan.data[scan], 'Det1_'+name)+getattr(dscan.data[scan], 'Det2_'+name)+getattr(dscan.data[scan], 'Det3_'+name)
+
+def plot2d(scan_id, name, row, col):
+    scan_id, df = _load_scan(scan_id, fill_events=False)
+    det = (df['Det1_{}'.format(name)] +
+           df['Det2_{}'.format(name)] +
+           df['Det3_{}'.format(name)])
 
     plt.figure()
     data = np.reshape(det, (row, col))
-    plt.imshow(data,interpolation='None')
+    plt.imshow(data, interpolation='None')
     plt.colorbar()
-    '''
-    num_det = 1;
-    if name == "all":
-        for i in range(num_det):
-            #det_name = dscan.detectors[i].name
-            det = getattr(dscan.data[scan], 'Fe_ch1')+getattr(dscan.data[scan], 'Fe_ch2')+getattr(dscan.data[scan], 'Fe_ch3')
-            plt.figure(i)
-            data = np.reshape(det, (row, col))
-            plt.imshow(data,interpolation='None')
-    else:
-        plt.figure()
-        det = getattr(dscan.data[scan], name)
-        data = np.reshape(det, (row, col))
-        plt.imshow(data,interpolation='None')
-    # return data
-    '''
 
-def dev(scan, namex, namey):
-    dety = getattr(dscan.data[scan], namey)
+
+def dev(scan_id, namex, namey):
     d = 3.13559
 
+    scan_id, df = _load_scan(scan_id, fill_events=False)
+    dety = df[namey]
+
     if namex == "energy":
-        detx = getattr(dscan.data[scan],"dcm_th")
+        detx = df["dcm_th"]
         num_points = len(detx)
-        data = np.zeros((num_points-1,2))
-        for i in range(num_points-1):
-            data[i,1] = (dety[i+1] - dety[i])/(detx[i+1]-detx[i])
-            tmp = (detx[i+1] + detx[i])/2
-            data[i,0] = 12.398/(2*d*np.sin(np.pi*(tmp + (-0.0135))/180))
-
+        data = np.zeros((num_points - 1, 2))
+        for i in range(num_points - 1):
+            data[i, 1] = (dety[i + 1] - dety[i]) / (detx[i + 1] - detx[i])
+            tmp = (detx[i + 1] + detx[i]) / 2
+            s = np.sin(np.pi * (tmp + (-0.0135)) / 180)
+            data[i, 0] = 12.398 / (2 * d * s)
     else:
-        detx = getattr(dscan.data[scan],namex)
+        detx = df[namex]
         num_points = len(detx)
-        data = np.zeros((num_points-1,2))
-        for i in range(num_points-1):
-            data[i,1] = (dety[i+1] - dety[i])/(detx[i+1]-detx[i])
-            data[i,0] = (detx[i+1] + detx[i])/2
-
+        data = np.zeros((num_points - 1, 2))
+        for i in range(num_points - 1):
+            data[i, 1] = (dety[i + 1] - dety[i]) / (detx[i + 1] - detx[i])
+            data[i, 0] = (detx[i + 1] + detx[i]) / 2
 
     plt.figure(20)
-    plt.plot(data[:,0],data[:,1])
+    plt.plot(data[:, 0], data[:, 1])
+    # return data
 
-    #return data
 
-
-def plot(scan, namex, elem='Pt', channels=None, norm='None'):
+def plot(scan_id, namex, elem='Pt', channels=None, norm='None'):
     plt.figure()
     plt.clf()
     if channels is None:
         channels = [1, 2, 3]
 
-    data = np.sum(getattr(dscan.data[scan],'Det%d_%s' % (chan, elem))
-                for chan in channels)
-
-    # data = getattr(dscan.data[scan], 'Det1_'+namey)+getattr(dscan.data[scan], 'Det2_'+namey)+getattr(dscan.data[scan], 'Det3_'+namey)
-
-    x = getattr(dscan.data[scan], namex)
+    scan_id, df = _load_scan(scan_id, fill_events=False)
+    x = df[namex]
+    data = np.sum(df['Det%d_%s' % (chan, elem)]
+                  for chan in channels)
 
     if norm != 'None':
-        norm_v = getattr(dscan.data[-1], norm)
-        plt.plot(x,data/(norm_v+1.e-8))
-        plt.plot(x,data/(norm_v+1.e-8),'bo')
+        norm_v = df[norm]
+        plt.plot(x, data / (norm_v + 1.e-8))
+        plt.plot(x, data / (norm_v + 1.e-8), 'bo')
     else:
-        plt.plot(x,data)
-        plt.plot(x,data,'bo')
+        plt.plot(x, data)
+        plt.plot(x, data, 'bo')
         plt.figure()
-        plt.plot(x[:-1],data[1:]-data[:-1])
-        plt.plot(x[:-1],data[1:]-data[:-1],'bo')
+        plt.plot(x[:-1], data[1:] - data[:-1])
+        plt.plot(x[:-1], data[1:] - data[:-1], 'bo')
         plt.title('derivative')
     plt.show()
 
 
-def plotfly(namex, elem='Pt', channels=None):
+def plotfly(scan_id, elem='Pt', channels=None):
     if channels is None:
         channels = [1, 2, 3]
 
     plt.figure()
-    x = fly_data[namex]
-    Pt = np.sum(fly_data['Det%d_%s' % (chan, elem)]
-                for chan in channels)
-    Pt[0] = Pt[1]
-    Pt = np.array(Pt)
+
+    scan_id, df = _load_scan(scan_id, fill_events=False)
+    hdr = DataBroker[scan_id]['start']
+    namex = hdr['fast_axis']
+
+    x = df[namex]
+    roi_data = np.sum(df['Det%d_%s' % (chan, elem)]
+                      for chan in channels)
 
     plt.subplot(121)
-    plt.plot(x,Pt)
-    plt.plot(x,Pt,'bo')
-    plt.title(elem)
+    plt.plot(x, roi_data)
+    plt.plot(x, roi_data, 'bo')
+    plt.title('Scan %d: %s' % (scan_id, elem))
 
+    diff = np.diff(roi_data)
     plt.subplot(122)
-    plt.plot(x[1:],Pt[1:]-Pt[:-1])
-    plt.plot(x[1:],Pt[1:]-Pt[:-1],'bo')
-    plt.title('%s (deriv)' % elem)
+    plt.plot(x[1:], diff)
+    plt.plot(x[1:], diff, 'bo')
+    plt.title('Scan %d: %s (deriv)' % (scan_id, elem))
 
     plt.show()
 
@@ -123,26 +116,6 @@ def _scan_starts(df):
     return [0] + list(scan_starts) + [len(t)]
 
 
-def _shift_zeros(df, spectrum):
-    zeros, = np.where(spectrum == 0)
-    print('number of zeros=%d' % len(zeros))
-    scan_starts = _scan_starts(df)
-    last_start = 0
-
-    spectrum = list(spectrum)
-    for zero_i in reversed(zeros):
-        # get end of scan index
-        next_scan = np.where(zero_i >= scan_starts)[0][-1] + 1
-        scan_end = scan_starts[next_scan]
-        # shift all spectrum data down
-        print('inserting zero at scan_end [idx %d], removing zero '
-              'at index %d' % (scan_end, zero_i))
-        spectrum.insert(scan_end, 5)
-        del spectrum[zero_i]
-
-    return np.array(spectrum, dtype=float)
-
-
 def _load_scan(scan_id, fill_events=False):
     '''Load scan from databroker by scan id'''
 
@@ -150,7 +123,7 @@ def _load_scan(scan_id, fill_events=False):
         df = data_cache[scan_id]
     else:
         hdr = DataBroker[scan_id]
-        scan_id = hdr.scan_id
+        scan_id = hdr['start'].scan_id
         if scan_id in data_cache:
             df = data_cache[scan_id]
         else:
@@ -164,7 +137,7 @@ def _load_scan(scan_id, fill_events=False):
 
 # TODO: change l, h to clim which defaults to 'auto'
 def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', elem='Pt', clim=None,
-              fill_events=False, cmap='Oranges', shift_zeros=False, cols=None,
+              fill_events=False, cmap='Oranges', cols=None,
               channels=None):
     """Plot the results of a 2d fly scan
 
@@ -190,9 +163,6 @@ def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', elem='Pt', clim=None,
     cmap : str, optional
         Defaults to "Oranges"
         The colormap to use. See the pyplot.cm module for valid color maps
-    shift_zeros : bool, optional
-        Shift all zeros in the scan [NOTE: this is for the detector triggering-
-        related bug only]
     cols : int, optional
         The number of columns in the scan. Automatically detected when possible
     channels : list, optional
@@ -212,70 +182,93 @@ def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', elem='Pt', clim=None,
             raise KeyError('ROI %s not found' % (key, ))
 
     spectrum = np.sum([getattr(df, roi) for roi in roi_keys], axis=0)
-    spectrum[0] = spectrum[1]
     x_data = df[x]
     y_data = df[y]
 
-    if cols is None:
-        prev_x = x_data[0]
-        for idx, pos in enumerate(x_data[1:]):
-            if pos > prev_x:
-                prev_x = pos
-            else:
-                break
+    hdr = DataBroker[scan_id]['start']
+    if len(hdr['dimensions']) != 2:
+        raise ValueError('Not a 2d scan (dimensions={})'
+                         ''.format(hdr['dimensions']))
 
-        cols = idx + 1
-        print('Detected scan columns: ', cols)
-
-    if shift_zeros:
-        spectrum = _shift_zeros(df, spectrum)
+    fly_type = hdr['fly_type']
+    nx, ny = hdr['dimensions']
+    total_points = nx * ny
 
     if clim is None:
         clim = (np.nanmin(spectrum), np.nanmax(spectrum))
     extent = (np.min(x_data), np.max(x_data), np.max(y_data), np.min(y_data))
 
-    # save it to disk
+    # these values are also used to set the limits on the value
+    if ((abs(extent[0] - extent[1]) <= 0.001) or
+            (abs(extent[2] - extent[3]) <= 0.001)):
+        extent = None
+
     dt = datetime.utcnow()
-    folder = '/data/{}{:0>2}{:0>2}/'.format(dt.year, dt.month, dt.day)
+    folder = os.path.join('/data',
+                          '{}{:0>2}{:0>2}/'.format(dt.year, dt.month, dt.day))
+
     if not os.path.exists(folder):
         os.makedirs(folder)
 
+    print('Scan {}. Saving to: {}'.format(scan_id, folder))
+
+    if len(spectrum) != total_points:
+        print('Padding data (points=%d expected=%d)' % (len(spectrum),
+                                                        total_points))
+
+        _spectrum = np.zeros(total_points, dtype=spectrum.dtype)
+        _spectrum[:len(spectrum)] = spectrum
+        spectrum = _spectrum
+
     try:
         spectrum2 = spectrum.copy()
-        spectrum2 = spectrum2.reshape((-1, cols))
+        spectrum2 = spectrum2.reshape((nx, ny))
     except Exception as ex:
-        print('Unable to reshape data to width: %d (%s: %s)' % (cols, ex.__class__.__name__, ex))
+        print('Unable to reshape data to width: %d (%s: %s)'
+              '' % (cols, ex.__class__.__name__, ex))
+
         fig = plt.figure()
         ax2 = plt.subplot(111)
     else:
-        print('Reshaped to %s' % (spectrum2.shape, ))
-        print(np.shape(spectrum2))
-        fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(10,5))
+        fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(10, 5))
         fig.set_tight_layout(True)
-  #      rows = np.size(spectrum2)/cols
-  #      for row in range(1, rows, 2):
-  #          spectrum2[row, :] = spectrum2[row, ::-1]
+        if fly_type in ('pyramid', ):
+            # Pyramid scans' odd rows are flipped:
+            print('\tPyramid scan. Flipping odd rows.')
+            spectrum2[1::2, :] = spectrum2[1::2, ::-1]
 
-        im = ax1.imshow(spectrum2, extent=extent, interpolation='None', cmap=cmap,
-                        vmin=clim[0], vmax=clim[1])
-        np.savetxt(folder + 'data_scan_'+np.str(scan_id), spectrum2)
+        ax1.imshow(spectrum2, extent=extent, interpolation='None', cmap=cmap,
+                   vmin=clim[0], vmax=clim[1])
+        np.savetxt(os.path.join(folder, 'data_scan_{}'.format(scan_id)),
+                   spectrum2)
 
         ax1.set_title('IMSHOW. ' + title)
 
-    # create the scatter plot version
-    scatter = ax2.scatter(x_data, y_data, c=spectrum, marker='s', s=250,
-                          cmap=getattr(mpl.cm, cmap), linewidths=0, alpha=.8,
-                          vmin=clim[0], vmax=clim[1])
-    ax2.set_xlim(np.min(x_data), np.max(x_data))
-    ax2.set_ylim(np.min(y_data), np.max(y_data))
-    ax2.set_title('SCATTER. ' + title)
-    ax2.set_aspect('equal')
-    fig.colorbar(scatter)
-    fig.savefig(folder + 'data_scan_'+np.str(scan_id)+'.png')
-    np.savetxt(folder + 'data_x_y_ch_'+np.str(scan_id),
-               np.vstack((x_data, y_data, spectrum)).T)
-    globals()['S_%d_%s' % (scan_id, elem)] = spectrum2
+    if extent is not None:
+        # create the scatter plot version
+        scatter = ax2.scatter(x_data, y_data, c=spectrum, marker='s', s=250,
+                              cmap=getattr(mpl.cm, cmap), linewidths=0,
+                              alpha=.8, vmin=clim[0], vmax=clim[1])
+        ax2.set_xlim(np.min(x_data), np.max(x_data))
+        ax2.set_ylim(np.min(y_data), np.max(y_data))
+        ax2.set_title('SCATTER. ' + title)
+        ax2.set_aspect('equal')
+        fig.colorbar(scatter)
+
+    fig_path = os.path.join(folder, 'data_scan_{}.png'.format(scan_id))
+    print('\tSaving figure to: {}'.format(fig_path))
+    fig.savefig(fig_path)
+
+    text_path = os.path.join(folder, 'data_x_y_ch_{}'.format(scan_id))
+    print('\tSaving text positions to: {}'.format(text_path))
+    np.savetxt(text_path, np.vstack((x_data, y_data, spectrum)).T)
+
+    var_name = 'S_%d_%s' % (scan_id, elem)
+    globals()[var_name] = spectrum2
+    print('\tScan data available in variable: {}'.format(var_name))
+
 
 def export(sid):
-    data = StepScan[sid]
-    np.savetxt('/data/txt/scan_'+np.str(sid)+'.txt',data,fmt='%1.5e')
+    sid, df = _load_scan(sid, fill_events=False)
+    path = os.path.join('/data', 'txt', 'scan_{}.txt'.format(sid))
+    np.savetxt(path, df, fmt='%1.5e')
