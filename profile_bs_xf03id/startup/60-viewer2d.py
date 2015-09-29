@@ -271,4 +271,11 @@ def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', elem='Pt', clim=None,
 def export(sid):
     sid, df = _load_scan(sid, fill_events=False)
     path = os.path.join('/data', 'txt', 'scan_{}.txt'.format(sid))
-    np.savetxt(path, df, fmt='%1.5e')
+    print('Scan {}. Saving to {}'.format(sid, path))
+
+    non_objects = [name for name, col in df.iteritems()
+                   if col.dtype.name not in ('object', )]
+
+    df.to_csv(path, float_format='%1.5e', sep='\t',
+              columns=sorted(non_objects))
+    # return df
