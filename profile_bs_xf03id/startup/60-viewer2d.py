@@ -109,13 +109,6 @@ if 'data_cache' not in globals():
     data_cache = {}
 
 
-def _scan_starts(df):
-    t = df['time']
-    # TODO using simple time threshold to determine where 2d scans start/stop
-    scan_starts, = np.where(np.diff(t) > 5)
-    return [0] + list(scan_starts) + [len(t)]
-
-
 def _load_scan(scan_id, fill_events=False):
     '''Load scan from databroker by scan id'''
 
