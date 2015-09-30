@@ -48,12 +48,18 @@ _xz_angle = 15. * pi / 180.
 
 
 def _pssxz_rev(ssx=None, ssz=None):
+    if None in [ssx, ssz]:
+        return [0.0, 0.0]
+
     _pssx = ssx * cos(_xz_angle) + ssz * sin(_xz_angle)
     _pssz = -ssx * sin(_xz_angle) + ssz * cos(_xz_angle)
     return [_pssx, _pssz]
 
 
 def _pssxz_fwd(pssx=None, pssz=None):
+    if None in [pssx, pssz]:
+        return [0.0, 0.0]
+
     _ssx = pssx * cos(_xz_angle) - pssz * sin(_xz_angle)
     _ssz = pssx * sin(_xz_angle) + pssz * cos(_xz_angle)
     return [_ssx, _ssz]
@@ -67,12 +73,16 @@ pssz = _pssxz['pssz']
 
 
 def _psxz_rev(sx=None, sz=None):
+    if None in [sx, sz]:
+        return [0.0, 0.0]
     _psx = sx * cos(_xz_angle) + sz * sin(_xz_angle)
     _psz = -sx * sin(_xz_angle) + sz * cos(_xz_angle)
     return [_psx, _psz]
 
 
 def _psxz_fwd(psx=None, psz=None):
+    if None in [psx, psz]:
+        return [0.0, 0.0]
     _sx = psx * cos(_xz_angle) - psz * sin(_xz_angle)
     _sz = psx * sin(_xz_angle) + psz * cos(_xz_angle)
     return [_sx, _sz]
