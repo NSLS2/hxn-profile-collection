@@ -4,7 +4,7 @@
 from hxnfly.bs import (FlyScan1D, FlyScan2D)
 # from hxnfly.callbacks import FlyLivePlot
 from hxnfly.callbacks import (FlyRoiPlot, FlyLiveImage)
-# from hxnfly.callbacks import FlyLiveCrossSection
+from hxnfly.callbacks import FlyLiveCrossSection
 
 # def _sum_func(*values):
 #     return np.sum(values, axis=1)
@@ -21,8 +21,8 @@ from hxnfly.callbacks import (FlyRoiPlot, FlyLiveImage)
 #
 flyplot = FlyRoiPlot(['BadROI', 'Al'], channels=[1, 2, 3], use_sum=True)
 fly2dplot = FlyLiveImage(['BadROI', 'Al'], channels=[1, 2, 3], use_sum=True)
-# fly2dplot = FlyLiveCrossSection(['BadROI'], channels=[1, 2, 3], use_sum=True)
+fly2dplot1 = FlyLiveCrossSection(['BadROI'], channels=[1, 2, 3], use_sum=True)
 
 
 fly1d = FlyScan1D([flyplot], detectors=[xspress3])
-fly2d = FlyScan2D([fly2dplot], detectors=[xspress3])
+fly2d = FlyScan2D([fly2dplot, fly2dplot1], detectors=[xspress3])
