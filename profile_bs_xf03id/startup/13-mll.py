@@ -65,11 +65,11 @@ def _pssxz_fwd(pssx=None, pssz=None):
     return [_ssx, _ssz]
 
 
-_pssxz = PseudoPositioner('_pssxz', [ssx, ssz], forward=_pssxz_fwd, reverse=_pssxz_rev,
-                          pseudo=['pssx', 'pssz'])
-
-pssx = _pssxz['pssx']
-pssz = _pssxz['pssz']
+# _pssxz = PseudoPositioner('_pssxz', [ssx, ssz], forward=_pssxz_fwd, reverse=_pssxz_rev,
+#                           pseudo=['pssx', 'pssz'])
+#
+# pssx = _pssxz['pssx']
+# pssz = _pssxz['pssz']
 
 
 def _psxz_rev(sx=None, sz=None):
@@ -88,11 +88,11 @@ def _psxz_fwd(psx=None, psz=None):
     return [_sx, _sz]
 
 
-_psxz = PseudoPositioner('_psxz', [sx, sz], forward=_psxz_fwd, reverse=_psxz_rev,
-                         pseudo=['psx', 'psz'])
-# psx, psz = _psxz
-psx = _psxz['psx']
-psz = _psxz['psz']
+# _psxz = PseudoPositioner('_psxz', [sx, sz], forward=_psxz_fwd, reverse=_psxz_rev,
+#                          pseudo=['psx', 'psz'])
+# # psx, psz = _psxz
+# psx = _psxz['psx']
+# psz = _psxz['psz']
 
 
 def movr_hth(angle):
