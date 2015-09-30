@@ -93,3 +93,37 @@ _psxz = PseudoPositioner('_psxz', [sx, sz], forward=_psxz_fwd, reverse=_psxz_rev
 # psx, psz = _psxz
 psx = _psxz['psx']
 psz = _psxz['psz']
+
+
+def movr_hth(angle):
+    radian = angle*pi/180.0
+    correction = -1.*tan(radian)*34376.6
+    movr(hth, angle)
+    movr(hx,correction)
+
+
+def movr_ssx(d):
+    dx_n = d * cos(15.*pi/180.)
+    dz_n = d * sin(15.*pi/180.)
+    movr(ssx, dx_n)
+    movr(ssz, dz_n)
+
+def movr_sx(d):
+    dx_n = d * cos(15.*pi/180.)
+    dz_n = d * sin(15.*pi/180.)
+    movr(sx, dx_n)
+    movr(sz, dz_n)
+
+
+def movr_sz(d):
+    dx_n = -d * sin(15.*pi/180.)
+    dz_n = d * cos(15.*pi/180.)
+    movr(sx, dx_n)
+    movr(sz, dz_n)
+
+
+def movr_ssz(d):
+    dx_n = -d * sin(15.*pi/180.)
+    dz_n = d * cos(15.*pi/180.)
+    movr(ssx, dx_n)
+    movr(ssz, dz_n)
