@@ -16,10 +16,14 @@ hxntools.scans.setup()
 #                      ssx_rbv, ssy_rbv, ssz_rbv, t_base, t_sample, t_vlens,
 #                      t_hlens]
 
+# When the scaler is triggered, the xspress3 is externally triggered with this
+# MasterDetector:
 master_sclr1 = MasterDetector(sclr1, slaves=[xspress3.filestore])
 
 # NOTE: master_sclr1 has SUB-detectors which are not in this list (see above)
-gs.DETS = [zebra, master_sclr1, ssx_rbv, ssy_rbv, ssz_rbv, t_base, t_sample,
+gs.DETS = [zebra, master_sclr1, ssx, ssy, ssz, t_base, t_sample,
            t_vlens, t_hlens]
 
-beamline_config_pvs = [ssx_rbv, ssy_rbv, ssz_rbv, t_base, t_sample, t_vlens]
+gs.TABLE_COLS = ['sclr1_chan1', 'sclr1_chan4', 'ssx', 'ssy', 'ssz',
+                 't_base', 't_sample', 't_vlens', 't_hlens']
+gs.PLOT_Y = 'sclr1_chan4'
