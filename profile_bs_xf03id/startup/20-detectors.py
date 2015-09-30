@@ -7,10 +7,6 @@ from hxntools.detectors import (TimepixDetector,
 from hxntools.detectors.zebra import HXNZebra
 
 
-# Scaler 1 MCA channels numbers to record with fly scans
-# (if above 8, be sure to modify n_scaler_mca below)
-FLY_SCALER1_CHANS = [2, 3, 8]
-
 # Flyscan results are shown using pandas. Maximum rows/columns to use when
 # printing the table:
 pd.options.display.width = 180

@@ -23,6 +23,10 @@ flyplot = FlyRoiPlot(['BadROI', 'Al'], channels=[1, 2, 3], use_sum=True)
 fly2dplot = FlyLiveImage(['BadROI', 'Al'], channels=[1, 2, 3], use_sum=True)
 fly2dplot1 = FlyLiveCrossSection(['BadROI'], channels=[1, 2, 3], use_sum=True)
 
+fly1d = FlyScan1D([flyplot],
+                  detectors=[xspress3],
+                  scaler_channels=[2, 3, 8])
 
-fly1d = FlyScan1D([flyplot], detectors=[xspress3])
-fly2d = FlyScan2D([fly2dplot, fly2dplot1], detectors=[xspress3])
+fly2d = FlyScan2D([fly2dplot, fly2dplot1],
+                  detectors=[xspress3],
+                  scaler_channels=[2, 3, 8])
