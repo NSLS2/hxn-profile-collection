@@ -26,4 +26,15 @@ gs.DETS = [zebra, master_sclr1, ssx, ssy, ssz, t_base, t_sample,
 
 gs.TABLE_COLS = ['sclr1_chan1', 'sclr1_chan4', 'ssx', 'ssy', 'ssz',
                  't_base', 't_sample', 't_vlens', 't_hlens']
-gs.PLOT_Y = 'sclr1_chan4'
+
+for roi in xspress3.rois.get_epics_rois(channels=[1, 2, 3]):
+    # Add the ROI to the list of detectors to be recorded
+    gs.DETS.append(roi)
+
+    if roi.channel == 1:
+        # Add the ROI to the list of columns to be printed in the table:
+        gs.TABLE_COLS.append(roi.name)
+
+
+# Plot this by default versus motor position:
+gs.PLOT_Y = 'Det1_BadROI'
