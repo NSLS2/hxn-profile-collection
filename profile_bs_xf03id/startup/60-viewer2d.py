@@ -171,7 +171,7 @@ def fly2d_grid(hdr, x_data=None, y_data=None, plot=False):
     return grid_x, grid_y
 
 
-def interp2d_scan(hdr, x_data, y_data, spectrum, kind='linear',
+def interp2d_scan(hdr, x_data, y_data, spectrum, *, kind='linear',
                   plot_points=False, **kwargs):
     '''Interpolate a 2D flyscan over a grid'''
 
@@ -221,7 +221,7 @@ def fly2d_reshape(hdr, spectrum, verbose=True):
 
 
 # TODO: change l, h to clim which defaults to 'auto'
-def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', elem='Pt', clim=None,
+def plot2dfly(scan_id, elem='Pt', *, x='ssx[um]', y='ssy[um]', clim=None,
               fill_events=False, cmap='Oranges', cols=None,
               channels=None, interp=None, interp2d=None):
     """Plot the results of a 2d fly scan
@@ -230,15 +230,15 @@ def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', elem='Pt', clim=None,
     ----------
     scan_id : int
         Any valid input to DataBroker[] or StepScan
-    x : str
-        The data key that corresponds to the x axis
-        Defaults to 'ssx[um]'
-    y : str
-        The data key that corresponds to the y axis
-        Defaults to 'ssy[um]'
     elem : str
         The element to display
         Defaults to 'Pt'
+    x : str, optional
+        The data key that corresponds to the x axis
+        Defaults to 'ssx[um]'
+    y : str, optional
+        The data key that corresponds to the y axis
+        Defaults to 'ssy[um]'
     clim : tuple, optional
         formtted as (min, max)
         If None, defaults to min/max of the data
