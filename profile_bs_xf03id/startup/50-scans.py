@@ -21,10 +21,10 @@ hxntools.scans.setup()
 master_sclr1 = MasterDetector(sclr1, slaves=[xspress3.filestore])
 
 # NOTE: master_sclr1 has SUB-detectors which are not in this list (see above)
-gs.DETS = [zebra, master_sclr1, ssx, ssy, ssz, t_base, t_sample,
+gs.DETS = [zebra, master_sclr1, sclr2_ch3, sclr2_ch4, ssx, ssy, ssz, t_base, t_sample,
            t_vlens, t_hlens]
 
-gs.TABLE_COLS = ['sclr1_chan1', 'sclr1_chan4', 'ssx', 'ssy', 'ssz',
+gs.TABLE_COLS = ['sclr2_ch3', 'sclr2_ch4', 'ssx', 'ssy', 'ssz',
                  't_base', 't_sample', 't_vlens', 't_hlens']
 
 for roi in xspress3.rois.get_epics_rois(channels=[1, 2, 3]):
@@ -37,4 +37,4 @@ for roi in xspress3.rois.get_epics_rois(channels=[1, 2, 3]):
 
 
 # Plot this by default versus motor position:
-gs.PLOT_Y = 'Det1_BadROI'
+gs.PLOT_Y = 'Det2_Pt'
