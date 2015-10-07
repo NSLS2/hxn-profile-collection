@@ -204,7 +204,7 @@ def fly2d_reshape(hdr, spectrum, verbose=True):
         raise ValueError('Not a 2D flyscan (dimensions={})'
                          ''.format(hdr['dimensions']))
     try:
-        spectrum2 = spectrum.copy().reshape((nx, ny))
+        spectrum2 = spectrum.copy().reshape((ny, nx))
     except Exception as ex:
         if verbose:
             print('\tUnable to reshape data to (%d, %d) (%s: %s)'
