@@ -1,14 +1,16 @@
 from __future__ import print_function
-import matplotlib as mpl
-import matplotlib.pyplot as plt
+import os
+import sys
 import numpy as np
 from datetime import datetime
-import os
+
+import matplotlib as mpl
+import matplotlib.pyplot as plt
 
 from dataportal import DataBroker, DataMuxer
-
-from xray_vision.qt_widgets import CrossSectionMainWindow
-from xray_vision.backend.mpl.cross_section_2d import CrossSection
+# from xray_vision.qt_widgets import CrossSectionMainWindow
+# from xray_vision.backend.mpl.cross_section_2d import CrossSection
+from scipy.interpolate import interp1d, interp2d
 
 
 def plot2d(scan_id, name, row, col):
@@ -128,10 +130,91 @@ def _load_scan(scan_id, fill_events=False):
     return scan_id, df
 
 
+def fly2d_grid(hdr, x_data=None, y_data=None, plot=False):
+    '''Get ideal gridded points for a 2D flyscan'''
+    try:
+        nx, ny = hdr['dimensions']
+    except ValueError:
+        raise ValueError('Not a 2D flyscan (dimensions={})'
+                         ''.format(hdr['dimensions']))
+
+    rangex, rangey = hdr['scan_range']
+    width = rangex[1] - rangex[0]
+    height = rangey[1] - rangey[0]
+
+    macros = eval(hdr['subscan_0']['macros'], dict(array=np.array))
+    start_x, start_y = macros['scan_starts']
+    dx = width / nx
+    dy = height / ny
+    grid_x = np.linspace(start_x, start_x + width + dx / 2, nx)
+    grid_y = np.linspace(start_y, start_y + height + dy / 2, ny)
+
+    if plot:
+        mesh_x, mesh_y = np.meshgrid(grid_x, grid_y)
+        plt.figure()
+        if x_data is not None and y_data is not None:
+            plt.scatter(x_data, y_data, c='blue', label='actual')
+        plt.scatter(mesh_x, mesh_y, c='red', label='gridded',
+                    alpha=0.5)
+        plt.legend()
+        plt.show()
+
+    return grid_x, grid_y
+
+
+def interp2d_scan(hdr, x_data, y_data, spectrum, kind='linear',
+                  plot_points=False, **kwargs):
+    '''Interpolate a 2D flyscan over a grid'''
+
+    new_x, new_y = fly2d_grid(hdr, x_data, y_data, plot=plot_points)
+
+    f = interp2d(x_data, y_data, spectrum, kind=kind, **kwargs)
+    return f(new_x, new_y)
+
+
+def interp1d_scan(hdr, x_data, y_data, spectrum, kind='linear',
+                  plot_points=False, **kwargs):
+    '''Interpolate a 2D flyscan only over the fast-scanning direction'''
+    grid_x, grid_y = fly2d_grid(hdr, x_data, y_data, plot=plot_points)
+    x_data = fly2d_reshape(hdr, x_data, verbose=False)
+
+    spectrum2 = np.zeros_like(spectrum)
+    for row in range(len(grid_y)):
+        spectrum2[row, :] = interp1d(x_data[row, :], spectrum[row, :],
+                                     kind=kind, bounds_error=False,
+                                     **kwargs)(grid_x)
+
+    return spectrum2
+
+
+def fly2d_reshape(hdr, spectrum, verbose=True):
+    '''Reshape a 1D array to match the shape of a 2D flyscan'''
+    try:
+        nx, ny = hdr['dimensions']
+    except ValueError:
+        raise ValueError('Not a 2D flyscan (dimensions={})'
+                         ''.format(hdr['dimensions']))
+    try:
+        spectrum2 = spectrum.copy().reshape((nx, ny))
+    except Exception as ex:
+        if verbose:
+            print('\tUnable to reshape data to (%d, %d) (%s: %s)'
+                  '' % (nx, ny, ex.__class__.__name__, ex))
+    else:
+        fly_type = hdr['fly_type']
+        if fly_type in ('pyramid', ):
+            # Pyramid scans' odd rows are flipped:
+            if verbose:
+                print('\tPyramid scan. Flipping odd rows.')
+            spectrum2[1::2, :] = spectrum2[1::2, ::-1]
+
+        return spectrum2
+
+
 # TODO: change l, h to clim which defaults to 'auto'
 def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', elem='Pt', clim=None,
               fill_events=False, cmap='Oranges', cols=None,
-              channels=None):
+              channels=None, interp=None, interp2d=None):
     """Plot the results of a 2d fly scan
 
     Parameters
@@ -156,10 +239,14 @@ def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', elem='Pt', clim=None,
     cmap : str, optional
         Defaults to "Oranges"
         The colormap to use. See the pyplot.cm module for valid color maps
-    cols : int, optional
-        The number of columns in the scan. Automatically detected when possible
     channels : list, optional
         The channels to use (defaults to 1 to 3)
+    interp : {'linear', 'cubic', 'quintic'}, optional
+        Interpolate the data on the 2D mesh defined by positioners x and y,
+        only in the x direction
+    interp2d : {'linear', 'cubic', 'quintic'}, optional
+        Interpolate the data on the 2D mesh defined by positioners x and y,
+        in both the x and y directions (NOTE: _extremely_ slow)
     """
 
     if channels is None:
@@ -168,28 +255,31 @@ def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', elem='Pt', clim=None,
     scan_id, df = _load_scan(scan_id, fill_events=fill_events)
 
     title = 'Scan id %s. ' % scan_id + elem
-    roi_keys = ['Det%d_%s' % (chan, elem) for chan in channels]
+    if elem in df:
+        spectrum = np.asarray(df[elem])
+    else:
+        roi_keys = ['Det%d_%s' % (chan, elem) for chan in channels]
 
-    for key in roi_keys:
-        if key not in df:
-            raise KeyError('ROI %s not found' % (key, ))
+        for key in roi_keys:
+            if key not in df:
+                raise KeyError('ROI %s not found' % (key, ))
 
-    spectrum = np.sum([getattr(df, roi) for roi in roi_keys], axis=0)
-    x_data = df[x]
-    y_data = df[y]
+        spectrum = np.sum([getattr(df, roi) for roi in roi_keys], axis=0)
+    x_data = np.asarray(df[x])
+    y_data = np.asarray(df[y])
 
     hdr = DataBroker[scan_id]['start']
     if len(hdr['dimensions']) != 2:
         raise ValueError('Not a 2d scan (dimensions={})'
                          ''.format(hdr['dimensions']))
 
-    fly_type = hdr['fly_type']
     nx, ny = hdr['dimensions']
     total_points = nx * ny
 
     if clim is None:
         clim = (np.nanmin(spectrum), np.nanmax(spectrum))
-    extent = (np.min(x_data), np.max(x_data), np.max(y_data), np.min(y_data))
+    extent = (np.nanmin(x_data), np.nanmax(x_data),
+              np.nanmax(y_data), np.nanmin(y_data))
 
     # these values are also used to set the limits on the value
     if ((abs(extent[0] - extent[1]) <= 0.001) or
@@ -213,23 +303,27 @@ def plot2dfly(scan_id, x='ssx[um]', y='ssy[um]', elem='Pt', clim=None,
         _spectrum[:len(spectrum)] = spectrum
         spectrum = _spectrum
 
-    try:
-        spectrum2 = spectrum.copy()
-        spectrum2 = spectrum2.reshape((nx, ny))
-    except Exception as ex:
-        print('Unable to reshape data to width: %d (%s: %s)'
-              '' % (cols, ex.__class__.__name__, ex))
+    if interp2d is not None:
+        print('\tUsing 2D %s interpolation...' % (interp2d, ), end=' ')
+        sys.stdout.flush()
+        spectrum = interp2d_scan(hdr, x_data, y_data, spectrum,
+                                 kind=interp2d)
+        print('done')
 
+    spectrum2 = fly2d_reshape(hdr, spectrum)
+
+    if interp is not None:
+        print('\tUsing 1D %s interpolation...' % (interp, ), end=' ')
+        sys.stdout.flush()
+        spectrum2 = interp1d_scan(hdr, x_data, y_data, spectrum2, kind=interp)
+        print('done')
+
+    if spectrum2 is None:
         fig = plt.figure()
         ax2 = plt.subplot(111)
     else:
         fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(10, 5))
         fig.set_tight_layout(True)
-        if fly_type in ('pyramid', ):
-            # Pyramid scans' odd rows are flipped:
-            print('\tPyramid scan. Flipping odd rows.')
-            spectrum2[1::2, :] = spectrum2[1::2, ::-1]
-
         ax1.imshow(spectrum2, extent=extent, interpolation='None', cmap=cmap,
                    vmin=clim[0], vmax=clim[1])
         np.savetxt(os.path.join(folder, 'data_scan_{}'.format(scan_id)),
