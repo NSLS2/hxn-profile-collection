@@ -91,18 +91,23 @@ def plotfly(scan_id, elem='Pt', channels=None):
     x = df[namex]
     roi_data = np.sum(df['Det%d_%s' % (chan, elem)]
                       for chan in channels)
+    try:
+        diff = np.diff(roi_data)
+        plt.subplot(122)
+        plt.plot(x[1:], diff)
+        plt.plot(x[1:], diff, 'bo')
+        plt.title('Scan %d: %s (deriv)' % (scan_id, elem))
+    except Exception:
+        print('Failed to plot derivative: ({}) {}'
+              ''.format(ex.__class__.__name__, ex))
+        plt.clf()
+        plt.subplot(111)
+    else:
+        plt.subplot(121)
 
-    plt.subplot(121)
     plt.plot(x, roi_data)
     plt.plot(x, roi_data, 'bo')
     plt.title('Scan %d: %s' % (scan_id, elem))
-
-    diff = np.diff(roi_data)
-    plt.subplot(122)
-    plt.plot(x[1:], diff)
-    plt.plot(x[1:], diff, 'bo')
-    plt.title('Scan %d: %s (deriv)' % (scan_id, elem))
-
     plt.show()
 
 
