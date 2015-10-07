@@ -71,10 +71,14 @@ def plot(scan_id, namex, elem='Pt', channels=None, norm='None'):
     else:
         plt.plot(x, data)
         plt.plot(x, data, 'bo')
-        plt.figure()
-        plt.plot(x[:-1], data[1:] - data[:-1])
-        plt.plot(x[:-1], data[1:] - data[:-1], 'bo')
-        plt.title('derivative')
+        try:
+            plt.figure()
+            plt.plot(x[:-1], data[1:] - data[:-1])
+            plt.plot(x[:-1], data[1:] - data[:-1], 'bo')
+            plt.title('derivative')
+        except Exception as ex:
+            print('Failed to plot derivative: ({}) {}'
+                  ''.format(ex.__class__.__name__, ex))
     plt.show()
 
 
@@ -97,7 +101,7 @@ def plotfly(scan_id, elem='Pt', channels=None):
         plt.plot(x[1:], diff)
         plt.plot(x[1:], diff, 'bo')
         plt.title('Scan %d: %s (deriv)' % (scan_id, elem))
-    except Exception:
+    except Exception as ex:
         print('Failed to plot derivative: ({}) {}'
               ''.format(ex.__class__.__name__, ex))
         plt.clf()
