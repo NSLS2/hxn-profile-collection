@@ -18,7 +18,7 @@ hxntools.scans.setup()
 
 # When the scaler is triggered, the xspress3 is externally triggered with this
 # MasterDetector:
-master_sclr1 = MasterDetector(sclr1, slaves=[xspress3.filestore])
+master_sclr1 = MasterDetector(sclr1, slaves=[xspress3.filestore, merlin1.filestore])
 
 # NOTE: master_sclr1 has SUB-detectors which are not in this list (see above)
 gs.DETS = [zebra, master_sclr1, sclr2_ch3, sclr2_ch4, ssx, ssy, ssz, t_base, t_sample,
