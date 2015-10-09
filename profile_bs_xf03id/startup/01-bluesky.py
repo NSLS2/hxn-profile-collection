@@ -1,4 +1,5 @@
 import asyncio
+
 from functools import partial
 from bluesky.standard_config import *
 from bluesky.scans import *
@@ -6,6 +7,7 @@ from bluesky.callbacks import *
 from bluesky.broker_callbacks import *
 from bluesky.hardware_checklist import *
 
+from hxntools.uid_broadcast import HxnUidBroadcast
 
 RE = gs.RE
 RE.md['group'] = ''
@@ -26,8 +28,10 @@ class HxnScanNumberPrinter:
         if name in ('start', 'stop'):
             print('Scan ID: {scan_id} [{uid}]'.format(**self._last_start))
 
+uid_broadcaster = HxnUidBroadcast('XF:03IDC-ES{BS-Scan}UID-I')
 
 RE.subscribe('all', HxnScanNumberPrinter())
+RE.subscribe('all', uid_broadcaster)
 
 loop = asyncio.get_event_loop()
 loop.set_debug(False)
