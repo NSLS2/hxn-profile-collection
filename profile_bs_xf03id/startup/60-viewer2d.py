@@ -6,6 +6,7 @@ from datetime import datetime
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 
 from dataportal import DataBroker, DataMuxer
 # from xray_vision.qt_widgets import CrossSectionMainWindow
@@ -53,9 +54,10 @@ def dev(scan_id, namex, namey):
     # return data
 
 
-def plot(scan_id, namex, elem='Pt', channels=None, norm='None'):
+def plot(scan_id, namex, elem='Pt', channels=None, norm=None):
     plt.figure()
-    plt.clf()
+    plt.title(elem)
+
     if channels is None:
         channels = [1, 2, 3]
 
@@ -64,7 +66,10 @@ def plot(scan_id, namex, elem='Pt', channels=None, norm='None'):
     data = np.sum(df['Det%d_%s' % (chan, elem)]
                   for chan in channels)
 
-    if norm != 'None':
+    x = np.asarray(x)
+    data = np.asarray(data)
+
+    if norm is not None:
         norm_v = df[norm]
         plt.plot(x, data / (norm_v + 1.e-8))
         plt.plot(x, data / (norm_v + 1.e-8), 'bo')
@@ -72,13 +77,59 @@ def plot(scan_id, namex, elem='Pt', channels=None, norm='None'):
         plt.plot(x, data)
         plt.plot(x, data, 'bo')
         try:
+            diff = np.diff(data)
             plt.figure()
-            plt.plot(x[:-1], data[1:] - data[:-1])
-            plt.plot(x[:-1], data[1:] - data[:-1], 'bo')
+            plt.plot(x[:-1], diff)
+            plt.plot(x[:-1], diff, 'bo')
             plt.title('derivative')
         except Exception as ex:
             print('Failed to plot derivative: ({}) {}'
                   ''.format(ex.__class__.__name__, ex))
+            raise
+
+    plt.show()
+
+
+def plot_all(scan_id, namex=None, diff=False, channels=None,
+             same_axis=False):
+    plt.figure()
+
+    if channels is None:
+        channels = [1, 2, 3]
+
+    scan_id, df = _load_scan(scan_id, fill_events=False)
+    plt.title('Scan id: {}'.format(scan_id))
+
+    x = df[namex]
+    elems = set(key.split('_', 1)[1] for key in df
+                if key.startswith('Det'))
+
+    if same_axis:
+        ax = plt.subplot(111)
+    else:
+        n_elem = len(elems)
+        cols = rows = int(np.ceil(np.sqrt(n_elem)))
+        gs = gridspec.GridSpec(rows, rows)
+
+    print('All elements:', list(elems))
+    for i, elem in sorted(enumerate(elems)):
+        if not same_axis:
+            ax = plt.subplot(gs[i])
+            ax.set_title(elem)
+
+            # share the x-axes in columns
+            if i < (n_elem - cols):
+                plt.setp(ax.get_xticklabels(), visible=False)
+
+        data = np.sum(df['Det%d_%s' % (chan, elem)]
+                      for chan in channels)
+
+        ax.plot(x, data, label=elem)
+        ax.plot(x, data, 'bo')
+
+    if same_axis:
+        plt.legend(loc='best')
+
     plt.show()
 
 
@@ -240,7 +291,7 @@ def plot2dfly(scan_id, elem='Pt', *, x='ssx[um]', y='ssy[um]', clim=None,
         The data key that corresponds to the y axis
         Defaults to 'ssy[um]'
     clim : tuple, optional
-        formtted as (min, max)
+        formatted as (min, max)
         If None, defaults to min/max of the data
     fill_events : bool, optional
         Fill the events with data from filestore
