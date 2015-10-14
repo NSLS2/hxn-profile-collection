@@ -11,6 +11,10 @@ from hxntools.uid_broadcast import HxnUidBroadcast
 from hxntools.scan_status import HxnScanStatus
 
 RE = gs.RE
+abort = RE.abort
+resume = RE.resume
+stop = RE.stop
+
 RE.md['group'] = ''
 RE.md['config'] = {}
 RE.md['beamline_id'] = 'HXN'
