@@ -3,6 +3,8 @@
 
 import hxntools.scans
 from hxntools.detectors.master_detector import MasterDetector
+from hxntools.spiral_scans import HxnFermatScan
+
 
 # TODO: figure out olog issues
 olog_client = None
@@ -10,6 +12,10 @@ olog_client = None
 
 # Set up regular ascans/dscans to work with HXN detector triggering methods:
 hxntools.scans.setup()
+
+# Define how spiral scans should work
+fermat = HxnFermatScan()
+
 
 # default_detectors = [sclr1, det_beamstatus,
 #                      sclr1_ch2, sclr1_ch3, sclr1_ch4,
