@@ -6,9 +6,14 @@ from bluesky.scans import *
 from bluesky.callbacks import *
 from bluesky.broker_callbacks import *
 from bluesky.hardware_checklist import *
+from bluesky.qt_kicker import install_qt_kicker
 
 from hxntools.uid_broadcast import HxnUidBroadcast
 from hxntools.scan_status import HxnScanStatus
+
+# The following line allows bluesky and pyqt4 GUIs to play nicely together:
+install_qt_kicker()
+
 
 RE = gs.RE
 abort = RE.abort
