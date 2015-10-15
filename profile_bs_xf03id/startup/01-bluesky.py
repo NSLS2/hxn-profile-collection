@@ -10,6 +10,8 @@ from bluesky.qt_kicker import install_qt_kicker
 
 from hxntools.uid_broadcast import HxnUidBroadcast
 from hxntools.scan_status import HxnScanStatus
+from hxntools.scan_number import HxnScanNumberPrinter
+
 
 # The following line allows bluesky and pyqt4 GUIs to play nicely together:
 install_qt_kicker()
@@ -24,19 +26,6 @@ RE.md['group'] = ''
 RE.md['config'] = {}
 RE.md['beamline_id'] = 'HXN'
 # RE.ignore_callback_exceptions = False
-
-
-class HxnScanNumberPrinter:
-    def __init__(self):
-        self._last_start = None
-
-    def __call__(self, name, doc):
-        if name == 'start':
-            self._last_start = doc
-        if self._last_start is None:
-            return
-        if name in ('start', 'stop'):
-            print('Scan ID: {scan_id} [{uid}]'.format(**self._last_start))
 
 uid_broadcaster = HxnUidBroadcast('XF:03IDC-ES{BS-Scan}UID-I')
 hxn_scan_status = HxnScanStatus('XF:03IDC-ES{Status}ScanRunning-I')
