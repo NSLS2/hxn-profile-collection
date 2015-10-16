@@ -28,7 +28,7 @@ master_sclr1 = MasterDetector(sclr1, slaves=[xspress3.filestore, merlin1.filesto
 
 # NOTE: master_sclr1 has SUB-detectors which are not in this list (see above)
 gs.DETS = [zebra, master_sclr1, sclr2_ch3, sclr2_ch4, ssx, ssy, ssz, t_base, t_sample,
-           t_vlens, t_hlens]
+           t_vlens, t_hlens, timepix1.filestore]
 
 gs.TABLE_COLS = ['sclr2_ch3', 'sclr2_ch4', 'ssx', 'ssy', 'ssz',
                  't_base', 't_sample', 't_vlens', 't_hlens']
