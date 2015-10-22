@@ -1,12 +1,14 @@
 from ophyd.controls import EpicsMotor, PVPositioner, PseudoPositioner
 
-p_ssx = EpicsMotor('XF:03IDC-ES{Ddrive:1-Ax:1}Mtr', name='p_ssx')
-p_ssy = EpicsMotor('XF:03IDC-ES{Ddrive:1-Ax:2}Mtr', name='p_ssy')
-p_ssz = EpicsMotor('XF:03IDC-ES{Ddrive:1-Ax:3}Mtr', name='p_ssz')
+p_ssx = EpicsMotor('XF:03IDC-ES{Ddrive:1-Ax:2}Mtr', name='p_ssx')
+p_ssy = EpicsMotor('XF:03IDC-ES{Ddrive:1-Ax:3}Mtr', name='p_ssy')
+p_ssz = EpicsMotor('XF:03IDC-ES{Ddrive:1-Ax:1}Mtr', name='p_ssz')
 
 p_vz = EpicsMotor('XF:03IDC-ES{MMC100:1-Ax:1}Mtr', name='p_vz')
 p_cz = EpicsMotor('XF:03IDC-ES{MMC100:1-Ax:2}Mtr', name='p_cz')
 p_cx = EpicsMotor('XF:03IDC-ES{MMC100:1-Ax:3}Mtr', name='p_cx')
+p_cy = EpicsMotor('XF:03IDC-ES{ANC350:6-Ax:1}Mtr', name='p_cy')
+
 
 p_bsx = EpicsMotor('XF:03IDC-ES{MCS:3-Ax:1}Mtr', name='p_bsx')
 p_bsy = EpicsMotor('XF:03IDC-ES{MCS:3-Ax:2}Mtr', name='p_bsy')
