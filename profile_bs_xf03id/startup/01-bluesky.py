@@ -1,5 +1,4 @@
 import asyncio
-
 from functools import partial
 from bluesky.standard_config import *
 from bluesky.scans import *
@@ -45,7 +44,7 @@ loop.set_debug(False)
 
 checklist = partial(basic_checklist,
                     ca_url='http://xf03id-ca.cs.nsls2.local:4800',
-                    # disk_storage=[('/', 1e9)],
+                    disk_storage=[('/', 10e9), ('/data', 10e9), ('/xspress3_data', 10e9)],
                     # pv_names=['XF:23ID1-ES{Dif-Ax:SY}Pos-SP'],
                     # pv_conditions=[('XF:23ID-PPS{Sh:FE}Pos-Sts', 'front-end shutter is open', assert_pv_equal, 0),
                     # 		   ('XF:23IDA-PPS:1{PSh}Pos-Sts', 'upstream shutter is open', assert_pv_equal, 0),
