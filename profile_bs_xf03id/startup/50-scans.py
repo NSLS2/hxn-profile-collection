@@ -27,10 +27,10 @@ fermat = HxnFermatScan()
 master_sclr1 = MasterDetector(sclr1, slaves=[xspress3.filestore, merlin1.filestore])
 
 # NOTE: master_sclr1 has SUB-detectors which are not in this list (see above)
-gs.DETS = [zebra, master_sclr1, tpx1_roi, sclr2_ch2,sclr2_ch3, sclr2_ch4, ssx, ssy, ssz, t_base, t_sample,
-           t_vlens, t_hlens, timepix1.filestore]
+gs.DETS = [zebra, master_sclr1, sclr2_ch2, sclr2_ch3, sclr2_ch4, ssx, ssy, ssz, t_base, t_sample,
+           t_vlens, t_hlens, bpmx, bpmy]
 
-gs.TABLE_COLS = ['tpx1_roi','sclr2_ch2','sclr2_ch3', 'sclr2_ch4', 'ssx', 'ssy', 'ssz',
+gs.TABLE_COLS = ['sclr2_ch2','sclr2_ch3', 'sclr2_ch4', 'ssx', 'ssy', 'ssz',
                  't_base', 't_sample', 't_vlens', 't_hlens']
 
 for roi in xspress3.rois.get_epics_rois(channels=[1, 2, 3]):

@@ -74,7 +74,12 @@ int_sz = EpicsSignal('XF:03IDC-ES{FPS:1-Chan2}Pos-I', name='int_sz')
 int_hx = EpicsSignal('XF:03IDC-ES{FPS:2-Chan0}Pos-I', name='int_hx')
 int_vy = EpicsSignal('XF:03IDC-ES{FPS:2-Chan1}Pos-I', name='int_vy')
 
-tpx1_roi = EpicsSignal('XF:03IDC-ES{Tpx:1}Stats1:Total_RBV', name='tpx1_roi')
+# Front-end Xray BPMs
+bpmx = EpicsSignal('SR:C03-BI{XBPM:1}Pos:X-I', name='bpmx')
+bpmy = EpicsSignal('SR:C03-BI{XBPM:1}Pos:Y-I', name='bpmy')
+
+
+#tpx1_roi = EpicsSignal('XF:03IDC-ES{Tpx:1}Stats1:Total_RBV', name='tpx1_roi')
 
 
 # Unused interferometer signals
