@@ -1,6 +1,5 @@
 # vim: sw=4 ts=4 sts expandtab smarttab
 # HXN fly-scan configuration
-
 from hxnfly.bs import (FlyScan1D, FlyScan2D)
 # from hxnfly.callbacks import FlyLivePlot
 from hxnfly.callbacks import (FlyRoiPlot, FlyLiveImage)
@@ -19,14 +18,14 @@ from hxnfly.callbacks import FlyLiveCrossSection
 # (optionally sum them together with use_sum=True or adding a function to
 #  calculate with data_func=sum_func)
 #
-flyplot = FlyRoiPlot(['Fe'], channels=[1, 2, 3], use_sum=True)
-fly2dplot = FlyLiveImage(['Fe','Gd','Ce','Co'], channels=[1, 2, 3], use_sum=True)
-fly2dplot1 = FlyLiveCrossSection(['Fe'], channels=[1, 2, 3], use_sum=True)
+flyplot = FlyRoiPlot(['Pt'], channels=[1, 2, 3], use_sum=True)
+fly2dplot = FlyLiveImage(['V','P','Ag','Pt','Si'], channels=[1, 2, 3], use_sum=True)
+fly2dplot1 = FlyLiveCrossSection(['V'], channels=[1, 2, 3], use_sum=True)
 
 fly1d = FlyScan1D([flyplot],
                   detectors=[xspress3, merlin1],
                   scaler_channels=[2, 3, 4])
 
-fly2d = FlyScan2D([fly2dplot, fly2dplot1],
+fly2d = FlyScan2D([fly2dplot],
                   detectors=[xspress3, merlin1],
                   scaler_channels=[2, 3, 4])
