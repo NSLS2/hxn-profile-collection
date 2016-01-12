@@ -45,6 +45,10 @@ sclr1_mca = [EpicsSignal('XF:03IDC-ES{Sclr:1}Mca:%d' % (i, ))
 sclr1_trig = EpicsSignal('XF:03IDC-ES{Sclr:1}.CNT', rw=True, name='sclr1_trig')
 sclr2_trig = EpicsSignal('XF:03IDC-ES{Sclr:2}.CNT', rw=True, name='sclr2_trig')
 
+# ugap scan trigger
+ugap_trig = EpicsSignal('SR:C3-ID:G1{IVU20:1-Mtr:2}Sw:Go', rw=True, name='ugap_trig')
+
+
 # Ion chamber
 sclr2_ch2 = EpicsSignal('XF:03IDC-ES{Sclr:2}_cts1.B', name='sclr2_ch2')
 sclr2_ch3 = EpicsSignal('XF:03IDC-ES{Sclr:2}_cts1.C', name='sclr2_ch3')
@@ -74,10 +78,30 @@ int_sz = EpicsSignal('XF:03IDC-ES{FPS:1-Chan2}Pos-I', name='int_sz')
 int_hx = EpicsSignal('XF:03IDC-ES{FPS:2-Chan0}Pos-I', name='int_hx')
 int_vy = EpicsSignal('XF:03IDC-ES{FPS:2-Chan1}Pos-I', name='int_vy')
 
-# Front-end Xray BPMs
-bpmx = EpicsSignal('SR:C03-BI{XBPM:1}Pos:X-I', name='bpmx')
-bpmy = EpicsSignal('SR:C03-BI{XBPM:1}Pos:Y-I', name='bpmy')
+# Front-end Xray BPMs and local bumps
+xbpm_x = EpicsSignal('SR:C03-BI{XBPM:1}Pos:X-I', name='xbpm_x')
+xbpm_y = EpicsSignal('SR:C03-BI{XBPM:1}Pos:Y-I', name='xbpm_y')
 
+angle_x = EpicsSignal('SR:C31-{AI}Aie3:Angle-x-Cal', name='angle_x')
+angle_y = EpicsSignal('SR:C31-{AI}Aie3:Angle-y-Cal', name='angle_y')
+
+# Diamond Quad BPMs in C hutch
+quad_x = EpicsSignal('SR:C12-BI{XBPM:1}Pos:X-I', name='quad_x')
+quad_y = EpicsSignal('SR:C12-BI{XBPM:1}Pos:Y-I', name='quad_y')
+
+
+# Slit 1 BPM (drain current from I400)
+slit1_top    = EpicsSignal('XF:03IDA-BI{Slt:1}I:Raw1-I', name='slit1_top')
+slit1_bottom = EpicsSignal('XF:03IDA-BI{Slt:1}I:Raw2-I', name='slit1_bottom')
+slit1_right  = EpicsSignal('XF:03IDA-BI{Slt:1}I:Raw3-I', name='slit1_right')
+slit1_left   = EpicsSignal('XF:03IDA-BI{Slt:1}I:Raw4-I', name='slit1_left')
+# calculated position (from CALC record)
+slit1_xpos = EpicsSignal('XF:03IDA-BI{Slt:1}PosX-I', name='slit1_xpos')
+slit1_ypos = EpicsSignal('XF:03IDA-BI{Slt:1}PosY-I', name='slit1_ypos')
+
+# Mono motors
+dcm_th = EpicsSignal('XF:03IDA-OP{Mon:1-Ax:Bragg}Mtr.RBV', name='dcm_th')
+dcm_p = EpicsSignal('XF:03IDA-OP{Mon:1-Ax:P}Mtr.RBV', name='dcm_p')
 
 #tpx1_roi = EpicsSignal('XF:03IDC-ES{Tpx:1}Stats1:Total_RBV', name='tpx1_roi')
 
