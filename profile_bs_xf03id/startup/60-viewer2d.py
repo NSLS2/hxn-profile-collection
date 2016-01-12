@@ -63,9 +63,9 @@ def plot(scan_id, namex, elem='Pt', channels=None, norm=None):
 
     scan_id, df = _load_scan(scan_id, fill_events=False)
     x = df[namex]
-    data = np.sum(df['Det%d_%s' % (chan, elem)]
-                  for chan in channels)
-
+#    data = np.sum(df['Det%d_%s' % (chan, elem)]
+#                  for chan in channels)
+    data = df[elem]
     x = np.asarray(x)
     data = np.asarray(data)
 
@@ -347,7 +347,7 @@ def plot2dfly(scan_id, elem='Pt', *, x='ssx[um]', y='ssy[um]', clim=None,
         extent = None
 
     dt = datetime.utcnow()
-    folder = os.path.join('/data',
+    folder = os.path.join('/data/output/',
                           '{}{:0>2}{:0>2}/'.format(dt.year, dt.month, dt.day))
 
     if not os.path.exists(folder):
@@ -391,6 +391,7 @@ def plot2dfly(scan_id, elem='Pt', *, x='ssx[um]', y='ssy[um]', clim=None,
 
         ax1.set_title('IMSHOW. ' + title)
 
+
     if extent is not None:
         # create the scatter plot version
         scatter = ax2.scatter(x_data, y_data, c=spectrum, marker='s', s=250,
@@ -402,11 +403,11 @@ def plot2dfly(scan_id, elem='Pt', *, x='ssx[um]', y='ssy[um]', clim=None,
         ax2.set_aspect('equal')
         fig.colorbar(scatter)
 
-    fig_path = os.path.join(folder, 'data_scan_{}.png'.format(scan_id))
+    fig_path = os.path.join(folder,'data_scan_{}.png'.format(scan_id))
     print('\tSaving figure to: {}'.format(fig_path))
     fig.savefig(fig_path)
 
-    text_path = os.path.join(folder, 'data_x_y_ch_{}'.format(scan_id))
+    text_path = os.path.join(folder,'data_x_y_ch_{}'.format(scan_id))
     print('\tSaving text positions to: {}'.format(text_path))
     np.savetxt(text_path, np.vstack((x_data, y_data, spectrum)).T)
 
@@ -417,7 +418,7 @@ def plot2dfly(scan_id, elem='Pt', *, x='ssx[um]', y='ssy[um]', clim=None,
 
 def export(sid):
     sid, df = _load_scan(sid, fill_events=False)
-    path = os.path.join('/data', 'txt', 'scan_{}.txt'.format(sid))
+    path = os.path.join('/data/output/txt/', 'scan_{}.txt'.format(sid))
     print('Scan {}. Saving to {}'.format(sid, path))
 
     non_objects = [name for name, col in df.iteritems()
