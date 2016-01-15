@@ -1,7 +1,7 @@
 import asyncio
 from functools import partial
 from bluesky.standard_config import *
-from bluesky.scans import *
+from bluesky.plans import *
 from bluesky.callbacks import *
 from bluesky.broker_callbacks import *
 from bluesky.hardware_checklist import *
