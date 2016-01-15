@@ -8,7 +8,8 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
-from dataportal import DataBroker, DataMuxer
+import databroker
+from databroker import DataBroker as db
 # from xray_vision.qt_widgets import CrossSectionMainWindow
 # from xray_vision.backend.mpl.cross_section_2d import CrossSection
 from scipy.interpolate import interp1d, interp2d
@@ -140,7 +141,7 @@ def plotfly(scan_id, elem='Pt', channels=None):
     plt.figure()
 
     scan_id, df = _load_scan(scan_id, fill_events=False)
-    hdr = DataBroker[scan_id]['start']
+    hdr = db[scan_id]['start']
     namex = hdr['fast_axis']
 
     x = df[namex]
@@ -177,14 +178,12 @@ def _load_scan(scan_id, fill_events=False):
     if scan_id > 0 and scan_id in data_cache:
         df = data_cache[scan_id]
     else:
-        hdr = DataBroker[scan_id]
+        hdr = db[scan_id]
         scan_id = hdr['start'].scan_id
         if scan_id in data_cache:
             df = data_cache[scan_id]
         else:
-            data = DataBroker.fetch_events(hdr, fill=fill_events)
-            dm = DataMuxer.from_events(data)
-            df = dm.to_sparse_dataframe()
+            df = databroker.get_table(hdr, fill=fill_events)
             data_cache[scan_id] = df
 
     return scan_id, df
@@ -280,7 +279,7 @@ def plot2dfly(scan_id, elem='Pt', *, x='ssx[um]', y='ssy[um]', clim=None,
     Parameters
     ----------
     scan_id : int
-        Any valid input to DataBroker[] or StepScan
+        Any valid input to databroker[] or StepScan
     elem : str
         The element to display
         Defaults to 'Pt'
@@ -328,7 +327,7 @@ def plot2dfly(scan_id, elem='Pt', *, x='ssx[um]', y='ssy[um]', clim=None,
     x_data = np.asarray(df[x])
     y_data = np.asarray(df[y])
 
-    hdr = DataBroker[scan_id]['start']
+    hdr = db[scan_id]['start']
     if len(hdr['dimensions']) != 2:
         raise ValueError('Not a 2d scan (dimensions={})'
                          ''.format(hdr['dimensions']))

@@ -16,7 +16,5 @@ logging.getLogger('hxntools').setLevel(logging.DEBUG)
 logging.getLogger('ppmac').setLevel(logging.INFO)
 
 from ophyd.commands import *
-from dataportal import (DataBroker as db,
-                        StepScan as ss,
-                        DataBroker, StepScan,
-                        DataMuxer)
+import databroker
+from databroker import DataBroker as db
