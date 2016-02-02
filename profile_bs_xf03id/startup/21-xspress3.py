@@ -37,6 +37,8 @@ def xspress3_roi_setup():
     rois.add(4360, 4660, 'Ti')
     rois.add(4550, 4750, 'La')
     rois.add(9150, 9350, 'Ga')
+
+
 try:
     print('Configuring Xspress3 ROIs...')
     xspress3_roi_setup()

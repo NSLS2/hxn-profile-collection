@@ -1,7 +1,8 @@
 from ophyd.controls import EpicsMotor, PVPositioner
 
-dcm_th = EpicsMotor('XF:03IDA-OP{Mon:1-Ax:Bragg}Mtr', name='dcm_th')
+#dcm_th = EpicsMotor('XF:03IDA-OP{Mon:1-Ax:Bragg}Mtr', name='dcm_th')
 dcm_x = EpicsMotor('XF:03IDA-OP{Mon:1-Ax:X}Mtr', name='dcm_x')
+dcm_th = EpicsMotor('XF:03IDA-OP{Mon:1-Ax:Bragg}Mtr', name='dcm_th')
 dcm_p = EpicsMotor('XF:03IDA-OP{Mon:1-Ax:P}Mtr', name='dcm_p')
 dcm_r = EpicsMotor('XF:03IDA-OP{Mon:1-Ax:R}Mtr', name='dcm_r')
 m1_x = EpicsMotor('XF:03IDA-OP{Mir:1-Ax:X}Mtr', name='m1_x')
@@ -44,37 +45,37 @@ dcm_rf = EpicsMotor('XF:03IDA-OP{Mon:1-Ax:RF}Mtr', name='dcm_rf')
 # m1y = EpicsMotor('XF:03IDA-OP{Mir:1-Ax:Y}Mtr', name='m1y')
 # m1p = EpicsMotor('XF:03IDA-OP{Mir:1-Ax:P}Mtr', name='m1p')
 # m1b = EpicsMotor('XF:03IDA-OP{Mir:1-Ax:Bend}Mtr', name='m1b')
-# 
+#
 # # HCM
 # m1pz = EpicsMotor('XF:03IDA-OP{HCM:1-Ax:PF}Mtr', name='m1pz')
-# 
+#
 # # slit:1
 # slt = EpicsMotor('XF:03IDA-OP{Slt:1-Ax:Top}Mtr', name='slt')
 # slb = EpicsMotor('XF:03IDA-OP{Slt:1-Ax:Btm}Mtr', name='slb')
 # sli = EpicsMotor('XF:03IDA-OP{Slt:1-Ax:Inb}Mtr', name='sli')
 # slo = EpicsMotor('XF:03IDA-OP{Slt:1-Ax:Outb}Mtr', name='slo')
-# 
+#
 # # Mon:1
 # bragg = EpicsMotor('XF:03IDA-OP{Mon:1-Ax:Bragg}Mtr', name='bragg')
-# 
+#
 # # HFM
 # m2x = EpicsMotor('XF:03IDA-OP{Mir:2-Ax:X}Mtr', name='m2x')
 # m2y = EpicsMotor('XF:03IDA-OP{Mir:2-Ax:Y}Mtr', name='m2y')
 # m2p = EpicsMotor('XF:03IDA-OP{Mir:2-Ax:P}Mtr', name='m2p')
 # m2b = EpicsMotor('XF:03IDA-OP{Mir:2-Ax:Bend}Mtr', name='m2b')
-# 
-# 
+#
+#
 # # Diagnostic Manipulators
 # f1y = EpicsMotor('XF:03IDA-OP{Flr:1-Ax:Y}Mtr', name='f1y')
 # f2y = EpicsMotor('XF:03IDA-OP{Flr:2-Ax:Y}Mtr', name='f2y')
-# 
+#
 # # CRL
 # crlth = EpicsMotor('XF:03IDA-OP{Lens:CRL-Ax:P}Mtr', name='crlth')
-# 
+#
 # # nanoBPM2@SSA1
 # nano2y = EpicsMotor('XF:03IDB-OP{BPM:6-Ax:Y}Mtr', name='nano2y')
-# 
+#
 # # nanoBPM3@SSA2
 # nano3y = EpicsMotor('XF:03IDC-OP{BPM:7-Ax:Y}Mtr', name='nano3y')
-# 
-# 
+#
+#

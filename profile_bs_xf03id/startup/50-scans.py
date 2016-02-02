@@ -6,9 +6,10 @@ from hxntools.detectors.master_detector import MasterDetector
 from hxntools.spiral_scans import HxnFermatScan
 
 
-# TODO: figure out olog issues
-olog_client = None
-# TODO
+# # TODO: figure out olog issues
+# olog_client = None
+# # TODO
+RE.logbook = olog_wrapper(olog_client, 'Experiments')
 
 # Set up regular ascans/dscans to work with HXN detector triggering methods:
 hxntools.scans.setup()
@@ -24,14 +25,21 @@ fermat = HxnFermatScan()
 
 # When the scaler is triggered, the xspress3 is externally triggered with this
 # MasterDetector:
-master_sclr1 = MasterDetector(sclr1, slaves=[xspress3.filestore, merlin1.filestore])
+#master_sclr1 = MasterDetector(sclr1, slaves=[xspress3.filestore, merlin1.filestore])
+#master_sclr1 = MasterDetector(sclr1)
+master_sclr1 = MasterDetector(sclr1, slaves=[merlin1.filestore])
+
 
 # NOTE: master_sclr1 has SUB-detectors which are not in this list (see above)
-gs.DETS = [zebra, master_sclr1, sclr1_ch2, sclr1_ch3, sclr1_ch4, ssx, ssy, ssz, t_base, t_sample,
-           t_vlens, t_hlens, xbpm_x, xbpm_y, quad_x, quad_y, dcm_th, dcm_p, angle_x, angle_y, slit1_top, slit1_bottom,
+#gs.DETS = [zebra, master_sclr1, sclr1_ch2, sclr1_ch3, sclr1_ch4, ssx, ssy, ssz, t_base, t_sample,
+#           t_vlens, t_hlens, xbpm_x, xbpm_y, quad_x, quad_y, dcm_th, dcm_p, angle_x, angle_y, slit1_top, slit1_bottom,
+#           slit1_right, slit1_left, slit1_xpos, slit1_ypos]
+gs.DETS = [zebra,master_sclr1, sclr1_ch2, sclr1_ch3, sclr1_ch4, sclr1_ch4_calc, ssx, ssy, ssz, t_base, t_sample,
+           t_vlens, t_hlens, xbpm_x, xbpm_y, dcm_th, dcm_p, angle_x, angle_y, slit1_top, slit1_bottom,
            slit1_right, slit1_left, slit1_xpos, slit1_ypos]
 
-gs.TABLE_COLS = ['sclr2_ch2','sclr2_ch3', 'sclr2_ch4', 'ssx', 'ssy', 'ssz',
+
+gs.TABLE_COLS = ['sclr1_ch2','sclr1_ch3', 'sclr1_ch4', sclr1_ch4_calc, 'ssx', 'ssy', 'ssz',
                  't_base', 't_sample', 't_vlens', 't_hlens']
 
 for roi in xspress3.rois.get_epics_rois(channels=[1, 2, 3]):

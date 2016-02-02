@@ -56,11 +56,11 @@ sclr2_ch4_calc = EpicsSignal('XF:03IDC-ES{Sclr:2}_calc4.VAL',
                              name='sclr2_ch4_calc')
 sclr2_ch4 = EpicsSignal('XF:03IDC-ES{Sclr:2}_cts1.D', name='sclr2_ch4')
 
-sclr1_ch2 = EpicsSignal('XF:03IDC-ES{Sclr:2}_cts1.B', name='sclr1_ch2')
-sclr1_ch3 = EpicsSignal('XF:03IDC-ES{Sclr:2}_cts1.C', name='sclr1_ch3')
-sclr1_ch4_calc = EpicsSignal('XF:03IDC-ES{Sclr:2}_calc4.VAL',
+sclr1_ch2 = EpicsSignal('XF:03IDC-ES{Sclr:1}_cts1.B', name='sclr1_ch2')
+sclr1_ch3 = EpicsSignal('XF:03IDC-ES{Sclr:1}_cts1.C', name='sclr1_ch3')
+sclr1_ch4_calc = EpicsSignal('XF:03IDC-ES{Sclr:1}_calc4.VAL',
                              name='sclr1_ch4_calc')
-sclr1_ch4 = EpicsSignal('XF:03IDC-ES{Sclr:2}_cts1.D', name='sclr1_ch4')
+sclr1_ch4 = EpicsSignal('XF:03IDC-ES{Sclr:1}_cts1.D', name='sclr1_ch4')
 
 t_base = EpicsSignal('XF:03IDC-ES{LS:2-Ch:D}C:T-I', name='t_base')
 t_sample = EpicsSignal('XF:03IDC-ES{LS:2-Ch:C}C:T-I', name='t_sample')
@@ -100,8 +100,8 @@ slit1_xpos = EpicsSignal('XF:03IDA-BI{Slt:1}PosX-I', name='slit1_xpos')
 slit1_ypos = EpicsSignal('XF:03IDA-BI{Slt:1}PosY-I', name='slit1_ypos')
 
 # Mono motors
-dcm_th = EpicsSignal('XF:03IDA-OP{Mon:1-Ax:Bragg}Mtr.RBV', name='dcm_th')
-dcm_p = EpicsSignal('XF:03IDA-OP{Mon:1-Ax:P}Mtr.RBV', name='dcm_p')
+#dcm_th = EpicsSignal('XF:03IDA-OP{Mon:1-Ax:Bragg}Mtr.RBV', name='dcm_th')
+#dcm_p = EpicsSignal('XF:03IDA-OP{Mon:1-Ax:P}Mtr.RBV', name='dcm_p')
 
 #tpx1_roi = EpicsSignal('XF:03IDC-ES{Tpx:1}Stats1:Total_RBV', name='tpx1_roi')
 
