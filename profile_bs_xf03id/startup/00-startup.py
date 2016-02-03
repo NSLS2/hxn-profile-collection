@@ -1,8 +1,7 @@
 import logging
+from ophyd.commands import setup_ophyd
 
-session_mgr._logger.setLevel(logging.INFO)
-# To help with debugging scanning-related problems, uncomment the following:
-# session_mgr._logger.setLevel(logging.DEBUG)
+setup_ophyd()
 
 handler = logging.StreamHandler(sys.stderr)
 fmt = logging.Formatter("%(asctime)-15s [%(name)5s:%(levelname)s] %(message)s")
