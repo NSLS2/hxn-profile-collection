@@ -1,4 +1,4 @@
-from ophyd.controls import EpicsMotor, PVPositioner
+from ophyd import EpicsMotor, PVPositioner
 
 ssa1_hgap = EpicsMotor('XF:03IDB-OP{Slt:SSA1-Ax:XAp}Mtr', name='ssa1_hgap')
 ssa1_vgap = EpicsMotor('XF:03IDB-OP{Slt:SSA1-Ax:YAp}Mtr', name='ssa1_vgap')

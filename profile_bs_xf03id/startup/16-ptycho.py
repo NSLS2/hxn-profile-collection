@@ -1,4 +1,4 @@
-from ophyd.controls import EpicsMotor, PVPositioner, PseudoPositioner
+from ophyd import EpicsMotor, PVPositioner, PseudoPositioner
 
 p_ssx = EpicsMotor('XF:03IDC-ES{Ddrive:1-Ax:2}Mtr', name='p_ssx')
 p_ssy = EpicsMotor('XF:03IDC-ES{Ddrive:1-Ax:3}Mtr', name='p_ssy')
