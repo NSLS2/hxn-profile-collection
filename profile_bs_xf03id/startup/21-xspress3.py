@@ -1,12 +1,11 @@
-from hxntools.detectors import Xspress3Detector
+from hxntools.detectors.xspress3 import HxnXspress3Detector
 
 
-xspress3 = Xspress3Detector('XF:03IDC-ES{Xsp:1}:', cam='', files=['HDF5:'],
-                            name='xspress3',
-                            file_path='/xspress3_data/',
-                            ioc_file_path='/xspress3_data/',
-                            default_channels=[1, 2, 3],
-                            num_roi=16, channel_prefix='Det')
+xspress3 = HxnXspress3Detector('XF:03IDC-ES{Xsp:1}:', name='xspress3')
+
+# files=['HDF5:'], name='xspress3',
+# file_path='/xspress3_data/',
+# ioc_file_path='/xspress3_data/')
 
 
 def xspress3_roi_setup():
@@ -31,15 +30,17 @@ def xspress3_roi_setup():
     rois.add(8490, 8790, 'Zn')
     rois.add(8250, 8550, 'W')
     rois.add(9600, 9750, 'Au')
-    rois.add(11500, 12500,'EL')
+    rois.add(11500, 12500, 'EL')
     rois.add(1900, 2000, 'Y')
     rois.add(1340, 1640, 'Al')
     rois.add(4360, 4660, 'Ti')
     rois.add(4550, 4750, 'La')
     rois.add(9150, 9350, 'Ga')
+
+
 try:
     print('Configuring Xspress3 ROIs...')
-    xspress3_roi_setup()
+    # xspress3_roi_setup()
     print('Done')
 except KeyboardInterrupt:
     print('Xspress3 ROI configuration cancelled.')
