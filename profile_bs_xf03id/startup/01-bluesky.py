@@ -37,10 +37,10 @@ loop = asyncio.get_event_loop()
 loop.set_debug(False)
 # RE.verbose = True
 
-# sr_shutter_status = EpicsSignal('SR-EPS{PLC:1}Sts:MstrSh-Sts', rw=False,
-#                                 name='sr_shutter_status')
-# sr_beam_current = EpicsSignal('SR:C03-BI{DCCT:1}I:Real-I', rw=False,
-#                               name='sr_beam_current')
+# sr_shutter_status = EpicsSignalRO('SR-EPS{PLC:1}Sts:MstrSh-Sts',
+#                                   name='sr_shutter_status')
+# sr_beam_current = EpicsSignalRO('SR:C03-BI{DCCT:1}I:Real-I',
+#                                 name='sr_beam_current')
 
 checklist = partial(basic_checklist,
                     ca_url='http://xf03id-ca.cs.nsls2.local:4800',
