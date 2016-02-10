@@ -25,21 +25,21 @@ fermat = HxnFermatScan()
 
 # When the scaler is triggered, the xspress3 is externally triggered with this
 # MasterDetector:
-#master_sclr1 = MasterDetector(sclr1, slaves=[xspress3.filestore, merlin1.filestore])
+master_sclr1 = MasterDetector(sclr1, slaves=[xspress3.filestore, merlin1.filestore])
 #master_sclr1 = MasterDetector(sclr1)
-master_sclr1 = MasterDetector(sclr1, slaves=[merlin1.filestore])
+#master_sclr1 = MasterDetector(sclr1, slaves=[merlin1.filestore])
 
 
 # NOTE: master_sclr1 has SUB-detectors which are not in this list (see above)
 #gs.DETS = [zebra, master_sclr1, sclr1_ch2, sclr1_ch3, sclr1_ch4, ssx, ssy, ssz, t_base, t_sample,
 #           t_vlens, t_hlens, xbpm_x, xbpm_y, quad_x, quad_y, dcm_th, dcm_p, angle_x, angle_y, slit1_top, slit1_bottom,
 #           slit1_right, slit1_left, slit1_xpos, slit1_ypos]
-gs.DETS = [zebra,master_sclr1, sclr1_ch2, sclr1_ch3, sclr1_ch4, sclr1_ch4_calc, ssx, ssy, ssz, t_base, t_sample,
+gs.DETS = [zebra,master_sclr1, sclr1_ch2, sclr1_ch3, sclr1_ch4, sclr1_ch4_calc, zpssx, zpssy, zpssz, t_base, t_sample,
            t_vlens, t_hlens, xbpm_x, xbpm_y, dcm_th, dcm_p, angle_x, angle_y, slit1_top, slit1_bottom,
            slit1_right, slit1_left, slit1_xpos, slit1_ypos]
 
 
-gs.TABLE_COLS = ['sclr1_ch2','sclr1_ch3', 'sclr1_ch4', sclr1_ch4_calc, 'ssx', 'ssy', 'ssz',
+gs.TABLE_COLS = ['sclr1_ch2','sclr1_ch3', 'sclr1_ch4', sclr1_ch4_calc, 'zpssx', 'zpssy', 'zpssz',
                  't_base', 't_sample', 't_vlens', 't_hlens']
 
 for roi in xspress3.rois.get_epics_rois(channels=[1, 2, 3]):
@@ -52,4 +52,4 @@ for roi in xspress3.rois.get_epics_rois(channels=[1, 2, 3]):
 
 
 # Plot this by default versus motor position:
-gs.PLOT_Y = 'Det2_V'
+gs.PLOT_Y = 'Det2_Cr'
