@@ -1,8 +1,8 @@
 from ophyd import (EpicsSignal, EpicsSignalRO, EpicsScaler)
 import pandas as pd
 
-# from hxntools.detectors import (TimepixDetector,
-#                                 MerlinDetector, BeamStatusDetector)
+from hxntools.detectors import (TimepixDetector,
+                                HxnMerlinDetector, BeamStatusDetector)
 from hxntools.detectors.zebra import HXNZebra
 
 
@@ -18,9 +18,9 @@ pd.options.display.max_columns = 10
 # timepix2 = TimepixDetector('XF:03IDC-ES{Tpx:2}', files=['TIFF1:'],
 #                            name='timepix2',
 #                            file_path='/data', ioc_file_path='/data')
-# merlin1 = MerlinDetector('XF:03IDC-ES{Merlin:1}', files=['TIFF1:'],
-#                          name='merlin1',
-#                          file_path='/data', ioc_file_path='/data')
+merlin1 = HxnMerlinDetector('XF:03IDC-ES{Merlin:1}', name='merlin1')
+# merlin1 = HxnMerlinDetector('XF:31IDA-BI{Cam:Tbl}', name='merlin1')
+merlin1.tiff1.read_attrs = []
 
 zebra = HXNZebra('XF:03IDC-ES{Zeb:1}:', name='zebra')
 
