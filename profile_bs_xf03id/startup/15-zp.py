@@ -1,4 +1,5 @@
-from ophyd.controls import (PVPositioner, EpicsMotor)
+from ophyd.controls import (PVPositioner, EpicsMotor,
+                            EpicsSignal)
 
 # Zoneplate module fine sample stage axes (closed on cap sensors/interferometer)
 zpssx = EpicsMotor('XF:03IDC-ES{Ppmac:1-zpssx}Mtr', name='zpssx')
@@ -28,6 +29,13 @@ zpz = EpicsMotor('XF:03IDC-ES{ZpTpa-Ax:Z}Mtr', name='zpz')
 
 # long travel range z holding the ZP
 zpz1 = EpicsMotor('XF:03IDC-ES{MCS:1-Ax:zpz1}Mtr', name='zpz1')
+
+zp_lab_theta = EpicsSignal('XF:03IDC-ES{PseudoPos-ZP}theta',
+                           name='zp_lab_theta')
+zpssx_lab = EpicsMotor('XF:03IDC-ES{PseudoPos-zpssx}Mtr',
+                       name='zpssx_lab')
+zpssz_lab = EpicsMotor('XF:03IDC-ES{PseudoPos-zpssz}Mtr',
+                       name='zpssz_lab')
 
 
 # Smarpod axes - updated to support put completion
