@@ -9,8 +9,7 @@ from hxntools.spiral_scans import HxnFermatScan
 # # TODO: figure out olog issues
 # olog_client = None
 # # TODO
-RE.logbook = olog_wrapper(olog_client, 'Experiments')
-
+# RE.logbook = olog_wrapper(olog_client, 'Experiments')
 # Set up regular ascans/dscans to work with HXN detector triggering methods:
 hxntools.scans.setup()
 
@@ -34,13 +33,13 @@ master_sclr1 = MasterDetector(sclr1, slaves=[xspress3.filestore, merlin1.filesto
 #gs.DETS = [zebra, master_sclr1, sclr1_ch2, sclr1_ch3, sclr1_ch4, ssx, ssy, ssz, t_base, t_sample,
 #           t_vlens, t_hlens, xbpm_x, xbpm_y, quad_x, quad_y, dcm_th, dcm_p, angle_x, angle_y, slit1_top, slit1_bottom,
 #           slit1_right, slit1_left, slit1_xpos, slit1_ypos]
-gs.DETS = [zebra,master_sclr1, sclr1_ch2, sclr1_ch3, sclr1_ch4, sclr1_ch4_calc, zpssx, zpssy, zpssz, t_base, t_sample,
+gs.DETS = [zebra,master_sclr1, sclr1_ch2, sclr1_ch3, sclr1_ch4, sclr1_ch4_calc, ssx, ssy, ssz, t_base, t_sample,
            t_vlens, t_hlens, xbpm_x, xbpm_y, dcm_th, dcm_p, angle_x, angle_y, slit1_top, slit1_bottom,
-           slit1_right, slit1_left, slit1_xpos, slit1_ypos]
+           slit1_right, slit1_left, slit1_xpos, slit1_ypos, int_zpssx, int_zpssy, int_zpssz]
 
 
-gs.TABLE_COLS = ['sclr1_ch2','sclr1_ch3', 'sclr1_ch4', sclr1_ch4_calc, 'zpssx', 'zpssy', 'zpssz',
-                 't_base', 't_sample', 't_vlens', 't_hlens']
+gs.TABLE_COLS = ['sclr1_ch2','sclr1_ch3', 'sclr1_ch4', sclr1_ch4_calc, 'ssx', 'ssy', 'ssz',
+                 't_base', 't_sample', 't_vlens', 't_hlens', 'int_zpssx', 'int_zpssy', 'int_zpssz']
 
 for roi in xspress3.rois.get_epics_rois(channels=[1, 2, 3]):
     # Add the ROI to the list of detectors to be recorded
@@ -52,4 +51,4 @@ for roi in xspress3.rois.get_epics_rois(channels=[1, 2, 3]):
 
 
 # Plot this by default versus motor position:
-gs.PLOT_Y = 'Det2_Cr'
+gs.PLOT_Y = 'Det2_V'
