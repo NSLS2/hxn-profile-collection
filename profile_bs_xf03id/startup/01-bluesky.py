@@ -50,3 +50,9 @@ checklist = partial(basic_checklist,
                     # 		   ('XF:23IDA-PPS:1{PSh}Pos-Sts', 'upstream shutter is open', assert_pv_equal, 0),
                     #                ('XF:23ID1-PPS{PSh}Pos-Sts', 'downstream shutter is open', assert_pv_equal, 0)],
 		    )
+
+
+# # TODO: figure out olog issues
+# olog_client = None
+# # TODO
+RE.logbook = olog_wrapper(olog_client, 'Experiments')

@@ -6,10 +6,6 @@ from hxntools.detectors.master_detector import MasterDetector
 from hxntools.spiral_scans import HxnFermatScan
 
 
-# # TODO: figure out olog issues
-# olog_client = None
-# # TODO
-# RE.logbook = olog_wrapper(olog_client, 'Experiments')
 # Set up regular ascans/dscans to work with HXN detector triggering methods:
 hxntools.scans.setup()
 
