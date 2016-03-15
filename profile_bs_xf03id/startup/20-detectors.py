@@ -4,6 +4,7 @@ import pandas as pd
 from hxntools.detectors import (TimepixDetector,
                                 HxnMerlinDetector, BeamStatusDetector)
 from hxntools.detectors.zebra import HXNZebra
+from hxntools.struck_scaler import (HxnScaler, StruckScaler)
 
 
 # Flyscan results are shown using pandas. Maximum rows/columns to use when
@@ -25,30 +26,34 @@ merlin1.tiff1.read_attrs = []
 zebra = HXNZebra('XF:03IDC-ES{Zeb:1}:', name='zebra')
 
 # 3IDC RG:C4 VME scalers
-sclr1 = EpicsScaler('XF:03IDC-ES{Sclr:1}', name='sclr1')
-sclr2 = EpicsScaler('XF:03IDC-ES{Sclr:2}', name='sclr2')
+# - sclr1 is used for data acquisition. HxnScaler takes care of setting that
+#   up:
+sclr1 = HxnScaler('XF:03IDC-ES{Sclr:1}', name='sclr1')
+# - sclr2, on the other hand, is just used as a regular scaler, however the
+#   user desires
+sclr2 = StruckScaler('XF:03IDC-ES{Sclr:2}', name='sclr2')
 
-sclr1_erase_start = EpicsSignal('XF:03IDC-ES{Sclr:1}EraseStart',
-                                name='sclr1_erase_start')
-sclr1_nuse_all = EpicsSignal('XF:03IDC-ES{Sclr:1}NuseAll',
-                             name='sclr1_nuse_all')
-sclr1_channel_advance = EpicsSignal('XF:03IDC-ES{Sclr:1}ChannelAdvance',
-                                    name='sclr1_channel_advance')
-sclr1_input_mode = EpicsSignal('XF:03IDC-ES{Sclr:1}InputMode',
-                               name='sclr1_input_mode')
+sclr1_erase_start = sclr1.erase_start
+sclr1_nuse_all = sclr1.nuse_all
+sclr1_channel_advance = sclr1.channel_advance
+sclr1_input_mode = sclr1.input_mode
 
 n_scaler_mca = 8
-sclr1_mca = [EpicsSignalRO('XF:03IDC-ES{Sclr:1}Mca:%d' % (i, ))
-             for i in range(1, n_scaler_mca + 1)]
+sclr1_mca = [sclr1.mca_by_index[i] for i in range(1, n_scaler_mca + 1)]
 
-sclr1_trig = EpicsSignal('XF:03IDC-ES{Sclr:1}.CNT', name='sclr1_trig')
-sclr2_trig = EpicsSignal('XF:03IDC-ES{Sclr:2}.CNT', name='sclr2_trig')
+for mca in sclr1_mca:
+    mca.name = 'sclr1_mca{}'.format(mca.index)
+
+
+sclr1_trig = sclr1.count
+sclr2_trig = sclr2.count
 
 # ugap scan trigger
 ugap_trig = EpicsSignal('SR:C3-ID:G1{IVU20:1-Mtr:2}Sw:Go', name='ugap_trig')
 
 
 # Ion chamber
+# TODO (scaler cts vs .S1, _calc output not in ophyd?)
 sclr2_ch2 = EpicsSignalRO('XF:03IDC-ES{Sclr:2}_cts1.B', name='sclr2_ch2')
 sclr2_ch3 = EpicsSignalRO('XF:03IDC-ES{Sclr:2}_cts1.C', name='sclr2_ch3')
 sclr2_ch4_calc = EpicsSignalRO('XF:03IDC-ES{Sclr:2}_calc4.VAL',
@@ -122,10 +127,12 @@ slit1_ypos = EpicsSignalRO('XF:03IDA-BI{Slt:1}PosY-I', name='slit1_ypos')
 dcm_th = EpicsSignal('XF:03IDA-OP{Mon:1-Ax:Bragg}Mtr.RBV', name='dcm_th')
 dcm_p = EpicsSignal('XF:03IDA-OP{Mon:1-Ax:P}Mtr.RBV', name='dcm_p')
 
-#tpx1_roi = EpicsSignal('XF:03IDC-ES{Tpx:1}Stats1:Total_RBV', name='tpx1_roi')
+# tpx1_roi = EpicsSignal('XF:03IDC-ES{Tpx:1}Stats1:Total_RBV', name='tpx1_roi')
 
 
-sr_shutter_status = EpicsSignalRO('SR-EPS{PLC:1}Sts:MstrSh-Sts', name='sr_shutter_status')
-sr_beam_current = EpicsSignalRO('SR:C03-BI{DCCT:1}I:Real-I', name='sr_beam_current')
+sr_shutter_status = EpicsSignalRO('SR-EPS{PLC:1}Sts:MstrSh-Sts',
+                                  name='sr_shutter_status')
+sr_beam_current = EpicsSignalRO('SR:C03-BI{DCCT:1}I:Real-I',
+                                name='sr_beam_current')
 
 det_beamstatus = BeamStatusDetector(min_current=100.0)
