@@ -426,3 +426,12 @@ def export(sid):
     df.to_csv(path, float_format='%1.5e', sep='\t',
               columns=sorted(non_objects))
     # return df
+
+
+def get_first_tiff_filename(scan_id, key='merlin1'):
+    scan_id, df = _load_scan(scan_id, fill_events=False)
+    uid = list(df[key])[0]
+    from filestore.path_only_handlers import AreaDetectorTiffPathOnlyHandler
+    handlers = {'AD_TIFF': AreaDetectorTiffPathOnlyHandler}
+    filename, = filestore.api.retrieve(uid, handlers)
+    return filename
