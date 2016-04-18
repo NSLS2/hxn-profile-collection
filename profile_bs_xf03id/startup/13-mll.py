@@ -1,15 +1,15 @@
-from ophyd import (EpicsMotor, PVPositioner, PseudoPositioner,
-                   Device, Component as Cpt)
+from ophyd import (EpicsMotor, Device, Component as Cpt)
 
 
 def rename_motors(device):
+    from ophyd.positioner import PositionerBase
     cls = device.__class__
-
     for attribute in device.signal_names:
         motor = getattr(device, attribute)
-        if isinstance(motor, EpicsMotor):
-            component = getattr(cls, attribute)
-            motor.name = component.kwargs['name']
+        component = getattr(cls, attribute)
+        if isinstance(motor, PositionerBase):
+            if 'name' in component.kwargs:
+                motor.name = component.kwargs['name']
 
 
 class HxnMLLSample(Device):
