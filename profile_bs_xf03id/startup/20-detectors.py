@@ -3,7 +3,7 @@ import pandas as pd
 
 from hxntools.detectors import (TimepixDetector,
                                 HxnMerlinDetector, BeamStatusDetector)
-from hxntools.detectors.zebra import HXNZebra
+from hxntools.detectors.zebra import HxnZebra
 from hxntools.struck_scaler import (HxnScaler, StruckScaler)
 
 
@@ -23,7 +23,7 @@ merlin1 = HxnMerlinDetector('XF:03IDC-ES{Merlin:1}', name='merlin1')
 # merlin1 = HxnMerlinDetector('XF:31IDA-BI{Cam:Tbl}', name='merlin1')
 merlin1.tiff1.read_attrs = []
 
-zebra = HXNZebra('XF:03IDC-ES{Zeb:1}:', name='zebra')
+zebra = HxnZebra('XF:03IDC-ES{Zeb:1}:', name='zebra')
 
 # 3IDC RG:C4 VME scalers
 # - sclr1 is used for data acquisition. HxnScaler takes care of setting that

@@ -435,3 +435,11 @@ def get_first_tiff_filename(scan_id, key='merlin1'):
     handlers = {'AD_TIFF': AreaDetectorTiffPathOnlyHandler}
     filename, = filestore.api.retrieve(uid, handlers)
     return filename
+
+
+def get_all_tiff_filenames(scan_id, key='merlin1'):
+    scan_id, df = _load_scan(scan_id, fill_events=False)
+    from filestore.path_only_handlers import AreaDetectorTiffPathOnlyHandler
+    handlers = {'AD_TIFF': AreaDetectorTiffPathOnlyHandler}
+    return [filestore.api.retrieve(uid, handlers)[0]
+            for uid in list(df[key])]

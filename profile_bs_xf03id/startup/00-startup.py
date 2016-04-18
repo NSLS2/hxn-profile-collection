@@ -1,7 +1,10 @@
+import sys
 import logging
-from ophyd.commands import setup_ophyd
 
-setup_ophyd()
+import matplotlib.pyplot as plt
+import numpy as np
+
+plt.ion()
 
 handler = logging.StreamHandler(sys.stderr)
 fmt = logging.Formatter("%(asctime)-15s [%(name)5s:%(levelname)s] %(message)s")
@@ -13,7 +16,3 @@ logging.getLogger('ppmac').addHandler(handler)
 logging.getLogger('hxnfly').setLevel(logging.DEBUG)
 logging.getLogger('hxntools').setLevel(logging.DEBUG)
 logging.getLogger('ppmac').setLevel(logging.INFO)
-
-from ophyd.commands import *
-import databroker
-from databroker import DataBroker as db
