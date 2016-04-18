@@ -1,23 +1,23 @@
-from ophyd import EpicsMotor, PVPositioner
+from ophyd import (EpicsMotor, Device, Component as Cpt,
+                   EpicsSignalRO, PVPositioner)
 
-ssa1_hgap = EpicsMotor('XF:03IDB-OP{Slt:SSA1-Ax:XAp}Mtr', name='ssa1_hgap')
-ssa1_vgap = EpicsMotor('XF:03IDB-OP{Slt:SSA1-Ax:YAp}Mtr', name='ssa1_vgap')
-ssa1_hcen = EpicsMotor('XF:03IDB-OP{Slt:SSA1-Ax:X}Mtr', name='ssa1_hcen')
-ssa1_vcen = EpicsMotor('XF:03IDB-OP{Slt:SSA1-Ax:Y}Mtr', name='ssa1_vcen')
+class HxnSSAperture(Device):
+    hgap = EpicsMotor('-Ax:XAp}Mtr')
+    vgap = EpicsMotor('-Ax:YAp}Mtr')
+    hcen = EpicsMotor('-Ax:X}Mtr')
+    vcen = EpicsMotor('-Ax:Y}Mtr')
+
+
+ssa1 = HxnSSAperture('XF:03IDB-OP{Slt:SSA1', name='ssa1')
+ssa2 = HxnSSAperture('XF:03IDB-OP{Slt:SSA2', name='ssa2')
+
 bpm6_y = EpicsMotor('XF:03IDB-OP{BPM:6-Ax:Y}Mtr', name='bpm6_y')
 
 # idb_m1 = EpicsMotor('XF:03IDB-OP{Slt:SSA1-Ax:6}Mtr', name='idb_m1')
 # idb_m2 = EpicsMotor('XF:03IDB-OP{Slt:SSA1-Ax:7}Mtr', name='idb_m2')
 # idb_m3 = EpicsMotor('XF:03IDB-OP{Slt:SSA1-Ax:8}Mtr', name='idb_m3')
 
-ssa2_hgap = EpicsMotor('XF:03IDC-OP{Slt:SSA2-Ax:XAp}Mtr', name='ssa2_hgap')
-ssa2_vgap = EpicsMotor('XF:03IDC-OP{Slt:SSA2-Ax:YAp}Mtr', name='ssa2_vgap')
-ssa2_hcen = EpicsMotor('XF:03IDC-OP{Slt:SSA2-Ax:X}Mtr', name='ssa2_hcen')
-ssa2_vcen = EpicsMotor('XF:03IDC-OP{Slt:SSA2-Ax:Y}Mtr', name='ssa2_vcen')
-s3_top = EpicsMotor('XF:03IDC-OP{Slt:3-Ax:Top}Mtr', name='s3_top')
-s3_bot = EpicsMotor('XF:03IDC-OP{Slt:3-Ax:Btm}Mtr', name='s3_bot')
-s3_inb = EpicsMotor('XF:03IDC-OP{Slt:3-Ax:Inb}Mtr', name='s3_inb')
-s3_outb = EpicsMotor('XF:03IDC-OP{Slt:3-Ax:Outb}Mtr', name='s3_outb')
+s3 = HxnSlitA('XF:03IDC-OP{Slt:3', name='s3')
 
 # mc2_m1 = EpicsMotor('XF:03IDC-ES{MC:2-Ax:1}Mtr', name='mc2_m1')
 # mc2_m2 = EpicsMotor('XF:03IDC-ES{MC:2-Ax:2}Mtr', name='mc2_m2')
@@ -52,10 +52,17 @@ p_osat = EpicsMotor('XF:03IDC-ES{Proto:1-Ax:5}Mtr', name='p_osat')
 p_osay = EpicsMotor('XF:03IDC-ES{Proto:1-Ax:6}Mtr', name='p_osay')
 p_osax = EpicsMotor('XF:03IDC-ES{Proto:1-Ax:7}Mtr', name='p_osax')
 p_osaz = EpicsMotor('XF:03IDC-ES{Proto:1-Ax:8}Mtr', name='p_osaz')
-s4_vgap = EpicsMotor('XF:03IDC-ES{Slt:4-Ax:X}Mtr', name='s4_vgap')
-s4_vcen = EpicsMotor('XF:03IDC-ES{Slt:4-Ax:Y}Mtr', name='s4_vcen')
-s4_hgap = EpicsMotor('XF:03IDC-ES{Slt:4-Ax:Z}Mtr', name='s4_hgap')
-s4_hcen = EpicsMotor('XF:03IDC-ES{Slt:4-Ax:Top}Mtr', name='s4_hcen')
+
+
+class HxnSlitB(Device):
+    '''HXN slit device, with X/Y/Z/top'''
+    vgap = Cpt(EpicsMotor, '-Ax:X}Mtr')
+    vcen = Cpt(EpicsMotor, '-Ax:Y}Mtr')
+    hgap = Cpt(EpicsMotor, '-Ax:Z}Mtr')
+    hcen = Cpt(EpicsMotor, '-Ax:Top}Mtr')
+
+
+s4 = HxnSlitB('XF:03IDC-ES{Slt:4', name='s4')
 
 # mc6_m5 = EpicsMotor('XF:03IDC-ES{MC:6-Ax:5}Mtr', name='mc6_m5')
 # mc6_m6 = EpicsMotor('XF:03IDC-ES{MC:6-Ax:6}Mtr', name='mc6_m6')
@@ -86,26 +93,32 @@ questar_f = EpicsMotor('XF:03IDC-ES{MC:8-Ax:1}Mtr', name='questar_f')
 # mc9_m3 = EpicsMotor('XF:03IDC-ES{MC:9-Ax:3}Mtr', name='mc9_m3')
 # mc9_m4 = EpicsMotor('XF:03IDC-ES{MC:9-Ax:4}Mtr', name='mc9_m4')
 
-s6_vgap = EpicsMotor('XF:03IDC-ES{Slt:6-Ax:Vgap}Mtr', name='s6_vgap')
-s6_vcen = EpicsMotor('XF:03IDC-ES{Slt:6-Ax:Vcen}Mtr', name='s6_vcen')
-s6_hgap = EpicsMotor('XF:03IDC-ES{Slt:6-Ax:Hgap}Mtr', name='s6_hgap')
-s6_vcen = EpicsMotor('XF:03IDC-ES{Slt:6-Ax:Hcen}Mtr', name='s6_vcen')
-s5_hcen = EpicsMotor('XF:03IDC-ES{Slt:5-Ax:Hcen}Mtr', name='s5_hcen')
-s5_hgap = EpicsMotor('XF:03IDC-ES{Slt:5-Ax:Hgap}Mtr', name='s5_hgap')
-s5_vcen = EpicsMotor('XF:03IDC-ES{Slt:5-Ax:Vcen}Mtr', name='s5_vcen')
-s5_vgap = EpicsMotor('XF:03IDC-ES{Slt:5-Ax:Vgap}Mtr', name='s5_vgap')
+class HxnSlitC(Device):
+    '''HXN slit device, with vertical/horizontal gaps/centers'''
+    vgap = Cpt(EpicsMotor, '-Ax:Vgap}Mtr')
+    vcen = Cpt(EpicsMotor, '-Ax:Vcen}Mtr')
+    hgap = Cpt(EpicsMotor, '-Ax:Hgap}Mtr')
+    vcen = Cpt(EpicsMotor, '-Ax:Hcen}Mtr')
+
+
+s5 = HxnSlitC('XF:03IDC-ES{Slt:5', name='s5')
+s6 = HxnSlitC('XF:03IDC-ES{Slt:6', name='s6')
+
 
 # mc10_m5 = EpicsMotor('XF:03IDC-ES{MC:10-Ax:5}Mtr', name='mc10_m5')
 # mc10_m6 = EpicsMotor('XF:03IDC-ES{MC:10-Ax:6}Mtr', name='mc10_m6')
 # mc10_m7 = EpicsMotor('XF:03IDC-ES{MC:10-Ax:7}Mtr', name='mc10_m7')
 # mc10_m8 = EpicsMotor('XF:03IDC-ES{MC:10-Ax:8}Mtr', name='mc10_m8')
 
-fdet2_z = EpicsMotor('XF:03IDC-ES{Det:Bruk-Ax:Z}Mtr', name='fdet2_z')
-fdet2_y = EpicsMotor('XF:03IDC-ES{Det:Bruk-Ax:Y}Mtr', name='fdet2_y')
-fdet2_x = EpicsMotor('XF:03IDC-ES{Det:Bruk-Ax:X}Mtr', name='fdet2_x')
-fdet1_z = EpicsMotor('XF:03IDC-ES{Det:Vort-Ax:Z}Mtr', name='fdet1_z')
-fdet1_y = EpicsMotor('XF:03IDC-ES{Det:Vort-Ax:Y}Mtr', name='fdet1_y')
-fdet1_x = EpicsMotor('XF:03IDC-ES{Det:Vort-Ax:X}Mtr', name='fdet1_x')
+class HxnDetectorPositioner(Device):
+    '''HXN X/Y positioner device'''
+    x = Cpt(EpicsMotor, '-Ax:X}Mtr')
+    y = Cpt(EpicsMotor, '-Ax:Y}Mtr')
+    z = Cpt(EpicsMotor, '-Ax:Z}Mtr')
+
+
+fdet1 = HxnDetectorPositioner('XF:03IDC-ES{Det:Vort', name='fdet1')
+fdet2 = HxnDetectorPositioner('XF:03IDC-ES{Det:Bruk', name='fdet2')
 
 # mc11_m7 = EpicsMotor('XF:03IDC-ES{MC:11-Ax:7}Mtr', name='mc11_m7')
 # mc11_m8 = EpicsMotor('XF:03IDC-ES{MC:11-Ax:8}Mtr', name='mc11_m8')
@@ -119,19 +132,19 @@ bs_y = EpicsMotor('XF:03IDC-ES{MC:12-Ax:5}Mtr', name='bs_y')
 # mc12_m7 = EpicsMotor('XF:03IDC-ES{MC:12-Ax:7}Mtr', name='mc12_m7')
 # mc12_m8 = EpicsMotor('XF:03IDC-ES{MC:12-Ax:8}Mtr', name='mc12_m8')
 
-diff_z = EpicsMotor('XF:03IDC-ES{Diff-Ax:Z}Mtr', name='diff_z')
-diff_x = EpicsMotor('XF:03IDC-ES{Diff-Ax:X}Mtr', name='diff_x')
-diff_y1 = EpicsMotor('XF:03IDC-ES{Diff-Ax:Y1}Mtr', name='diff_y1')
-diff_y2 = EpicsMotor('XF:03IDC-ES{Diff-Ax:Y2}Mtr', name='diff_y2')
-diff_yaw = EpicsMotor('XF:03IDC-ES{Diff-Ax:Yaw}Mtr', name='diff_yaw')
-diff_c1 = EpicsMotor('XF:03IDC-ES{Diff-Ax:C1}Mtr', name='diff_c1')
-diff_c2 = EpicsMotor('XF:03IDC-ES{Diff-Ax:C2}Mtr', name='diff_c2')
-diff_c3 = EpicsMotor('XF:03IDC-ES{Diff-Ax:C3}Mtr', name='diff_c3')
+class DetectorStation(Device):
+    z = Cpt(EpicsMotor, '-Ax:Z}Mtr')
+    x = Cpt(EpicsMotor, '-Ax:X}Mtr')
+    y1 = Cpt(EpicsMotor, '-Ax:Y1}Mtr')
+    y2 = Cpt(EpicsMotor, '-Ax:Y2}Mtr')
+    yaw = Cpt(EpicsMotor, '-Ax:Yaw}Mtr')
+    c1 = Cpt(EpicsMotor, '-Ax:C1}Mtr')
+    c2 = Cpt(EpicsMotor, '-Ax:C2}Mtr')
+    c3 = Cpt(EpicsMotor, '-Ax:C3}Mtr')
 
-s7_vgap = EpicsMotor('XF:03IDC-ES{Slt:7-Ax:Vgap}Mtr', name='s7_vgap')
-s7_vcen = EpicsMotor('XF:03IDC-ES{Slt:7-Ax:Vcen}Mtr', name='s7_vcen')
-s7_hgap = EpicsMotor('XF:03IDC-ES{Slt:7-Ax:Hgap}Mtr', name='s7_hgap')
-s7_hcen = EpicsMotor('XF:03IDC-ES{Slt:7-Ax:Hcen}Mtr', name='s7_hcen')
+
+diff = DetectorStation('XF:03IDC-ES{Diff', name='diff')
+s7 = HxnSlitC('XF:03IDC-ES{Slt:7', name='s7')
 
 # mc14_m5 = EpicsMotor('XF:03IDC-ES{MC:14-Ax:5}Mtr', name='mc14_m5')
 # mc14_m6 = EpicsMotor('XF:03IDC-ES{MC:14-Ax:6}Mtr', name='mc14_m6')

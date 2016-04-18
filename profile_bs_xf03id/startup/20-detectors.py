@@ -1,4 +1,5 @@
-from ophyd import (EpicsSignal, EpicsSignalRO, EpicsScaler)
+from ophyd import (EpicsSignal, EpicsSignalRO)
+from ophyd import (Device, Component as Cpt)
 import pandas as pd
 
 from hxntools.detectors import (TimepixDetector,
@@ -33,11 +34,6 @@ sclr1 = HxnScaler('XF:03IDC-ES{Sclr:1}', name='sclr1')
 #   user desires
 sclr2 = StruckScaler('XF:03IDC-ES{Sclr:2}', name='sclr2')
 
-sclr1_erase_start = sclr1.erase_start
-sclr1_nuse_all = sclr1.nuse_all
-sclr1_channel_advance = sclr1.channel_advance
-sclr1_input_mode = sclr1.input_mode
-
 n_scaler_mca = 8
 sclr1_mca = [sclr1.mca_by_index[i] for i in range(1, n_scaler_mca + 1)]
 
@@ -45,26 +41,40 @@ for mca in sclr1_mca:
     mca.name = 'sclr1_mca{}'.format(mca.index)
 
 
-sclr1_trig = sclr1.count
-sclr2_trig = sclr2.count
-
 # ugap scan trigger
 ugap_trig = EpicsSignal('SR:C3-ID:G1{IVU20:1-Mtr:2}Sw:Go', name='ugap_trig')
 
 
 # Ion chamber
-# TODO (scaler cts vs .S1, _calc output not in ophyd?)
-sclr2_ch2 = EpicsSignalRO('XF:03IDC-ES{Sclr:2}_cts1.B', name='sclr2_ch2')
-sclr2_ch3 = EpicsSignalRO('XF:03IDC-ES{Sclr:2}_cts1.C', name='sclr2_ch3')
-sclr2_ch4_calc = EpicsSignalRO('XF:03IDC-ES{Sclr:2}_calc4.VAL',
-                               name='sclr2_ch4_calc')
-sclr2_ch4 = EpicsSignalRO('XF:03IDC-ES{Sclr:2}_cts1.D', name='sclr2_ch4')
+sclr1_ch1 = sclr1.channels.chan1
+sclr1_ch2 = sclr1.channels.chan2
+sclr1_ch3 = sclr1.channels.chan3
+sclr1_ch4 = sclr1.channels.chan4
+sclr1_ch5 = sclr1.channels.chan5
 
-sclr1_ch2 = EpicsSignalRO('XF:03IDC-ES{Sclr:2}_cts1.B', name='sclr1_ch2')
-sclr1_ch3 = EpicsSignalRO('XF:03IDC-ES{Sclr:2}_cts1.C', name='sclr1_ch3')
-sclr1_ch4_calc = EpicsSignalRO('XF:03IDC-ES{Sclr:2}_calc4.VAL',
-                               name='sclr1_ch4_calc')
-sclr1_ch4 = EpicsSignalRO('XF:03IDC-ES{Sclr:2}_cts1.D', name='sclr1_ch4')
+sclr2_ch1 = sclr2.channels.chan1
+sclr2_ch2 = sclr2.channels.chan2
+sclr2_ch3 = sclr2.channels.chan3
+sclr2_ch4 = sclr2.channels.chan4
+sclr2_ch5 = sclr2.channels.chan5
+
+sclr1_ch4_calc = sclr1.calculations.calc4.value
+sclr2_ch4_calc = sclr2.calculations.calc4
+
+
+def setup_scaler_names(scaler):
+    scaler_name = scaler.name
+    for i in range(1, 32):
+        channel = getattr(scaler.channels, 'chan{}'.format(i))
+        channel.name = '{}_ch{}'.format(scaler_name, i)
+
+    for i in range(1, 9):
+        c = getattr(scaler.calculations, 'calc{}'.format(i))
+        c.name = '{}_ch{}_calc'.format(scaler_name, i)
+
+
+setup_scaler_names(sclr1)
+setup_scaler_names(sclr2)
 
 t_base = EpicsSignalRO('XF:03IDC-ES{LS:2-Ch:D}C:T-I', name='t_base')
 t_sample = EpicsSignalRO('XF:03IDC-ES{LS:2-Ch:C}C:T-I', name='t_sample')
@@ -112,20 +122,6 @@ angle_y = EpicsSignalRO('SR:C31-{AI}Aie3:Angle-y-Cal', name='angle_y')
 quad_x = EpicsSignalRO('SR:C12-BI{XBPM:1}Pos:X-I', name='quad_x')
 quad_y = EpicsSignalRO('SR:C12-BI{XBPM:1}Pos:Y-I', name='quad_y')
 
-
-# Slit 1 BPM (drain current from I400)
-slit1_top = EpicsSignalRO('XF:03IDA-BI{Slt:1}I:Raw1-I', name='slit1_top')
-slit1_bottom = EpicsSignalRO('XF:03IDA-BI{Slt:1}I:Raw2-I', name='slit1_bottom')
-slit1_right = EpicsSignalRO('XF:03IDA-BI{Slt:1}I:Raw3-I', name='slit1_right')
-slit1_left = EpicsSignalRO('XF:03IDA-BI{Slt:1}I:Raw4-I', name='slit1_left')
-
-# calculated position (from CALC record)
-slit1_xpos = EpicsSignalRO('XF:03IDA-BI{Slt:1}PosX-I', name='slit1_xpos')
-slit1_ypos = EpicsSignalRO('XF:03IDA-BI{Slt:1}PosY-I', name='slit1_ypos')
-
-# Mono motors
-dcm_th = EpicsSignal('XF:03IDA-OP{Mon:1-Ax:Bragg}Mtr.RBV', name='dcm_th')
-dcm_p = EpicsSignal('XF:03IDA-OP{Mon:1-Ax:P}Mtr.RBV', name='dcm_p')
 
 # tpx1_roi = EpicsSignal('XF:03IDC-ES{Tpx:1}Stats1:Total_RBV', name='tpx1_roi')
 
