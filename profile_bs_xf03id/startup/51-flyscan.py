@@ -18,12 +18,12 @@ from hxnfly.callbacks import FlyLiveCrossSection
 # (optionally sum them together with use_sum=True or adding a function to
 #  calculate with data_func=sum_func)
 #
-flyplot = FlyRoiPlot(['Pt'], channels=[1, 2, 3], use_sum=True)
-fly2dplot = FlyLiveImage(['As','Ba','S','Cs','Ti'], channels=[1, 2, 3], use_sum=True)
-fly2dplot1 = FlyLiveCrossSection(['Ba'], channels=[1, 2, 3], use_sum=True)
+flyplot = FlyRoiPlot(['Cr'], channels=[1, 2, 3], use_sum=True)
+fly2dplot = FlyLiveImage(['Cr'], channels=[1, 2, 3], use_sum=True)
+fly2dplot1 = FlyLiveCrossSection(['Cr'], channels=[1, 2, 3], use_sum=True)
 
 fly1d = FlyScan1D([flyplot],
-                  detectors=[xspress3, merlin1],
+                  detectors=[xspress3, merlin1],       # , merlin1],
                   scaler_channels=[2, 3, 4])
 
 fly2d = FlyScan2D([fly2dplot],
