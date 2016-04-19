@@ -4,6 +4,9 @@ import pandas as pd
 
 from hxntools.detectors import (TimepixDetector,
                                 MerlinDetector, BeamStatusDetector)
+from hxntools.detectors import (MerlinDetector, BeamStatusDetector)
+
+from hxntools.detectors import (MerlinDetector, BeamStatusDetector)
 from hxntools.detectors.zebra import HXNZebra
 
 
@@ -16,9 +19,9 @@ pd.options.display.max_columns = 10
 timepix1 = TimepixDetector('XF:03IDC-ES{Tpx:1}', files=['TIFF1:'],
                            name='timepix1',
                            file_path='/data', ioc_file_path='/data')
-timepix2 = TimepixDetector('XF:03IDC-ES{Tpx:2}', files=['TIFF1:'],
-                           name='timepix2',
-                           file_path='/data', ioc_file_path='/data')
+#timepix2 = TimepixDetector('XF:03IDC-ES{Tpx:2}', files=['TIFF1:'],
+#                           name='timepix2',
+#                           file_path='/data', ioc_file_path='/data')
 merlin1 = MerlinDetector('XF:03IDC-ES{Merlin:1}', files=['TIFF1:'],
                          name='merlin1',
                          file_path='/data', ioc_file_path='/data')
@@ -26,6 +29,13 @@ merlin1 = MerlinDetector('XF:03IDC-ES{Merlin:1}', files=['TIFF1:'],
 zebra = HXNZebra('XF:03IDC-ES{Zeb:1}:', name='zebra')
 
 # 3IDC RG:C4 VME scalers
+
+tpx_roi1_total = EpicsSignal('XF:03IDC-ES{Tpx:1}Stats1:Total_RBV',name='tpx_roi1_total')
+
+#dexela_proc1_total = EpicsSignal('XF:03IDC-ES{Dexela:1}Stats1:Total_RBV',name='dexela_proc1_total')
+
+merlin_roi1_total = EpicsSignal('XF:03IDC-ES{Merlin:1}Stats1:Total_RBV',name='merlin_roi1_total')
+
 sclr1 = EpicsScaler('XF:03IDC-ES{Sclr:1}', name='sclr1')
 sclr2 = EpicsScaler('XF:03IDC-ES{Sclr:2}', name='sclr2')
 
@@ -66,6 +76,9 @@ t_base = EpicsSignal('XF:03IDC-ES{LS:2-Ch:D}C:T-I', name='t_base')
 t_sample = EpicsSignal('XF:03IDC-ES{LS:2-Ch:C}C:T-I', name='t_sample')
 t_vlens = EpicsSignal('XF:03IDC-ES{LS:2-Ch:B}C:T-I', name='t_vlens')
 t_hlens = EpicsSignal('XF:03IDC-ES{LS:2-Ch:A}C:T-I', name='t_hlens')
+
+# Merlin ROI sum
+merlin_ROI1_tot = EpicsSignal('XF:03IDC-ES{Merlin:1}Stats1:Total_RBV', name ='merlin_ROI1_tot')
 
 # X-ray eye camera sigma X/sigma Y
 sigx = EpicsSignal('XF:03IDB-BI{Xeye-CAM:1}Stats1:SigmaX_RBV', name='sigx')
