@@ -1,3 +1,4 @@
+
 # vim: sw=4 ts=4 sts expandtab smarttab
 # HXN step-scan configuration
 
@@ -20,7 +21,8 @@ fermat = HxnFermatScan()
 
 # When the scaler is triggered, the xspress3 is externally triggered with this
 # MasterDetector:
-master_sclr1 = MasterDetector(sclr1, slaves=[xspress3.filestore, merlin1.filestore])
+master_sclr1 = MasterDetector(sclr1, slaves=[merlin1.filestore,xspress3.filestore])
+# , merlin1.filestore])
 #master_sclr1 = MasterDetector(sclr1)
 #master_sclr1 = MasterDetector(sclr1, slaves=[merlin1.filestore])
 
@@ -29,13 +31,11 @@ master_sclr1 = MasterDetector(sclr1, slaves=[xspress3.filestore, merlin1.filesto
 #gs.DETS = [zebra, master_sclr1, sclr1_ch2, sclr1_ch3, sclr1_ch4, ssx, ssy, ssz, t_base, t_sample,
 #           t_vlens, t_hlens, xbpm_x, xbpm_y, quad_x, quad_y, dcm_th, dcm_p, angle_x, angle_y, slit1_top, slit1_bottom,
 #           slit1_right, slit1_left, slit1_xpos, slit1_ypos]
-gs.DETS = [zebra,master_sclr1, sclr1_ch2, sclr1_ch3, sclr1_ch4, sclr1_ch4_calc, ssx, ssy, ssz, t_base, t_sample,
-           t_vlens, t_hlens, xbpm_x, xbpm_y, dcm_th, dcm_p, angle_x, angle_y, slit1_top, slit1_bottom,
-           slit1_right, slit1_left, slit1_xpos, slit1_ypos, int_zpssx, int_zpssy, int_zpssz]
+gs.DETS = [zebra, timepix1.filestore, master_sclr1, sclr1_ch2, sclr1_ch3, sclr1_ch4, sclr1_ch4_calc, ssx, ssy, ssz, t_base, t_sample, t_vlens, t_hlens, xbpm_x, xbpm_y, dcm_th, dcm_p, angle_x, angle_y, slit1_top, slit1_bottom,
+           slit1_right, slit1_left, slit1_xpos, slit1_ypos, int_zpssx, int_zpssy, int_zpssz, merlin_ROI1_tot,tpx_roi1_total,merlin_roi1_total]
 
 
-gs.TABLE_COLS = ['sclr1_ch2','sclr1_ch3', 'sclr1_ch4', sclr1_ch4_calc, 'ssx', 'ssy', 'ssz',
-                 't_base', 't_sample', 't_vlens', 't_hlens', 'int_zpssx', 'int_zpssy', 'int_zpssz']
+gs.TABLE_COLS = ['sclr1_ch2','sclr1_ch3', 'sclr1_ch4', sclr1_ch4_calc,'merlin_ROI1_tot',  'int_zpssx', 'int_zpssy', 'int_zpssz','tpx_roi1_total','merlin_roi1_total']
 
 for roi in xspress3.rois.get_epics_rois(channels=[1, 2, 3]):
     # Add the ROI to the list of detectors to be recorded
@@ -47,4 +47,5 @@ for roi in xspress3.rois.get_epics_rois(channels=[1, 2, 3]):
 
 
 # Plot this by default versus motor position:
-gs.PLOT_Y = 'Det2_V'
+#gs.PLOT_Y = 'merlin_roi1_total'
+gs.PLOT_Y = 'Det2_Cr'
