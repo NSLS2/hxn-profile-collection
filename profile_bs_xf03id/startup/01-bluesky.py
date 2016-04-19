@@ -55,4 +55,4 @@ checklist = partial(basic_checklist,
 # # TODO: figure out olog issues
 # olog_client = None
 # # TODO
-RE.logbook = olog_wrapper(olog_client, 'Experiments')
+# RE.logbook = olog_wrapper(olog_client, 'Experiments')
