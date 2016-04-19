@@ -15,9 +15,9 @@ class SmarpodBase(PVPositionerPC):
     done = Cpt(EpicsSignalRO, 'XF:03IDC-ES{SPod:1}Moving-I')
     done_value = 1
 
-    def __init__(self, prefix, axis, **kwargs):
+    def __init__(self, prefix='', axis=0, **kwargs):
         self.axis = axis
-        super().__init__(prefix, **kwargs)
+        super().__init__(prefix='', **kwargs)
 
 
 class SmarpodTranslationAxis(SmarpodBase):
@@ -47,12 +47,12 @@ class HxnZPSample(Device):
     coarse_x = Cpt(EpicsMotor, 'XF:03IDC-ES{ZpPI:1-zpsx}Mtr', name='zpsx')
     coarse_z = Cpt(EpicsMotor, 'XF:03IDC-ES{ZpPI:1-zpsz}Mtr', name='zpsz')
 
-    smarx = Cpt(SmarpodTranslationAxis, '', axis=2, name='smarx')
-    smary = Cpt(SmarpodTranslationAxis, '', axis=3, name='smary')
-    smarz = Cpt(SmarpodTranslationAxis, '', axis=1, name='smary')
-    smarthx = Cpt(SmarpodRotationAxis, '', axis=2, name='smarthx')
-    smarthy = Cpt(SmarpodRotationAxis, '', axis=3, name='smarthy')
-    smarthz = Cpt(SmarpodRotationAxis, '', axis=1, name='smarthy')
+    smarx = Cpt(SmarpodTranslationAxis, axis=2, name='smarx')
+    smary = Cpt(SmarpodTranslationAxis, axis=3, name='smary')
+    smarz = Cpt(SmarpodTranslationAxis, axis=1, name='smary')
+    smarthx = Cpt(SmarpodRotationAxis, axis=2, name='smarthx')
+    smarthy = Cpt(SmarpodRotationAxis, axis=3, name='smarthy')
+    smarthz = Cpt(SmarpodRotationAxis, axis=1, name='smarthy')
 
 
 zps = HxnZPSample('', name='zps')
