@@ -26,7 +26,3 @@ RE.md['beamline_id'] = 'HXN'
 register_mds(RE)
 # RE.verbose = True
 # RE.ignore_callback_exceptions = False
-
-# import asyncio
-# loop = asyncio.get_event_loop()
-# loop.set_debug(False)

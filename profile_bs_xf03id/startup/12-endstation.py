@@ -98,9 +98,9 @@ class DetectorStation(Device):
     y1 = Cpt(EpicsMotor, '-Ax:Y1}Mtr')
     y2 = Cpt(EpicsMotor, '-Ax:Y2}Mtr')
     yaw = Cpt(EpicsMotor, '-Ax:Yaw}Mtr')
-    c1 = Cpt(EpicsMotor, '-Ax:C1}Mtr')
-    c2 = Cpt(EpicsMotor, '-Ax:C2}Mtr')
-    c3 = Cpt(EpicsMotor, '-Ax:C3}Mtr')
+    cx = Cpt(EpicsMotor, '-Ax:C1}Mtr')
+    cy = Cpt(EpicsMotor, '-Ax:C2}Mtr')
+    cz = Cpt(EpicsMotor, '-Ax:C3}Mtr')
 
 
 diff = DetectorStation('XF:03IDC-ES{Diff', name='diff')
