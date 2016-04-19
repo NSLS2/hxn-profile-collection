@@ -2,8 +2,8 @@ from ophyd import (EpicsSignal, EpicsSignalRO)
 from ophyd import (Device, Component as Cpt)
 import pandas as pd
 
-from hxntools.detectors import (TimepixDetector,
-                                HxnMerlinDetector, BeamStatusDetector)
+from hxntools.detectors import (TimepixDetector, HxnMerlinDetector,
+                                BeamStatusDetector)
 from hxntools.detectors.zebra import HxnZebra
 from hxntools.struck_scaler import (HxnScaler, StruckScaler)
 
@@ -21,7 +21,6 @@ pd.options.display.max_columns = 10
 #                            name='timepix2',
 #                            file_path='/data', ioc_file_path='/data')
 merlin1 = HxnMerlinDetector('XF:03IDC-ES{Merlin:1}', name='merlin1')
-# merlin1 = HxnMerlinDetector('XF:31IDA-BI{Cam:Tbl}', name='merlin1')
 merlin1.tiff1.read_attrs = []
 
 zebra = HxnZebra('XF:03IDC-ES{Zeb:1}:', name='zebra')
@@ -86,44 +85,61 @@ sigx = EpicsSignalRO('XF:03IDB-BI{Xeye-CAM:1}Stats1:SigmaX_RBV', name='sigx')
 sigy = EpicsSignalRO('XF:03IDB-BI{Xeye-CAM:1}Stats1:SigmaY_RBV', name='sigy')
 
 # Interferometers
-int_sx = EpicsSignalRO('XF:03IDC-ES{FPS:1-Chan0}Pos-I', name='int_sx')
-int_sy = EpicsSignalRO('XF:03IDC-ES{FPS:1-Chan1}Pos-I', name='int_sy')
-int_sz = EpicsSignalRO('XF:03IDC-ES{FPS:1-Chan2}Pos-I', name='int_sz')
+class HxnFPSensor(Device):
+    ch0 = Cpt(EpicsSignalRO, '-Chan0}Pos-I')
+    ch1 = Cpt(EpicsSignalRO, '-Chan1}Pos-I')
+    ch2 = Cpt(EpicsSignalRO, '-Chan2}Pos-I')
 
-int_hx = EpicsSignalRO('XF:03IDC-ES{FPS:2-Chan0}Pos-I', name='int_hx')
-int_vy = EpicsSignalRO('XF:03IDC-ES{FPS:2-Chan1}Pos-I', name='int_vy')
-int_hy = EpicsSignal('XF:03IDC-ES{FPS:2-Chan2}Pos-I', name='int_hy')
+    def set_names(self, ch0, ch1, ch2):
+        '''Set names of all channels
 
-int_hz = EpicsSignal('XF:03IDC-ES{FPS:3-Chan0}Pos-I', name='int_hz')
-int_vx = EpicsSignal('XF:03IDC-ES{FPS:3-Chan1}Pos-I', name='int_vx')
-int_vz = EpicsSignal('XF:03IDC-ES{FPS:3-Chan2}Pos-I', name='int_vz')
+        Returns channel signals
+        '''
+        self.ch0.name = ch0
+        self.ch1.name = ch1
+        self.ch2.name = ch2
+        return self.ch0, self.ch1, self.ch2
 
-int_zpssx = EpicsSignal('XF:03IDC-ES{FPS:4-Chan0}Pos-I', name='int_zpssx')
-int_zpssy = EpicsSignal('XF:03IDC-ES{FPS:4-Chan1}Pos-I', name='int_zpssy')
-int_zpssz = EpicsSignal('XF:03IDC-ES{FPS:4-Chan2}Pos-I', name='int_zpssz')
 
-int_zpx1 = EpicsSignal('XF:03IDC-ES{FPS:5-Chan0}Pos-I', name='int_zpx1')
-int_zpx2 = EpicsSignal('XF:03IDC-ES{FPS:5-Chan1}Pos-I', name='int_zpx2')
-int_zpy1 = EpicsSignal('XF:03IDC-ES{FPS:5-Chan2}Pos-I', name='int_zpy1')
+fpsensor_1 = HxnFPSensor('XF:03IDC-ES{FPS:1', name='fpsensor_1')
+fpsensor_2 = HxnFPSensor('XF:03IDC-ES{FPS:2', name='fpsensor_2')
+fpsensor_3 = HxnFPSensor('XF:03IDC-ES{FPS:3', name='fpsensor_3')
+fpsensor_4 = HxnFPSensor('XF:03IDC-ES{FPS:4', name='fpsensor_4')
+fpsensor_5 = HxnFPSensor('XF:03IDC-ES{FPS:5', name='fpsensor_5')
+fpsensor_6 = HxnFPSensor('XF:03IDC-ES{FPS:6', name='fpsensor_6')
 
-int_zpy2 = EpicsSignal('XF:03IDC-ES{FPS:6-Chan0}Pos-I', name='int_zpy2')
-int_zpz = EpicsSignal('XF:03IDC-ES{FPS:6-Chan1}Pos-I', name='int_zpz')
-int_zpspare1 = EpicsSignal('XF:03IDC-ES{FPS:6-Chan2}Pos-I',
-                           name='int_zpspare1')
+int_sx, int_sy, int_sz = fpsensor_1.set_names('int_sx',
+                                              'int_sy',
+                                              'int_sz')
+int_hx, int_vy, int_hy = fpsensor_2.set_names('int_hx',
+                                              'int_vy',
+                                              'int_hy')
+int_hz, int_vx, int_vz = fpsensor_3.set_names('int_hz',
+                                              'int_vx',
+                                              'int_vz')
+int_zpssx, int_zpssy, int_zpssz = fpsensor_4.set_names('int_zpssx',
+                                                       'int_zpssy',
+                                                       'int_zpssz')
+int_zpx1, int_zpx2, int_zpy1 = fpsensor_5.set_names('int_zpx1',
+                                                    'int_zpx2',
+                                                    'int_zpy1')
+int_zpy2, int_zpz, int_zpspare1 = fpsensor_6.set_names('int_zpy2',
+                                                       'int_zpz',
+                                                       'int_zpspare1')
 
 # Front-end Xray BPMs and local bumps
-xbpm_x = EpicsSignalRO('SR:C03-BI{XBPM:1}Pos:X-I', name='xbpm_x')
-xbpm_y = EpicsSignalRO('SR:C03-BI{XBPM:1}Pos:Y-I', name='xbpm_y')
+class HxnBpm(Device):
+    x = Cpt(EpicsSignalRO, 'Pos:X-I')
+    y = Cpt(EpicsSignalRO, 'Pos:Y-I')
+
+
+xbpm = HxnBpm('SR:C03-BI{XBPM:1}', name='xbpm')
 
 angle_x = EpicsSignalRO('SR:C31-{AI}Aie3:Angle-x-Cal', name='angle_x')
 angle_y = EpicsSignalRO('SR:C31-{AI}Aie3:Angle-y-Cal', name='angle_y')
 
 # Diamond Quad BPMs in C hutch
-quad_x = EpicsSignalRO('SR:C12-BI{XBPM:1}Pos:X-I', name='quad_x')
-quad_y = EpicsSignalRO('SR:C12-BI{XBPM:1}Pos:Y-I', name='quad_y')
-
-
-# tpx1_roi = EpicsSignal('XF:03IDC-ES{Tpx:1}Stats1:Total_RBV', name='tpx1_roi')
+# quad = HxnBpm('SR:C12-BI{XBPM:1}', name='quad')
 
 
 sr_shutter_status = EpicsSignalRO('SR-EPS{PLC:1}Sts:MstrSh-Sts',
