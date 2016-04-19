@@ -1,26 +1,57 @@
-from ophyd import EpicsMotor, PVPositioner, PseudoPositioner
-
-p_ssx = EpicsMotor('XF:03IDC-ES{Ddrive:1-Ax:2}Mtr', name='p_ssx')
-p_ssy = EpicsMotor('XF:03IDC-ES{Ddrive:1-Ax:3}Mtr', name='p_ssy')
-p_ssz = EpicsMotor('XF:03IDC-ES{Ddrive:1-Ax:1}Mtr', name='p_ssz')
-
-p_vz = EpicsMotor('XF:03IDC-ES{MMC100:1-Ax:1}Mtr', name='p_vz')
-p_cz = EpicsMotor('XF:03IDC-ES{MMC100:1-Ax:2}Mtr', name='p_cz')
-p_cx = EpicsMotor('XF:03IDC-ES{MMC100:1-Ax:3}Mtr', name='p_cx')
-p_cy = EpicsMotor('XF:03IDC-ES{ANC350:6-Ax:1}Mtr', name='p_cy')
+from ophyd import (EpicsMotor, Device, Component as Cpt,
+                   PVPositioner)
 
 
-p_bsx = EpicsMotor('XF:03IDC-ES{MCS:3-Ax:1}Mtr', name='p_bsx')
-p_bsy = EpicsMotor('XF:03IDC-ES{MCS:3-Ax:2}Mtr', name='p_bsy')
-p_bsz = EpicsMotor('XF:03IDC-ES{MCS:3-Ax:3}Mtr', name='p_bsz')
 
-p_vth = EpicsMotor('XF:03IDC-ES{MCS:4-Ax:1}Mtr', name='p_vth')
+class HxnPrototypeMicroscope(Device):
+    vx = Cpt(EpicsMotor, 'XF:03IDC-ES{Proto:1-Ax:1}Mtr')
+    vy = Cpt(EpicsMotor, 'XF:03IDC-ES{Proto:1-Ax:2}Mtr')
+    vt = Cpt(EpicsMotor, 'XF:03IDC-ES{Proto:1-Ax:3}Mtr')
+    vchi = Cpt(EpicsMotor, 'XF:03IDC-ES{Proto:1-Ax:4}Mtr')
+    osat = Cpt(EpicsMotor, 'XF:03IDC-ES{Proto:1-Ax:5}Mtr')
+    osay = Cpt(EpicsMotor, 'XF:03IDC-ES{Proto:1-Ax:6}Mtr')
+    osax = Cpt(EpicsMotor, 'XF:03IDC-ES{Proto:1-Ax:7}Mtr')
+    osaz = Cpt(EpicsMotor, 'XF:03IDC-ES{Proto:1-Ax:8}Mtr')
 
-p_vx = EpicsMotor('XF:03IDC-ES{Proto:1-Ax:1}Mtr', name='p_vx')
-p_vy = EpicsMotor('XF:03IDC-ES{Proto:1-Ax:2}Mtr', name='p_vy')
-p_vt = EpicsMotor('XF:03IDC-ES{Proto:1-Ax:3}Mtr', name='p_vt')
-p_vchi = EpicsMotor('XF:03IDC-ES{Proto:1-Ax:4}Mtr', name='p_vchi')
-p_osat = EpicsMotor('XF:03IDC-ES{Proto:1-Ax:5}Mtr', name='p_osat')
-p_osay = EpicsMotor('XF:03IDC-ES{Proto:1-Ax:6}Mtr', name='p_osay')
-p_osax = EpicsMotor('XF:03IDC-ES{Proto:1-Ax:7}Mtr', name='p_osax')
-p_osaz = EpicsMotor('XF:03IDC-ES{Proto:1-Ax:8}Mtr', name='p_osaz')
+    ssx = Cpt(EpicsMotor, 'XF:03IDC-ES{Ddrive:1-Ax:2}Mtr')
+    ssy = Cpt(EpicsMotor, 'XF:03IDC-ES{Ddrive:1-Ax:3}Mtr')
+    ssz = Cpt(EpicsMotor, 'XF:03IDC-ES{Ddrive:1-Ax:1}Mtr')
+
+    vz = Cpt(EpicsMotor, 'XF:03IDC-ES{MMC100:1-Ax:1}Mtr')
+    cz = Cpt(EpicsMotor, 'XF:03IDC-ES{MMC100:1-Ax:2}Mtr')
+    cx = Cpt(EpicsMotor, 'XF:03IDC-ES{MMC100:1-Ax:3}Mtr')
+    cy = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:6-Ax:1}Mtr')
+
+    bsx = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:3-Ax:1}Mtr')
+    bsy = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:3-Ax:2}Mtr')
+    bsz = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:3-Ax:3}Mtr')
+
+    vth = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:4-Ax:1}Mtr')
+
+
+p = HxnPrototypeMicroscope('', name='p')
+
+p_vx = p.vx
+p_vy = p.vy
+p_vt = p.vt
+p_vchi = p.vchi
+p_osat = p.osat
+p_osay = p.osay
+p_osax = p.osax
+p_osaz = p.osaz
+
+p_ssx = p.ssx
+p_ssy = p.ssy
+p_ssz = p.ssz
+
+p_vz = p.vz
+p_cz = p.cz
+p_cx = p.cx
+p_cy = p.cy
+
+
+p_bsx = p.bsx
+p_bsy = p.bsy
+p_bsz = p.bsz
+
+p_vth = p.vth

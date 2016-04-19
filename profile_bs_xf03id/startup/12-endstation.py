@@ -37,20 +37,6 @@ mc3 = HxnTurboPmacController('XF:03IDC-ES{MC:3', name='mc3')
 mc4 = HxnTurboPmacController('XF:03IDC-ES{MC:4', name='mc4')
 
 
-class HxnPrototypeTable(Device):
-    vx = Cpt(EpicsMotor, '-Ax:1}Mtr')
-    vy = Cpt(EpicsMotor, '-Ax:2}Mtr')
-    vt = Cpt(EpicsMotor, '-Ax:3}Mtr')
-    vchi = Cpt(EpicsMotor, '-Ax:4}Mtr')
-    osat = Cpt(EpicsMotor, '-Ax:5}Mtr')
-    osay = Cpt(EpicsMotor, '-Ax:6}Mtr')
-    osax = Cpt(EpicsMotor, '-Ax:7}Mtr')
-    osaz = Cpt(EpicsMotor, '-Ax:8}Mtr')
-
-
-p = HxnPrototypeTable('XF:03IDC-ES{Proto:1', name='p')
-
-
 class HxnSlitB(Device):
     '''HXN slit device, with X/Y/Z/top'''
     vgap = Cpt(EpicsMotor, '-Ax:X}Mtr')
