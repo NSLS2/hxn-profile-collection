@@ -2,6 +2,7 @@ from __future__ import print_function
 import os
 import sys
 import numpy as np
+#import time
 from datetime import datetime
 
 import matplotlib as mpl
@@ -14,16 +15,47 @@ from dataportal import DataBroker, DataMuxer
 from scipy.interpolate import interp1d, interp2d
 
 
-def plot2d(scan_id, name, row, col):
+def plot2d(scan_id, elem, norm='sclr1_ch4', det_type='elem'):
     scan_id, df = _load_scan(scan_id, fill_events=False)
-    det = (df['Det1_{}'.format(name)] +
-           df['Det2_{}'.format(name)] +
-           df['Det3_{}'.format(name)])
+    scan_info=db[scan_id]
+    tmp = scan_info['start']['args']
+    tmp = tmp.split()
 
-    plt.figure()
-    data = np.reshape(det, (row, col))
-    plt.imshow(data, interpolation='None')
-    plt.colorbar()
+    y_motor = tmp[0][18:-2]
+    y_start = np.float(tmp[2][:-1])
+    y_end = np.float(tmp[3][:-1])
+    row = np.int(tmp[4][:-1])
+    x_motor = tmp[6][17:-2]
+    x_start = np.float(tmp[8][:-1])
+    x_end = np.float(tmp[9][:-1])
+    col = np.int(tmp[10][:-1])
+
+    if det_type == 'elem':
+        det = (df['Det1_{}'.format(elem)] +
+               df['Det2_{}'.format(elem)] +
+               df['Det3_{}'.format(elem)])
+    elif det_type == 'scalar':
+        det = df[elem]
+    else:
+        det = df[elem]
+
+    if norm is not None:
+        mon = np.reshape(df[norm], (row,col))
+        plt.figure()
+        data = np.reshape(det, (row, col))
+        plt.title('Scan %d: %s (normalized to %s)' % (scan_id, elem, norm))
+        plt.imshow(data/mon, interpolation='None',extent=[x_start,x_end,y_end,y_start])
+        plt.xlabel(x_motor)
+        plt.ylabel(y_motor)
+        plt.colorbar()
+    else:
+        plt.figure()
+        data = np.reshape(det, (row, col))
+        plt.title('Scan %d: %s' % (scan_id, elem))
+        plt.imshow(data, interpolation='None',extent=[x_start,x_end,y_end,y_start])
+        plt.xlabel(x_motor)
+        plt.ylabel(y_motor)
+        plt.colorbar()
 
 
 def dev(scan_id, namex, namey):
@@ -53,6 +85,35 @@ def dev(scan_id, namex, namey):
     plt.plot(data[:, 0], data[:, 1])
     # return data
 
+
+def scatter_plot(scan_id, namex,namey, elem='Pt', channels=None, norm=None):
+    plt.figure()
+    plt.title(elem)
+    if channels is None:
+        channels = [1, 2, 3]
+    scan_id, df = _load_scan(scan_id, fill_events=False)
+    x = df[namex]
+    y = df[namey]
+    #data = np.sum(df['Det%d_%s' % (chan, elem)]
+    #              for chan in channels)
+    data = df[elem]
+    x = np.asarray(x)
+    y = np.asarray(y)
+    data = np.asarray(data)
+    if norm is not None:
+        norm_v = df[norm]
+        plt.scatter(x,y, c=data / (norm_v + 1.e-8),s=200)
+        plt.gca().invert_yaxis()
+        plt.axes().set_aspect('equal','datalim')
+        plt.xlabel(namex)
+        plt.ylabel(namey)
+    else:
+        plt.scatter(x,y, c=data,s=200)
+        plt.gca().invert_yaxis()
+        plt.axes().set_aspect('equal','datalim')
+        plt.xlabel(namex)
+        plt.ylabel(namey)
+    plt.show()
 
 def plot(scan_id, namex, elem='Pt', channels=None, norm=None):
     plt.figure()
@@ -151,7 +212,10 @@ def plotfly(scan_id, elem='Pt', channels=None):
         plt.subplot(122)
         plt.plot(x[1:], diff)
         plt.plot(x[1:], diff, 'bo')
-        plt.title('Scan %d: %s (deriv)' % (scan_id, elem))
+        i_max = np.where(diff == np.max(diff))
+        i_min = np.where(diff == np.min(diff))
+        i_center = np.round((i_max[0][0]+i_min[0][0])/2)+1
+        plt.title('Scan %d: %s (deriv)' % (scan_id, elem)+' Center: '+np.str(x[i_center]))
     except Exception as ex:
         print('Failed to plot derivative: ({}) {}'
               ''.format(ex.__class__.__name__, ex))
@@ -416,14 +480,14 @@ def plot2dfly(scan_id, elem='Pt', *, x='ssx[um]', y='ssy[um]', clim=None,
     print('\tScan data available in variable: {}'.format(var_name))
 
 
-def export(sid):
-    sid, df = _load_scan(sid, fill_events=False)
-    path = os.path.join('/data/output/txt/', 'scan_{}.txt'.format(sid))
-    print('Scan {}. Saving to {}'.format(sid, path))
-
-    non_objects = [name for name, col in df.iteritems()
-                   if col.dtype.name not in ('object', )]
-
-    df.to_csv(path, float_format='%1.5e', sep='\t',
-              columns=sorted(non_objects))
+def export(sid,num=1):
+    for i in range(num):
+        sid, df = _load_scan(sid, fill_events=False)
+        path = os.path.join('/data/output/txt/', 'scan_{}.txt'.format(sid))
+        print('Scan {}. Saving to {}'.format(sid, path))
+        non_objects = [name for name, col in df.iteritems()
+                       if col.dtype.name not in ('object', )]
+        df.to_csv(path, float_format='%1.5e', sep='\t',
+                  columns=sorted(non_objects))
+        sid = sid + 1
     # return df
