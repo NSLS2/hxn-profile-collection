@@ -58,6 +58,10 @@ class HxnZPSample(Device):
 zps = HxnZPSample('', name='zps')
 rename_motors(zps)
 
+zpssx = zps.fine_x
+zpssy = zps.fine_y
+zpssz = zps.fine_z
+
 
 class HxnZP_OSA(Device):
     x = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:5-Ax:0}Mtr', name='zposax')
@@ -104,23 +108,23 @@ class FineSampleLabX(PseudoPositioner):
     # real axes
     zpssx = Cpt(EpicsMotor, '{Ppmac:1-zpssx}Mtr', name='zpssx')
     zpssz = Cpt(EpicsMotor, '{Ppmac:1-zpssz}Mtr', name='zpssz')
+    theta = Cpt(EpicsMotor, '{SC210:1-Ax:1}Mtr', name='zpsth')
 
     # configuration settings
-    theta = Cpt(Signal, value=0.0)
-    # TODO this should be added to the zp.theta angle
+    theta0 = Cpt(Signal, value=0.0)
 
     def __init__(self, prefix, **kwargs):
         super().__init__(prefix, **kwargs)
 
         # if theta changes, update the pseudo position
-        self.theta.subscribe(self.parameter_updated)
+        self.theta0.subscribe(self.parameter_updated)
 
     def parameter_updated(self, value=None, **kwargs):
         self._update_position()
 
     @property
     def radian_theta(self):
-        return math.radians(self.theta.get())
+        return math.radians(self.theta.position + self.theta0.get())
 
     @pseudo_position_argument
     def forward(self, position):
