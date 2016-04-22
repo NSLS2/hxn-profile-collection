@@ -1,4 +1,10 @@
-from ophyd import (EpicsMotor, Device, Component as Cpt)
+import math
+from ophyd import (Device, EpicsMotor, Signal, Component as Cpt,
+                   PseudoSingle, PseudoPositioner,
+                   movr)
+
+from ophyd.pseudopos import (real_position_argument,
+                             pseudo_position_argument)
 
 
 def rename_motors(device):
@@ -121,86 +127,81 @@ mllbs = HxnMLLBeamStop('', name='mllbs')
 rename_motors(mllbs)
 
 
-_xz_angle = 15. * pi / 180.
+class PseudoAngleCorrection(PseudoPositioner):
+    '''Pseudo positioner definition for MLL coarse and fine sample positioners
+    with angular correction
+    '''
+    # configuration settings
+    theta = Cpt(Signal, value=15.0)
+
+    def __init__(self, prefix, **kwargs):
+        super().__init__(prefix, **kwargs)
+
+        # if theta changes, update the pseudo position
+        self.theta.subscribe(self.parameter_updated)
+
+    def parameter_updated(self, value=None, **kwargs):
+        self._update_position()
+
+    @property
+    def radian_theta(self):
+        return math.radians(self.theta.get())
+
+    @pseudo_position_argument
+    def forward(self, position):
+        theta = self.radian_theta
+        c = math.cos(theta)
+        s = math.sin(theta)
+
+        x = c * position.px + s * position.pz
+        z = -s * position.px + c * position.pz
+        return self.RealPosition(x=x, z=z)
+
+    @real_position_argument
+    def inverse(self, position):
+        theta = self.radian_theta
+        c = math.cos(theta)
+        s = math.sin(theta)
+        x = c * position.x - s * position.z
+        z = s * position.x + c * position.z
+        return self.PseudoPosition(px=x, pz=z)
 
 
-def _pssxz_rev(ssx=None, ssz=None):
-    if None in [ssx, ssz]:
-        return [0.0, 0.0]
+class PseudoMLLFineSample(PseudoAngleCorrection):
+    # pseudo axes
+    px = Cpt(PseudoSingle, name='pssx')
+    pz = Cpt(PseudoSingle, name='pssz')
 
-    _pssx = ssx * cos(_xz_angle) + ssz * sin(_xz_angle)
-    _pssz = -ssx * sin(_xz_angle) + ssz * cos(_xz_angle)
-    return [_pssx, _pssz]
-
-
-def _pssxz_fwd(pssx=None, pssz=None):
-    if None in [pssx, pssz]:
-        return [0.0, 0.0]
-
-    _ssx = pssx * cos(_xz_angle) - pssz * sin(_xz_angle)
-    _ssz = pssx * sin(_xz_angle) + pssz * cos(_xz_angle)
-    return [_ssx, _ssz]
+    # real axes
+    x = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-ssx}Mtr', name='ssx')
+    z = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-ssz}Mtr', name='ssz')
 
 
-# _pssxz = PseudoPositioner('_pssxz', [ssx, ssz], forward=_pssxz_fwd, reverse=_pssxz_rev,
-#                           pseudo=['pssx', 'pssz'])
-#
-# pssx = _pssxz['pssx']
-# pssz = _pssxz['pssz']
+class PseudoMLLCoarseSample(PseudoAngleCorrection):
+    # pseudo axes
+    px = Cpt(PseudoSingle, name='psx')
+    pz = Cpt(PseudoSingle, name='psz')
+
+    # real axes
+    x = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:4-Ax:5}Mtr', name='sx')
+    z = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:2}Mtr', name='sz')
 
 
-def _psxz_rev(sx=None, sz=None):
-    if None in [sx, sz]:
-        return [0.0, 0.0]
-    _psx = sx * cos(_xz_angle) + sz * sin(_xz_angle)
-    _psz = -sx * sin(_xz_angle) + sz * cos(_xz_angle)
-    return [_psx, _psz]
+pseudo_mll_fine = PseudoMLLFineSample('', name='pmc')
+pssx = pseudo_mll_fine.x
+pssz = pseudo_mll_fine.z
+rename_motors(pseudo_mll_fine)
+# To tweak the angle, set pseudo_mll_fine.theta.put(15.1) for example
 
 
-def _psxz_fwd(psx=None, psz=None):
-    if None in [psx, psz]:
-        return [0.0, 0.0]
-    _sx = psx * cos(_xz_angle) - psz * sin(_xz_angle)
-    _sz = psx * sin(_xz_angle) + psz * cos(_xz_angle)
-    return [_sx, _sz]
-
-
-# _psxz = PseudoPositioner('_psxz', [sx, sz], forward=_psxz_fwd, reverse=_psxz_rev,
-#                          pseudo=['psx', 'psz'])
-# # psx, psz = _psxz
-# psx = _psxz['psx']
-# psz = _psxz['psz']
+pseudo_mll_coarse = PseudoMLLCoarseSample('', name='pmc')
+psx = pseudo_mll_coarse.x
+psz = pseudo_mll_coarse.z
+rename_motors(pseudo_mll_coarse)
 
 
 def movr_hth(angle):
-    radian = angle*pi/180.0
-    correction = -1.*tan(radian)*34376.6
-    movr(hth, angle)
-    movr(hx,correction)
-
-
-def movr_ssx(d):
-    dx_n = d * cos(15.*pi/180.)
-    dz_n = d * sin(15.*pi/180.)
-    movr(ssx, dx_n)
-    movr(ssz, dz_n)
-
-def movr_sx(d):
-    dx_n = d * cos(15.*pi/180.)
-    dz_n = d * sin(15.*pi/180.)
-    movr(sx, dx_n)
-    movr(sz, dz_n)
-
-
-def movr_sz(d):
-    dx_n = -d * sin(15.*pi/180.)
-    dz_n = d * cos(15.*pi/180.)
-    movr(sx, dx_n)
-    movr(sz, dz_n)
-
-
-def movr_ssz(d):
-    dx_n = -d * sin(15.*pi/180.)
-    dz_n = d * cos(15.*pi/180.)
-    movr(ssx, dx_n)
-    movr(ssz, dz_n)
+    radian = angle * math.pi / 180.0
+    correction = -1. * math.tan(radian) * 34376.6
+    movr(hmll.th, angle)
+    movr(hmll.coarse_x, correction)
