@@ -5,7 +5,8 @@ import pandas as pd
 from hxntools.detectors import (TimepixDetector, HxnMerlinDetector,
                                 BeamStatusDetector)
 from hxntools.detectors.zebra import HxnZebra
-from hxntools.struck_scaler import (HxnScaler, StruckScaler)
+from hxntools.struck_scaler import (HxnScaler, HxnTriggeringScaler,
+                                    StruckScaler)
 
 
 # Flyscan results are shown using pandas. Maximum rows/columns to use when
@@ -28,7 +29,10 @@ zebra = HxnZebra('XF:03IDC-ES{Zeb:1}:', name='zebra')
 # 3IDC RG:C4 VME scalers
 # - sclr1 is used for data acquisition. HxnScaler takes care of setting that
 #   up:
-sclr1 = HxnScaler('XF:03IDC-ES{Sclr:1}', name='sclr1')
+sclr1 = HxnTriggeringScaler('XF:03IDC-ES{Sclr:1}', name='sclr1')
+# let the scans know which detectors sclr1 triggers:
+sclr1.scan_type_triggers['step'] = [zebra, merlin1, ]
+sclr1.scan_type_triggers['fly'] = []
 # - sclr2, on the other hand, is just used as a regular scaler, however the
 #   user desires
 sclr2 = StruckScaler('XF:03IDC-ES{Sclr:2}', name='sclr2')
