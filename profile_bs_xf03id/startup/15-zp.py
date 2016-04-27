@@ -40,43 +40,43 @@ class SmarpodRotationAxis(SmarpodBase):
 class HxnZPSample(NamedDevice):
     # Zoneplate module fine sample stage axes (closed on cap
     # sensors/interferometer)
-    fine_x = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-zpssx}Mtr', name='zpssx')
-    fine_y = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-zpssy}Mtr', name='zpssy')
-    fine_z = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-zpssz}Mtr', name='zpssz')
+    zpssx = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-zpssx}Mtr', doc='fine x')
+    zpssy = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-zpssy}Mtr', doc='fine y')
+    zpssz = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-zpssz}Mtr', doc='fine z')
 
     # rotary underneath sample
-    theta = Cpt(EpicsMotor, 'XF:03IDC-ES{SC210:1-Ax:1}Mtr', name='zpsth')
+    zpsth = Cpt(EpicsMotor, 'XF:03IDC-ES{SC210:1-Ax:1}Mtr', doc='theta')
     # PI controller underneath smarpod
-    coarse_x = Cpt(EpicsMotor, 'XF:03IDC-ES{ZpPI:1-zpsx}Mtr', name='zpsx')
-    coarse_z = Cpt(EpicsMotor, 'XF:03IDC-ES{ZpPI:1-zpsz}Mtr', name='zpsz')
+    zpsx = Cpt(EpicsMotor, 'XF:03IDC-ES{ZpPI:1-zpsx}Mtr', doc='coarse x')
+    zpsz = Cpt(EpicsMotor, 'XF:03IDC-ES{ZpPI:1-zpsz}Mtr', doc='coarse z')
 
-    smarx = Cpt(SmarpodTranslationAxis, axis=2, name='smarx')
-    smary = Cpt(SmarpodTranslationAxis, axis=3, name='smary')
-    smarz = Cpt(SmarpodTranslationAxis, axis=1, name='smary')
-    smarthx = Cpt(SmarpodRotationAxis, axis=2, name='smarthx')
-    smarthy = Cpt(SmarpodRotationAxis, axis=3, name='smarthy')
-    smarthz = Cpt(SmarpodRotationAxis, axis=1, name='smarthy')
+    smarx = Cpt(SmarpodTranslationAxis, axis=2, doc='smarpod x')
+    smary = Cpt(SmarpodTranslationAxis, axis=3, doc='smarpod y')
+    smary = Cpt(SmarpodTranslationAxis, axis=1, doc='smarpod z')
+    smarthx = Cpt(SmarpodRotationAxis, axis=2, doc='smarpod theta around x')
+    smarthy = Cpt(SmarpodRotationAxis, axis=3, doc='smarpod theta around y')
+    smarthy = Cpt(SmarpodRotationAxis, axis=1, doc='smarpod theta around z')
 
 
 zps = HxnZPSample('', name='zps')
-zpssx = zps.fine_x
-zpssy = zps.fine_y
-zpssz = zps.fine_z
+zpssx = zps.zpssx
+zpssy = zps.zpssy
+zpssz = zps.zpssz
 
 
 class HxnZP_OSA(NamedDevice):
-    x = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:5-Ax:0}Mtr', name='zposax')
-    y = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:5-Ax:1}Mtr', name='zposay')
-    z = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:5-Ax:2}Mtr', name='zposaz')
+    zposax = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:5-Ax:0}Mtr', doc='coarse x')
+    zposay = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:5-Ax:1}Mtr', doc='coarse y')
+    zposaz = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:5-Ax:2}Mtr', doc='coarse z')
 
 
 zposa = HxnZP_OSA('', name='zposa')
 
 
 class HxnZPBeamStop(NamedDevice):
-    x = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:3-Ax:1}Mtr', name='zpbsx')
-    y = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:3-Ax:3}Mtr', name='zpbsy')
-    z = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:3-Ax:2}Mtr', name='zpbsz')
+    zpbsx = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:3-Ax:1}Mtr', doc='bs coarse x')
+    zpbsy = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:3-Ax:3}Mtr', doc='bs coarse y')
+    zpbsz = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:3-Ax:2}Mtr', doc='bs coarse z')
 
 
 zpbs = HxnZPBeamStop('', name='zpbs')
@@ -84,12 +84,12 @@ zpbs = HxnZPBeamStop('', name='zpbs')
 
 class HxnZonePlate(NamedDevice):
     # TPA stage holding the ZP (underneath long travel range stage)
-    x = Cpt(EpicsMotor, 'XF:03IDC-ES{ZpTpa-Ax:X}Mtr', name='zpx')
-    y = Cpt(EpicsMotor, 'XF:03IDC-ES{ZpTpa-Ax:Y}Mtr', name='zpy')
-    z = Cpt(EpicsMotor, 'XF:03IDC-ES{ZpTpa-Ax:Z}Mtr', name='zpz')
+    zpx = Cpt(EpicsMotor, 'XF:03IDC-ES{ZpTpa-Ax:X}Mtr', doc='coarse zp x')
+    zpy = Cpt(EpicsMotor, 'XF:03IDC-ES{ZpTpa-Ax:Y}Mtr', doc='coarse zp y')
+    zpz = Cpt(EpicsMotor, 'XF:03IDC-ES{ZpTpa-Ax:Z}Mtr', doc='coarse zp z')
 
     # long travel range z holding the ZP
-    long_z = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:1-Ax:zpz1}Mtr', name='zpz1')
+    zpz1 = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:1-Ax:zpz1}Mtr', doc='long range z')
 
 
 zp = HxnZonePlate('', name='zp')
@@ -100,16 +100,16 @@ class FineSampleLabX(PseudoPositioner, NamedDevice):
     with angular correction
     '''
     # pseudo axes
-    zpssx_lab = Cpt(PseudoSingle, name='zpssx_lab')
-    zpssz_lab = Cpt(PseudoSingle, name='zpssz_lab')
+    zpssx_lab = Cpt(PseudoSingle)
+    zpssz_lab = Cpt(PseudoSingle)
 
     # real axes
-    zpssx = Cpt(EpicsMotor, '{Ppmac:1-zpssx}Mtr', name='zpssx')
-    zpssz = Cpt(EpicsMotor, '{Ppmac:1-zpssz}Mtr', name='zpssz')
-    theta = Cpt(EpicsMotor, '{SC210:1-Ax:1}Mtr', name='zpsth')
+    zpssx = Cpt(EpicsMotor, '{Ppmac:1-zpssx}Mtr')
+    zpssz = Cpt(EpicsMotor, '{Ppmac:1-zpssz}Mtr')
+    zpsth = Cpt(EpicsMotor, '{SC210:1-Ax:1}Mtr', doc='theta angle')
 
     # configuration settings
-    theta0 = Cpt(Signal, value=0.0)
+    theta0 = Cpt(Signal, value=0.0, doc='theta offset')
 
     def __init__(self, prefix, **kwargs):
         super().__init__(prefix, **kwargs)
@@ -122,7 +122,7 @@ class FineSampleLabX(PseudoPositioner, NamedDevice):
 
     @property
     def radian_theta(self):
-        return math.radians(self.theta.position + self.theta0.get())
+        return math.radians(self.zpsth.position + self.theta0.get())
 
     @pseudo_position_argument
     def forward(self, position):
@@ -145,6 +145,5 @@ class FineSampleLabX(PseudoPositioner, NamedDevice):
 
 
 zplab = FineSampleLabX('XF:03IDC-ES', name='zplab')
-
 zpssx_lab = zplab.zpssx_lab
 zpssz_lab = zplab.zpssz_lab

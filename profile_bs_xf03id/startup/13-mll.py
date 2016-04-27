@@ -12,29 +12,29 @@ from hxntools.device import NamedDevice
 # NOTE: NamedDevice will name components exactly as the 'name' argument
 #       specifies. Normally, it would be named based on the parent
 class HxnMLLSample(NamedDevice):
-    fine_x = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-ssx}Mtr', name='ssx')
-    fine_y = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-ssy}Mtr', name='ssy')
-    fine_z = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-ssz}Mtr', name='ssz')
-    th = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:1-Ax:0}Mtr', name='th')
+    ssx = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-ssx}Mtr', doc='fine_x')
+    ssy = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-ssy}Mtr', doc='fine_y')
+    ssz = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-ssz}Mtr', doc='fine_z')
+    sth = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:1-Ax:0}Mtr', doc='theta')
 
-    coarse_x = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:4-Ax:5}Mtr', name='sx')
-    coarse_y = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:0}Mtr', name='sy')
-    coarse_x1 = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:1}Mtr', name='sx1')
-    coarse_z = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:2}Mtr', name='sz')
-    coarse_z1 = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:3}Mtr', name='sz1')
+    sx = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:4-Ax:5}Mtr', doc='coarse x')
+    sy = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:0}Mtr', doc='coarse y')
+    sx1 = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:1}Mtr', doc='coarse x1')
+    sz = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:2}Mtr', doc='coarse z')
+    sz1 = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:3}Mtr', doc='coarse z1')
 
 
 smll = HxnMLLSample('', name='smll')
-ssx = smll.fine_x
-ssy = smll.fine_y
-ssz = smll.fine_z
-sth = smll.th
+ssx = smll.ssx
+ssy = smll.ssy
+ssz = smll.ssz
+sth = smll.sth
 
-sx = smll.coarse_x
-sy = smll.coarse_y
-sx1 = smll.coarse_x1
-sz = smll.coarse_z
-sz1 = smll.coarse_z1
+sx = smll.sx
+sy = smll.sy
+sx1 = smll.sx1
+sz = smll.sz
+sz1 = smll.sz1
 
 
 class HxnAnc350_3(Device):
@@ -73,38 +73,38 @@ anc350_7 = HxnAnc350_3('XF:03IDC-ES{ANC350:7', name='anc350_7')
 
 
 class HxnVerticalMLL(NamedDevice):
-    x = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:2-Ax:0}Mtr', name='vx')
-    y = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:2-Ax:1}Mtr', name='vy')
-    z = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:2-Ax:2}Mtr', name='vz')
-    chi = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:2-Ax:4}Mtr', name='vchi')
-    th = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:2-Ax:3}Mtr', name='vth')
+    vx = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:2-Ax:0}Mtr', doc='coarse x')
+    vy = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:2-Ax:1}Mtr', doc='coarse y')
+    vz = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:2-Ax:2}Mtr', doc='coarse z')
+    vchi = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:2-Ax:4}Mtr', doc='chi')
+    vth = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:2-Ax:3}Mtr', doc='theta')
 
 
 vmll = HxnVerticalMLL('', name='vmll')
 
 
 class HxnHorizontalMLL(NamedDevice):
-    x = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:2-Ax:5}Mtr', name='hx')
-    y = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:4-Ax:0}Mtr', name='hy')
-    z = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:4-Ax:1}Mtr', name='hz')
-    th = EpicsMotor('XF:03IDC-ES{ANC350:1-Ax:2}Mtr', name='hth')
+    hx = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:2-Ax:5}Mtr', doc='x')
+    hy = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:4-Ax:0}Mtr', doc='y')
+    hz = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:4-Ax:1}Mtr', doc='z')
+    hth = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:1-Ax:2}Mtr', doc='theta')
 
 
 hmll = HxnHorizontalMLL('', name='hmll')
 
 
 class HxnMLL_OSA(NamedDevice):
-    osax = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:4-Ax:2}Mtr', name='osax')
-    osay = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:4-Ax:3}Mtr', name='osay')
-    osaz = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:4-Ax:4}Mtr', name='osaz')
+    osax = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:4-Ax:2}Mtr')
+    osay = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:4-Ax:3}Mtr')
+    osaz = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:4-Ax:4}Mtr')
 
 
 mllosa = HxnMLL_OSA('', name='mllosa')
 
 
 class HxnMLLBeamStop(NamedDevice):
-    bsx = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:5-Ax:0}Mtr', name='bsx')
-    bsy = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:5-Ax:1}Mtr', name='bsy')
+    bsx = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:5-Ax:0}Mtr')
+    bsy = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:5-Ax:1}Mtr')
 
 
 mllbs = HxnMLLBeamStop('', name='mllbs')
@@ -114,8 +114,6 @@ class PseudoAngleCorrection(PseudoPositioner, NamedDevice):
     '''Pseudo positioner definition for MLL coarse and fine sample positioners
     with angular correction
     '''
-    # configuration settings
-    theta = Cpt(Signal, value=15.0)
 
     def __init__(self, prefix, **kwargs):
         super().__init__(prefix, **kwargs)
@@ -159,6 +157,9 @@ class PseudoMLLFineSample(PseudoAngleCorrection):
     x = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-ssx}Mtr', name='ssx')
     z = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-ssz}Mtr', name='ssz')
 
+    # configuration settings
+    theta = Cpt(Signal, value=15.0, name='pmllf_theta')
+
 
 class PseudoMLLCoarseSample(PseudoAngleCorrection):
     # pseudo axes
@@ -168,6 +169,9 @@ class PseudoMLLCoarseSample(PseudoAngleCorrection):
     # real axes
     x = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:4-Ax:5}Mtr', name='sx')
     z = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:2}Mtr', name='sz')
+
+    # configuration settings
+    theta = Cpt(Signal, value=15.0, name='pmllc_theta')
 
 
 pmllf = PseudoMLLFineSample('', name='pmllf')
