@@ -6,19 +6,12 @@ from ophyd import (Device, EpicsMotor, Signal, Component as Cpt,
 from ophyd.pseudopos import (real_position_argument,
                              pseudo_position_argument)
 
-
-def rename_motors(device):
-    from ophyd.positioner import PositionerBase
-    cls = device.__class__
-    for attribute in device.signal_names:
-        motor = getattr(device, attribute)
-        component = getattr(cls, attribute)
-        if isinstance(motor, PositionerBase):
-            if 'name' in component.kwargs:
-                motor.name = component.kwargs['name']
+from hxntools.device import NamedDevice
 
 
-class HxnMLLSample(Device):
+# NOTE: NamedDevice will name components exactly as the 'name' argument
+#       specifies. Normally, it would be named based on the parent
+class HxnMLLSample(NamedDevice):
     fine_x = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-ssx}Mtr', name='ssx')
     fine_y = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-ssy}Mtr', name='ssy')
     fine_z = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-ssz}Mtr', name='ssz')
@@ -42,12 +35,6 @@ sy = smll.coarse_y
 sx1 = smll.coarse_x1
 sz = smll.coarse_z
 sz1 = smll.coarse_z1
-
-
-# NOTE: normally, motors would be named smll_{attribute} - or smll_coarse_x for
-#       example. To quickly rename them to what the component line shows, use
-#       'rename_motors' on the device:
-rename_motors(smll)
 
 
 class HxnAnc350_3(Device):
@@ -85,7 +72,7 @@ anc350_6 = HxnAnc350_6('XF:03IDC-ES{ANC350:6', name='anc350_6')
 anc350_7 = HxnAnc350_3('XF:03IDC-ES{ANC350:7', name='anc350_7')
 
 
-class HxnVerticalMLL(Device):
+class HxnVerticalMLL(NamedDevice):
     x = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:2-Ax:0}Mtr', name='vx')
     y = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:2-Ax:1}Mtr', name='vy')
     z = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:2-Ax:2}Mtr', name='vz')
@@ -94,10 +81,9 @@ class HxnVerticalMLL(Device):
 
 
 vmll = HxnVerticalMLL('', name='vmll')
-rename_motors(vmll)
 
 
-class HxnHorizontalMLL(Device):
+class HxnHorizontalMLL(NamedDevice):
     x = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:2-Ax:5}Mtr', name='hx')
     y = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:4-Ax:0}Mtr', name='hy')
     z = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:4-Ax:1}Mtr', name='hz')
@@ -105,29 +91,26 @@ class HxnHorizontalMLL(Device):
 
 
 hmll = HxnHorizontalMLL('', name='hmll')
-rename_motors(hmll)
 
 
-class HxnMLL_OSA(Device):
+class HxnMLL_OSA(NamedDevice):
     osax = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:4-Ax:2}Mtr', name='osax')
     osay = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:4-Ax:3}Mtr', name='osay')
     osaz = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:4-Ax:4}Mtr', name='osaz')
 
 
 mllosa = HxnMLL_OSA('', name='mllosa')
-rename_motors(mllosa)
 
 
-class HxnMLLBeamStop(Device):
+class HxnMLLBeamStop(NamedDevice):
     bsx = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:5-Ax:0}Mtr', name='bsx')
     bsy = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:5-Ax:1}Mtr', name='bsy')
 
 
 mllbs = HxnMLLBeamStop('', name='mllbs')
-rename_motors(mllbs)
 
 
-class PseudoAngleCorrection(PseudoPositioner):
+class PseudoAngleCorrection(PseudoPositioner, NamedDevice):
     '''Pseudo positioner definition for MLL coarse and fine sample positioners
     with angular correction
     '''
@@ -187,17 +170,15 @@ class PseudoMLLCoarseSample(PseudoAngleCorrection):
     z = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:2}Mtr', name='sz')
 
 
-pseudo_mll_fine = PseudoMLLFineSample('', name='pmc')
-pssx = pseudo_mll_fine.x
-pssz = pseudo_mll_fine.z
-rename_motors(pseudo_mll_fine)
-# To tweak the angle, set pseudo_mll_fine.theta.put(15.1) for example
+pmllf = PseudoMLLFineSample('', name='pmllf')
+pssx = pmllf.x
+pssz = pmllf.z
+# To tweak the angle, set pmllf.theta.put(15.1) for example
 
 
-pseudo_mll_coarse = PseudoMLLCoarseSample('', name='pmc')
-psx = pseudo_mll_coarse.x
-psz = pseudo_mll_coarse.z
-rename_motors(pseudo_mll_coarse)
+pmllc = PseudoMLLCoarseSample('', name='pmllc')
+psx = pmllc.x
+psz = pmllc.z
 
 
 def movr_hth(angle):

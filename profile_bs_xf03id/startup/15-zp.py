@@ -9,6 +9,9 @@ from ophyd.pseudopos import (real_position_argument,
                              pseudo_position_argument)
 
 
+from hxntools.device import NamedDevice
+
+
 class SmarpodBase(PVPositionerPC):
     actuate = Cpt(EpicsSignal, 'XF:03IDC-ES{SPod:1}Move-Cmd.PROC')
     actuate_value = 1
@@ -34,7 +37,7 @@ class SmarpodRotationAxis(SmarpodBase):
                     'XF:03IDC-ES{{SPod:1-Ax:{self.axis}}}Rot-I')
 
 
-class HxnZPSample(Device):
+class HxnZPSample(NamedDevice):
     # Zoneplate module fine sample stage axes (closed on cap
     # sensors/interferometer)
     fine_x = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-zpssx}Mtr', name='zpssx')
@@ -56,34 +59,30 @@ class HxnZPSample(Device):
 
 
 zps = HxnZPSample('', name='zps')
-rename_motors(zps)
-
 zpssx = zps.fine_x
 zpssy = zps.fine_y
 zpssz = zps.fine_z
 
 
-class HxnZP_OSA(Device):
+class HxnZP_OSA(NamedDevice):
     x = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:5-Ax:0}Mtr', name='zposax')
     y = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:5-Ax:1}Mtr', name='zposay')
     z = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:5-Ax:2}Mtr', name='zposaz')
 
 
 zposa = HxnZP_OSA('', name='zposa')
-rename_motors(zposa)
 
 
-class HxnZPBeamStop(Device):
+class HxnZPBeamStop(NamedDevice):
     x = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:3-Ax:1}Mtr', name='zpbsx')
     y = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:3-Ax:3}Mtr', name='zpbsy')
     z = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:3-Ax:2}Mtr', name='zpbsz')
 
 
 zpbs = HxnZPBeamStop('', name='zpbs')
-rename_motors(zpbs)
 
 
-class HxnZonePlate(Device):
+class HxnZonePlate(NamedDevice):
     # TPA stage holding the ZP (underneath long travel range stage)
     x = Cpt(EpicsMotor, 'XF:03IDC-ES{ZpTpa-Ax:X}Mtr', name='zpx')
     y = Cpt(EpicsMotor, 'XF:03IDC-ES{ZpTpa-Ax:Y}Mtr', name='zpy')
@@ -94,10 +93,9 @@ class HxnZonePlate(Device):
 
 
 zp = HxnZonePlate('', name='zp')
-rename_motors(zp)
 
 
-class FineSampleLabX(PseudoPositioner):
+class FineSampleLabX(PseudoPositioner, NamedDevice):
     '''Pseudo positioner definition for zoneplate fine sample positioner
     with angular correction
     '''
@@ -147,7 +145,6 @@ class FineSampleLabX(PseudoPositioner):
 
 
 zplab = FineSampleLabX('XF:03IDC-ES', name='zplab')
-rename_motors(zplab)
 
 zpssx_lab = zplab.zpssx_lab
 zpssz_lab = zplab.zpssz_lab
