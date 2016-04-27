@@ -2,18 +2,18 @@
 # HXN step-scan configuration
 
 import hxntools.scans
-from hxntools.spiral_scans import HxnFermatScan
+# from hxntools.spiral_scans import HxnFermatScan
 
 from bluesky.global_state import get_gs
 
 gs = get_gs()
 
-
-# Set up regular ascans/dscans to work with HXN detector triggering methods:
 hxntools.scans.setup()
+ascan = hxntools.scans.ascan
+
 
 # Define how spiral scans should work
-fermat = HxnFermatScan()
+# fermat = HxnFermatScan()
 
 
 # default_detectors = [sclr1, det_beamstatus, sclr1_ch2, sclr1_ch3, sclr1_ch4,
