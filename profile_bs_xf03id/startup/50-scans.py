@@ -13,6 +13,8 @@ ascan = hxntools.scans.absolute_scan
 dscan = hxntools.scans.relative_scan
 fermat = hxntools.scans.relative_fermat
 spiral = hxntools.scans.relative_spiral
+mesh = hxntools.scans.absolute_mesh
+dmesh = hxntools.scans.relative_mesh
 
 
 # Define how spiral scans should work
