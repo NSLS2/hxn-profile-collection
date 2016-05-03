@@ -9,7 +9,10 @@ from bluesky.global_state import get_gs
 gs = get_gs()
 
 hxntools.scans.setup()
-ascan = hxntools.scans.ascan
+ascan = hxntools.scans.absolute_scan
+dscan = hxntools.scans.relative_scan
+fermat = hxntools.scans.relative_fermat
+spiral = hxntools.scans.relative_spiral
 
 
 # Define how spiral scans should work
