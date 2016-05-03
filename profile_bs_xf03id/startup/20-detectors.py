@@ -112,7 +112,7 @@ t_base = lakeshore2.ch_d
 t_base.name = 't_base'
 
 t_sample = lakeshore2.ch_c
-t_sample.name = 't_base'
+t_sample.name = 't_sample'
 
 t_vlens = lakeshore2.ch_b
 t_vlens.name = 't_vlens'
@@ -125,7 +125,7 @@ sigx = EpicsSignalRO('XF:03IDB-BI{Xeye-CAM:1}Stats1:SigmaX_RBV', name='sigx')
 sigy = EpicsSignalRO('XF:03IDB-BI{Xeye-CAM:1}Stats1:SigmaY_RBV', name='sigy')
 
 
-# Interferometers
+
 class HxnFPSensor(Device):
     ch0 = Cpt(EpicsSignalRO, '-Chan0}Pos-I')
     ch1 = Cpt(EpicsSignalRO, '-Chan1}Pos-I')
