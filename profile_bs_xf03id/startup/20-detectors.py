@@ -98,33 +98,37 @@ setup_scaler_names(sclr2, 'sclr2_ch{}', 'sclr2_ch{}_calc')
 ugap_trig = EpicsSignal('SR:C3-ID:G1{IVU20:1-Mtr:2}Sw:Go', name='ugap_trig')
 
 
+# -- Lakeshores
 class HxnLakeShore(Device):
     ch_a = Cpt(EpicsSignalRO, '-Ch:A}C:T-I')
     ch_b = Cpt(EpicsSignalRO, '-Ch:B}C:T-I')
     ch_c = Cpt(EpicsSignalRO, '-Ch:C}C:T-I')
     ch_d = Cpt(EpicsSignalRO, '-Ch:D}C:T-I')
 
+    def set_names(self, cha, chb, chc, chd):
+        '''Set names of all channels
+
+        Returns channel signals
+        '''
+        self.ch_a.name = cha
+        self.ch_b.name = chb
+        self.ch_c.name = chc
+        self.ch_d.name = chd
+        return self.ch_a, self.ch_b, self.ch_c, self.ch_d
+
 
 lakeshore2 = HxnLakeShore('XF:03IDC-ES{LS:2', name='lakeshore2')
 
 # Name the lakeshore channels:
-t_base = lakeshore2.ch_d
-t_base.name = 't_base'
-
-t_sample = lakeshore2.ch_c
-t_sample.name = 't_sample'
-
-t_vlens = lakeshore2.ch_b
-t_vlens.name = 't_vlens'
-
-t_hlens = lakeshore2.ch_a
-t_hlens.name = 't_hlens'
+t_hlens, t_vlens, t_sample, t_base = lakeshore2.set_names(
+    't_hlens', 't_vlens', 't_sample', 't_base')
 
 # X-ray eye camera sigma X/sigma Y
 sigx = EpicsSignalRO('XF:03IDB-BI{Xeye-CAM:1}Stats1:SigmaX_RBV', name='sigx')
 sigy = EpicsSignalRO('XF:03IDB-BI{Xeye-CAM:1}Stats1:SigmaY_RBV', name='sigy')
 
 
+# -- Interferometers
 
 class HxnFPSensor(Device):
     ch0 = Cpt(EpicsSignalRO, '-Chan0}Pos-I')
