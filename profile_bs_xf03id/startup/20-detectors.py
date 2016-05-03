@@ -2,12 +2,15 @@ from ophyd import (EpicsSignal, EpicsSignalRO)
 from ophyd import (Device, Component as Cpt)
 import pandas as pd
 
-from hxntools.detectors import (TimepixDetector, HxnMerlinDetector,
+import hxntools.handlers
+from hxntools.detectors import (HxnTimepixDetector, HxnMerlinDetector,
                                 BeamStatusDetector)
 from hxntools.detectors.zebra import HxnZebra
-from hxntools.struck_scaler import (HxnScaler, HxnTriggeringScaler,
-                                    StruckScaler)
+from hxntools.struck_scaler import (HxnTriggeringScaler, StruckScaler)
 
+# Register all HXN-specific handlers so that filestore can load all detector
+# spectra and images directly:
+hxntools.handlers.register()
 
 # Flyscan results are shown using pandas. Maximum rows/columns to use when
 # printing the table:
@@ -15,27 +18,47 @@ pd.options.display.width = 180
 pd.options.display.max_rows = None
 pd.options.display.max_columns = 10
 
-# timepix1 = TimepixDetector('XF:03IDC-ES{Tpx:1}', files=['TIFF1:'],
-#                            name='timepix1',
-#                            file_path='/data', ioc_file_path='/data')
-# timepix2 = TimepixDetector('XF:03IDC-ES{Tpx:2}', files=['TIFF1:'],
-#                            name='timepix2',
-#                            file_path='/data', ioc_file_path='/data')
-merlin1 = HxnMerlinDetector('XF:03IDC-ES{Merlin:1}', name='merlin1')
-merlin1.tiff1.read_attrs = []
+# - 2D pixel array detectors
+# -- Timepix 1
+timepix1 = HxnTimepixDetector('XF:03IDC-ES{Tpx:1}', name='timepix1',
+                              image_name='timepix1',
+                              read_attrs=['hdf5', 'cam'])
+timepix1.hdf5.read_attrs = []
+
+# -- Timepix 2
+timepix2 = HxnTimepixDetector('XF:03IDC-ES{Tpx:2}', name='timepix2',
+                              image_name='timepix1',
+                              read_attrs=['hdf5', 'cam'])
+timepix2.hdf5.read_attrs = []
+
+# -- Merlin 1
+merlin1 = HxnMerlinDetector('XF:03IDC-ES{Merlin:1}', name='merlin1',
+                            image_name='merlin1',
+                            read_attrs=['hdf5', 'cam'])
+merlin1.hdf5.read_attrs = []
 
 zebra = HxnZebra('XF:03IDC-ES{Zeb:1}:', name='zebra')
+zebra.read_attrs = []
 
-# 3IDC RG:C4 VME scalers
-# - sclr1 is used for data acquisition. HxnScaler takes care of setting that
-#   up:
+# - 3IDC RG:C4 VME scalers
+# -- scaler 1 is used for data acquisition. HxnScaler takes care of setting
+#    that up:
 sclr1 = HxnTriggeringScaler('XF:03IDC-ES{Sclr:1}', name='sclr1')
 # let the scans know which detectors sclr1 triggers:
 sclr1.scan_type_triggers['step'] = [zebra, merlin1, ]
 sclr1.scan_type_triggers['fly'] = []
-# - sclr2, on the other hand, is just used as a regular scaler, however the
-#   user desires
-sclr2 = StruckScaler('XF:03IDC-ES{Sclr:2}', name='sclr2')
+sclr1.read_attrs = ['channels.chan1', 'channels.chan2', 'channels.chan3',
+                    'channels.chan4', 'channels.chan5', 'channels.chan6',
+                    'channels.chan7',
+                    ]
+
+sclr1_ch1 = sclr1.channels.chan1
+sclr1_ch2 = sclr1.channels.chan2
+sclr1_ch3 = sclr1.channels.chan3
+sclr1_ch4 = sclr1.channels.chan4
+sclr1_ch5 = sclr1.channels.chan5
+
+sclr1_ch4_calc = sclr1.calculations.calc4.value
 
 n_scaler_mca = 8
 sclr1_mca = [sclr1.mca_by_index[i] for i in range(1, n_scaler_mca + 1)]
@@ -43,17 +66,10 @@ sclr1_mca = [sclr1.mca_by_index[i] for i in range(1, n_scaler_mca + 1)]
 for mca in sclr1_mca:
     mca.name = 'sclr1_mca{}'.format(mca.index)
 
-
-# ugap scan trigger
-ugap_trig = EpicsSignal('SR:C3-ID:G1{IVU20:1-Mtr:2}Sw:Go', name='ugap_trig')
-
-
-# Ion chamber
-sclr1_ch1 = sclr1.channels.chan1
-sclr1_ch2 = sclr1.channels.chan2
-sclr1_ch3 = sclr1.channels.chan3
-sclr1_ch4 = sclr1.channels.chan4
-sclr1_ch5 = sclr1.channels.chan5
+# -- scaler 2, on the other hand, is just used as a regular scaler, however the
+#    user desires
+sclr2 = StruckScaler('XF:03IDC-ES{Sclr:2}', name='sclr2')
+sclr2.read_attrs = sclr1.read_attrs
 
 sclr2_ch1 = sclr2.channels.chan1
 sclr2_ch2 = sclr2.channels.chan2
@@ -61,32 +77,53 @@ sclr2_ch3 = sclr2.channels.chan3
 sclr2_ch4 = sclr2.channels.chan4
 sclr2_ch5 = sclr2.channels.chan5
 
-sclr1_ch4_calc = sclr1.calculations.calc4.value
 sclr2_ch4_calc = sclr2.calculations.calc4
 
 
-def setup_scaler_names(scaler):
-    scaler_name = scaler.name
-    for i in range(1, 32):
+# Rename all scaler channels according to a common format.
+def setup_scaler_names(scaler, channel_format, calc_format):
+    for i in range(1, 33):
         channel = getattr(scaler.channels, 'chan{}'.format(i))
-        channel.name = '{}_ch{}'.format(scaler_name, i)
+        channel.name = channel_format.format(i)
 
     for i in range(1, 9):
         c = getattr(scaler.calculations, 'calc{}'.format(i))
-        c.name = '{}_ch{}_calc'.format(scaler_name, i)
+        c.name = calc_format.format(i)
 
 
-setup_scaler_names(sclr1)
-setup_scaler_names(sclr2)
+setup_scaler_names(sclr1, 'sclr1_ch{}', 'sclr1_ch{}_calc')
+setup_scaler_names(sclr2, 'sclr2_ch{}', 'sclr2_ch{}_calc')
 
-t_base = EpicsSignalRO('XF:03IDC-ES{LS:2-Ch:D}C:T-I', name='t_base')
-t_sample = EpicsSignalRO('XF:03IDC-ES{LS:2-Ch:C}C:T-I', name='t_sample')
-t_vlens = EpicsSignalRO('XF:03IDC-ES{LS:2-Ch:B}C:T-I', name='t_vlens')
-t_hlens = EpicsSignalRO('XF:03IDC-ES{LS:2-Ch:A}C:T-I', name='t_hlens')
+# ugap scan trigger
+ugap_trig = EpicsSignal('SR:C3-ID:G1{IVU20:1-Mtr:2}Sw:Go', name='ugap_trig')
+
+
+class HxnLakeShore(Device):
+    ch_a = Cpt(EpicsSignalRO, '-Ch:A}C:T-I')
+    ch_b = Cpt(EpicsSignalRO, '-Ch:B}C:T-I')
+    ch_c = Cpt(EpicsSignalRO, '-Ch:C}C:T-I')
+    ch_d = Cpt(EpicsSignalRO, '-Ch:D}C:T-I')
+
+
+lakeshore2 = HxnLakeShore('XF:03IDC-ES{LS:2', name='lakeshore2')
+
+# Name the lakeshore channels:
+t_base = lakeshore2.ch_d
+t_base.name = 't_base'
+
+t_sample = lakeshore2.ch_c
+t_sample.name = 't_base'
+
+t_vlens = lakeshore2.ch_b
+t_vlens.name = 't_vlens'
+
+t_hlens = lakeshore2.ch_a
+t_hlens.name = 't_hlens'
 
 # X-ray eye camera sigma X/sigma Y
 sigx = EpicsSignalRO('XF:03IDB-BI{Xeye-CAM:1}Stats1:SigmaX_RBV', name='sigx')
 sigy = EpicsSignalRO('XF:03IDB-BI{Xeye-CAM:1}Stats1:SigmaY_RBV', name='sigy')
+
 
 # Interferometers
 class HxnFPSensor(Device):
