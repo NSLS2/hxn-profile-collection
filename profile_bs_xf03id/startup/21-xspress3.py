@@ -1,41 +1,63 @@
-from hxntools.detectors.xspress3 import HxnXspress3Detector
+from ophyd.device import (Component as Cpt)
+from hxntools.detectors.xspress3 import (Xspress3Detector, XspressTrigger,
+                                         Xspress3FileStore, Xspress3Channel)
+
+
+class HxnXspress3Detector(XspressTrigger, Xspress3Detector):
+    channel1 = Cpt(Xspress3Channel, 'C1_', channel_num=1)
+    channel2 = Cpt(Xspress3Channel, 'C2_', channel_num=2)
+    channel3 = Cpt(Xspress3Channel, 'C3_', channel_num=3)
+    # Currently only using three channels. Uncomment these to enable more
+    # channels:
+    # channel4 = C(Xspress3Channel, 'C4_', channel_num=4)
+    # channel5 = C(Xspress3Channel, 'C5_', channel_num=5)
+    # channel6 = C(Xspress3Channel, 'C6_', channel_num=6)
+    # channel7 = C(Xspress3Channel, 'C7_', channel_num=7)
+    # channel8 = C(Xspress3Channel, 'C8_', channel_num=8)
+
+    hdf5 = Cpt(Xspress3FileStore, 'HDF5:',
+               write_path_template='/data/%Y/%m/%d/')
+
+    def __init__(self, prefix, *, configuration_attrs=None, read_attrs=None,
+                 **kwargs):
+        if configuration_attrs is None:
+            configuration_attrs = ['external_trig', 'total_points',
+                                   'spectra_per_point']
+        if read_attrs is None:
+            read_attrs = ['channel1', 'channel2', 'channel3', 'hdf5']
+        super().__init__(prefix, configuration_attrs=configuration_attrs,
+                         read_attrs=read_attrs, **kwargs)
 
 
 xspress3 = HxnXspress3Detector('XF:03IDC-ES{Xsp:1}:', name='xspress3')
 
-# files=['HDF5:'], name='xspress3',
-# file_path='/xspress3_data/',
-# ioc_file_path='/xspress3_data/')
-
 
 def xspress3_roi_setup():
-    # ROIs (added to all default channels if unspecified)
-    rois = xspress3.rois
-    # rois.clear_all()
-    rois.add(9300, 9600, 'Pt')
-    rois.add(1590, 1890, 'Si')
-    rois.add(2150, 2450, 'S')
-    rois.add(2000, 2300, 'Zr')
-    rois.add(2810, 3110, 'Ag')
-    rois.add(4800, 5100, 'V')
-    rois.add(4610, 5070, 'Ce')
-    rois.add(1850, 2150, 'P')
-    rois.add(5270, 5570, 'Cr')
-    rois.add(5750, 6050, 'Mn')
-    rois.add(6250, 6550, 'Fe')
-    rois.add(6530, 6940, 'Gd')
-    rois.add(6780, 7080, 'Co')
-    rois.add(7330, 7630, 'Ni')
-    rois.add(7900, 8200, 'Cu')
-    rois.add(8490, 8790, 'Zn')
-    rois.add(8250, 8550, 'W')
-    rois.add(9600, 9750, 'Au')
-    rois.add(11500, 12500, 'EL')
-    rois.add(1900, 2000, 'Y')
-    rois.add(1340, 1640, 'Al')
-    rois.add(4360, 4660, 'Ti')
-    rois.add(4550, 4750, 'La')
-    rois.add(9150, 9350, 'Ga')
+    for channel in [xspress3.channel1, xspress3.channel2, xspress3.channel3]:
+        channel.set_roi(1, 9300, 9600, name='Pt')
+        channel.set_roi(2, 1590, 1890, name='Si')
+        channel.set_roi(3, 2150, 2450, name='S')
+        channel.set_roi(4, 2000, 2300, name='Zr')
+        channel.set_roi(5, 2810, 3110, name='Ag')
+        channel.set_roi(6, 4800, 5100, name='V')
+        channel.set_roi(7, 4610, 5070, name='Ce')
+        channel.set_roi(8, 1850, 2150, name='P')
+        channel.set_roi(9, 5270, 5570, name='Cr')
+        channel.set_roi(10, 5750, 6050, name='Mn')
+        channel.set_roi(11, 6250, 6550, name='Fe')
+        channel.set_roi(12, 6530, 6940, name='Gd')
+        channel.set_roi(13, 6780, 7080, name='Co')
+        channel.set_roi(14, 7330, 7630, name='Ni')
+        channel.set_roi(15, 7900, 8200, name='Cu')
+        channel.set_roi(16, 8490, 8790, name='Zn')
+        # channel.set_roi(17, 8250, 8550, 'W')
+        # channel.set_roi(18, 9600, 9750, 'Au')
+        # channel.set_roi(19, 11500, 12500, 'EL')
+        # channel.set_roi(20, 1900, 2000, 'Y')
+        # channel.set_roi(21, 1340, 1640, 'Al')
+        # channel.set_roi(22, 4360, 4660, 'Ti')
+        # channel.set_roi(23, 4550, 4750, 'La')
+        # channel.set_roi(24, 9150, 9350, 'Ga')
 
 
 try:
