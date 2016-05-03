@@ -16,3 +16,11 @@ logging.getLogger('ppmac').addHandler(handler)
 logging.getLogger('hxnfly').setLevel(logging.DEBUG)
 logging.getLogger('hxntools').setLevel(logging.DEBUG)
 logging.getLogger('ppmac').setLevel(logging.INFO)
+
+import pandas as pd
+
+# Flyscan results are shown using pandas. Maximum rows/columns to use when
+# printing the table:
+pd.options.display.width = 180
+pd.options.display.max_rows = None
+pd.options.display.max_columns = 10

@@ -1,6 +1,5 @@
 from ophyd import (EpicsSignal, EpicsSignalRO)
 from ophyd import (Device, Component as Cpt)
-import pandas as pd
 
 import hxntools.handlers
 from hxntools.detectors import (HxnTimepixDetector, HxnMerlinDetector,
@@ -11,12 +10,6 @@ from hxntools.struck_scaler import (HxnTriggeringScaler, StruckScaler)
 # Register all HXN-specific handlers so that filestore can load all detector
 # spectra and images directly:
 hxntools.handlers.register()
-
-# Flyscan results are shown using pandas. Maximum rows/columns to use when
-# printing the table:
-pd.options.display.width = 180
-pd.options.display.max_rows = None
-pd.options.display.max_columns = 10
 
 # - 2D pixel array detectors
 # -- Timepix 1
