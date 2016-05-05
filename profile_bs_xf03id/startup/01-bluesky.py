@@ -6,8 +6,7 @@ from bluesky.callbacks import *
 from bluesky.plans import *
 # from bluesky.spec_api import *
 from bluesky.utils import install_qt_kicker
-from bluesky.global_state import (get_gs, abort, stop, resume, panic,
-                                  all_is_well)
+from bluesky.global_state import (get_gs, abort, stop, resume)
 
 from databroker import (DataBroker as db, get_events, get_images, get_table,
                         get_fields, restream, process)
