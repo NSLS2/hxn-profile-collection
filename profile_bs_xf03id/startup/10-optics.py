@@ -1,5 +1,6 @@
 from ophyd import (EpicsMotor, Device, Component as Cpt,
                    EpicsSignalRO)
+from ophyd.device import FormattedComponent as FCpt
 
 
 class HxnDCM(Device):
@@ -45,7 +46,14 @@ class HxnSlitA(Device):
     outb = Cpt(EpicsMotor, '-Ax:Outb}Mtr')
 
 
-s1 = HxnSlitA('XF:03IDA-OP{Slt:1', name='s1')
+class HxnSlitA1(HxnSlitA):
+    #           ^^^^^^^^ means it includes 'bot, top, inb, outb' too
+    # x, y position from the i400 IOC:
+    xpos = FCpt(EpicsSignalRO, 'XF:03IDA-BI{{Slt:1}}PosX-I')
+    ypos = FCpt(EpicsSignalRO, 'XF:03IDA-BI{{Slt:1}}PosY-I')
+
+
+s1 = HxnSlitA1('XF:03IDA-OP{Slt:1', name='s1')
 s2 = HxnSlitA('XF:03IDA-OP{Slt:2', name='s2')
 
 
