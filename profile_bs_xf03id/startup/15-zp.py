@@ -74,9 +74,14 @@ zposa = HxnZP_OSA('', name='zposa')
 
 
 class HxnZPBeamStop(NamedDevice):
-    zpbsx = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:3-Ax:1}Mtr', doc='bs coarse x')
-    zpbsy = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:3-Ax:3}Mtr', doc='bs coarse y')
-    zpbsz = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:3-Ax:2}Mtr', doc='bs coarse z')
+    # The SmarAct MCS was previously used for the beamstop:
+    # zpbsx = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:3-Ax:1}Mtr', doc='bs coarse x')
+    # zpbsy = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:3-Ax:3}Mtr', doc='bs coarse y')
+    # zpbsz = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:3-Ax:2}Mtr', doc='bs coarse z')
+    # The MCS is now being used for ptycho (prototype) p_bsx/p_bsy/p_bsz
+    zpbsx = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:8-Ax:0}Mtr', doc='bs coarse x')
+    zpbsy = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:8-Ax:1}Mtr', doc='bs coarse y')
+    zpbsz = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:8-Ax:2}Mtr', doc='bs coarse z')
 
 
 zpbs = HxnZPBeamStop('', name='zpbs')

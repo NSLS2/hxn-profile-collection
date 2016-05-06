@@ -17,7 +17,7 @@ dcm = HxnDCM('', name='dcm')
 
 
 class HxnMirror1(Device):
-    '''HXN Mirror 1 device'''
+    '''HXN Mirror 1 device (HCM)'''
     x = Cpt(EpicsMotor, 'XF:03IDA-OP{Mir:1-Ax:X}Mtr')
     y = Cpt(EpicsMotor, 'XF:03IDA-OP{Mir:1-Ax:Y}Mtr')
     p = Cpt(EpicsMotor, 'XF:03IDA-OP{Mir:1-Ax:P}Mtr')
@@ -25,8 +25,11 @@ class HxnMirror1(Device):
     pf = Cpt(EpicsMotor, 'XF:03IDA-OP{HCM:1-Ax:PF}Mtr')
 
 
+m1 = HxnMirror1('', name='m1')
+
+
 class HxnMirror2(Device):
-    '''HXN Mirror 2 device'''
+    '''HXN Mirror 2 device (HFM)'''
     x = Cpt(EpicsMotor, 'XF:03IDA-OP{Mir:2-Ax:X}Mtr')
     y = Cpt(EpicsMotor, 'XF:03IDA-OP{Mir:2-Ax:Y}Mtr')
     p = Cpt(EpicsMotor, 'XF:03IDA-OP{Mir:2-Ax:P}Mtr')
@@ -34,7 +37,6 @@ class HxnMirror2(Device):
     pf = Cpt(EpicsMotor, 'XF:03IDA-OP{HFM:1-Ax:PF}Mtr')
 
 
-m1 = HxnMirror1('', name='m1')
 m2 = HxnMirror2('', name='m2')
 
 
@@ -95,22 +97,13 @@ fs1_y = EpicsMotor('XF:03IDA-OP{FS:1-Ax:Y}Mtr', name='fs1_y')
 bpm4_y = EpicsMotor('XF:03IDA-OP{BPM:4-Ax:Y}Mtr', name='bpm4_y')
 bpm5_y = EpicsMotor('XF:03IDA-OP{BPM:5-Ax:Y}Mtr', name='bpm5_y')
 
+# Diagnostic Manipulators
 fl1_y = EpicsMotor('XF:03IDA-OP{Flr:1-Ax:Y}Mtr', name='fl1_y')
 fl2_y = EpicsMotor('XF:03IDA-OP{Flr:2-Ax:Y}Mtr', name='fl2_y')
 
 crl = HxnXYPitchPositioner('XF:03IDA-OP{Lens:CRL', name='crl')
 
 
-# # HCM
-# m1pz = EpicsMotor('XF:03IDA-OP{HCM:1-Ax:PF}Mtr', name='m1pz')
-#
-# # Mon:1
-# bragg = EpicsMotor('XF:03IDA-OP{Mon:1-Ax:Bragg}Mtr', name='bragg')
-#
-# # Diagnostic Manipulators
-# f1y = EpicsMotor('XF:03IDA-OP{Flr:1-Ax:Y}Mtr', name='f1y')
-# f2y = EpicsMotor('XF:03IDA-OP{Flr:2-Ax:Y}Mtr', name='f2y')
-#
 # # nanoBPM2@SSA1
 # nano2y = EpicsMotor('XF:03IDB-OP{BPM:6-Ax:Y}Mtr', name='nano2y')
 #

@@ -70,6 +70,7 @@ anc350_4 = HxnAnc350_6('XF:03IDC-ES{ANC350:4', name='anc350_4')
 anc350_5 = HxnAnc350_6('XF:03IDC-ES{ANC350:5', name='anc350_5')
 anc350_6 = HxnAnc350_6('XF:03IDC-ES{ANC350:6', name='anc350_6')
 anc350_7 = HxnAnc350_3('XF:03IDC-ES{ANC350:7', name='anc350_7')
+anc350_8 = HxnAnc350_3('XF:03IDC-ES{ANC350:8', name='anc350_8')
 
 
 class HxnVerticalMLL(NamedDevice):
