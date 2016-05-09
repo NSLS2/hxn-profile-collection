@@ -7,6 +7,7 @@ from bluesky.global_state import get_gs
 gs = get_gs()
 
 hxntools.scans.setup()
+ct = hxntools.scans.count
 ascan = hxntools.scans.absolute_scan
 dscan = hxntools.scans.relative_scan
 fermat = hxntools.scans.relative_fermat
