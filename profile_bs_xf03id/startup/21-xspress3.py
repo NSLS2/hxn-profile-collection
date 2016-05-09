@@ -62,7 +62,7 @@ def xspress3_roi_setup():
 
 try:
     print('Configuring Xspress3 ROIs...')
-    # xspress3_roi_setup()
+    xspress3_roi_setup()
     print('Done')
 except KeyboardInterrupt:
     print('Xspress3 ROI configuration cancelled.')
