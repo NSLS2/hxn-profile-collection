@@ -31,6 +31,9 @@ class HxnXspress3Detector(XspressTrigger, Xspress3Detector):
 
 xspress3 = HxnXspress3Detector('XF:03IDC-ES{Xsp:1}:', name='xspress3')
 
+# Create directories on the xspress3 server, otherwise scans can fail:
+xspress3.make_directories.put(True)
+
 
 def xspress3_roi_setup():
     for channel in [xspress3.channel1, xspress3.channel2, xspress3.channel3]:
