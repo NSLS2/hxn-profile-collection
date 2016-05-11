@@ -31,12 +31,8 @@ RE = get_gs().RE
 
 # Save all scan data to metadatastore:
 
-try:
-    from bluesky.register_mds import register_mds
-except ImportError:
-    RE.subscribe_lossless('all', metadatastore.commands.insert)
-else:
-    register_mds(RE)
+from bluesky.register_mds import register_mds
+register_mds(RE)
 
 
 # Pass on only start/stop documents to a few subscriptions
