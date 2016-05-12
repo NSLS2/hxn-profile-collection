@@ -10,18 +10,20 @@ RE = gs.RE
 susp_current = SuspendFloor(beamline_status.beam_current,
                             suspend_thresh=100.0,
                             resume_thresh=105.0,
-                            # message='beam current too low',
+                            tripped_message='beam current too low',
                             )
-# RE.install_suspender(susp_current)
 
 # - when the shutter is closed
 susp_shutter = SuspendBoolLow(beamline_status.shutter_status,
-                              # message='shutter not open',
+                              tripped_message='shutter not open',
                               )
-# RE.install_suspender(susp_shutter)
 
 # - if the beamline isn't enabled
 susp_enabled = SuspendBoolLow(beamline_status.beamline_enabled,
-                              # message='beamline is not enabled',
+                              tripped_message='beamline is not enabled',
                               )
+
+# Install all suspenders:
+# RE.install_suspender(susp_current)
+# RE.install_suspender(susp_shutter)
 # RE.install_suspender(susp_enabled)
