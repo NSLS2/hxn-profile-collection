@@ -3,6 +3,15 @@ from ophyd import (EpicsMotor, Device, Component as Cpt,
 from ophyd.device import FormattedComponent as FCpt
 
 
+class BeamlineStatus(Device):
+    shutter_status = Cpt(EpicsSignalRO, 'SR-EPS{PLC:1}Sts:MstrSh-Sts')
+    beam_current = Cpt(EpicsSignalRO, 'SR:C03-BI{DCCT:1}I:Real-I')
+    beamline_enabled = Cpt(EpicsSignalRO, 'SR:C03-EPS{PLC:1}Sts:ID_BE_Enbl-Sts')
+
+
+beamline_status = BeamlineStatus('', name='beamline_status')
+
+
 class HxnDCM(Device):
     '''HXN DCM Device'''
     th = Cpt(EpicsMotor, 'XF:03IDA-OP{Mon:1-Ax:Bragg}Mtr')
