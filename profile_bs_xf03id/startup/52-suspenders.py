@@ -23,6 +23,7 @@ susp_enabled = SuspendBoolLow(beamline_status.beamline_enabled,
                               tripped_message='beamline is not enabled',
                               )
 
+# NOTE: to enable or disable the suspenders, (un)comment the following:
 # Install all suspenders:
 # RE.install_suspender(susp_current)
 # RE.install_suspender(susp_shutter)
