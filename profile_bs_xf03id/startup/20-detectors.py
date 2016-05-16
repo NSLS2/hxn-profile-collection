@@ -3,7 +3,7 @@ from ophyd import (Device, Component as Cpt)
 
 import hxntools.handlers
 from hxntools.detectors import (HxnTimepixDetector, HxnMerlinDetector,
-                                BeamStatusDetector)
+                                BeamStatusDetector, HxnMercuryDetector)
 from hxntools.detectors.zebra import HxnZebra
 
 # Register all HXN-specific handlers so that filestore can load all detector
@@ -29,6 +29,13 @@ merlin1 = HxnMerlinDetector('XF:03IDC-ES{Merlin:1}', name='merlin1',
                             read_attrs=['hdf5', 'cam'])
 merlin1.hdf5.read_attrs = []
 
+# - Other detectors and triggering devices
+# -- DXP Mercury (1 channel)
+mercury1 = HxnMercuryDetector('XF:03IDC-ES{DXP:1}', name='mercury1')
+mercury1.read_attrs = ['dxp', 'mca']
+mercury1.dxp.read_attrs = []
+
+# -- Quantum Detectors Zebra
 zebra = HxnZebra('XF:03IDC-ES{Zeb:1}:', name='zebra')
 zebra.read_attrs = []
 
