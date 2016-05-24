@@ -15,7 +15,7 @@ spiral = hxntools.scans.relative_spiral
 mesh = hxntools.scans.absolute_mesh
 dmesh = hxntools.scans.relative_mesh
 
-gs.DETS = [zebra, sclr1, merlin1, smll, lakeshore2, xbpm, dcm, s1]
+gs.DETS = [zebra, sclr1, merlin1, xspress3, smll, lakeshore2, xbpm, dcm, s1]
 gs.TABLE_COLS = ['sclr2_ch2','sclr2_ch3', 'sclr2_ch4', 'ssx', 'ssy', 'ssz',
                  't_base', 't_sample', 't_vlens', 't_hlens']
 
