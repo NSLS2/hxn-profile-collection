@@ -1,6 +1,6 @@
-# vim: sw=4 ts=4 sts expandtab smarttab
+# vim: sw=4 ts=4 sts=4 expandtab smarttab
 # HXN fly-scan configuration
-from hxnfly.bs import (FlyPlan1D, FlyPlan2D)
+from hxnfly.bs import (FlyPlan1D, FlyPlan2D, maybe_a_table)
 from hxnfly.hxn_fly import (Fly1D_MLL, Fly1D_ZP, Fly2D_MLL, Fly2D_ZP)
 
 # These define which scans can be done by which class:
@@ -23,29 +23,33 @@ FlyPlan2D.scans = {frozenset({ssx, ssy}): Fly2D_MLL,
                    }
 
 
-# # from hxnfly.callbacks import FlyLivePlot
-# from hxnfly.callbacks import (FlyRoiPlot, FlyLiveImage)
-# from hxnfly.callbacks import FlyLiveCrossSection
+# from hxnfly.callbacks import FlyLivePlot
+from hxnfly.callbacks import (FlyRoiPlot, FlyLiveImage)
+from hxnfly.callbacks import FlyLiveCrossSection
+
+# def _sum_func(*values):
+#     return np.sum(values, axis=0)
 #
-# # def _sum_func(*values):
-# #     return np.sum(values, axis=1)
-# #
-# # A live plot using scaler 1's first three MCA channels and sums them
-# # together:
-# # flyplot = FlyLivePlot(sclr1_mca[:3], data_func=_sum_func,
-# #                       labels=['test'])
-# #
-# # A 1D ROI plot of aluminum from channels 1 to 3:
-# # flyplot = FlyRoiPlot('Al', channels=[1, 2, 3])
-# # (optionally sum them together with use_sum=True or adding a function to
-# #  calculate with data_func=sum_func)
-# #
-# # flyplot = FlyRoiPlot(['Pt'], channels=[1, 2, 3], use_sum=True)
-# # fly2dplot = FlyLiveImage(['V','P','Ag','Pt','Si'], channels=[1, 2, 3], use_sum=True)
-# # fly2dplot1 = FlyLiveCrossSection(['V'], channels=[1, 2, 3], use_sum=True)
+# A live plot using scaler 1's first three MCA channels and sums them
+# together:
+# flyplot = FlyLivePlot(sclr1_mca[:3], data_func=_sum_func,
+#                       labels=['test'])
 #
+# A 1D ROI plot of aluminum from channels 1 to 3:
+# flyplot = FlyRoiPlot('Al', channels=[1, 2, 3])
+#
+live_im_plot = FlyLiveImage(['V','P','Ag','Pt','Si'], channels=[1, 2, 3])
+# fly2dplot1 = FlyLiveCrossSection(['V'], channels=[1, 2, 3)
+
+pt_plot = FlyRoiPlot(['Pt', 'V', 'Ag'], channels=[1, 2, 3])
 fly1d = FlyPlan1D(detectors=[xspress3],
-                  scaler_channels=[1, 2, 3, 4])
+                  scaler_channels=[1, 2, 3, 4],
+                  )
+
+fly1d.sub_factories = [maybe_a_table]
+fly1d.subs = [pt_plot, ]
 
 fly2d = FlyPlan2D(detectors=[xspress3],
                   scaler_channels=[1, 2, 3, 4])
+fly2d.sub_factories = [maybe_a_table]
+fly2d.subs = [pt_plot, live_im_plot, ]
