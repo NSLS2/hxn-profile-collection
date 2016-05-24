@@ -42,14 +42,20 @@ live_im_plot = FlyLiveImage(['V','P','Ag','Pt','Si'], channels=[1, 2, 3])
 # fly2dplot1 = FlyLiveCrossSection(['V'], channels=[1, 2, 3)
 
 pt_plot = FlyRoiPlot(['Pt', 'V', 'Ag'], channels=[1, 2, 3])
-fly1d = FlyPlan1D(detectors=[xspress3],
+
+
+# NOTE: indicate which detectors can be used in fly scans. When a
+#       fly scan is run, all of those matching in gs.DETS will be
+#       used.
+fly_scannable_detectors = [xspress3, merlin1, zebra, sclr1]
+fly1d = FlyPlan1D(usable_detectors=fly_scannable_detectors,
                   scaler_channels=[1, 2, 3, 4],
                   )
 
 fly1d.sub_factories = [maybe_a_table]
 fly1d.subs = [pt_plot, ]
 
-fly2d = FlyPlan2D(detectors=[xspress3],
+fly2d = FlyPlan2D(usable_detectors=fly_scannable_detectors,
                   scaler_channels=[1, 2, 3, 4])
 fly2d.sub_factories = [maybe_a_table]
 fly2d.subs = [pt_plot, live_im_plot, ]
