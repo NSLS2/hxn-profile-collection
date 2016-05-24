@@ -1,9 +1,11 @@
 from ophyd.device import (Component as Cpt)
-from hxntools.detectors.xspress3 import (Xspress3Detector, XspressTrigger,
-                                         Xspress3FileStore, Xspress3Channel)
+
+from hxntools.detectors.xspress3 import (Xspress3FileStore,
+                                         Xspress3Channel)
+from hxntools.detectors.hxn_xspress3 import HxnXspress3DetectorBase
 
 
-class HxnXspress3Detector(XspressTrigger, Xspress3Detector):
+class HxnXspress3Detector(HxnXspress3DetectorBase):
     channel1 = Cpt(Xspress3Channel, 'C1_', channel_num=1)
     channel2 = Cpt(Xspress3Channel, 'C2_', channel_num=2)
     channel3 = Cpt(Xspress3Channel, 'C3_', channel_num=3)
@@ -16,7 +18,9 @@ class HxnXspress3Detector(XspressTrigger, Xspress3Detector):
     # channel8 = C(Xspress3Channel, 'C8_', channel_num=8)
 
     hdf5 = Cpt(Xspress3FileStore, 'HDF5:',
-               write_path_template='/data/%Y/%m/%d/')
+               write_path_template='/data/%Y/%m/%d/',
+               mds_key_format='xspress3_ch{chan}',
+               )
 
     def __init__(self, prefix, *, configuration_attrs=None, read_attrs=None,
                  **kwargs):
@@ -30,6 +34,7 @@ class HxnXspress3Detector(XspressTrigger, Xspress3Detector):
 
 
 xspress3 = HxnXspress3Detector('XF:03IDC-ES{Xsp:1}:', name='xspress3')
+
 
 # Create directories on the xspress3 server, otherwise scans can fail:
 xspress3.make_directories.put(True)
