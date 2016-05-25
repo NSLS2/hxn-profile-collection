@@ -5,7 +5,7 @@ from ophyd.commands import *
 from bluesky.callbacks import *
 from bluesky.plans import *
 # from bluesky.spec_api import *
-from bluesky.utils import install_qt_kicker
+from bluesky.utils import (install_qt_kicker, register_transform)
 from bluesky.global_state import (get_gs, abort, stop, resume)
 
 from databroker import (DataBroker as db, get_events, get_images, get_table,
@@ -23,3 +23,6 @@ RE.md['beamline_id'] = 'HXN'
 
 RE.verbose = True
 # RE.ignore_callback_exceptions = False
+
+# Allow scans to be run by using the prefix '<' instead of typing RE(...)
+register_transform('RE', prefix='<')
