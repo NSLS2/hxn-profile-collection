@@ -13,8 +13,8 @@ logging.getLogger('hxntools').addHandler(handler)
 logging.getLogger('hxnfly').addHandler(handler)
 logging.getLogger('ppmac').addHandler(handler)
 
-logging.getLogger('hxnfly').setLevel(logging.DEBUG)
-logging.getLogger('hxntools').setLevel(logging.DEBUG)
+logging.getLogger('hxnfly').setLevel(logging.INFO)
+logging.getLogger('hxntools').setLevel(logging.INFO)
 logging.getLogger('ppmac').setLevel(logging.INFO)
 
 import pandas as pd
