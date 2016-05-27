@@ -26,3 +26,6 @@ RE.verbose = True
 
 # Allow scans to be run by using the prefix '<' instead of typing RE(...)
 register_transform('RE', prefix='<')
+
+# The default is 'count_time', HXN has always used 'exposure_time':
+gs.MD_TIME_KEY = 'exposure_time'
