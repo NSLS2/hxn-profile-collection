@@ -57,6 +57,8 @@ class HxnZPSample(NamedDevice):
     smarthy = Cpt(SmarpodRotationAxis, axis=3, doc='smarpod theta around y')
     smarthy = Cpt(SmarpodRotationAxis, axis=1, doc='smarpod theta around z')
 
+    zp_kill_piezos = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1-ZP}Kill-Cmd.PROC')
+
 
 zps = HxnZPSample('', name='zps')
 zpssx = zps.zpssx
