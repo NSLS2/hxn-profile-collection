@@ -395,21 +395,6 @@ def tomo_slice_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
     mov(zpsth, 0)
 
 
-def _load_scan(scan_id, fill_events=False):
-    '''Load scan from databroker by scan id'''
-    if scan_id > 0 and scan_id in data_cache:
-        df = data_cache[scan_id]
-    else:
-        hdr = db[scan_id]
-        scan_id = hdr['start'].scan_id
-        if scan_id in data_cache:
-            df = data_cache[scan_id]
-        else:
-            data_cache[scan_id] = get_table(hdr, fill=fill_events)
-
-    return scan_id, df
-
-
 def movr_zpz1(dz):
     movr(zpz1, dz)
     movr(zpx, dz * 4.428)

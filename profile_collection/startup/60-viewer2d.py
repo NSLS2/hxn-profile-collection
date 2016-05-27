@@ -1,8 +1,8 @@
-from __future__ import print_function
 import os
 import sys
 import numpy as np
-#import time
+import filestore
+import filestore.api
 from datetime import datetime
 
 import matplotlib as mpl
@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
 import databroker
-from databroker import DataBroker as db
+from databroker import (get_table, db)
 # from xray_vision.qt_widgets import CrossSectionMainWindow
 # from xray_vision.backend.mpl.cross_section_2d import CrossSection
 from scipy.interpolate import interp1d, interp2d
@@ -244,11 +244,10 @@ def _load_scan(scan_id, fill_events=False):
     else:
         hdr = db[scan_id]
         scan_id = hdr['start'].scan_id
-        if scan_id in data_cache:
-            df = data_cache[scan_id]
-        else:
-            df = databroker.get_table(hdr, fill=fill_events)
-            data_cache[scan_id] = df
+        if scan_id not in data_cache:
+            data_cache[scan_id] = db.get_table(hdr, fill=fill_events)
+
+        df = data_cache[scan_id]
 
     return scan_id, df
 
@@ -492,18 +491,15 @@ def export(sid,num=1):
     # return df
 
 
-def get_first_tiff_filename(scan_id, key='merlin1'):
+def get_all_filenames(scan_id, key='merlin1'):
     scan_id, df = _load_scan(scan_id, fill_events=False)
-    uid = list(df[key])[0]
-    from filestore.path_only_handlers import AreaDetectorTiffPathOnlyHandler
-    handlers = {'AD_TIFF': AreaDetectorTiffPathOnlyHandler}
-    filename, = filestore.api.retrieve(uid, handlers)
-    return filename
+    from filestore.path_only_handlers import (AreaDetectorTiffPathOnlyHandler,
+                                              RawHandler)
+    handlers = {'AD_TIFF': AreaDetectorTiffPathOnlyHandler,
+                'XSP3': RawHandler}
+    filenames = [filestore.api.retrieve(uid, handlers)[0]
+                 for uid in list(df[key])]
 
-
-def get_all_tiff_filenames(scan_id, key='merlin1'):
-    scan_id, df = _load_scan(scan_id, fill_events=False)
-    from filestore.path_only_handlers import AreaDetectorTiffPathOnlyHandler
-    handlers = {'AD_TIFF': AreaDetectorTiffPathOnlyHandler}
-    return [filestore.api.retrieve(uid, handlers)[0]
-            for uid in list(df[key])]
+    if len(set(filenames)) != len(filenames):
+        return set(filenames)
+    return filenames
