@@ -16,10 +16,11 @@ timepix1 = HxnTimepixDetector('XF:03IDC-ES{Tpx:1}', name='timepix1',
                               image_name='timepix1',
                               read_attrs=['hdf5', 'cam'])
 timepix1.hdf5.read_attrs = []
+# TODO: add stats plugins
 
 # -- Timepix 2
 timepix2 = HxnTimepixDetector('XF:03IDC-ES{Tpx:2}', name='timepix2',
-                              image_name='timepix1',
+                              image_name='timepix2',
                               read_attrs=['hdf5', 'cam'])
 timepix2.hdf5.read_attrs = []
 
@@ -38,9 +39,6 @@ mercury1.dxp.read_attrs = []
 # -- Quantum Detectors Zebra
 zebra = HxnZebra('XF:03IDC-ES{Zeb:1}:', name='zebra')
 zebra.read_attrs = []
-
-# ugap scan trigger
-ugap_trig = EpicsSignal('SR:C3-ID:G1{IVU20:1-Mtr:2}Sw:Go', name='ugap_trig')
 
 
 # -- Lakeshores

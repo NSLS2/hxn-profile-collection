@@ -44,8 +44,9 @@ from hxnfly.callbacks import FlyLiveCrossSection
 live_im_plot = FlyLiveImage(['V','P','Ag','Pt','Si'], channels=[1, 2, 3])
 # fly2dplot1 = FlyLiveCrossSection(['V'], channels=[1, 2, 3)
 
-pt_plot = FlyRoiPlot(['Pt', 'V', 'Ag'], channels=[1, 2, 3])
-
+pt_plot = FlyRoiPlot(['Pt', 'V', 'Ag'],
+                     channels=[1, 2, 3],
+                     )
 
 # NOTE: indicate which detectors can be used in fly scans. When a
 #       fly scan is run, all of those matching in gs.DETS will be

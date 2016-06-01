@@ -22,3 +22,4 @@ gs.TABLE_COLS = ['sclr2_ch2','sclr2_ch3', 'sclr2_ch4', 'ssx', 'ssy', 'ssz',
 
 # Plot this by default versus motor position:
 gs.PLOT_Y = 'Det2_V'
+gs.BASELINE_DEVICES = [smll]
