@@ -17,7 +17,7 @@ from pyOlog import SimpleOlogClient
 # Set up the logbook. This configures bluesky's summaries of
 # data acquisition (scan type, ID, etc.).
 
-LOGBOOKS = ['bs-testing']
+LOGBOOKS = ['Data Acquisition']
 
 logbook = SimpleOlogClient()
 
