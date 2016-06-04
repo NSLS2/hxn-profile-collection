@@ -125,9 +125,9 @@ def plot(scan_id, namex, elem='Pt', channels=None, norm=None):
 
     scan_id, df = _load_scan(scan_id, fill_events=False)
     x = df[namex]
-#    data = np.sum(df['Det%d_%s' % (chan, elem)]
-#                  for chan in channels)
-    data = df[elem]
+    data = np.sum(df['Det%d_%s' % (chan, elem)]
+                  for chan in channels)
+    #data = df[elem]
     x = np.asarray(x)
     data = np.asarray(data)
 
