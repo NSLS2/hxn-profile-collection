@@ -9,7 +9,7 @@ sclr1.scan_type_triggers['step'] = [zebra, merlin1, xspress3]
 sclr1.scan_type_triggers['fly'] = []
 sclr1.read_attrs = ['channels.chan1', 'channels.chan2', 'channels.chan3',
                     'channels.chan4', 'channels.chan5', 'channels.chan6',
-                    'channels.chan7',
+                    'channels.chan7', 'calculations.calc4.value',
                     ]
 
 sclr1_ch1 = sclr1.channels.chan1
@@ -37,7 +37,7 @@ sclr2_ch3 = sclr2.channels.chan3
 sclr2_ch4 = sclr2.channels.chan4
 sclr2_ch5 = sclr2.channels.chan5
 
-sclr2_ch4_calc = sclr2.calculations.calc4
+sclr2_ch4_calc = sclr2.calculations.calc4.value
 
 
 # Rename all scaler channels according to a common format.
@@ -49,6 +49,7 @@ def setup_scaler_names(scaler, channel_format, calc_format):
     for i in range(1, 9):
         c = getattr(scaler.calculations, 'calc{}'.format(i))
         c.name = calc_format.format(i)
+        c.value.name = calc_format.format(i)
 
 
 setup_scaler_names(sclr1, 'sclr1_ch{}', 'sclr1_ch{}_calc')
