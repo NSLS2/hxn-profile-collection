@@ -77,7 +77,7 @@ class UVDoneMOVN(Signal):
         # poke it again
         if not_moving:
             actuate = getattr(self.parent, self._act)
-            print('re actuated')
+            # print('re actuated')
             actuate.put(1)
 
     def _stop_watcher(self, *arg, **kwargs):
@@ -89,7 +89,7 @@ class UVDoneMOVN(Signal):
         TODO: mark status object as failed
         TODO: only trigger this on 0 -> 1 transposition
         '''
-        print('STOPPED')
+        # print('STOPPED')
         # set the target to None and remove all callbacks
         self.reset(None)
         # flip this signal to 1 to signal it is done
