@@ -19,17 +19,18 @@ from scipy.interpolate import interp1d, interp2d
 def plot2d(scan_id, elem, norm='sclr1_ch4', det_type='elem'):
     scan_id, df = _load_scan(scan_id, fill_events=False)
     scan_info=db[scan_id]
-    tmp = scan_info['start']['args']
-    tmp = tmp.split()
+    tmp = scan_info['start']
+    #tmp = tmp.split()
+    x_motor = tmp['motors'][0]
+    y_motor = tmp['motors'][1]
 
-    y_motor = tmp[0][18:-2]
-    y_start = np.float(tmp[2][:-1])
-    y_end = np.float(tmp[3][:-1])
-    row = np.int(tmp[4][:-1])
-    x_motor = tmp[6][17:-2]
-    x_start = np.float(tmp[8][:-1])
-    x_end = np.float(tmp[9][:-1])
-    col = np.int(tmp[10][:-1])
+    x_start = tmp['plan_args']['args'][1]
+    x_end = tmp['plan_args']['args'][2]
+    col = tmp['plan_args']['args'][3]
+
+    y_start = tmp['plan_args']['args'][5]
+    y_end = tmp['plan_args']['args'][6]
+    row = tmp['plan_args']['args'][7]
 
     if det_type == 'elem':
         det = (df['Det1_{}'.format(elem)] +
@@ -45,7 +46,7 @@ def plot2d(scan_id, elem, norm='sclr1_ch4', det_type='elem'):
         plt.figure()
         data = np.reshape(det, (row, col))
         plt.title('Scan %d: %s (normalized to %s)' % (scan_id, elem, norm))
-        plt.imshow(data/mon, interpolation='None',extent=[x_start,x_end,y_end,y_start])
+        plt.imshow(data/mon, interpolation='None',extent=[x_start,x_end,y_end,y_start],cmap='bone')
         plt.xlabel(x_motor)
         plt.ylabel(y_motor)
         plt.colorbar()
@@ -120,14 +121,19 @@ def plot(scan_id, namex, elem='Pt', channels=None, norm=None):
     plt.figure()
     plt.title(elem)
 
-    if channels is None:
-        channels = [1, 2, 3]
-
     scan_id, df = _load_scan(scan_id, fill_events=False)
     x = df[namex]
-    data = np.sum(df['Det%d_%s' % (chan, elem)]
-                  for chan in channels)
-    #data = df[elem]
+
+    if channels is 'sum':
+        channels = [1, 2, 3]
+
+    #scan_id, df = _load_scan(scan_id, fill_events=False)
+    #x = df[namex]
+        data = np.sum(df['Det%d_%s' % (chan, elem)]
+                      for chan in channels)
+    else:
+        data = df[elem]
+
     x = np.asarray(x)
     data = np.asarray(data)
 
