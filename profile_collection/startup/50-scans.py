@@ -15,12 +15,12 @@ spiral = hxntools.scans.relative_spiral
 mesh = hxntools.scans.absolute_mesh
 dmesh = hxntools.scans.relative_mesh
 
-gs.DETS = [zebra, sclr1, merlin1, xspress3, smll, lakeshore2, xbpm, s1]
-gs.TABLE_COLS = ['sclr1_ch2','sclr1_ch3', 'sclr1_ch4', 'sclr1_ch4_calc', 'ssx', 'ssy', 'ssz',
+gs.DETS = [zebra, sclr1, merlin1, timepix1, xspress3, lakeshore2, xbpm, s1, roi1_tot]
+gs.TABLE_COLS = ['sclr1_ch2','sclr1_ch3', 'sclr1_ch4', 'sclr1_ch4_calc', 'ssx', 'ssy', 'ssz','roi1_tot',
                  't_base', 't_sample', 't_vlens', 't_hlens']
 
 
 # Plot this by default versus motor position:
 gs.PLOT_Y = 'Det2_Pt'
 gs.OVERPLOT = False
-gs.BASELINE_DEVICES = []
+gs.BASELINE_DEVICES = [dcm, smll]
