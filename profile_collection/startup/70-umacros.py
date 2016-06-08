@@ -403,7 +403,7 @@ def movr_zpz1(dz):
 
 def reset_tpx(num):
     for i in range(1000):
-        timepix1.cam.num_images.put(num, wait=False)
+        timepix2.cam.num_images.put(num, wait=False)
         sleep(0.5)
 
 
