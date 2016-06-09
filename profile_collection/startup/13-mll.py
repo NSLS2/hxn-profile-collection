@@ -21,7 +21,8 @@ class HxnMLLSample(NamedDevice):
     sy = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:0}Mtr', doc='coarse y')
     sx1 = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:1}Mtr', doc='coarse x1')
     sz = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:2}Mtr', doc='coarse z')
-    sz1 = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:3}Mtr', doc='coarse z1')
+    # sz1 = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:3}Mtr', doc='coarse z1')
+    # sz1 was replaced with vz when controller 2 died
 
 
 smll = HxnMLLSample('', name='smll')
@@ -34,7 +35,7 @@ sx = smll.sx
 sy = smll.sy
 sx1 = smll.sx1
 sz = smll.sz
-sz1 = smll.sz1
+# sz1 = smll.sz1
 
 
 class HxnAnc350_3(Device):
@@ -64,7 +65,8 @@ class HxnAnc350_6(Device):
 
 # Note that different controllers have different axis counts:
 anc350_1 = HxnAnc350_6('XF:03IDC-ES{ANC350:1', name='anc350_1')
-anc350_2 = HxnAnc350_6('XF:03IDC-ES{ANC350:2', name='anc350_2')
+# anc350 controller 2 is being sent for repairs
+# anc350_2 = HxnAnc350_6('XF:03IDC-ES{ANC350:2', name='anc350_2')
 anc350_3 = HxnAnc350_4('XF:03IDC-ES{ANC350:3', name='anc350_3')
 anc350_4 = HxnAnc350_6('XF:03IDC-ES{ANC350:4', name='anc350_4')
 anc350_5 = HxnAnc350_6('XF:03IDC-ES{ANC350:5', name='anc350_5')
@@ -74,18 +76,22 @@ anc350_8 = HxnAnc350_3('XF:03IDC-ES{ANC350:8', name='anc350_8')
 
 
 class HxnVerticalMLL(NamedDevice):
-    vx = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:2-Ax:0}Mtr', doc='coarse x')
-    vy = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:2-Ax:1}Mtr', doc='coarse y')
-    vz = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:2-Ax:2}Mtr', doc='coarse z')
-    vchi = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:2-Ax:4}Mtr', doc='chi')
-    vth = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:2-Ax:3}Mtr', doc='theta')
+    # vx, vy now on controller 5
+    vx = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:5-Ax:3}Mtr', doc='coarse x')
+    vy = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:5-Ax:4}Mtr', doc='coarse y')
+    # vz is now on controller 3
+    vz = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:3}Mtr', doc='coarse z')
+    # vchi, vth now on controller 8
+    vchi = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:8-Ax:3}Mtr', doc='chi')
+    vth = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:8-Ax:4}Mtr', doc='theta')
 
 
 vmll = HxnVerticalMLL('', name='vmll')
 
 
 class HxnHorizontalMLL(NamedDevice):
-    hx = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:2-Ax:5}Mtr', doc='x')
+    # hx now on controller 8
+    hx = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:8-Ax:5}Mtr', doc='x')
     hy = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:4-Ax:0}Mtr', doc='y')
     hz = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:4-Ax:1}Mtr', doc='z')
     hth = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:1-Ax:2}Mtr', doc='theta')
