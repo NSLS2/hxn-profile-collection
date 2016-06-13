@@ -209,7 +209,10 @@ def plotfly(scan_id, elem='Pt', channels=None):
 
     scan_id, df = _load_scan(scan_id, fill_events=False)
     hdr = db[scan_id]['start']
-    namex = hdr['fast_axis']
+    try:
+        namex = hdr['fast_axis']
+    except KeyError:
+        namex = hdr['motor']
 
     x = df[namex]
     roi_data = np.sum(df['Det%d_%s' % (chan, elem)]
