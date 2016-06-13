@@ -389,7 +389,7 @@ def plot2dfly(scan_id, elem='Pt', *, x=None, y=None, clim=None,
     """
 
     if channels is None:
-        channels = range(1, 4)
+        channels = [1, 2, 3]
 
     scan_id, df = _load_scan(scan_id, fill_events=fill_events)
 
