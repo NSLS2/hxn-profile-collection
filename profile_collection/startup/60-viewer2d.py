@@ -258,20 +258,30 @@ def _load_scan(scan_id, fill_events=False):
     return scan_id, df
 
 
+def get_flyscan_dimensions(hdr):
+    if 'dimensions' in hdr:
+        return hdr['dimensions']
+    else:
+        return hdr['shape']
+
+
 def fly2d_grid(hdr, x_data=None, y_data=None, plot=False):
     '''Get ideal gridded points for a 2D flyscan'''
     try:
-        nx, ny = hdr['dimensions']
+        nx, ny = get_flyscan_dimensions(hdr)
     except ValueError:
-        raise ValueError('Not a 2D flyscan (dimensions={})'
-                         ''.format(hdr['dimensions']))
+        raise ValueError('Not a 2D flyscan')
 
     rangex, rangey = hdr['scan_range']
     width = rangex[1] - rangex[0]
     height = rangey[1] - rangey[0]
 
-    macros = eval(hdr['subscan_0']['macros'], dict(array=np.array))
-    start_x, start_y = macros['scan_starts']
+    if 'scan_starts' in hdr:
+        start_x, start_y = hdr['scan_starts'][0]
+    else:
+        macros = eval(hdr['subscan_0']['macros'], dict(array=np.array))
+        start_x, start_y = macros['scan_starts']
+
     dx = width / nx
     dy = height / ny
     grid_x = np.linspace(start_x, start_x + width + dx / 2, nx)
@@ -318,10 +328,10 @@ def interp1d_scan(hdr, x_data, y_data, spectrum, kind='linear',
 def fly2d_reshape(hdr, spectrum, verbose=True):
     '''Reshape a 1D array to match the shape of a 2D flyscan'''
     try:
-        nx, ny = hdr['dimensions']
+        nx, ny = get_flyscan_dimensions(hdr)
     except ValueError:
-        raise ValueError('Not a 2D flyscan (dimensions={})'
-                         ''.format(hdr['dimensions']))
+        raise ValueError('Not a 2D flyscan')
+
     try:
         spectrum2 = spectrum.copy().reshape((ny, nx))
     except Exception as ex:
@@ -397,11 +407,8 @@ def plot2dfly(scan_id, elem='Pt', *, x='ssx[um]', y='ssy[um]', clim=None,
     y_data = np.asarray(df[y])
 
     hdr = db[scan_id]['start']
-    if len(hdr['dimensions']) != 2:
-        raise ValueError('Not a 2d scan (dimensions={})'
-                         ''.format(hdr['dimensions']))
 
-    nx, ny = hdr['dimensions']
+    nx, ny = get_flyscan_dimensions(hdr)
     total_points = nx * ny
 
     if clim is None:
@@ -458,7 +465,6 @@ def plot2dfly(scan_id, elem='Pt', *, x='ssx[um]', y='ssy[um]', clim=None,
                    spectrum2)
 
         ax1.set_title('IMSHOW. ' + title)
-
 
     if extent is not None:
         # create the scatter plot version
