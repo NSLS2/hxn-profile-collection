@@ -9,12 +9,14 @@ plt.ion()
 handler = logging.StreamHandler(sys.stderr)
 fmt = logging.Formatter("%(asctime)-15s [%(name)5s:%(levelname)s] %(message)s")
 handler.setFormatter(fmt)
+handler.setLevel(logging.INFO)
+
 logging.getLogger('hxntools').addHandler(handler)
 logging.getLogger('hxnfly').addHandler(handler)
 logging.getLogger('ppmac').addHandler(handler)
 
-logging.getLogger('hxnfly').setLevel(logging.INFO)
-logging.getLogger('hxntools').setLevel(logging.INFO)
+logging.getLogger('hxnfly').setLevel(logging.DEBUG)
+logging.getLogger('hxntools').setLevel(logging.DEBUG)
 logging.getLogger('ppmac').setLevel(logging.INFO)
 
 import pandas as pd
