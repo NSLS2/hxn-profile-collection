@@ -353,7 +353,7 @@ def fly2d_reshape(hdr, spectrum, verbose=True):
 
 
 # TODO: change l, h to clim which defaults to 'auto'
-def plot2dfly(scan_id, elem='Pt', *, x='ssx[um]', y='ssy[um]', clim=None,
+def plot2dfly(scan_id, elem='Pt', *, x=None, y=None, clim=None,
               fill_events=False, cmap='Oranges', cols=None,
               channels=None, interp=None, interp2d=None):
     """Plot the results of a 2d fly scan
@@ -367,10 +367,8 @@ def plot2dfly(scan_id, elem='Pt', *, x='ssx[um]', y='ssy[um]', clim=None,
         Defaults to 'Pt'
     x : str, optional
         The data key that corresponds to the x axis
-        Defaults to 'ssx[um]'
     y : str, optional
         The data key that corresponds to the y axis
-        Defaults to 'ssy[um]'
     clim : tuple, optional
         formatted as (min, max)
         If None, defaults to min/max of the data
@@ -406,10 +404,17 @@ def plot2dfly(scan_id, elem='Pt', *, x='ssx[um]', y='ssy[um]', clim=None,
                 raise KeyError('ROI %s not found' % (key, ))
 
         spectrum = np.sum([getattr(df, roi) for roi in roi_keys], axis=0)
-    x_data = np.asarray(df[x])
-    y_data = np.asarray(df[y])
 
     hdr = db[scan_id]['start']
+    if x is None:
+        x = hdr['motor1']
+
+    x_data = np.asarray(df[x])
+    if y is None:
+        y = hdr['motor2']
+
+    y_data = np.asarray(df[y])
+
 
     nx, ny = get_flyscan_dimensions(hdr)
     total_points = nx * ny
@@ -456,6 +461,10 @@ def plot2dfly(scan_id, elem='Pt', *, x='ssx[um]', y='ssy[um]', clim=None,
         spectrum2 = interp1d_scan(hdr, x_data, y_data, spectrum2, kind=interp)
         print('done')
 
+    fig = None
+    ax1 = None
+    ax2 = None
+
     if spectrum2 is None:
         fig = plt.figure()
         ax2 = plt.subplot(111)
@@ -468,17 +477,23 @@ def plot2dfly(scan_id, elem='Pt', *, x='ssx[um]', y='ssy[um]', clim=None,
                    spectrum2)
 
         ax1.set_title('IMSHOW. ' + title)
+        ax1.set_xlabel(x)
+        ax1.set_ylabel(y)
 
     if extent is not None:
         # create the scatter plot version
         scatter = ax2.scatter(x_data, y_data, c=spectrum, marker='s', s=250,
                               cmap=getattr(mpl.cm, cmap), linewidths=0,
                               alpha=.8, vmin=clim[0], vmax=clim[1])
+        ax2.set_xlabel(x)
         ax2.set_xlim(np.min(x_data), np.max(x_data))
+        ax2.set_ylabel(y)
         ax2.set_ylim(np.min(y_data), np.max(y_data))
         ax2.set_title('SCATTER. ' + title)
         ax2.set_aspect('equal')
+        ax2.invert_yaxis()
         fig.colorbar(scatter)
+
 
     fig_path = os.path.join(folder,'data_scan_{}.png'.format(scan_id))
     print('\tSaving figure to: {}'.format(fig_path))
@@ -491,6 +506,7 @@ def plot2dfly(scan_id, elem='Pt', *, x='ssx[um]', y='ssy[um]', clim=None,
     var_name = 'S_%d_%s' % (scan_id, elem)
     globals()[var_name] = spectrum2
     print('\tScan data available in variable: {}'.format(var_name))
+    return fig, ax1, ax2
 
 
 def export(sid,num=1):
