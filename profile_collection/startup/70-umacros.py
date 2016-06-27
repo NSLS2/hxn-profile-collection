@@ -52,17 +52,17 @@ def z_scan(z_range, num_step):
 
 def go_det(det):
     if det == 'merlin':
-        mov(diff_x, -177)
-        mov(diff_y1, -31)
-        mov(diff_y2, -31)
+        mov(diff.x, -26.4)
+        mov(diff.y1, 14.2)
+        mov(diff.y2, 14.2)
     elif det == 'cam11':
-        mov(diff_x, 0)
-        mov(diff_y1, -0.)
-        mov(diff_y2, -0.)
+        mov(diff.x, 191.3)
+        mov(diff.y1, 35.35)
+        mov(diff.y2, 35.35)
     elif det == 'tpx':
-        mov(diff_x, -112)
-        mov(diff_y1, -50)
-        mov(diff_y2, -50)
+        mov(diff.x, -112)
+        mov(diff.y1, -50)
+        mov(diff.y2, -50)
     else:
         print('Inout det is not defined. '
               'Available ones are merlin, cam11 and tpx')
@@ -407,69 +407,6 @@ def reset_tpx(num):
         sleep(0.5)
 
 
-def mov_gamma(gamma):
-
-    diff_z_pos = diff.z.position
-    diff_yaw_pos = diff.yaw.position * np.pi / 180.0
-    diff_cz_pos = diff.cz.position
-    diff_x_pos = diff.x.position
-
-    r_yaw = 581.20
-
-    # when both diff_z and diff_cz are at positive limit:
-    r0 = 574.668 + diff_z_pos
-    beta = 89.377 * np.pi / 180.0
-    gamma = gamma * np.pi / 180.0
-
-    current_r = (sin(beta) / sin(diff_yaw_pos + beta)) * \
-        (r0 + r_yaw * (1.0 - cos(diff_yaw_pos))) + diff_cz_pos
-    print('current r =', current_r)
-
-    x = r_yaw * sin(gamma) + (sin(gamma) / sin(gamma + beta)) * \
-        (r0 + r_yaw * (1.0 - cos(gamma)))
-    r = (sin(beta) / sin(gamma + beta)) * (r0 + r_yaw * (1.0 - cos(gamma)))
-
-    print('gamma =', gamma * 180.0 / np.pi, '   x =', x, '   r =', r)
-    print('diff_x=', -x, 'diff_cz=', current_r - r)
-    sleep(10)
-    mov(diff.yaw, gamma * 180. / np.pi, wait=False)
-    sleep(1)
-    mov(diff.x, -x, wait=False)
-    sleep(1)
-    mov(diff.cz, current_r - r, wait=False)
-
-#    mov(diff_yaw, gamma*180.0/pi)
-#    mov(diff_x, -x)
-#    mov(diff_cz, current_r - r)
-
-
-def mov_delta(delta):
-    diff_z_pos = diff.z.position
-    diff_yaw_pos = diff.yaw.position * np.pi / 180.0
-    diff_cz_pos = diff.cz.position
-    diff_x_pos = diff.x.position
-
-    r0 = 574.668 + diff_z_pos
-    z1 = r0 + 395.2
-    z2 = z1 + 380
-
-    z1 = z1 / cos(diff_yaw_pos)
-    z2 = z1 + 380
-
-    delta = delta * np.pi / 180.0
-    y1 = tan(delta) * z1
-    y2 = tan(delta) * z2
-
-    dr = z1 / cos(delta) - z1
-
-    print('y1 =', y1, '   y2 =', y2, '  dr =', dr)
-
-    sleep(10)
-
-    diff.y1.move(y1, wait=False)
-    sleep(0.5)
-    diff.y2.move(y2, wait=False)
-
 
 def th_fly1d(th_start, th_end, num, m_start, m_end, m_num, sec):
     th_step = (th_end - th_start) / num
@@ -571,3 +508,55 @@ def wh_diff():
         R_det = R1 / cos(delta) - d + diff_cz
         print('gamma = ', gamma * 180 / np.pi, ' delta = ',
               delta * 180 / np.pi, ' r = ', R_det)
+
+
+def xanes_scan(bragg_list,x_start,x_end,x_num,y_start,y_end,y_num,exposure,sign='max'):
+    bragg_list = np.array(bragg_list)
+    num_bragg = np.size(bragg_list)
+    current_det = gs.PLOT_Y
+    gs.PLOT_Y='sclr1_ch4'
+    for i in range(num_bragg):
+        mov(dcm.th,bragg_list[i])
+
+        RE(dscan(dcm.rf,-1, 1, 40, 1))
+        if sign == 'max':
+            mov(dcm.rf,gs.PS.max[0])
+        elif sign == 'cen':
+            mov(dcm.rf,gs.PS.cen)
+        #df=get_table(db[-1],fill=False)
+        #ic = np.asarray(df['sclr1_ch4'])
+        #x = np.asarray(df['dcm_rf'])
+        ##i_max = find_mass_center(ic)
+        #mov(dcm.rf,x[ic == np.max(ic)])
+
+        RE(dscan(m2.pf,-1, 1, 40, 1))
+        if sign == 'max':
+            mov(m2.pf,gs.PS.max[0])
+        elif sign == 'cen':
+            mov(m2.pf,gs.PS.cen)
+        #df = get_table(db[-1],fill=False)
+        #ic = np.asarray(df['sclr1_ch4'])
+        #x = np.asarray(df[-1],'m2_pf')
+        ##i_max = find_mass_center(ic)
+        #mov(m2.pf,x[ic == np.max(ic)])
+
+        RE(fly2d(ssx, x_start, x_end, x_num, ssy, y_start, y_end, y_num, exposure, return_speed=50))
+    gs.PLOT_Y = current_det
+
+def smll_kill_piezos():
+    smll.kill.put(1)
+    sleep(5)
+
+def smll_zero_piezos():
+    smll.zero.put(1)
+    sleep(3)
+
+def smll_sync_piezos():
+    #sync positions
+    mov(ssx, smll.ssx.position + 0.0001)
+    mov(ssy, smll.ssy.position + 0.0001)
+    mov(ssz, smll.ssz.position + 0.0001)
+
+
+
+
