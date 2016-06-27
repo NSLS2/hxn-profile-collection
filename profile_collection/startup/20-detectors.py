@@ -12,17 +12,17 @@ hxntools.handlers.register()
 
 # - 2D pixel array detectors
 # -- Timepix 1
-timepix1 = HxnTimepixDetector('XF:03IDC-ES{Tpx:1}', name='timepix1',
-                              image_name='timepix1',
-                              read_attrs=['hdf5', 'cam'])
-timepix1.hdf5.read_attrs = []
+#timepix1 = HxnTimepixDetector('XF:03IDC-ES{Tpx:1}', name='timepix1',
+#                              image_name='timepix1',
+#                              read_attrs=['hdf5', 'cam'])
+#timepix1.hdf5.read_attrs = []
 # TODO: add stats plugins
 
 # -- Timepix 2
-timepix2 = HxnTimepixDetector('XF:03IDC-ES{Tpx:2}', name='timepix2',
-                              image_name='timepix2',
-                              read_attrs=['hdf5', 'cam'])
-timepix2.hdf5.read_attrs = []
+#timepix2 = HxnTimepixDetector('XF:03IDC-ES{Tpx:2}', name='timepix2',
+#                              image_name='timepix2',
+#                              read_attrs=['hdf5', 'cam'])
+#timepix2.hdf5.read_attrs = []
 
 # -- Merlin 1
 merlin1 = HxnMerlinDetector('XF:03IDC-ES{Merlin:1}', name='merlin1',
@@ -93,3 +93,6 @@ sr_beam_current = EpicsSignalRO('SR:C03-BI{DCCT:1}I:Real-I',
                                 name='sr_beam_current')
 
 det_beamstatus = BeamStatusDetector(min_current=100.0)
+
+#Temporary EPICS PV  detectors
+#roi1_tot = EpicsSignalRO('XF:03IDC-ES{Tpx:1}Stats1:Total_RBV', name = 'roi1_tot')

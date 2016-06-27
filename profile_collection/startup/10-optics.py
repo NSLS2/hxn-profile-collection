@@ -23,7 +23,7 @@ class HxnDCM(Device):
 
 
 dcm = HxnDCM('', name='dcm')
-
+#dcmth = dcm.th
 
 class HxnMirror1(Device):
     '''HXN Mirror 1 device (HCM)'''
