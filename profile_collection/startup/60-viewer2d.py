@@ -119,11 +119,13 @@ def scatter_plot(scan_id, namex,namey, elem='Pt', channels=None, norm=None):
 
 def plot(scan_id, elem='Pt', channels=None, norm=None):
     plt.figure()
-    plt.title(elem)
-
+    
     scan_id, df = _load_scan(scan_id, fill_events=False)
-    namex = db[scan_id]['start']['motors'][0]
-    x = df[namex]
+    hdr = db[scan_id]['start']
+    scan_start_time = datetime.isoformat(datetime.fromtimestamp(hdr['time']))
+    scanned_axis = hdr['motors'][0]
+    
+    x = df[scanned_axis]
 
     if channels is 'sum':
         channels = [1, 2, 3]
@@ -139,12 +141,12 @@ def plot(scan_id, elem='Pt', channels=None, norm=None):
         norm_v = df[norm]
         plt.plot(x, data / (norm_v + 1.e-8))
         plt.plot(x, data / (norm_v + 1.e-8), 'bo')
-        plt.xlabel(namex)
-        plt.ylavel(elem)
+        plt.xlabel(scanned_axis)
+        plt.ylabel(elem)
     else:
         plt.plot(x, data)
         plt.plot(x, data, 'bo')
-        plt.xlabel(namex)
+        plt.xlabel(scanned_axis)
         plt.ylabel(elem)
         try:
             diff = np.diff(data)
@@ -156,7 +158,7 @@ def plot(scan_id, elem='Pt', channels=None, norm=None):
             print('Failed to plot derivative: ({}) {}'
                   ''.format(ex.__class__.__name__, ex))
             raise
-
+    plt.title('Scan %d: %s    Start time: %s' % (scan_id, elem, scan_start_time))
     plt.show()
 
 
@@ -204,24 +206,26 @@ def plot_all(scan_id, namex=None, diff=False, channels=None,
 
 
 def plotfly(scan_id, elem='Pt', channels=None, norm=None):
-    if channels is None:
-        channels = [1, 2, 3]
-
     plt.figure()
-
     scan_id, df = _load_scan(scan_id, fill_events=False)
     hdr = db[scan_id]['start']
+    scan_start_time = datetime.isoformat(datetime.fromtimestamp(hdr['time']))
     # try:
     #     namex = hdr['fast_axis']
     # except KeyError:
-    namex = hdr['motor']
-
-    x = df[namex]
-    roi_data = np.sum(df['Det%d_%s' % (chan, elem)]
+    if channels is 'sum':
+        channels = [1, 2, 3]
+        roi_data = np.sum(df['Det%d_%s' % (chan, elem)]
                       for chan in channels)
+    else:
+        data = df[elem]
+
+    scanned_axis = hdr['motor'] 
+    x = df[scanned_axis]
+    
     if norm is not None:
         norm_tot = df[norm]
-        roi_data = roi_data/norm_tot
+        roi_data = roi_data/(norm_tot + 1e-8)
     '''''
     try:
         diff = np.diff(roi_data)
@@ -242,7 +246,9 @@ def plotfly(scan_id, elem='Pt', channels=None, norm=None):
     '''''
     plt.plot(x, roi_data)
     plt.plot(x, roi_data, 'bo')
-    plt.title('Scan %d: %s' % (scan_id, elem))
+    plt.xlabel(scanned_axis)
+    plt.ylabel(elem)
+    plt.title('Scan %d: %s    Start time: %s' % (scan_id, elem, scan_start_time))
     plt.show()
 
 
