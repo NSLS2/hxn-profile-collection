@@ -21,6 +21,9 @@ class HxnMLLSample(NamedDevice):
     sy = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:0}Mtr', doc='coarse y')
     sx1 = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:1}Mtr', doc='coarse x1')
     sz = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:2}Mtr', doc='coarse z')
+    
+    kill = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1}KillAll-Cmd.PROC', doc='kill all piezos') 
+    zero = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1}KillZero-Cmd.PROC', doc='zero all piezos')
     # sz1 = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:3}Mtr', doc='coarse z1')
     # sz1 was replaced with vz when controller 2 died
 
@@ -29,6 +32,7 @@ smll = HxnMLLSample('', name='smll')
 ssx = smll.ssx
 ssy = smll.ssy
 ssz = smll.ssz
+
 sth = smll.sth
 
 sx = smll.sx
