@@ -117,18 +117,16 @@ def scatter_plot(scan_id, namex,namey, elem='Pt', channels=None, norm=None):
         plt.ylabel(namey)
     plt.show()
 
-def plot(scan_id, namex, elem='Pt', channels=None, norm=None):
+def plot(scan_id, elem='Pt', channels=None, norm=None):
     plt.figure()
     plt.title(elem)
 
     scan_id, df = _load_scan(scan_id, fill_events=False)
+    namex = db[scan_id]['start']['motors'][0]
     x = df[namex]
 
     if channels is 'sum':
         channels = [1, 2, 3]
-
-    #scan_id, df = _load_scan(scan_id, fill_events=False)
-    #x = df[namex]
         data = np.sum(df['Det%d_%s' % (chan, elem)]
                       for chan in channels)
     else:
@@ -141,9 +139,13 @@ def plot(scan_id, namex, elem='Pt', channels=None, norm=None):
         norm_v = df[norm]
         plt.plot(x, data / (norm_v + 1.e-8))
         plt.plot(x, data / (norm_v + 1.e-8), 'bo')
+        plt.xlabel(namex)
+        plt.ylavel(elem)
     else:
         plt.plot(x, data)
         plt.plot(x, data, 'bo')
+        plt.xlabel(namex)
+        plt.ylabel(elem)
         try:
             diff = np.diff(data)
             plt.figure()
@@ -201,7 +203,7 @@ def plot_all(scan_id, namex=None, diff=False, channels=None,
     plt.show()
 
 
-def plotfly(scan_id, elem='Pt', channels=None):
+def plotfly(scan_id, elem='Pt', channels=None, norm=None):
     if channels is None:
         channels = [1, 2, 3]
 
@@ -209,14 +211,18 @@ def plotfly(scan_id, elem='Pt', channels=None):
 
     scan_id, df = _load_scan(scan_id, fill_events=False)
     hdr = db[scan_id]['start']
-    try:
-        namex = hdr['fast_axis']
-    except KeyError:
-        namex = hdr['motor']
+    # try:
+    #     namex = hdr['fast_axis']
+    # except KeyError:
+    namex = hdr['motor']
 
     x = df[namex]
     roi_data = np.sum(df['Det%d_%s' % (chan, elem)]
                       for chan in channels)
+    if norm is not None:
+        norm_tot = df[norm]
+        roi_data = roi_data/norm_tot
+    '''''
     try:
         diff = np.diff(roi_data)
         plt.subplot(122)
@@ -233,7 +239,7 @@ def plotfly(scan_id, elem='Pt', channels=None):
         plt.subplot(111)
     else:
         plt.subplot(121)
-
+    '''''
     plt.plot(x, roi_data)
     plt.plot(x, roi_data, 'bo')
     plt.title('Scan %d: %s' % (scan_id, elem))
@@ -354,7 +360,7 @@ def fly2d_reshape(hdr, spectrum, verbose=True):
 
 # TODO: change l, h to clim which defaults to 'auto'
 def plot2dfly(scan_id, elem='Pt', *, x=None, y=None, clim=None,
-              fill_events=False, cmap='Oranges', cols=None,
+              fill_events=False, cmap='jet', cols=None,
               channels=None, interp=None, interp2d=None):
     """Plot the results of a 2d fly scan
 
@@ -514,8 +520,10 @@ def export(sid,num=1):
         sid, df = _load_scan(sid, fill_events=False)
         path = os.path.join('/data/output/txt/', 'scan_{}.txt'.format(sid))
         print('Scan {}. Saving to {}'.format(sid, path))
-        non_objects = [name for name, col in df.iteritems()
-                       if col.dtype.name not in ('object', )]
+        #non_objects = [name for name, col in df.iteritems()
+                       #if col.dtype.name not in ('object', )]
+        #dump all data
+        non_objects = [name for name, col in df.iteritems()]
         df.to_csv(path, float_format='%1.5e', sep='\t',
                   columns=sorted(non_objects))
         sid = sid + 1
