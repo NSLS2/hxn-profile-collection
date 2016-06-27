@@ -66,7 +66,7 @@ class HxnSlitC(Device):
     vgap = Cpt(EpicsMotor, '-Ax:Vgap}Mtr')
     vcen = Cpt(EpicsMotor, '-Ax:Vcen}Mtr')
     hgap = Cpt(EpicsMotor, '-Ax:Hgap}Mtr')
-    vcen = Cpt(EpicsMotor, '-Ax:Hcen}Mtr')
+    hcen = Cpt(EpicsMotor, '-Ax:Hcen}Mtr')
 
 
 s5 = HxnSlitC('XF:03IDC-ES{Slt:5', name='s5')
