@@ -14,6 +14,8 @@ fermat = hxntools.scans.relative_fermat
 spiral = hxntools.scans.relative_spiral
 mesh = hxntools.scans.absolute_mesh
 dmesh = hxntools.scans.relative_mesh
+d2scan = hxntools.scans.d2scan
+a2scan = hxntools.scans.a2scan
 
 gs.DETS = [zebra, sclr1, merlin1, xspress3, lakeshore2]
 gs.TABLE_COLS = ['sclr1_ch2','sclr1_ch3', 'sclr1_ch4', 'sclr1_ch5_calc', 'ssx', 'ssy', 'ssz',
