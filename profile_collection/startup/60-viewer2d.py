@@ -117,23 +117,33 @@ def scatter_plot(scan_id, namex,namey, elem='Pt', channels=None, norm=None):
         plt.ylabel(namey)
     plt.show()
 
-def plot(scan_id, elem='Pt', channels=None, norm=None):
-    plt.figure()
-    
+def plot(scan_id, elem='Pt', norm=None):
+    plt.figure() 
     scan_id, df = _load_scan(scan_id, fill_events=False)
     hdr = db[scan_id]['start']
     scan_start_time = datetime.isoformat(datetime.fromtimestamp(hdr['time']))
+    
+    if elem in df:
+        data = np.asarray(df[elem])
+    else:
+        channels = [1, 2, 3]
+        roi_keys = ['Det%d_%s' % (chan, elem) for chan in channels]
+        for key in roi_keys:
+            if key not in df:
+                raise KeyError('ROI %s not found' % (key, ))
+        data = np.sum([getattr(df, roi) for roi in roi_keys], axis=0)
+
     scanned_axis = hdr['motors'][0]
     
     x = df[scanned_axis]
-
+    '''
     if channels is 'sum':
         channels = [1, 2, 3]
         data = np.sum(df['Det%d_%s' % (chan, elem)]
                       for chan in channels)
     else:
         data = df[elem]
-
+    '''
     x = np.asarray(x)
     data = np.asarray(data)
 
@@ -205,20 +215,20 @@ def plot_all(scan_id, namex=None, diff=False, channels=None,
     plt.show()
 
 
-def plotfly(scan_id, elem='Pt', channels=None, norm=None):
+def plotfly(scan_id, elem='Pt', norm=None):
     plt.figure()
     scan_id, df = _load_scan(scan_id, fill_events=False)
     hdr = db[scan_id]['start']
     scan_start_time = datetime.isoformat(datetime.fromtimestamp(hdr['time']))
-    # try:
-    #     namex = hdr['fast_axis']
-    # except KeyError:
-    if channels is 'sum':
-        channels = [1, 2, 3]
-        roi_data = np.sum(df['Det%d_%s' % (chan, elem)]
-                      for chan in channels)
+    if elem in df:
+        roi_data = np.asarray(df[elem])
     else:
-        data = df[elem]
+        channels = [1, 2, 3]
+        roi_keys = ['Det%d_%s' % (chan, elem) for chan in channels]
+        for key in roi_keys:
+            if key not in df:
+                raise KeyError('ROI %s not found' % (key, ))
+        roi_data = np.sum([getattr(df, roi) for roi in roi_keys], axis=0)
 
     scanned_axis = hdr['motor'] 
     x = df[scanned_axis]
@@ -365,7 +375,7 @@ def fly2d_reshape(hdr, spectrum, verbose=True):
 
 
 # TODO: change l, h to clim which defaults to 'auto'
-def plot2dfly(scan_id, elem='Pt', *, x=None, y=None, clim=None,
+def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
               fill_events=False, cmap='jet', cols=None,
               channels=None, interp=None, interp2d=None):
     """Plot the results of a 2d fly scan
@@ -377,6 +387,8 @@ def plot2dfly(scan_id, elem='Pt', *, x=None, y=None, clim=None,
     elem : str
         The element to display
         Defaults to 'Pt'
+    norm : str, optional
+        scaler for intensity normalization
     x : str, optional
         The data key that corresponds to the x axis
     y : str, optional
@@ -407,7 +419,7 @@ def plot2dfly(scan_id, elem='Pt', *, x=None, y=None, clim=None,
 
     title = 'Scan id %s. ' % scan_id + elem
     if elem in df:
-        spectrum = np.asarray(df[elem])
+        spectrum = np.asarray(df[elem], dtype=np.float32)
     else:
         roi_keys = ['Det%d_%s' % (chan, elem) for chan in channels]
 
@@ -420,12 +432,15 @@ def plot2dfly(scan_id, elem='Pt', *, x=None, y=None, clim=None,
     hdr = db[scan_id]['start']
     if x is None:
         x = hdr['motor1']
-
     x_data = np.asarray(df[x])
+    
     if y is None:
         y = hdr['motor2']
-
     y_data = np.asarray(df[y])
+
+    if norm is not None:
+        monitor = np.asarray(df[norm],dtype=np.float32)
+        spectrum = spectrum/(monitor + 1e-8)
 
 
     nx, ny = get_flyscan_dimensions(hdr)
