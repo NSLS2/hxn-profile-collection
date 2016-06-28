@@ -1,4 +1,5 @@
-from ophyd.commands import setup_ophyd
+import functools
+from ophyd.commands import (setup_ophyd, wh_pos as _wh_pos)
 setup_ophyd()
 
 from ophyd.commands import *
@@ -29,3 +30,10 @@ register_transform('RE', prefix='<')
 
 # The default is 'count_time', HXN has always used 'exposure_time':
 gs.MD_TIME_KEY = 'exposure_time'
+
+
+@functools.wraps(_wh_pos)
+def wh_pos(*args, **kwargs):
+    from datetime import datetime
+    print(datetime.now())
+    return _wh_pos(*args, **kwargs)
