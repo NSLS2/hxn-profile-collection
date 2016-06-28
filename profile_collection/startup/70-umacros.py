@@ -118,6 +118,73 @@ def go_energy(energy):
     else:
         print('energy not defined')
 
+def mll_mosac_scan(x_start, x_end, x_num, x_block, y_start, y_end, y_num, y_block, acq_time):
+    
+    #initialize parameters 
+    x_start = np.float(x_start)
+    x_end = np.float(x_end)
+    x_num = np.int(x_num)
+    y_num = np.int(y_num)
+    y_start = np.float(y_start)
+    y_end = np.float(y_end)
+    x_block = np.int(x_block)
+    y_block = np.int(y_block)
+
+    #read initial positions
+    pre_sx = smll.sx.position
+    pre_sy = smll.sy.position
+    pre_ssx = smll.ssx.position
+    pre_ssy = smll.ssy.position
+
+    print('Initial sx = ', pre_sx)
+    print('Initial sy = ', pre_sy)
+    print('Initial ssx = ', pre_ssx)
+    print('Initial ssy = ', pre_ssy)
+   
+    #kill mll piezos
+    mll_kill_piezos()
+    
+    #move back to start positions after killing
+    dx = pre_ssx - smll.ssx.position
+    dy = pre_ssy - smll.ssy.position
+    if np.abs(dx) < 500 and np.abs(dy) < 500:
+        movr(smll.sx, dx)
+        movr(smll.sy, dy)
+    else:
+        raise KeyError('Too large travel range')
+
+    #calculate block size
+    x_block_size = (x_end - x_start)
+    y_block_size = (y_end - y_start)
+    
+    #move to first block
+    dx = x_block*x_bloack_size/2.0 - 0.5*x_block_size
+    dy = y_block*y_bloack_size/2.0 - 0.5*y_block_size
+    if np.abs(dx) < 500 and np.abs(dy) < 500:
+        movr(smll.sx, dx)
+        movr(smll.sy, dy)
+    else:
+        raise KeyError('Too large travel range')
+    
+    #start mosaic scan
+    for i in range(y_block):
+        for j in range(x_block): 
+            mll_sync_piezos()
+            RE(fly2d(smll.ssx, x_start, x_end, x_num, smll.ssy, y_start, y_end, y_num, acq_time, return_speed=40))
+            mll_kill_piezos()
+            movr(smll.sx, x_block_size)
+        movr(smll.sy, y_block_size)
+    
+    #return to initial position
+    mll_kill_piezos()
+    mov(smll.sx, pre_sx)
+    mov(smll.sy, pre_sy)
+    mll_sync_piezos()
+    mov(smll.ssx, pre_ssx)
+    mov(smll.ssy, pre_ssy)
+    
+    print('%d x %d mosaic scan finished' % (x_block, y_block))
+
 
 def mosaic_scan(x_start, x_end, x_num, y_start, y_end, y_num):
     x_start = np.float(x_start)
