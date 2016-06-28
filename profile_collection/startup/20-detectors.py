@@ -3,7 +3,8 @@ from ophyd import (Device, Component as Cpt)
 
 import hxntools.handlers
 from hxntools.detectors import (HxnTimepixDetector, HxnMerlinDetector,
-                                BeamStatusDetector, HxnMercuryDetector)
+                                BeamStatusDetector, HxnMercuryDetector,
+                                HxnDexelaDetector)
 from hxntools.detectors.zebra import HxnZebra
 
 # Register all HXN-specific handlers so that filestore can load all detector
@@ -29,6 +30,12 @@ merlin1 = HxnMerlinDetector('XF:03IDC-ES{Merlin:1}', name='merlin1',
                             image_name='merlin1',
                             read_attrs=['hdf5', 'cam'])
 merlin1.hdf5.read_attrs = []
+
+# -- Dexela 1 (Dexela 1512 GigE-V24)
+dexela1 = HxnDexelaDetector('XF:03IDC-ES{Dexela:1}', name='dexela1',
+                            image_name='dexela1',
+                            read_attrs=['hdf5', 'cam'])
+dexela1.hdf5.read_attrs = []
 
 # - Other detectors and triggering devices
 # -- DXP Mercury (1 channel)
