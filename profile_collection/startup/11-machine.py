@@ -168,10 +168,16 @@ class UgapPositioner(PVPositioner):
         super().stop()
 
 
-ugap = UgapPositioner(prefix='', settle_time=1.5, name='ugap')
+ugap = UgapPositioner(prefix='', settle_time=3., name='ugap')
 
 # Front End Slits (Primary Slits)
 fe_tb = EpicsMotor('FE:C03A-OP{Slt:1-Ax:T}Mtr.VAL', name='fe_tb')
 fe_bb = EpicsMotor('FE:C03A-OP{Slt:2-Ax:B}Mtr.VAL', name='fe_bb')
 fe_ib = EpicsMotor('FE:C03A-OP{Slt:2-Ax:I}Mtr.VAL', name='fe_ib')
 fe_ob = EpicsMotor('FE:C03A-OP{Slt:1-Ax:O}Mtr.VAL', name='fe_ob')
+
+# Shutter operation
+shutter_open = EpicsSignal('XF:03IDB-PPS{PSh}Cmd:Opn-Cmd', name = 'shutter_open')
+shutter_close = EpicsSignal('XF:03IDB-PPS{PSh}Cmd:Cls-Cmd', name = 'shutter_close')
+
+
