@@ -117,12 +117,12 @@ def scatter_plot(scan_id, namex,namey, elem='Pt', channels=None, norm=None):
         plt.ylabel(namey)
     plt.show()
 
-def plot(scan_id, elem='Pt', norm=None):
-    plt.figure() 
+def plot(scan_id, elem='Pt', norm=None,center_method='com'):
+    plt.figure()
     scan_id, df = _load_scan(scan_id, fill_events=False)
     hdr = db[scan_id]['start']
     scan_start_time = datetime.isoformat(datetime.fromtimestamp(hdr['time']))
-    
+
     if elem in df:
         data = np.asarray(df[elem])
     else:
@@ -134,7 +134,7 @@ def plot(scan_id, elem='Pt', norm=None):
         data = np.sum([getattr(df, roi) for roi in roi_keys], axis=0)
 
     scanned_axis = hdr['motors'][0]
-    
+
     x = df[scanned_axis]
     '''
     if channels is 'sum':
@@ -158,16 +158,19 @@ def plot(scan_id, elem='Pt', norm=None):
         plt.plot(x, data, 'bo')
         plt.xlabel(scanned_axis)
         plt.ylabel(elem)
+
         try:
             diff = np.diff(data)
             plt.figure()
             plt.plot(x[:-1], diff)
             plt.plot(x[:-1], diff, 'bo')
-            plt.title('derivative')
+            mc = find_mass_center(data)
+            plt.title('center of mass: %d',x[mc])
         except Exception as ex:
             print('Failed to plot derivative: ({}) {}'
                   ''.format(ex.__class__.__name__, ex))
             raise
+
     plt.title('Scan %d: %s    Start time: %s' % (scan_id, elem, scan_start_time))
     plt.show()
 
@@ -215,7 +218,15 @@ def plot_all(scan_id, namex=None, diff=False, channels=None,
     plt.show()
 
 
-def plotfly(scan_id, elem='Pt', norm=None):
+def find_mass_center(array):
+    n = np.size(array)
+    tmp = 0
+    for i in range(n):
+        tmp += i * array[i]
+    mc = np.round(tmp / np.sum(array))
+    return mc
+    
+def plotfly(scan_id, elem='Pt', norm=None,center_method='com'):
     plt.figure()
     scan_id, df = _load_scan(scan_id, fill_events=False)
     hdr = db[scan_id]['start']
@@ -230,18 +241,21 @@ def plotfly(scan_id, elem='Pt', norm=None):
                 raise KeyError('ROI %s not found' % (key, ))
         roi_data = np.sum([getattr(df, roi) for roi in roi_keys], axis=0)
 
-    scanned_axis = hdr['motor'] 
+    scanned_axis = hdr['motor']
     x = df[scanned_axis]
-    
+
     if norm is not None:
         norm_tot = df[norm]
         roi_data = roi_data/(norm_tot + 1e-8)
-    '''''
+    
     try:
         diff = np.diff(roi_data)
         plt.subplot(122)
         plt.plot(x[1:], diff)
         plt.plot(x[1:], diff, 'bo')
+        #if center_method == 'com':
+        #    i_center = find_mass_center(roi_data)
+        #else:
         i_max = np.where(diff == np.max(diff))
         i_min = np.where(diff == np.min(diff))
         i_center = np.round((i_max[0][0]+i_min[0][0])/2)+1
@@ -253,7 +267,7 @@ def plotfly(scan_id, elem='Pt', norm=None):
         plt.subplot(111)
     else:
         plt.subplot(121)
-    '''''
+    
     plt.plot(x, roi_data)
     plt.plot(x, roi_data, 'bo')
     plt.xlabel(scanned_axis)
@@ -433,7 +447,7 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
     if x is None:
         x = hdr['motor1']
     x_data = np.asarray(df[x])
-    
+
     if y is None:
         y = hdr['motor2']
     y_data = np.asarray(df[y])
