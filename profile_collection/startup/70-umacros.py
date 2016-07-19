@@ -7,6 +7,9 @@ from scipy.optimize import curve_fit
 from databroker import db, get_table
 from ophyd import mov, movr
 
+import sys
+import datetime
+import shutil
 
 def focusmerlin(cnttime):
     merlin1.cam.acquire.put(0)
@@ -26,28 +29,27 @@ def printfig():
 
 def shutter(cmd):
     if cmd == 'open':
-        caput('XF:03IDB-PPS{PSh}Cmd:Opn-Cmd', 1)
-        sleep(10)
+        shutter_open.put(1)
+        sleep(5)
     elif cmd == 'close':
-        caput('XF:03IDB-PPS{PSh}Cmd:Cls-Cmd', 1)
-        sleep(10)
+        shutter_close.put(1)
+        sleep(5)
 
 
-def z_scan(z_range, num_step):
-    z_range = np.float(z_range)
-    num_step = np.int(num_step)
-    z_step_size = z_range / num_step
-    print(z_range, num_step, z_step_size)
-    print(-1 * num_step * z_step_size / 2)
-    movr(smarz, -1 * num_step * z_step_size / 2)
-#    movr(zpsx,0.2588*num_step*z_step_size/2)
-
-    for i in range(num_step + 1):
-        fly2d(zpssx, -5, 5, 100, zpssy, -5, 5, 100, 0.025, return_speed=20)
-        movr(smarz, z_step_size)
-#        movr(zpsx,-0.2588*z_step_size)
-    mov(smarz, 1.716)
-    mov(zpsx, -0.9288)
+def mll_z_linecan(z_start, z_end, z_num, *,mot='ssy', start, end, num, acq_time, elem='Pt'):
+    z_step = (z_end - z_start)/z_num
+    c_ssz = smll.ssz.position
+    movr_sz(z_start)
+    for i in range(z_num + 1):
+        if mot == 'ssy':
+            RE(fly1d(ssy, start, end, num, acq_time))
+        elif mot == 'ssx':
+            RE(fly1d(ssy, start, end, num, acq_time))
+        else:
+            raise KeyError('mot has to be ssx or ssy')
+        plot(-1, elem, 'sclr1_ch4')
+        plt.title('ssz = %.3f' % smll.ssz.position)
+    mov_sz(c_ssz)
 
 
 def go_det(det):
@@ -57,8 +59,8 @@ def go_det(det):
         mov(diff.y2, 14.2)
     elif det == 'cam11':
         mov(diff.x, 191.3)
-        mov(diff.y1, 35.35)
-        mov(diff.y2, 35.35)
+        mov(diff.y1, 34.45)
+        mov(diff.y2, 34.45)
     elif det == 'tpx':
         mov(diff.x, -112)
         mov(diff.y1, -50)
@@ -118,9 +120,22 @@ def go_energy(energy):
     else:
         print('energy not defined')
 
-def mll_mosac_scan(x_start, x_end, x_num, x_block, y_start, y_end, y_num, y_block, acq_time):
-    
-    #initialize parameters 
+def sample_to_lab(xp, zp, alpha):
+    x = np.cos(alpha)*xp + np.sin(alpha)*zp
+    z = -np.sin(alpha)*xp + np.cos(alpha)*zp
+    return(x, z)
+
+def lab_to_sample(x, z, alpha):
+    xp = np.cos(alpha)*x - np.sin(alpha)*z
+    zp = np.sin(alpha)*x + np.cos(alpha)*z
+    return(xp, zp)
+
+def mll_mosaic_scan(x_start, x_end, x_num, x_block, y_start, y_end, y_num, y_block, acq_time, elem=None):
+
+    max_travel = 500
+    angle = 15.0*np.pi/180.0
+
+    #initialize parameters
     x_start = np.float(x_start)
     x_end = np.float(x_end)
     x_num = np.int(x_num)
@@ -130,59 +145,48 @@ def mll_mosac_scan(x_start, x_end, x_num, x_block, y_start, y_end, y_num, y_bloc
     x_block = np.int(x_block)
     y_block = np.int(y_block)
 
-    #read initial positions
-    pre_sx = smll.sx.position
-    pre_sy = smll.sy.position
+    #read initial position
     pre_ssx = smll.ssx.position
     pre_ssy = smll.ssy.position
+    pre_ssz = smll.ssz.position
 
-    print('Initial sx = ', pre_sx)
-    print('Initial sy = ', pre_sy)
     print('Initial ssx = ', pre_ssx)
     print('Initial ssy = ', pre_ssy)
-   
-    #kill mll piezos
-    mll_kill_piezos()
-    
-    #move back to start positions after killing
-    dx = pre_ssx - smll.ssx.position
-    dy = pre_ssy - smll.ssy.position
-    if np.abs(dx) < 500 and np.abs(dy) < 500:
-        movr(smll.sx, dx)
-        movr(smll.sy, dy)
-    else:
-        raise KeyError('Too large travel range')
+    print('Initial ssz = ', pre_ssz)
 
     #calculate block size
     x_block_size = (x_end - x_start)
     y_block_size = (y_end - y_start)
-    
+
     #move to first block
-    dx = x_block*x_bloack_size/2.0 - 0.5*x_block_size
-    dy = y_block*y_bloack_size/2.0 - 0.5*y_block_size
-    if np.abs(dx) < 500 and np.abs(dy) < 500:
-        movr(smll.sx, dx)
-        movr(smll.sy, dy)
+    dx = -(x_block*x_block_size/2.0 - 0.5*x_block_size)
+    dy = -(y_block*y_block_size/2.0 - 0.5*y_block_size)
+
+    if np.abs(dx) < max_travel and np.abs(dy) < max_travel:
+        movr_sx(dx)
+        movr_sy(dy)
     else:
         raise KeyError('Too large travel range')
-    
+
     #start mosaic scan
     for i in range(y_block):
-        for j in range(x_block): 
-            mll_sync_piezos()
+        for j in range(x_block):
+            smll_sync_piezos()
             RE(fly2d(smll.ssx, x_start, x_end, x_num, smll.ssy, y_start, y_end, y_num, acq_time, return_speed=40))
-            mll_kill_piezos()
-            movr(smll.sx, x_block_size)
-        movr(smll.sy, y_block_size)
-    
+            dx = x_block_size
+            movr_sx(dx)
+            if elem is not None:
+                plot2dfly(-1, elem, 'sclr1_ch4')
+        dx = -x_block_size*(x_block-1)
+        dy = y_block_size
+        movr_sx(dx)
+        movr_sy(dy)
+
     #return to initial position
-    mll_kill_piezos()
-    mov(smll.sx, pre_sx)
-    mov(smll.sy, pre_sy)
-    mll_sync_piezos()
-    mov(smll.ssx, pre_ssx)
-    mov(smll.ssy, pre_ssy)
-    
+    print('Return to prior positions')
+    mov_sx(pre_ssx)
+    mov_sy(pre_ssy)
+
     print('%d x %d mosaic scan finished' % (x_block, y_block))
 
 
@@ -395,14 +399,14 @@ def tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
     for i in range(angle_num + 1):
 
         angle = angle_start + i * angle_step
-        mov(zpsth, angle)
+        mov(zps.zpsth, angle)
         #x_start_real = x_start / np.cos(angle*np.pi/180.)
         #x_end_real = x_end / np.cos(angle*np.pi/180.)
 
-        dscan(zpsx, -0.01, 0.01, 50, 0.5)
+        RE(dscan(zps.zpsx, -0.01, 0.01, 50, 0.5))
         scan_id, df = _load_scan(-1, fill_events=False)
         x = df['zpsx']
-        data = df['Det2_Co']
+        data = df['Det2_Ce']
         x = np.asarray(x)
         data = np.asarray(data)
         #diff = np.diff(data)
@@ -411,19 +415,19 @@ def tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
         #i_center = np.round((i_max[0][0]+i_min[0][0])/2)+1
 
         mc = find_mass_center(data)
-        mov(zpsx, x[mc] - 0.001)
+        mov(zps.zpsx, x[mc] - 0.001)
 
         if np.abs(angle) <= 45:
             x_start_real = x_start / np.cos(angle * np.pi / 180.)
             x_end_real = x_end / np.cos(angle * np.pi / 180.)
-            fly2d(zpssx, x_start_real, x_end_real, x_num, zpssy,
-                  y_start, y_end, y_num, exposure, return_speed=40)
+            RE(fly2d(zpssx, x_start_real, x_end_real, x_num, zpssy,
+                     y_start, y_end, y_num, exposure, return_speed=40))
 
         else:
             x_start_real = x_start / np.abs(np.sin(angle * np.pi / 180.))
             x_end_real = x_end / np.abs(np.sin(angle * np.pi / 180.))
-            fly2d(zpssz, x_start_real, x_end_real, x_num, zpssy,
-                  y_start, y_end, y_num, exposure, return_speed=40)
+            RE(fly2d(zpssz, x_start_real, x_end_real, x_num, zpssy,
+                     y_start, y_end, y_num, exposure, return_speed=40))
 
         print('waiting for 120 sec...')
         sleep(120)
@@ -463,9 +467,9 @@ def tomo_slice_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
 
 
 def movr_zpz1(dz):
-    movr(zpz1, dz)
-    movr(zpx, dz * 4.428)
-    movr(zpy, -dz * 1.490)
+    movr(zp.zpz1, dz)
+    movr(zp.zpx, dz * 3.75)
+    movr(zp.zpy, -dz * 2.89)
 
 
 def reset_tpx(num):
@@ -610,6 +614,38 @@ def xanes_scan(bragg_list,x_start,x_end,x_num,y_start,y_end,y_num,exposure,sign=
         RE(fly2d(ssx, x_start, x_end, x_num, ssy, y_start, y_end, y_num, exposure, return_speed=50))
     gs.PLOT_Y = current_det
 
+def peak_ic():
+    current_det = gs.PLOT_Y
+    gs.PLOT_Y = 'sclr1_ch4'
+    RE(dscan(dcm.rf,-2,2,80,1))
+    mov(dcm.rf,gs.PS.max[0])
+    RE(dscan(m2.pf,-2,2,80,1))
+    mov(m2.pf,gs.PS.max[0])
+    gs.PLOT_Y = current_det
+
+def mono_m1(pf_start, pf_end, pf_num, b_start, b_end, b_num):
+    b_step = (b_end - b_start)/b_num
+    b_current = m1.b.position
+    current_det = gs.PLOT_Y
+    gs.PLOT_Y = 'sclr1_ch2'
+
+    peak_int = np.zeros(b_num + 1);
+    b_pos = np.zeros(b_num + 1)
+
+    movr(m1.b, b_start)
+    for i in range(b_num + 1):
+        RE(dscan(dcm.pf, pf_start, pf_end, pf_num, 1))
+        peak_int[i] = gs.PS.max[0]
+        b_pos[i] = m1.b.position
+        if i < b_num:
+            movr(m1.b, b_step)
+    mov(m1.b, b_current)
+    gs.PLOT_Y = current_det
+    plt.figure()
+    plt.plot(b_pos, peak_int)
+    plt.show()
+
+
 def smll_kill_piezos():
     smll.kill.put(1)
     sleep(5)
@@ -624,6 +660,500 @@ def smll_sync_piezos():
     mov(ssy, smll.ssy.position + 0.0001)
     mov(ssz, smll.ssz.position + 0.0001)
 
+def movr_sx(dist):
+    alpha = 15*np.pi/180.0
+    c_ssx = smll.ssx.position
+    c_ssy = smll.ssy.position
+    c_ssz = smll.ssz.position
+
+    print('Current ssx = %.3f' % c_ssx)
+    print('Current ssy = %.3f' % c_ssy)
+    print('Current ssz = %.3f' % c_ssz)
+
+    smll_kill_piezos()
+
+    t_ssx = c_ssx + dist
+
+    dxp = t_ssx - smll.ssx.position
+    dzp = c_ssz - smll.ssz.position
+
+    dx, dz = sample_to_lab(dxp, dzp, alpha)
+
+    movr(sx, dx)
+    movr(sz, dz)
+
+    dy = c_ssy -smll.ssy.position
+
+    movr(sy, dy)
+
+    sleep(5)
+
+    smll_sync_piezos()
+
+    mov(ssx, t_ssx)
+    mov(ssy, c_ssy)
+    mov(ssz, c_ssz)
+
+    print('Post-move x = %.3f' % smll.ssx.position)
+    print('Post-move y = %.3f' % smll.ssy.position)
+    print('Post-move z = %.3f' % smll.ssz.position)
+
+def mov_sx(t_pos):
+    alpha = 15*np.pi/180.0
+    c_ssx = smll.ssx.position
+    c_ssy = smll.ssy.position
+    c_ssz = smll.ssz.position
+
+    print('Current ssx = %.3f' % c_ssx)
+    print('Current ssy = %.3f' % c_ssy)
+    print('Current ssz = %.3f' % c_ssz)
+
+    smll_kill_piezos()
+
+    t_ssx = t_pos
+
+    dxp = t_ssx - smll.ssx.position
+    dzp = c_ssz - smll.ssz.position
+
+    dx, dz = sample_to_lab(dxp, dzp, alpha)
+
+    movr(sx, dx)
+    movr(sz, dz)
+
+    dy = c_ssy - smll.ssy.position
+
+    movr(sy, dy)
+
+    sleep(5)
+
+    smll_sync_piezos()
+    mov(ssx, t_ssx)
+    mov(ssy, c_ssy)
+    mov(ssz, c_ssz)
+
+    print('Post-move x = %.3f' % (smll.ssx.position))
+    print('Post-move y = %.3f' % (smll.ssy.position))
+    print('Post-move z = %.3f' % (smll.ssz.position))
 
 
+def movr_sy(dist):
+    alpha = 15*np.pi/180.0
+    c_ssx = smll.ssx.position
+    c_ssy = smll.ssy.position
+    c_ssz = smll.ssz.position
 
+    print('Current ssx = %.3f' % c_ssx)
+    print('Current ssy = %.3f' % c_ssy)
+    print('Current ssz = %.3f' % c_ssz)
+
+    smll_kill_piezos()
+
+    t_ssy = c_ssy + dist
+    dy = t_ssy - smll.ssy.position
+    movr(sy, dy)
+
+    dxp = c_ssx - smll.ssx.position
+    dzp = c_ssz - smll.ssz.position
+
+    dx, dz = sample_to_lab(dxp, dzp, alpha)
+
+    movr(sx, dx)
+    movr(sz, dz)
+
+    sleep(5)
+
+    smll_sync_piezos()
+    mov(ssx, c_ssx)
+    mov(ssy, t_ssy)
+    mov(ssz, c_ssz)
+
+    print('Post-move x = %.3f' % smll.ssx.position)
+    print('Post-move y = %.3f' % smll.ssy.position)
+    print('Post-move z = %.3f' % smll.ssz.position)
+
+def mov_sy(t_pos):
+    alpha = 15*np.pi/180.0
+    c_ssx = smll.ssx.position
+    c_ssy = smll.ssy.position
+    c_ssz = smll.ssz.position
+
+    print('Current ssx = %.3f' % c_ssx)
+    print('Current ssy = %.3f' % c_ssy)
+    print('Current ssz = %.3f' % c_ssz)
+
+    smll_kill_piezos()
+
+    t_ssy = t_pos
+    dy = t_ssy - smll.ssy.position
+    movr(sy, dy)
+
+    dxp = c_ssx - smll.ssx.position
+    dzp = c_ssz - smll.ssz.position
+
+    dx, dz = sample_to_lab(dxp, dzp, alpha)
+
+    movr(sx, dx)
+    movr(sz, dz)
+
+    sleep(5)
+
+    smll_sync_piezos()
+    mov(ssx, c_ssx)
+    mov(ssy, t_ssy)
+    mov(ssz, c_ssz)
+
+    print('Post-move x = %.3f' % (smll.ssx.position))
+    print('Post-move y = %.3f' % (smll.ssy.position))
+    print('Post-move z = %.3f' % (smll.ssz.position))
+
+def movr_sz(dist):
+    alpha = 15.0*np.pi/180
+
+    c_ssz = smll.ssz.position
+    c_ssy = smll.ssy.position
+    c_ssx = smll.ssx.position
+
+    print('Current ssx = %.3f' % c_ssx)
+    print('Current ssy = %.3f' % c_ssy)
+    print('Current ssz = %.3f' % c_ssz)
+
+    smll_kill_piezos()
+
+    t_ssz = c_ssz + dist*np.cos(alpha)
+    dz = t_ssz - smll.ssz.position
+    dy = c_ssy - smll.ssy.position
+
+    movr(sz, dz)
+    movr(sy, dy)
+
+    sleep(5)
+
+    smll_sync_piezos()
+    mov(ssy, c_ssy)
+    mov(ssz, t_ssz)
+
+    print('post-move x = %.3f' % smll.ssx.position)
+    print('Post-move y = %.3f' % smll.ssy.position)
+    print('Post-move z = %.3f' % smll.ssz.position)
+
+def mov_sz(t_pos):
+    alpha = 15.0*np.pi/180
+
+    c_ssz = smll.ssz.position
+    c_ssy = smll.ssy.position
+    c_ssx = smll.ssx.position
+
+    print('Current ssx = %.3f' % c_ssx)
+    print('Current ssy = %.3f' % c_ssy)
+    print('Current ssz = %.3f' % c_ssz)
+
+    smll_kill_piezos()
+
+    t_ssz = t_pos
+    dz = (t_ssz - smll.ssz.position)/np.cos(alpha)
+    dy = c_ssy - smll.ssy.position
+
+    movr(sz, dz)
+    movr(sy, dy)
+
+    sleep(5)
+
+    smll_sync_piezos()
+    mov(ssy, c_ssy)
+    mov(ssz, t_ssz)
+
+    print('Post-move x = %.3f' % smll.ssx.position)
+    print('Post-move y = %.3f' % smll.ssy.position)
+    print('Post-move z = %.3f' % smll.ssz.position)
+
+def list_fly2d(x_pos, y_pos, scan_p):
+    if np.size(x_pos) != np.size(y_pos):
+        raise KeyError('size of x_pos list is not equal to that of y_pos list')
+    else:
+        num_pos = np.size(x_pos)
+    if np.size(scan_p) != 7:
+        raise KeyError('Last argument needs 7 numbers')
+    else:
+        for i in range(num_pos):
+            mov_sx(x_pos[i])
+            mov_sy(y_pos[i])
+            RE(fly2d(ssx, scan_p[0], scan_p[1], scan_p[2], ssy, scan_p[3], scan_p[4], scan_p[5], scan_p[6], return_speed=20))
+            plot2dfly(-1, 'Ca', 'sclr1_ch4')
+            peak_ic()
+            sleep(2)
+
+
+def save_wh_pos(print_flag=False):
+    class Tee(object):
+        def __init__(self, *files):
+            self.files = files
+        def write(self, obj):
+            for f in self.files:
+                f.write(obj)
+                f.flush() # If you want the output to be visible immediately
+        def flush(self) :
+            for f in self.files:
+                f.flush()
+
+    now = datetime.datetime.now()
+    fn = '/data/wh_pos_printout/log-'+np.str(now.year)+'-'+np.str(now.month)+'-'+np.str(now.day)+'-'+np.str(now.hour)+'-'+np.str(now.minute)+'.log'
+    f = open(fn,'w')
+    original = sys.stdout
+    sys.stdout = Tee(sys.stdout, f)
+    wh_pos()
+    sys.stdout = original
+    f.close()
+    if print_flag:
+        shutil.copyfile(fn,'/data/wh_pos_printout/tmp.log')
+        os.system("lp -o cpi=20 -o lpi=8 -o media='letter' -d HXN-printer-1 /data/wh_pos_printout/tmp.log")
+
+
+def zps_kill_piezos():
+    zps.kill.put(1)
+    sleep(5)
+
+def zps_zero_piezos():
+    zps.zero.put(1)
+    sleep(3)
+
+def zps_sync_piezos():
+    #sync positions
+    mov(zps.zpssx, zps.zpssx.position + 0.0001)
+    mov(zps.zpssy, zps.zpssy.position + 0.0001)
+    mov(zps.zpssz, zps.zpssz.position + 0.0001)
+
+
+def movr_zpsx(dist):
+    alpha = 0.0*np.pi/180.0
+    c_ssx = zps.zpssx.position
+    c_ssy = zps.zpssy.position
+    c_ssz = zps.zpssz.position
+
+    print('Current ssx = %.3f' % c_ssx)
+    print('Current ssy = %.3f' % c_ssy)
+    print('Current ssz = %.3f' % c_ssz)
+
+    zps_kill_piezos()
+
+    t_ssx = c_ssx + dist
+
+    dxp = t_ssx - zps.zpssx.position
+    dzp = c_ssz - zps.zpssz.position
+
+    dx, dz = sample_to_lab(dxp, dzp, alpha)
+    dx = dx/1000.
+    dz = dz/1000.
+
+    movr(zps.zpsx, dx)
+    movr(zps.zpsz, dz)
+
+    dy = c_ssy -zps.zpssy.position
+    dy = dy/1000.
+
+    movr(smary, dy)
+
+    sleep(5)
+
+    zps_sync_piezos()
+
+    mov(zps.zpssx, t_ssx)
+    mov(zps.zpssy, c_ssy)
+    mov(zps.zpssz, c_ssz)
+
+    print('Post-move x = %.3f' % zps.zpssx.position)
+    print('Post-move y = %.3f' % zps.zpssy.position)
+    print('Post-move z = %.3f' % zps.zpssz.position)
+
+def mov_zpsx(t_pos):
+    alpha = 0.0*np.pi/180.0
+    c_ssx = zps.zpssx.position
+    c_ssy = zps.zpssy.position
+    c_ssz = zps.zpssz.position
+
+    print('Current zpssx = %.3f' % c_ssx)
+    print('Current zpssy = %.3f' % c_ssy)
+    print('Current zpssz = %.3f' % c_ssz)
+
+    zps_kill_piezos()
+
+    t_ssx = t_pos
+
+    dxp = t_ssx - zps.zpssx.position
+    dzp = c_ssz - zps.zpssz.position
+
+    dx, dz = sample_to_lab(dxp, dzp, alpha)
+    dx = dx/1000.0
+    dz = dz/1000.0
+
+    movr(zps.zpsx, dx)
+    movr(zps.zpsz, dz)
+
+    dy = c_ssy - zps.zpssy.position
+    dy = dy/1000.0
+
+    movr(smary, dy)
+
+    sleep(5)
+
+    zps_sync_piezos()
+    mov(zps.zpssx, t_ssx)
+    mov(zps.zpssy, c_ssy)
+    mov(zps.zpssz, c_ssz)
+
+    print('Post-move x = %.3f' % (zps.zpssx.position))
+    print('Post-move y = %.3f' % (zps.zpssy.position))
+    print('Post-move z = %.3f' % (zps.zpssz.position))
+
+
+def movr_zpsy(dist):
+    alpha = 0.0*np.pi/180.0
+    c_ssx = zps.zpssx.position
+    c_ssy = zps.zpssy.position
+    c_ssz = zps.zpssz.position
+
+    print('Current zpssx = %.3f' % c_ssx)
+    print('Current zpssy = %.3f' % c_ssy)
+    print('Current zpssz = %.3f' % c_ssz)
+
+    zps_kill_piezos()
+
+    t_ssy = c_ssy + dist
+    dy = t_ssy - zps.zpssy.position
+    dy = dy/1000.0
+
+    movr(smary, dy)
+
+    dxp = c_ssx - zps.zpssx.position
+    dzp = c_ssz - zps.zpssz.position
+
+    dx, dz = sample_to_lab(dxp, dzp, alpha)
+    dx = dx/1000.0
+    dz = dz/1000.0
+
+    movr(zps.zpsx, dx)
+    movr(zps.zpsz, dz)
+
+    sleep(5)
+
+    zps_sync_piezos()
+    mov(zps.zpssx, c_ssx)
+    mov(zps.zpssy, t_ssy)
+    mov(zps.zpssz, c_ssz)
+
+    print('Post-move x = %.3f' % zps.zpssx.position)
+    print('Post-move y = %.3f' % zps.zpssy.position)
+    print('Post-move z = %.3f' % zps.zpssz.position)
+
+def mov_zpsy(t_pos):
+    alpha = 0.0*np.pi/180.0
+    c_ssx = zps.zpssx.position
+    c_ssy = zps.zpssy.position
+    c_ssz = zps.zpssz.position
+
+    print('Current zpssx = %.3f' % c_ssx)
+    print('Current zpssy = %.3f' % c_ssy)
+    print('Current zpssz = %.3f' % c_ssz)
+
+    zps_kill_piezos()
+
+    t_ssy = t_pos
+    dy = t_ssy - zps.zpssy.position
+    dy = dy/1000.0
+
+    movr(smary, dy)
+
+    dxp = c_ssx - zps.zpssx.position
+    dzp = c_ssz - zps.zpssz.position
+
+    dx, dz = sample_to_lab(dxp, dzp, alpha)
+    dx = dx/1000.0
+    dz = dz/1000.0
+
+    movr(zps.zpsx, dx)
+    movr(zps.zpsz, dz)
+
+    sleep(5)
+
+    zps_sync_piezos()
+    mov(zps.zpssx, c_ssx)
+    mov(zps.zpssy, t_ssy)
+    mov(zps.zpssz, c_ssz)
+
+    print('Post-move x = %.3f' % (zps.zpssx.position))
+    print('Post-move y = %.3f' % (zps.zpssy.position))
+    print('Post-move z = %.3f' % (zps.zpssz.position))
+
+def movr_zpsz(dist):
+    alpha = 0.0*np.pi/180
+
+    c_ssz = zps.zpssz.position
+    c_ssy = zps.zpssy.position
+    c_ssx = zps.zpssx.position
+
+    print('Current zpssx = %.3f' % c_ssx)
+    print('Current zpssy = %.3f' % c_ssy)
+    print('Current zpssz = %.3f' % c_ssz)
+
+    zps_kill_piezos()
+
+    t_ssz = c_ssz + dist*np.cos(alpha)
+    dz = t_ssz - zps.zpssz.position
+    dy = c_ssy - zps.zpssy.position
+    dx = c_ssx - zps.zpssx.position
+
+    dz = dz/1000.0
+    dy = dy/1000.0
+    dx = dx/1000.0
+
+    movr(zps.zpsz, dz)
+    movr(smary, dy)
+    movr(zps.zpsx, dx)
+
+    sleep(5)
+
+    zps_sync_piezos()
+    mov(zpssy, c_ssy)
+    mov(zpssz, t_ssz)
+    mov(zpssx, c_ssx)
+
+    print('post-move x = %.3f' % zps.zpssx.position)
+    print('Post-move y = %.3f' % zps.zpssy.position)
+    print('Post-move z = %.3f' % zps.zpssz.position)
+
+def mov_zpsz(t_pos):
+    alpha = 0.0*np.pi/180
+
+    c_ssz = zps.zpssz.position
+    c_ssy = zps.zpssy.position
+    c_ssx = zps.zpssx.position
+
+    print('Current zpssx = %.3f' % c_ssx)
+    print('Current zpssy = %.3f' % c_ssy)
+    print('Current zpssz = %.3f' % c_ssz)
+
+    zps_kill_piezos()
+
+    t_ssz = t_pos
+    dz = (t_ssz - zps.zpssz.position)/np.cos(alpha)
+    dy = c_ssy - zps.zpssy.position
+    dx = c_ssx - zps.zpssx.position
+
+    dx = dx/1000.0
+    dy = dy/1000.0
+    dz = dz/1000.0
+
+    movr(zps.zpsz, dz)
+    movr(smary, dy)
+    movr(zps.zpsx, dx)
+
+    sleep(5)
+
+    zps_sync_piezos()
+
+    mov(zpssy, c_ssy)
+    mov(zpssz, t_ssz)
+    mov(zpssx, c_ssx)
+
+    print('Post-move x = %.3f' % zps.zpssx.position)
+    print('Post-move y = %.3f' % zps.zpssy.position)
+    print('Post-move z = %.3f' % zps.zpssz.position)
