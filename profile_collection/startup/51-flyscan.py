@@ -8,9 +8,9 @@ from hxnfly.hxn_fly import (Fly1D_MLL, Fly1D_ZP, Fly2D_MLL, Fly2D_ZP)
 FlyPlan1D.scans = {frozenset({ssx}): Fly1D_MLL,
                    frozenset({ssy}): Fly1D_MLL,
                    frozenset({ssz}): Fly1D_MLL,
-                   frozenset({zpssx}): Fly1D_ZP,
-                   frozenset({zpssy}): Fly1D_ZP,
-                   frozenset({zpssz}): Fly1D_ZP,
+                   frozenset({zps.zpssx}): Fly1D_ZP,
+                   frozenset({zps.zpssy}): Fly1D_ZP,
+                   frozenset({zps.zpssz}): Fly1D_ZP,
                    }
 
 # Mixed 1D fly/1D step scan, same as above:
@@ -20,9 +20,9 @@ FlyStep1D.scans = FlyPlan1D.scans
 FlyPlan2D.scans = {frozenset({ssx, ssy}): Fly2D_MLL,
                    frozenset({ssx, ssz}): Fly2D_MLL,
                    frozenset({ssy, ssz}): Fly2D_MLL,
-                   frozenset({zpssx, zpssy}): Fly2D_ZP,
-                   frozenset({zpssx, zpssz}): Fly2D_ZP,
-                   frozenset({zpssy, zpssz}): Fly2D_ZP,
+                   frozenset({zps.zpssx, zps.zpssy}): Fly2D_ZP,
+                   frozenset({zps.zpssx, zps.zpssz}): Fly2D_ZP,
+                   frozenset({zps.zpssy, zps.zpssz}): Fly2D_ZP,
                    }
 
 
@@ -41,17 +41,17 @@ from hxnfly.callbacks import FlyLiveCrossSection
 # A 1D ROI plot of aluminum from channels 1 to 3:
 # flyplot = FlyRoiPlot('Al', channels=[1, 2, 3])
 #
-live_im_plot = FlyLiveImage(['Ba','P','As','Pt','Si','Ce'], channels=[1, 2, 3])
+live_im_plot = FlyLiveImage(['Ce','Gd','Fe','Co'], channels=[1, 2, 3])
 # fly2dplot1 = FlyLiveCrossSection(['V'], channels=[1, 2, 3)
 
-pt_plot = FlyRoiPlot(['Pt', 'Cr'],
+pt_plot = FlyRoiPlot(['Gd'],
                      channels=[1, 2, 3],
                      )
 
 # NOTE: indicate which detectors can be used in fly scans. When a
 #       fly scan is run, all of those matching in gs.DETS will be
 #       used.
-fly_scannable_detectors = [xspress3, merlin1, zebra, sclr1]
+fly_scannable_detectors = [xspress3, merlin1, zebra, sclr1, dexela1]
 fly1d = FlyPlan1D(usable_detectors=fly_scannable_detectors,
                   scaler_channels=[1, 2, 3, 4],
                   )
