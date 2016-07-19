@@ -52,12 +52,13 @@ class HxnZPSample(NamedDevice):
 
     smarx = Cpt(SmarpodTranslationAxis, axis=2, doc='smarpod x')
     smary = Cpt(SmarpodTranslationAxis, axis=3, doc='smarpod y')
-    smary = Cpt(SmarpodTranslationAxis, axis=1, doc='smarpod z')
+    smarz = Cpt(SmarpodTranslationAxis, axis=1, doc='smarpod z')
     smarthx = Cpt(SmarpodRotationAxis, axis=2, doc='smarpod theta around x')
     smarthy = Cpt(SmarpodRotationAxis, axis=3, doc='smarpod theta around y')
-    smarthy = Cpt(SmarpodRotationAxis, axis=1, doc='smarpod theta around z')
+    smarthz = Cpt(SmarpodRotationAxis, axis=1, doc='smarpod theta around z')
 
-    zp_kill_piezos = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1-ZP}Kill-Cmd.PROC')
+    kill = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1-ZP}Kill-Cmd.PROC')
+    zero = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1-ZP}Zero-Cmd.PROC')
 
 
 zps = HxnZPSample('', name='zps')
@@ -65,6 +66,7 @@ zpssx = zps.zpssx
 zpssy = zps.zpssy
 zpssz = zps.zpssz
 smarx = zps.smarx
+smary = zps.smary
 
 
 class HxnZP_OSA(NamedDevice):
