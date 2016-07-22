@@ -54,13 +54,17 @@ def mll_z_linecan(z_start, z_end, z_num, *,mot='ssy', start, end, num, acq_time,
 
 def go_det(det):
     if det == 'merlin':
-        mov(diff.x, -26.4)
-        mov(diff.y1, 14.2)
-        mov(diff.y2, 14.2)
+        diff.x.move(0, wait=False)
+        sleep(0.5)
+        diff.y1.move(0, wait=False)
+        sleep(0.5)
+        diff.y2.move(0, wait=False)
     elif det == 'cam11':
-        mov(diff.x, 191.3)
-        mov(diff.y1, 34.45)
-        mov(diff.y2, 34.45)
+        diff.x.move(217.7, wait=False)
+        sleep(0.5)
+        diff.y1.move(20.25, wait=False)
+        sleep(0.5)
+        diff.y2.move(20.25, wait=False)
     elif det == 'tpx':
         mov(diff.x, -112)
         mov(diff.y1, -50)
@@ -297,6 +301,18 @@ def rot_fit(x, y):
     plt.xlabel('x:' + np.str(-1 * popt[1] * np.sin(popt[2] * np.pi / 180.)) +
                '  z:' + np.str(-1 * popt[1] * np.cos(popt[2] * np.pi / 180.)))
     plt.show()
+    return(popt)
+
+def coarse_align_rot(x, y, pix_size):
+    r0, dr, offset = rot_fit(x,y)
+    zps_kill_piezos()
+    mov(zpsth, 0)
+    dx = -dr*np.sin(offset)*pix_size/1000.0
+    dz = -dr*np.cos(offset)*pix_size/1000.0
+
+    movr(zps.smarx, dx)
+    movr(zps.smarz, dz)
+
 
 
 def linear_fit(x, y):
@@ -398,6 +414,9 @@ def tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
 
     for i in range(angle_num + 1):
 
+        #while beamline_status.beam_current.get() <= 245:
+        #    sleep(60)
+
         angle = angle_start + i * angle_step
         mov(zps.zpsth, angle)
         #x_start_real = x_start / np.cos(angle*np.pi/180.)
@@ -406,7 +425,10 @@ def tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
         RE(dscan(zps.zpsx, -0.01, 0.01, 50, 0.5))
         scan_id, df = _load_scan(-1, fill_events=False)
         x = df['zpsx']
-        data = df['Det2_Ce']
+        data = df['Det1_Ce'] + df['Det2_Ce'] + df['Det3_Ce'] +\
+            df['Det1_Gd'] + df['Det2_Gd'] + df['Det3_Gd'] +\
+            df['Det1_Fe'] + df['Det2_Fe'] + df['Det3_Fe'] +\
+            df['Det1_Co'] + df['Det2_Co'] + df['Det3_Co']
         x = np.asarray(x)
         data = np.asarray(data)
         #diff = np.diff(data)
@@ -415,7 +437,7 @@ def tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
         #i_center = np.round((i_max[0][0]+i_min[0][0])/2)+1
 
         mc = find_mass_center(data)
-        mov(zps.zpsx, x[mc] - 0.001)
+        mov(zps.zpsx, x[mc]-0.001)
 
         if np.abs(angle) <= 45:
             x_start_real = x_start / np.cos(angle * np.pi / 180.)
@@ -429,10 +451,10 @@ def tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
             RE(fly2d(zpssz, x_start_real, x_end_real, x_num, zpssy,
                      y_start, y_end, y_num, exposure, return_speed=40))
 
-        print('waiting for 120 sec...')
-        sleep(120)
+        print('waiting for 60 sec...')
+        sleep(10)
 
-    mov(zpsth, 0)
+    mov(zps.zpsth, 0)
 
 
 def tomo_slice_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
@@ -490,12 +512,14 @@ def th_fly1d(th_start, th_end, num, m_start, m_end, m_num, sec):
 
 def th_fly2d(th_start, th_end, num, x_start, x_end, x_num, y_start, y_end,
              y_num, sec):
+    shutter('open')
     th_step = (th_end - th_start) / num
-    movr(zpsth, th_start)
+    movr(zps.zpsth, th_start)
     for i in range(num + 1):
-        fly2d(zpssx, x_start, x_end, x_num, zpssy, y_start, y_end, y_num, sec)
-        movr(zpsth, th_step)
-    movr(zpsth, -(th_end + th_step))
+        RE(fly2d(zpssz, x_start, x_end, x_num, zpssy, y_start, y_end, y_num, sec, return_speed=40))
+        movr(zps.zpsth, th_step)
+    movr(zps.zpsth, -(th_end + th_step))
+    shutter('close')
 
 
 def mov_diff(gamma, delta, r=500):
@@ -542,11 +566,11 @@ def mov_diff(gamma, delta, r=500):
         sleep(0.5)
         diff.y2.move(y2, wait=False)
         sleep(0.5)
-        mov(diff.x, -x_yaw, wait=False)
-        sleep(1)
-        mov(diff.yaw, gamma * 180. / np.pi, wait=False)
+        diff.x.move(-x_yaw, wait=False)
         sleep(0.5)
-        mov(diff.cz, dz, wait=False)
+        diff.yaw.move(gamma * 180. / np.pi, wait=False)
+        sleep(0.5)
+        diff.cz.move(dz, wait=False)
 
 
 def wh_diff():
