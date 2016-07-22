@@ -23,6 +23,6 @@ gs.TABLE_COLS = ['sclr1_ch2','sclr1_ch3', 'sclr1_ch4', 'sclr1_ch5_calc', 'ssx', 
 
 
 # Plot this by default versus motor position:
-gs.PLOT_Y = 'Det2_Pt'
+gs.PLOT_Y = 'Det2_Cr'
 gs.OVERPLOT = False
-gs.BASELINE_DEVICES = [smll,vmll, hmll]
+gs.BASELINE_DEVICES = [smll,vmll, hmll, ssa2, zp]
