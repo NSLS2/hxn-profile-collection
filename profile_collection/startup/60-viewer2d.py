@@ -570,7 +570,10 @@ def get_all_filenames(scan_id, key='merlin1'):
     from filestore.path_only_handlers import (AreaDetectorTiffPathOnlyHandler,
                                               RawHandler)
     handlers = {'AD_TIFF': AreaDetectorTiffPathOnlyHandler,
-                'XSP3': RawHandler}
+                'XSP3': RawHandler,
+                'AD_HDF5': RawHandler,
+                'TPX_HDF5': RawHandler,
+                }
     filenames = [filestore.api.retrieve(uid, handlers)[0]
                  for uid in list(df[key])]
 

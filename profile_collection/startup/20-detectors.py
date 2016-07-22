@@ -28,7 +28,7 @@ hxntools.handlers.register()
 # -- Merlin 1
 merlin1 = HxnMerlinDetector('XF:03IDC-ES{Merlin:1}', name='merlin1',
                             image_name='merlin1',
-                            read_attrs=['hdf5', 'cam'])
+                            read_attrs=['hdf5', 'cam', 'stats1'])
 merlin1.hdf5.read_attrs = []
 
 # -- Dexela 1 (Dexela 1512 GigE-V24)
