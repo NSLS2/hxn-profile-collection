@@ -225,7 +225,7 @@ def find_mass_center(array):
         tmp += i * array[i]
     mc = np.round(tmp / np.sum(array))
     return mc
-    
+
 def plotfly(scan_id, elem='Pt', norm=None,center_method='com'):
     plt.figure()
     scan_id, df = _load_scan(scan_id, fill_events=False)
@@ -247,7 +247,7 @@ def plotfly(scan_id, elem='Pt', norm=None,center_method='com'):
     if norm is not None:
         norm_tot = df[norm]
         roi_data = roi_data/(norm_tot + 1e-8)
-    
+
     try:
         diff = np.diff(roi_data)
         plt.subplot(122)
@@ -267,7 +267,7 @@ def plotfly(scan_id, elem='Pt', norm=None,center_method='com'):
         plt.subplot(111)
     else:
         plt.subplot(121)
-    
+
     plt.plot(x, roi_data)
     plt.plot(x, roi_data, 'bo')
     plt.xlabel(scanned_axis)

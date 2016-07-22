@@ -103,3 +103,4 @@ det_beamstatus = BeamStatusDetector(min_current=100.0)
 
 #Temporary EPICS PV  detectors
 #roi1_tot = EpicsSignalRO('XF:03IDC-ES{Tpx:1}Stats1:Total_RBV', name = 'roi1_tot')
+roi1_tot = EpicsSignalRO('XF:03IDC-ES{Merlin:1}Stats1:Total_R', name = 'roi1_tot')
