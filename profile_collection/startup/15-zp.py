@@ -59,7 +59,7 @@ class HxnZPSample(NamedDevice):
 
     kill = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1-ZP}Kill-Cmd.PROC')
     zero = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1-ZP}Zero-Cmd.PROC')
-
+    mode = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1-ZP}Mode-I')
 
 zps = HxnZPSample('', name='zps')
 zpssx = zps.zpssx
