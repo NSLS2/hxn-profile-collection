@@ -8,7 +8,7 @@ from databroker import db, get_table
 from ophyd import mov, movr
 
 import sys
-import datetime
+from datetime import datetime
 import shutil
 
 def focusmerlin(cnttime):
