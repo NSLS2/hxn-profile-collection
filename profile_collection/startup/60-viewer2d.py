@@ -117,7 +117,7 @@ def scatter_plot(scan_id, namex,namey, elem='Pt', channels=None, norm=None):
         plt.ylabel(namey)
     plt.show()
 
-def plot(scan_id, elem='Pt', norm=None,center_method='com'):
+def plot(scan_id, elem='Pt', norm=None,center_method='com',log=False):
     plt.figure()
     scan_id, df = _load_scan(scan_id, fill_events=False)
     hdr = db[scan_id]['start']
@@ -149,13 +149,21 @@ def plot(scan_id, elem='Pt', norm=None,center_method='com'):
 
     if norm is not None:
         norm_v = df[norm]
-        plt.plot(x, data / (norm_v + 1.e-8))
-        plt.plot(x, data / (norm_v + 1.e-8), 'bo')
+        if log == True:
+            plt.plot(x,np.log10(data / (norm_v+1.e-8)))
+            plt.plot(x,np.log10(data / (norm_v + 1.e-8)),'bo')
+        else:
+            plt.plot(x, data / (norm_v + 1.e-8))
+            plt.plot(x, data / (norm_v + 1.e-8), 'bo')
         plt.xlabel(scanned_axis)
         plt.ylabel(elem)
     else:
-        plt.plot(x, data)
-        plt.plot(x, data, 'bo')
+        if log == True:
+            plt.plot(x,np.log10(data+1.e-8))
+            plt.plot(x,np.log10(data+1.e-8),'bo')
+        else:
+            plt.plot(x, data)
+            plt.plot(x, data, 'bo')
         plt.xlabel(scanned_axis)
         plt.ylabel(elem)
 
