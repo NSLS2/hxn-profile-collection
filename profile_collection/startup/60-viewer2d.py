@@ -3,7 +3,7 @@ import sys
 import numpy as np
 import filestore
 import filestore.api
-from datetime import datetime
+import datetime
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
