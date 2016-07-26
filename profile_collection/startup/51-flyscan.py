@@ -1,28 +1,37 @@
 # vim: sw=4 ts=4 sts=4 expandtab smarttab
 # HXN fly-scan configuration
 from hxnfly.bs import (FlyPlan1D, FlyPlan2D, FlyStep1D, maybe_a_table)
-from hxnfly.hxn_fly import (Fly1D_MLL, Fly1D_ZP, Fly2D_MLL, Fly2D_ZP)
+from hxnfly.hxn_fly import (Fly1D_MLL, Fly1D_ZP, Fly2D_MLL, Fly2D_ZP,
+        Fly1D_Diffraction, Fly2D_Diffraction)
 
 # These define which scans can be done by which class:
 # 1D scans:
-FlyPlan1D.scans = {frozenset({ssx}): Fly1D_MLL,
-                   frozenset({ssy}): Fly1D_MLL,
-                   frozenset({ssz}): Fly1D_MLL,
+FlyPlan1D.scans = {frozenset({smll.ssx}): Fly1D_MLL,
+                   frozenset({smll.ssy}): Fly1D_MLL,
+                   frozenset({smll.ssz}): Fly1D_MLL,
                    frozenset({zps.zpssx}): Fly1D_ZP,
                    frozenset({zps.zpssy}): Fly1D_ZP,
                    frozenset({zps.zpssz}): Fly1D_ZP,
+                   frozenset({smlld.dssx}): Fly1D_Diffraction,
+                   frozenset({smlld.dssy}): Fly1D_Diffraction,
+                   frozenset({smlld.dssz}): Fly1D_Diffraction,
                    }
 
 # Mixed 1D fly/1D step scan, same as above:
 FlyStep1D.scans = FlyPlan1D.scans
 
 # 2D scans:
-FlyPlan2D.scans = {frozenset({ssx, ssy}): Fly2D_MLL,
-                   frozenset({ssx, ssz}): Fly2D_MLL,
-                   frozenset({ssy, ssz}): Fly2D_MLL,
+FlyPlan2D.scans = {frozenset({smll.ssx, smll.ssy}): Fly2D_MLL,
+                   frozenset({smll.ssx, smll.ssz}): Fly2D_MLL,
+                   frozenset({smll.ssy, smll.ssz}): Fly2D_MLL,
+
                    frozenset({zps.zpssx, zps.zpssy}): Fly2D_ZP,
                    frozenset({zps.zpssx, zps.zpssz}): Fly2D_ZP,
                    frozenset({zps.zpssy, zps.zpssz}): Fly2D_ZP,
+
+                   frozenset({smlld.dssx, smlld.dssy}): Fly2D_Diffraction,
+                   frozenset({smlld.dssx, smlld.dssz}): Fly2D_Diffraction,
+                   frozenset({smlld.dssy, smlld.dssz}): Fly2D_Diffraction,
                    }
 
 
