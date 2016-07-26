@@ -21,8 +21,8 @@ class HxnMLLSample(NamedDevice):
     sy = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:0}Mtr', doc='coarse y')
     sx1 = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:1}Mtr', doc='coarse x1')
     sz = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:2}Mtr', doc='coarse z')
-    
-    kill = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1}KillAll-Cmd.PROC', doc='kill all piezos') 
+
+    kill = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1}KillAll-Cmd.PROC', doc='kill all piezos')
     zero = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1}KillZero-Cmd.PROC', doc='zero all piezos')
     # sz1 = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:3}Mtr', doc='coarse z1')
     # sz1 was replaced with vz when controller 2 died
@@ -40,6 +40,19 @@ sy = smll.sy
 sx1 = smll.sx1
 sz = smll.sz
 # sz1 = smll.sz1
+
+
+class HxnMLLDiffractionSample(NamedDevice):
+    '''MLL diffraction sample scanning stages'''
+    dssx = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-dssx}Mtr', doc='fine_x')
+    dssy = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-dssy}Mtr', doc='fine_y')
+    dssz = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-dssz}Mtr', doc='fine_z')
+
+
+smlld = HxnMLLDiffractionSample('', name='smlld')
+dssx = smlld.dssx
+dssy = smlld.dssy
+dssz = smlld.dssz
 
 
 class HxnAnc350_3(Device):
