@@ -1,6 +1,7 @@
 from ophyd import (PVPositioner, Component as Cpt, EpicsSignal, EpicsSignalRO,
                    Signal)
 from ophyd.utils import ReadOnlyError
+import time as ttime
 
 
 class UVDoneMOVN(Signal):
@@ -42,6 +43,7 @@ class UVDoneMOVN(Signal):
         self._act = actuate
         self._stp = stop
         self.target = None
+        self._next_reactuate_time = 0
 
     def put(self, *arg, **kwargs):
         raise ReadOnlyError("You con not tell an undulator motor it is done")
@@ -76,9 +78,12 @@ class UVDoneMOVN(Signal):
         # if it is not moving, but we are not where we want to be,
         # poke it again
         if not_moving:
-            actuate = getattr(self.parent, self._act)
-            # print('re actuated')
-            actuate.put(1)
+            cur_time = ttime.time()
+            if cur_time > self._next_reactuate_time:
+                actuate = getattr(self.parent, self._act)
+                print('re actuated', self.parent.name)
+                actuate.put(1)
+                self._next_reactuate_time = cur_time + 1
 
     def _stop_watcher(self, *arg, **kwargs):
         '''Call back to be installed on the stop signal
@@ -179,5 +184,3 @@ fe_ob = EpicsMotor('FE:C03A-OP{Slt:1-Ax:O}Mtr.VAL', name='fe_ob')
 # Shutter operation
 shutter_open = EpicsSignal('XF:03IDB-PPS{PSh}Cmd:Opn-Cmd', name = 'shutter_open')
 shutter_close = EpicsSignal('XF:03IDB-PPS{PSh}Cmd:Cls-Cmd', name = 'shutter_close')
-
-
