@@ -123,6 +123,7 @@ class UVDoneMOVN(Signal):
 class UgapReadbackRO(EpicsSignalRO):
     '''Undulator gap readback scaling factor'''
     factor = 1e6
+    precision = 4
 
     def subscribe(self, _fcn, event_type=None, **kwargs):
         # TODO this should be a DerivedSignal and have this taken care of there
@@ -141,8 +142,13 @@ class UgapReadbackRO(EpicsSignalRO):
         return super().get(*args, **kwargs) / self.factor
 
 
+class FixedPrecisionEpicsSignal(EpicsSignal):
+    precision = 4
+
+
 class UgapPositioner(PVPositioner):
-    setpoint = Cpt(EpicsSignal, 'SR:C3-ID:G1{IVU20:1-Mtr:2}Inp:Pos')
+    setpoint = Cpt(FixedPrecisionEpicsSignal,
+                   'SR:C3-ID:G1{IVU20:1-Mtr:2}Inp:Pos')
     readback = Cpt(UgapReadbackRO, 'SR:C3-ID:G1{IVU20:1-Mtr:2}Pos.RBV')
     actuate = Cpt(EpicsSignal, 'SR:C3-ID:G1{IVU20:1-Mtr:2}Sw:Go')
     actuate_value = 1
@@ -156,6 +162,7 @@ class UgapPositioner(PVPositioner):
 
     def move(self, position, *args, **kwargs):
         self.done.reset(position)
+        self.done._next_reactuate_time = ttime.time() + 2
         ret = super().move(position, *args, **kwargs)
         self.moving.subscribe(self.done._watcher,
                               event_type=self.moving.SUB_VALUE)
@@ -174,6 +181,7 @@ class UgapPositioner(PVPositioner):
 
 
 ugap = UgapPositioner(prefix='', settle_time=3., name='ugap')
+ugap.read_attrs = ['setpoint', 'readback']
 
 # Front End Slits (Primary Slits)
 fe_tb = EpicsMotor('FE:C03A-OP{Slt:1-Ax:T}Mtr.VAL', name='fe_tb')
