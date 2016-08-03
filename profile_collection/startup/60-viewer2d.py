@@ -3,7 +3,7 @@ import sys
 import numpy as np
 import filestore
 import filestore.api
-import datetime
+from datetime import datetime
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -117,7 +117,7 @@ def scatter_plot(scan_id, namex,namey, elem='Pt', channels=None, norm=None):
         plt.ylabel(namey)
     plt.show()
 
-def plot(scan_id, elem='Pt', norm=None,center_method='com',log=False):
+def plot(scan_id, elem='Pt', norm=None,center_method='com',log=0):
     plt.figure()
     scan_id, df = _load_scan(scan_id, fill_events=False)
     hdr = db[scan_id]['start']
@@ -149,7 +149,7 @@ def plot(scan_id, elem='Pt', norm=None,center_method='com',log=False):
 
     if norm is not None:
         norm_v = df[norm]
-        if log == True:
+        if log:
             plt.plot(x,np.log10(data / (norm_v+1.e-8)))
             plt.plot(x,np.log10(data / (norm_v + 1.e-8)),'bo')
         else:
@@ -157,8 +157,9 @@ def plot(scan_id, elem='Pt', norm=None,center_method='com',log=False):
             plt.plot(x, data / (norm_v + 1.e-8), 'bo')
         plt.xlabel(scanned_axis)
         plt.ylabel(elem)
+        plt.title('Scan %d' % (scan_id))
     else:
-        if log == True:
+        if log:
             plt.plot(x,np.log10(data+1.e-8))
             plt.plot(x,np.log10(data+1.e-8),'bo')
         else:
@@ -166,14 +167,14 @@ def plot(scan_id, elem='Pt', norm=None,center_method='com',log=False):
             plt.plot(x, data, 'bo')
         plt.xlabel(scanned_axis)
         plt.ylabel(elem)
-
+        plt.title('Scan %d' % (scan_id))
         try:
             diff = np.diff(data)
             plt.figure()
             plt.plot(x[:-1], diff)
             plt.plot(x[:-1], diff, 'bo')
             mc = find_mass_center(data)
-            plt.title('center of mass: %d',x[mc])
+            #plt.title('center of mass: %d',x[mc])
         except Exception as ex:
             print('Failed to plot derivative: ({}) {}'
                   ''.format(ex.__class__.__name__, ex))
@@ -563,10 +564,10 @@ def export(sid,num=1):
         sid, df = _load_scan(sid, fill_events=False)
         path = os.path.join('/data/output/txt/', 'scan_{}.txt'.format(sid))
         print('Scan {}. Saving to {}'.format(sid, path))
-        #non_objects = [name for name, col in df.iteritems()
-                       #if col.dtype.name not in ('object', )]
+        non_objects = [name for name, col in df.iteritems()
+                       if col.dtype.name not in ('object', )]
         #dump all data
-        non_objects = [name for name, col in df.iteritems()]
+        #non_objects = [name for name, col in df.iteritems()]
         df.to_csv(path, float_format='%1.5e', sep='\t',
                   columns=sorted(non_objects))
         sid = sid + 1
