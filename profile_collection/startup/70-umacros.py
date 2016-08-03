@@ -54,11 +54,11 @@ def mll_z_linecan(z_start, z_end, z_num, *,mot='ssy', start, end, num, acq_time,
 
 def go_det(det):
     if det == 'merlin':
-        diff.x.move(0, wait=False)
+        diff.x.move(10, wait=False)
         sleep(0.5)
-        diff.y1.move(0, wait=False)
+        diff.y1.move(4, wait=False)
         sleep(0.5)
-        diff.y2.move(0, wait=False)
+        diff.y2.move(4, wait=False)
     elif det == 'cam11':
         diff.x.move(217.7, wait=False)
         sleep(0.5)
@@ -304,12 +304,12 @@ def rot_fit(x, y):
     return(popt)
 
 def coarse_align_rot(x, y, pix_size):
-    r0, dr, offset = rot_fit(x,y)
+    r0, dr, offset = rot_fit_2(x,y)
     zps_kill_piezos()
-    mov(zpsth, 0)
-    dx = -dr*np.sin(offset)*pix_size/1000.0
-    dz = -dr*np.cos(offset)*pix_size/1000.0
-
+    mov(zps.zpsth, 0)
+    dx = -dr*np.sin(offset*np.pi/180)*pix_size/1000.0
+    dz = -dr*np.cos(offset*np.pi/180)*pix_size/1000.0
+    #print(dx,dz)
     movr(zps.smarx, dx)
     movr(zps.smarz, dz)
 
@@ -385,7 +385,7 @@ def rot_fit_2(x, y):
     plt.title(np.str(popt[0]) + '+' + np.str(popt[1]) +
               '*sin(x+' + np.str(popt[2]) + ')')
     plt.show()
-
+    return popt[0], popt[1], popt[2]
 
 def find_mass_center(array):
     n = np.size(array)
@@ -604,8 +604,66 @@ def wh_diff():
         print('gamma = ', gamma * 180 / np.pi, ' delta = ',
               delta * 180 / np.pi, ' r = ', R_det)
 
+def movr_zpsz_new(dist):
+    movr(zps.zpsz,dist)
+    movr(zps.smarx,dist*5.4161/1000.)
+    movr(zps.smary,dist*1.8905/1000.)
 
-def xanes_scan(bragg_list,x_start,x_end,x_num,y_start,y_end,y_num,exposure,sign='max'):
+def xanes_scan(energy_list,x_start,x_end,x_num,y_start,y_end,y_num,exposure,peak_flag=1,sign='max'):
+    energy_list = np.array(energy_list) # unit keV
+    bragg_list = np.arcsin(12.39842/(2.*3.1355893*energy_list)) * 180. / np.pi
+    num_bragg = np.size(bragg_list)
+    current_det = gs.PLOT_Y
+    gs.PLOT_Y='sclr1_ch4'
+
+    start_bragg = dcm.th.position
+    start_zpsz = zps.zpsz.position
+    start_smarx = zps.smarx.position
+    start_smary = zps.smary.position
+    start_gap = ugap.position
+    start_energy = 12.39842 / (2.*3.1355893 * np.sin(start_bragg * np.pi / 180.))
+
+    for i in range(num_bragg):
+        current_bragg = dcm.th.position
+        current_energy = 12.39842 / (2.*3.1355893 * np.sin(current_bragg * np.pi / 180.))
+        mov(dcm.th,bragg_list[i])
+
+        current_ugap = 6.645 + (energy_list[i] - 5.993) * 0.055 / 0.067
+        print(current_energy,current_ugap)
+        mov(ugap,current_ugap)
+        sleep(10)
+
+        delta_kev = energy_list[i] - current_energy
+        dist_zpsz = delta_kev*14.11290323
+        movr_zpsz_new(dist_zpsz)
+        #movr(zps.zpsz,delta_kev*14.11290323)
+        #movr(zps.smarx,delta_kev*14.11290323*5.4161/1000.)
+        #movr(zps.smary,delta_kev*14.11290323*1.8905/1000.)
+        if peak_flag:
+            peak_ic()
+        '''
+        RE(dscan(dcm.rf,-1, 1, 40, 1))
+        if sign == 'max':
+            mov(dcm.rf,gs.PS.max[0])
+        elif sign == 'cen':
+            mov(dcm.rf,gs.PS.cen)
+
+        RE(dscan(m2.pf,-1, 1, 40, 1))
+        if sign == 'max':
+            mov(m2.pf,gs.PS.max[0])
+        elif sign == 'cen':
+            mov(m2.pf,gs.PS.cen)
+        '''
+        RE(fly2d(zps.zpssx, x_start, x_end, x_num, zps.zpssy, y_start, y_end, y_num, exposure, return_speed=50))
+
+    gs.PLOT_Y = current_det
+    mov(dcm.th,start_bragg)
+    mov(zps.zpsz,start_zpsz)
+    mov(zps.smarx,start_smarx)
+    mov(zps.smary,start_smary)
+    mov(ugap,start_gap)
+
+def xanes_scan_bp(bragg_list,x_start,x_end,x_num,y_start,y_end,y_num,exposure,sign='max'):
     bragg_list = np.array(bragg_list)
     num_bragg = np.size(bragg_list)
     current_det = gs.PLOT_Y
@@ -919,7 +977,7 @@ def save_wh_pos(print_flag=False):
             for f in self.files:
                 f.flush()
 
-    now = datetime.datetime.now()
+    now = datetime.now()
     fn = '/data/wh_pos_printout/log-'+np.str(now.year)+'-'+np.str(now.month)+'-'+np.str(now.day)+'-'+np.str(now.hour)+'-'+np.str(now.minute)+'.log'
     f = open(fn,'w')
     original = sys.stdout
