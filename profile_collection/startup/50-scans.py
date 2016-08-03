@@ -16,6 +16,7 @@ mesh = hxntools.scans.absolute_mesh
 dmesh = hxntools.scans.relative_mesh
 d2scan = hxntools.scans.d2scan
 a2scan = hxntools.scans.a2scan
+scan_steps = hxntools.scans.scan_steps
 
 gs.DETS = [zebra, sclr1, merlin1, xspress3, lakeshore2]
 gs.TABLE_COLS = ['sclr1_ch2','sclr1_ch3', 'sclr1_ch4', 'sclr1_ch5_calc', 'ssx', 'ssy', 'ssz',
@@ -25,4 +26,4 @@ gs.TABLE_COLS = ['sclr1_ch2','sclr1_ch3', 'sclr1_ch4', 'sclr1_ch5_calc', 'ssx', 
 # Plot this by default versus motor position:
 gs.PLOT_Y = 'Det2_Cr'
 gs.OVERPLOT = False
-gs.BASELINE_DEVICES = [smll,vmll, hmll, ssa2, zp]
+gs.BASELINE_DEVICES = [dcm, m1, m2, beamline_status, smll, vmll, hmll, ssa2, zp]
