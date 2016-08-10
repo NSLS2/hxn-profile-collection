@@ -46,7 +46,7 @@ class UVDoneMOVN(Signal):
         self._next_reactuate_time = 0
 
     def put(self, *arg, **kwargs):
-        raise ReadOnlyError("You con not tell an undulator motor it is done")
+        raise ReadOnlyError("You cannot tell an undulator motor it is done")
 
     def _put(self, *args, **kwargs):
         return super().put(*args, **kwargs)
@@ -69,8 +69,8 @@ class UVDoneMOVN(Signal):
         not_moving = not moving.get()
 
         # come back and check this threshold value
-        # this is 2 microns
-        if not_moving and abs(target - cur_value) < 0.002:
+        # this is 1 microns
+        if not_moving and abs(target - cur_value) < 0.001:
             self._put(1)
             self._remove_cbs()
             return
