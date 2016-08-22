@@ -60,7 +60,7 @@ def go_det(det):
         sleep(0.5)
         diff.y2.move(4, wait=False)
     elif det == 'cam11':
-        diff.x.move(217.7, wait=False)
+        diff.x.move(217.45, wait=False)
         sleep(0.5)
         diff.y1.move(20.25, wait=False)
         sleep(0.5)
@@ -510,13 +510,36 @@ def th_fly1d(th_start, th_end, num, m_start, m_end, m_num, sec):
     movr(zpsth, -(th_end + th_step))
 
 
+def move_fly_center(elem):
+    scan_id, df = _load_scan(-1, fill_events=False)
+    hdr = db[scan_id]['start']
+    if elem in df:
+        roi_data = np.asarray(df[elem])
+    else:
+        channels = [1, 2, 3]
+        roi_keys = ['Det%d_%s' % (chan, elem) for chan in channels]
+        for key in roi_keys:
+            if key not in df:
+                raise KeyError('ROI %s not found' % (key, ))
+        roi_data = np.sum([getattr(df, roi) for roi in roi_keys], axis=0)
+
+    scanned_axis = hdr['motor']
+    x = np.asarray(df[scanned_axis])
+    #i_max = find_mass_center(roi_data)
+    i_max = np.where(roi_data == np.max(roi_data))
+    mov(eval(scanned_axis),x[i_max[0]][0])
+
 def th_fly2d(th_start, th_end, num, x_start, x_end, x_num, y_start, y_end,
              y_num, sec):
     shutter('open')
     th_step = (th_end - th_start) / num
     movr(zps.zpsth, th_start)
+
     for i in range(num + 1):
-        RE(fly2d(zpssz, x_start, x_end, x_num, zpssy, y_start, y_end, y_num, sec, return_speed=40))
+        sleep(5)
+        RE(fly1d(zpssx,-5,5,100,0.1))
+        move_fly_center('Ge')
+        RE(fly2d(zpssx, x_start, x_end, x_num, zpssy, y_start, y_end, y_num, sec, return_speed=40))
         movr(zps.zpsth, th_step)
     movr(zps.zpsth, -(th_end + th_step))
     shutter('close')
@@ -545,7 +568,7 @@ def mov_diff(gamma, delta, r=500):
 
     print('Make sure all motors are zeroed properly, '
           'otherwise calculation will be wrong.')
-    if x_yaw > 747 or x_yaw < -200:
+    if x_yaw > 787 or x_yaw < -200:
         print('diff_x = ', -x_yaw,
               ' out of range, move diff_z upstream and try again')
     elif dz < -250 or dz > 0:
