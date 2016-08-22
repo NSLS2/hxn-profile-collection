@@ -117,7 +117,7 @@ def scatter_plot(scan_id, namex,namey, elem='Pt', channels=None, norm=None):
         plt.ylabel(namey)
     plt.show()
 
-def plot(scan_id, elem='Pt', norm=None,center_method='com',log=0):
+def plot(scan_id, elem='Pt', norm=None,center_method='com',log=0,e_flag=0):
     plt.figure()
     scan_id, df = _load_scan(scan_id, fill_events=False)
     hdr = db[scan_id]['start']
@@ -135,7 +135,12 @@ def plot(scan_id, elem='Pt', norm=None,center_method='com',log=0):
 
     scanned_axis = hdr['motors'][0]
 
+    if scanned_axis == 'ugap':
+        scanned_axis = 'ugap_readback'
     x = df[scanned_axis]
+
+    if e_flag:
+        x = 12.39842 / (2.*3.1355893*np.sin(np.deg2rad(x)))
     '''
     if channels is 'sum':
         channels = [1, 2, 3]
@@ -155,7 +160,10 @@ def plot(scan_id, elem='Pt', norm=None,center_method='com',log=0):
         else:
             plt.plot(x, data / (norm_v + 1.e-8))
             plt.plot(x, data / (norm_v + 1.e-8), 'bo')
-        plt.xlabel(scanned_axis)
+        if e_flag:
+            plt.xlabel('Energy (keV)')
+        else:
+            plt.xlabel(scanned_axis)
         plt.ylabel(elem)
         plt.title('Scan %d' % (scan_id))
     else:
@@ -165,7 +173,10 @@ def plot(scan_id, elem='Pt', norm=None,center_method='com',log=0):
         else:
             plt.plot(x, data)
             plt.plot(x, data, 'bo')
-        plt.xlabel(scanned_axis)
+        if e_flag:
+            plt.xlabel('Energy (keV)')
+        else:
+            plt.xlabel(scanned_axis)
         plt.ylabel(elem)
         plt.title('Scan %d' % (scan_id))
         try:
@@ -562,7 +573,7 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
 def export(sid,num=1):
     for i in range(num):
         sid, df = _load_scan(sid, fill_events=False)
-        path = os.path.join('/data/output/txt/', 'scan_{}.txt'.format(sid))
+        path = os.path.join('/home/xf03id/data_analysis/Amy_Aug2016/', 'scan_{}.txt'.format(sid))
         print('Scan {}. Saving to {}'.format(sid, path))
         non_objects = [name for name, col in df.iteritems()
                        if col.dtype.name not in ('object', )]
@@ -570,6 +581,10 @@ def export(sid,num=1):
         #non_objects = [name for name, col in df.iteritems()]
         df.to_csv(path, float_format='%1.5e', sep='\t',
                   columns=sorted(non_objects))
+
+        #path = os.path.join('/home/xf03id/data_analysis/Amy_Aug2016/', 'scan_{}_raw.txt'.format(sid))
+        #np.savetxt(path, (df['sclr1_ch4'], df['zpssx'], df['zpssy']), fmt='%1.5e')
+
         sid = sid + 1
     # return df
 
