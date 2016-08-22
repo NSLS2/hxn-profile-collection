@@ -147,9 +147,9 @@ class FixedPrecisionEpicsSignal(EpicsSignal):
 
 
 class UgapPositioner(PVPositioner):
+    readback = Cpt(UgapReadbackRO, 'SR:C3-ID:G1{IVU20:1-Mtr:2}Pos.RBV')
     setpoint = Cpt(FixedPrecisionEpicsSignal,
                    'SR:C3-ID:G1{IVU20:1-Mtr:2}Inp:Pos')
-    readback = Cpt(UgapReadbackRO, 'SR:C3-ID:G1{IVU20:1-Mtr:2}Pos.RBV')
     actuate = Cpt(EpicsSignal, 'SR:C3-ID:G1{IVU20:1-Mtr:2}Sw:Go')
     actuate_value = 1
 

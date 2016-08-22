@@ -13,6 +13,7 @@ from hxntools.device import NamedDevice
 
 
 class SmarpodBase(PVPositionerPC):
+    readback = FCpt(EpicsSignal, '')  # readback placeholder
     actuate = Cpt(EpicsSignal, 'XF:03IDC-ES{SPod:1}Move-Cmd.PROC')
     actuate_value = 1
     done = Cpt(EpicsSignalRO, 'XF:03IDC-ES{SPod:1}Moving-I')
@@ -67,7 +68,7 @@ zpssy = zps.zpssy
 zpssz = zps.zpssz
 smarx = zps.smarx
 smary = zps.smary
-
+smarz = zps.smarz
 
 class HxnZP_OSA(NamedDevice):
     zposax = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:5-Ax:0}Mtr', doc='coarse x')
