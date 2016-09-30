@@ -47,6 +47,7 @@ class HxnMLLDiffractionSample(NamedDevice):
     dssx = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-dssx}Mtr', doc='fine_x')
     dssy = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-dssy}Mtr', doc='fine_y')
     dssz = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-dssz}Mtr', doc='fine_z')
+    kill = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1-Diff}Kill-Cmd.PROC', doc='kill all piezos')
 
 
 smlld = HxnMLLDiffractionSample('', name='smlld')
@@ -111,7 +112,7 @@ class HxnHorizontalMLL(NamedDevice):
     hx = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:8-Ax:5}Mtr', doc='x')
     hy = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:4-Ax:0}Mtr', doc='y')
     hz = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:4-Ax:1}Mtr', doc='z')
-    hth = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:1-Ax:2}Mtr', doc='theta')
+    hth = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:6-Ax:4}Mtr', doc='theta')
 
 
 hmll = HxnHorizontalMLL('', name='hmll')

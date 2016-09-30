@@ -1,6 +1,22 @@
 from functools import partial
 
-import metadatastore.commands
+from metadatastore.mds import MDS
+from databroker import Broker
+from databroker.core import register_builtin_handlers
+from filestore.fs import FileStore
+
+_mds_config = {'host': 'xf03id-ca1',
+               'port': '27017',
+               'database': 'datastore',
+               'timezone': 'US/Eastern'}
+mds = MDS(_mds_config, auth=False)
+
+_fs_config = {'host': 'xf03id-ca1',
+               'port': '27017',
+               'database': 'filestore'}
+db = Broker(mds, FileStore(_fs_config))
+register_builtin_handlers(db.fs)
+
 
 import ophyd
 from ophyd import EpicsSignal
@@ -31,8 +47,8 @@ RE = get_gs().RE
 
 # Save all scan data to metadatastore:
 
-from bluesky.register_mds import register_mds
-register_mds(RE)
+#from bluesky.register_mds import register_mds
+RE.subscribe('all', mds.insert)
 
 
 # Pass on only start/stop documents to a few subscriptions
