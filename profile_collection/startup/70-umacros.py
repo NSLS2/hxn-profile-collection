@@ -6,6 +6,7 @@ from time import sleep
 from scipy.optimize import curve_fit
 from databroker import db, get_table
 from ophyd import mov, movr
+from scipy import ndimage
 
 import sys
 from datetime import datetime
@@ -31,7 +32,11 @@ def shutter(cmd):
     if cmd == 'open':
         shutter_open.put(1)
         sleep(5)
+        shutter_open.put(1)
+        sleep(5)
     elif cmd == 'close':
+        shutter_close.put(1)
+        sleep(5)
         shutter_close.put(1)
         sleep(5)
 
@@ -545,7 +550,7 @@ def th_fly2d(th_start, th_end, num, x_start, x_end, x_num, y_start, y_end,
     shutter('close')
 
 
-def mov_diff(gamma, delta, r=500):
+def mov_diff(gamma, delta, r=500, calc=0):
     diff_z = diff.z.position
 
     gamma = gamma * np.pi / 180
@@ -574,26 +579,31 @@ def mov_diff(gamma, delta, r=500):
     elif dz < -250 or dz > 0:
         print('diff_cz = ', dz,
               ' out of range, move diff_z up or down stream and try again')
-    elif y1 > 450:
+    elif y1 > 750:
         print('diff_y1 = ', y1, ' out of range, move diff_z upstream '
               'and try again')
-    elif y2 > 600:
+    elif y2 > 1000:
         print('diff_y2 = ', y2, ' out of range, move diff_z upstream '
               'and try again')
     else:
         print('diff_x = ', -x_yaw, ' diff_cz = ', dz,
               ' diff_y1 = ', y1, ' diff_y2 = ', y2)
-        print('wait for 1 sec, hit Ctrl+c to quit the operation')
-        sleep(1)
-        diff.y1.move(y1, wait=False)
-        sleep(0.5)
-        diff.y2.move(y2, wait=False)
-        sleep(0.5)
-        diff.x.move(-x_yaw, wait=False)
-        sleep(0.5)
-        diff.yaw.move(gamma * 180. / np.pi, wait=False)
-        sleep(0.5)
-        diff.cz.move(dz, wait=False)
+        if calc == 0:
+            print('wait for 1 sec, hit Ctrl+c to quit the operation')
+            sleep(1)
+            diff.y1.move(y1, wait=False)
+            sleep(0.5)
+            diff.y2.move(y2, wait=False)
+            sleep(0.5)
+            diff.x.move(-x_yaw, wait=False)
+            sleep(0.5)
+            diff.yaw.move(gamma * 180. / np.pi, wait=False)
+            sleep(0.5)
+            diff.cz.move(dz, wait=False)
+            while (diff.x.moving is True or diff.y1.moving is True or diff.y2.moving is True or diff.yaw.moving is True):
+                sleep(2)
+        else:
+            print('Calculation mode; no motor will be moved')
 
 
 def wh_diff():
@@ -1262,3 +1272,107 @@ def mov_zpsz(t_pos):
     print('Post-move x = %.3f' % zps.zpssx.position)
     print('Post-move y = %.3f' % zps.zpssy.position)
     print('Post-move z = %.3f' % zps.zpssz.position)
+
+
+def plot_fermat(scan_id,elem='Ga',norm=1):
+    df = get_table(db[scan_id],fill=False)
+    x = np.asarray(df.zpssx)
+    y = np.asarray(df.zpssy)
+    io = np.asfarray(df.sclr1_ch4)
+    #if elem == 'Ga':
+    xrf = np.asfarray(eval('df.Det1_'+elem)) + np.asfarray(eval('df.Det2_'+elem)) + np.asfarray(eval('df.Det3_'+elem))
+    #elif elem == 'K':
+    #    xrf = np.asfarray(df.Det1_K) + np.asfarray(df.Det2_K) + np.asfarray(df.Det3_K)
+
+    if norm:
+        xrf /= (io+1.e-8)
+        #print(xrf.dtype)
+    props = dict(alpha=0.8, edgecolors='none' )
+    plt.figure()
+    plt.scatter(x,y,c=xrf,s=50,marker='s',**props)
+    plt.xlim([np.min(x),np.max(x)])
+    plt.ylim([np.min(y),np.max(y)])
+    plt.title('scan '+ np.str(scan_id))
+    plt.axes().set_aspect('equal')
+    plt.gca().invert_yaxis()
+    plt.colorbar()
+
+    plt.show()
+
+def mov_to_image_cen_smar(scan_id=-1, elem='K', bitflag=1):
+
+    df2 = get_table(db[scan_id],fill=False)
+    xrf = np.asfarray(eval('df2.Det2_' + elem)) + np.asfarray(eval('df2.Det1_' + elem)) + np.asfarray(eval('df2.Det3_' + elem))
+    x = np.asarray(df2.zpssx)
+    y = np.asarray(df2.zpssy)
+    I0 = np.asfarray(df2.sclr1_ch4)
+
+    scan_info=db[scan_id]
+    tmp = scan_info['start']
+    nx=tmp['plan_args']['num1']
+    ny=tmp['plan_args']['num2']
+
+    xrf = xrf/I0
+    xrf = np.asarray(np.reshape(xrf,(ny,nx)))
+
+    if bitflag:
+        xrf[xrf <= 0.25*np.max(xrf)] = 0.
+        xrf[xrf > 0.25*np.max(xrf)] = 1.
+
+
+    b = ndimage.measurements.center_of_mass(xrf)
+
+    iy = np.int(np.round(b[0]))
+    ix = np.int(np.round(b[1]))
+    i_max = ix + iy * nx
+
+    x_cen = x[i_max]
+    y_cen = y[i_max]
+    print('move smarx, smary by', x_cen, y_cen)
+    print('move zpssx, zpssy to ',0, 0)
+
+    movr(zps.smarx, x_cen*0.001)
+    mov(zps.zpssx,0)
+    sleep(.1)
+    movr(zps.smary, y_cen*0.001)
+    mov(zps.zpssy,0)
+    sleep(.1)
+
+def mov_to_image_cen_zpss(scan_id=-1, elem='K', bitflag=1):
+
+    df2 = get_table(db[scan_id],fill=False)
+    xrf = np.asfarray(eval('df2.Det2_' + elem)) + np.asfarray(eval('df2.Det1_' + elem)) + np.asfarray(eval('df2.Det3_' + elem))
+    x = np.asarray(df2.zpssx)
+    y = np.asarray(df2.zpssy)
+    I0 = np.asfarray(df2.sclr1_ch4)
+
+    scan_info=db[scan_id]
+    tmp = scan_info['start']
+    nx=tmp['plan_args']['num1']
+    ny=tmp['plan_args']['num2']
+
+    xrf = xrf/I0
+    xrf = np.asarray(np.reshape(xrf,(ny,nx)))
+
+    if bitflag:
+        xrf[xrf <= 0.25*np.max(xrf)] = 0.
+        xrf[xrf > 0.25*np.max(xrf)] = 1.
+
+
+    b = ndimage.measurements.center_of_mass(xrf)
+
+    iy = np.int(np.round(b[0]))
+    ix = np.int(np.round(b[1]))
+    i_max = ix + iy * nx
+
+    x_cen = x[i_max]
+    y_cen = y[i_max]
+    #print('move smarx, smary by', x_cen, y_cen)
+    print('move zpssx, zpssy to ',x_cen, y_cen)
+
+    #movr(zps.smarx, x_cen*0.001)
+    mov(zps.zpssx,x_cen)
+    sleep(.1)
+    #movr(zps.smary, y_cen*0.001)
+    mov(zps.zpssy,y_cen)
+    sleep(.1)

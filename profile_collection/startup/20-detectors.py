@@ -13,11 +13,10 @@ hxntools.handlers.register()
 
 # - 2D pixel array detectors
 # -- Timepix 1
-#timepix1 = HxnTimepixDetector('XF:03IDC-ES{Tpx:1}', name='timepix1',
-#                              image_name='timepix1',
-#                              read_attrs=['hdf5', 'cam'])
-#timepix1.hdf5.read_attrs = []
-# TODO: add stats plugins
+# timepix1 = HxnTimepixDetector('XF:03IDC-ES{Tpx:1}', name='timepix1',
+#                               image_name='timepix1',
+#                               read_attrs=['hdf5', 'cam'])
+# timepix1.hdf5.read_attrs = []
 
 # -- Timepix 2
 #timepix2 = HxnTimepixDetector('XF:03IDC-ES{Tpx:2}', name='timepix2',
@@ -32,10 +31,10 @@ merlin1 = HxnMerlinDetector('XF:03IDC-ES{Merlin:1}', name='merlin1',
 merlin1.hdf5.read_attrs = []
 
 # -- Dexela 1 (Dexela 1512 GigE-V24)
-dexela1 = HxnDexelaDetector('XF:03IDC-ES{Dexela:1}', name='dexela1',
-                            image_name='dexela1',
-                            read_attrs=['hdf5', 'cam'])
-dexela1.hdf5.read_attrs = []
+#dexela1 = HxnDexelaDetector('XF:03IDC-ES{Dexela:1}', name='dexela1',
+#                            image_name='dexela1',
+#                            read_attrs=['hdf5', 'cam','stats1'])
+#dexela1.hdf5.read_attrs = []
 
 # - Other detectors and triggering devices
 # -- DXP Mercury (1 channel)
@@ -102,5 +101,6 @@ sr_beam_current = EpicsSignalRO('SR:C03-BI{DCCT:1}I:Real-I',
 det_beamstatus = BeamStatusDetector(min_current=100.0)
 
 #Temporary EPICS PV  detectors
-#roi1_tot = EpicsSignalRO('XF:03IDC-ES{Tpx:1}Stats1:Total_RBV', name = 'roi1_tot')
-roi1_tot = EpicsSignalRO('XF:03IDC-ES{Merlin:1}Stats1:Total_R', name = 'roi1_tot')
+#dexela_roi1_tot = EpicsSignalRO('XF:03IDC-ES{Dexela:1}Stats1:Total_RBV', name='dexela_roi1_tot')
+#roi1_tot = EpicsSignalRO('XF:03IDC-ES{Merlin:1}Stats1:Total_RBV', name='roi1_tot')
+#roi1_tot = roi1_tot.value
