@@ -17,6 +17,9 @@ _fs_config = {'host': 'xf03id-ca1',
 db = Broker(mds, FileStore(_fs_config))
 register_builtin_handlers(db.fs)
 
+def ensure_proposal_id(md):
+    if 'proposal_id' not in md:
+        raise ValueError("You forgot the proposal id.")
 
 import ophyd
 from ophyd import EpicsSignal
@@ -48,6 +51,7 @@ RE = get_gs().RE
 # Save all scan data to metadatastore:
 
 #from bluesky.register_mds import register_mds
+# RE.md_validator = ensure_proposal_id
 RE.subscribe('all', mds.insert)
 
 

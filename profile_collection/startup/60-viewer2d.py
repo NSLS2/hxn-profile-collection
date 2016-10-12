@@ -570,13 +570,16 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
     return fig, ax1, ax2
 
 
-def export(sid,num=1):
+def export(sid,num=1, export_folder='/home/xf03id/data_analysis/',
+           fields_excluded=['xspress3_ch1', 'xspress3_ch2', 'xspress3_ch3', 'merlin1']):
     for i in range(num):
         sid, df = _load_scan(sid, fill_events=False)
-        path = os.path.join('/home/xf03id/data_analysis/Amy_Aug2016/', 'scan_{}.txt'.format(sid))
+        path = os.path.join(export_folder, 'scan_{}.txt'.format(sid))
         print('Scan {}. Saving to {}'.format(sid, path))
-        non_objects = [name for name, col in df.iteritems()
-                       if col.dtype.name not in ('object', )]
+        #non_objects = [name for name, col in df.iteritems()
+        #               if col.dtype.name not in ('object', )]
+        non_objects = [name for name in df.keys() if name not in fields_excluded]
+        print('fields inclued: {}'.format(sorted(non_objects)))
         #dump all data
         #non_objects = [name for name, col in df.iteritems()]
         df.to_csv(path, float_format='%1.5e', sep='\t',

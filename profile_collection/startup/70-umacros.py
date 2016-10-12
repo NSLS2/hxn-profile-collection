@@ -61,15 +61,15 @@ def go_det(det):
     if det == 'merlin':
         diff.x.move(10, wait=False)
         sleep(0.5)
-        diff.y1.move(4, wait=False)
+        diff.y1.move(0, wait=False)
         sleep(0.5)
-        diff.y2.move(4, wait=False)
+        diff.y2.move(0, wait=False)
     elif det == 'cam11':
-        diff.x.move(217.45, wait=False)
+        diff.x.move(218.8, wait=False)
         sleep(0.5)
-        diff.y1.move(20.25, wait=False)
+        diff.y1.move(17.9, wait=False)
         sleep(0.5)
-        diff.y2.move(20.25, wait=False)
+        diff.y2.move(17.9, wait=False)
     elif det == 'tpx':
         mov(diff.x, -112)
         mov(diff.y1, -50)
@@ -427,6 +427,7 @@ def tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
         #x_start_real = x_start / np.cos(angle*np.pi/180.)
         #x_end_real = x_end / np.cos(angle*np.pi/180.)
 
+        '''
         RE(dscan(zps.zpsx, -0.01, 0.01, 50, 0.5))
         scan_id, df = _load_scan(-1, fill_events=False)
         x = df['zpsx']
@@ -443,7 +444,7 @@ def tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
 
         mc = find_mass_center(data)
         mov(zps.zpsx, x[mc]-0.001)
-
+        '''
         if np.abs(angle) <= 45:
             x_start_real = x_start / np.cos(angle * np.pi / 180.)
             x_end_real = x_end / np.cos(angle * np.pi / 180.)
@@ -455,10 +456,10 @@ def tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
             x_end_real = x_end / np.abs(np.sin(angle * np.pi / 180.))
             RE(fly2d(zpssz, x_start_real, x_end_real, x_num, zpssy,
                      y_start, y_end, y_num, exposure, return_speed=40))
-
-        print('waiting for 60 sec...')
+        mov_to_image_cen_smar(-1)
+        merlin1.unstage()
+        print('waiting for 10 sec...')
         sleep(10)
-
     mov(zps.zpsth, 0)
 
 
@@ -641,6 +642,10 @@ def movr_zpsz_new(dist):
     movr(zps.zpsz,dist)
     movr(zps.smarx,dist*5.4161/1000.)
     movr(zps.smary,dist*1.8905/1000.)
+def movr_smarz(dist):
+    movr(zps.smarz, dist)
+    movr(zps.smarx, dist*5.4161/1000.)
+    movr(zps.smary, dist*1.8905/1000.)
 
 def xanes_scan(energy_list,x_start,x_end,x_num,y_start,y_end,y_num,exposure,peak_flag=1,sign='max'):
     energy_list = np.array(energy_list) # unit keV
@@ -1011,7 +1016,7 @@ def save_wh_pos(print_flag=False):
                 f.flush()
 
     now = datetime.now()
-    fn = '/data/wh_pos_printout/log-'+np.str(now.year)+'-'+np.str(now.month)+'-'+np.str(now.day)+'-'+np.str(now.hour)+'-'+np.str(now.minute)+'.log'
+    fn = '/data/motor_positions/log-'+np.str(now.year)+'-'+np.str(now.month)+'-'+np.str(now.day)+'-'+np.str(now.hour)+'-'+np.str(now.minute)+'.log'
     f = open(fn,'w')
     original = sys.stdout
     sys.stdout = Tee(sys.stdout, f)
@@ -1019,8 +1024,8 @@ def save_wh_pos(print_flag=False):
     sys.stdout = original
     f.close()
     if print_flag:
-        shutil.copyfile(fn,'/data/wh_pos_printout/tmp.log')
-        os.system("lp -o cpi=20 -o lpi=8 -o media='letter' -d HXN-printer-1 /data/wh_pos_printout/tmp.log")
+        shutil.copyfile(fn,'/data/motor_positions/tmp.log')
+        os.system("lp -o cpi=20 -o lpi=8 -o media='letter' -d HXN-printer-1 /data/motor_positions/tmp.log")
 
 
 def zps_kill_piezos():
@@ -1299,7 +1304,8 @@ def plot_fermat(scan_id,elem='Ga',norm=1):
 
     plt.show()
 
-def mov_to_image_cen_smar(scan_id=-1, elem='K', bitflag=1):
+
+def mov_to_image_cen_zpsx(scan_id=-1, elem='Ni', bitflag=1):
 
     df2 = get_table(db[scan_id],fill=False)
     xrf = np.asfarray(eval('df2.Det2_' + elem)) + np.asfarray(eval('df2.Det1_' + elem)) + np.asfarray(eval('df2.Det3_' + elem))
@@ -1319,6 +1325,48 @@ def mov_to_image_cen_smar(scan_id=-1, elem='K', bitflag=1):
         xrf[xrf <= 0.25*np.max(xrf)] = 0.
         xrf[xrf > 0.25*np.max(xrf)] = 1.
 
+    b = ndimage.measurements.center_of_mass(xrf)
+
+    iy = np.int(np.round(b[0]))
+    ix = np.int(np.round(b[1]))
+    i_max = ix + iy * nx
+
+    x_cen = x[i_max]
+    y_cen = y[i_max]
+    print('move zpsx by', x_cen)
+    #print('move zpssx, zpssy to ',0, 0)
+
+    #movr(zps.zpsx, x_cen*0.001)
+    #mov(zps.zpssx,0)
+    #mov(zps.zpssy,0)
+    sleep(.1)
+
+def mov_to_image_cen_smar(scan_id=-1, elem='Co', bitflag=1):
+
+    df2 = get_table(db[scan_id],fill=False)
+    xrf = np.asfarray(eval('df2.Det2_' + elem)) + np.asfarray(eval('df2.Det1_' + elem)) + np.asfarray(eval('df2.Det3_' + elem))
+    hdr = db[scan_id]['start']
+    x_motor = hdr['motor1']
+    y_motor = hdr['motor2']
+    x = np.asarray(df2[x_motor])
+    y = np.asarray(df2[y_motor])
+    I0 = np.asfarray(df2.sclr1_ch4)
+
+    scan_info=db[scan_id]
+    tmp = scan_info['start']
+    nx=tmp['plan_args']['num1']
+    ny=tmp['plan_args']['num2']
+
+    xrf = xrf/I0
+    xrf = np.asarray(np.reshape(xrf,(ny,nx)))
+
+    #plt.figure()
+    #plt.imshow(xrf)
+
+    if bitflag:
+        xrf[xrf <= 0.25*np.max(xrf)] = 0.
+        xrf[xrf > 0.25*np.max(xrf)] = 1.
+
 
     b = ndimage.measurements.center_of_mass(xrf)
 
@@ -1328,17 +1376,28 @@ def mov_to_image_cen_smar(scan_id=-1, elem='K', bitflag=1):
 
     x_cen = x[i_max]
     y_cen = y[i_max]
-    print('move smarx, smary by', x_cen, y_cen)
-    print('move zpssx, zpssy to ',0, 0)
 
-    movr(zps.smarx, x_cen*0.001)
-    mov(zps.zpssx,0)
-    sleep(.1)
-    movr(zps.smary, y_cen*0.001)
-    mov(zps.zpssy,0)
+    #print(b,ix,iy,i_max,x_cen,y_cen)
+
+    if x_motor == 'zpssx':
+        print('move smarx,by', x_cen, 'um')
+        #print('move zpssx, zpssy to ',0, 0)
+
+        movr(zps.smarx, x_cen*0.001)
+        #mov(zps.zpssx,0)
+        sleep(.1)
+
+    elif x_motor == 'zpssz':
+        print('move smarz,by', x_cen, 'um')
+        movr(zps.smarz, x_cen*0.001)
+        #mov(zps.zpssx,0)
+        sleep(.1)
+
+#    movr(zps.smary, y_cen*0.001)
+    #mov(zps.zpssy,0)
     sleep(.1)
 
-def mov_to_image_cen_zpss(scan_id=-1, elem='K', bitflag=1):
+def mov_to_image_cen_zpss(scan_id=-1, elem='Ni', bitflag=1):
 
     df2 = get_table(db[scan_id],fill=False)
     xrf = np.asfarray(eval('df2.Det2_' + elem)) + np.asfarray(eval('df2.Det1_' + elem)) + np.asfarray(eval('df2.Det3_' + elem))

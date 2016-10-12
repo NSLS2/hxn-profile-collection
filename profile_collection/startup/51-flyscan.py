@@ -50,10 +50,10 @@ from hxnfly.callbacks import FlyLiveCrossSection
 # A 1D ROI plot of aluminum from channels 1 to 3:
 # flyplot = FlyRoiPlot('Al', channels=[1, 2, 3])
 #
-live_im_plot = FlyLiveImage(['Ga','K','Si','Cr'], channels=[1, 2, 3])
+live_im_plot = FlyLiveImage(['Co','Al','Ti','Cu'], channels=[1, 2, 3])
 # fly2dplot1 = FlyLiveCrossSection(['V'], channels=[1, 2, 3)
 
-pt_plot = FlyRoiPlot(['Ga'],
+pt_plot = FlyRoiPlot(['Ti'],
                      channels=[1, 2, 3],
                      )
 

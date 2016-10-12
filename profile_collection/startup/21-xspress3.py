@@ -44,7 +44,8 @@ def xspress3_roi_setup():
     for channel in [xspress3.channel1, xspress3.channel2, xspress3.channel3]:
         #channel.set_roi(1, 9300, 9600, name='Pt')
         channel.set_roi(1, 1590, 1890, name='Si')
-        channel.set_roi(2, 2150, 2450, name='S')
+        #channel.set_roi(2, 2150, 2450, name='S')
+        channel.set_roi(2, 1337, 1637, name='Al')
         #channel.set_roi(2, 4690, 4990, name='Ce')
         #channel.set_roi(3, 5750, 6050, name='Mn')
         channel.set_roi(3, 4360, 4660, name='Ti')
