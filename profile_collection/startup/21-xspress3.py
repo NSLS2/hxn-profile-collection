@@ -21,6 +21,7 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
                write_path_template='/data/%Y/%m/%d/',
                mds_key_format='xspress3_ch{chan}',
                fs=db.fs,
+               root='/data',
                )
 
     def __init__(self, prefix, *, configuration_attrs=None, read_attrs=None,
