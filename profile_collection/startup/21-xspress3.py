@@ -20,6 +20,7 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
     hdf5 = Cpt(Xspress3FileStore, 'HDF5:',
                write_path_template='/data/%Y/%m/%d/',
                mds_key_format='xspress3_ch{chan}',
+               root='/data'
                )
 
     def __init__(self, prefix, *, configuration_attrs=None, read_attrs=None,
