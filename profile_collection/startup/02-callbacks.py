@@ -12,9 +12,11 @@ _mds_config = {'host': 'xf03id-ca1',
 mds = MDS(_mds_config, auth=False)
 
 _fs_config = {'host': 'xf03id-ca1',
-               'port': 27017,
-               'database': 'filestore'}
+              'port': 27017,
+              'database': 'filestore'}
 db = Broker(mds, FileStore(_fs_config))
+
+
 register_builtin_handlers(db.fs)
 
 def ensure_proposal_id(md):

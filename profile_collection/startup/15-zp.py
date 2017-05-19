@@ -70,6 +70,8 @@ smarx = zps.smarx
 smary = zps.smary
 smarz = zps.smarz
 
+zps = remove_names_maybe(zps, ['kill', 'zero'])
+
 class HxnZP_OSA(NamedDevice):
     zposax = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:5-Ax:0}Mtr', doc='coarse x')
     zposay = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:5-Ax:1}Mtr', doc='coarse y')
@@ -95,9 +97,9 @@ zpbs = HxnZPBeamStop('', name='zpbs')
 
 class HxnZonePlate(NamedDevice):
     # TPA stage holding the ZP (underneath long travel range stage)
-    zpx = Cpt(EpicsMotor, 'XF:03IDC-ES{ZpTpa-Ax:X}Mtr', doc='coarse zp x')
-    zpy = Cpt(EpicsMotor, 'XF:03IDC-ES{ZpTpa-Ax:Y}Mtr', doc='coarse zp y')
-    zpz = Cpt(EpicsMotor, 'XF:03IDC-ES{ZpTpa-Ax:Z}Mtr', doc='coarse zp z')
+    zpx = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:2-Ax:zpx}Mtr', doc='coarse zp x')
+    zpy = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:2-Ax:zpy}Mtr', doc='coarse zp y')
+    zpz = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:2-Ax:zpz}Mtr', doc='coarse zp z')
 
     # long travel range z holding the ZP
     zpz1 = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:1-Ax:zpz1}Mtr', doc='long range z')

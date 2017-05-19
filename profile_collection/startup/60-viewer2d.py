@@ -16,7 +16,7 @@ from databroker import (get_table, db)
 from scipy.interpolate import interp1d, interp2d
 
 
-def plot2d(scan_id, elem, norm='sclr1_ch4', det_type='elem'):
+def plot2d(scan_id, elem, norm='sclr1_ch4'):
     scan_id, df = _load_scan(scan_id, fill_events=False)
     scan_info=db[scan_id]
     tmp = scan_info['start']
@@ -24,35 +24,33 @@ def plot2d(scan_id, elem, norm='sclr1_ch4', det_type='elem'):
     x_motor = tmp['motors'][0]
     y_motor = tmp['motors'][1]
 
-    x_start = tmp['plan_args']['args'][1]
-    x_end = tmp['plan_args']['args'][2]
+    x_start = tmp['plan_args']['args'][5]
+    x_end = tmp['plan_args']['args'][6]
     col = tmp['plan_args']['args'][3]
 
-    y_start = tmp['plan_args']['args'][5]
-    y_end = tmp['plan_args']['args'][6]
+    y_start = tmp['plan_args']['args'][1]
+    y_end = tmp['plan_args']['args'][2]
     row = tmp['plan_args']['args'][7]
 
-    if det_type == 'elem':
+    if elem in df:
+        det = df[elem]
+    else:
         det = (df['Det1_{}'.format(elem)] +
                df['Det2_{}'.format(elem)] +
                df['Det3_{}'.format(elem)])
-    elif det_type == 'scalar':
-        det = df[elem]
-    else:
-        det = df[elem]
 
     if norm is not None:
-        mon = np.reshape(df[norm], (row,col))
+        mon = np.reshape(df[norm], (col,row))
         plt.figure()
-        data = np.reshape(det, (row, col))
+        data = np.reshape(det, (col, row))
         plt.title('Scan %d: %s (normalized to %s)' % (scan_id, elem, norm))
-        plt.imshow(data/mon, interpolation='None',extent=[x_start,x_end,y_end,y_start],cmap='bone')
+        plt.imshow(data/mon, interpolation='None',extent=[x_start,x_end,y_end,y_start])
         plt.xlabel(x_motor)
         plt.ylabel(y_motor)
         plt.colorbar()
     else:
         plt.figure()
-        data = np.reshape(det, (row, col))
+        data = np.reshape(det, (col, row))
         plt.title('Scan %d: %s' % (scan_id, elem))
         plt.imshow(data, interpolation='None',extent=[x_start,x_end,y_end,y_start])
         plt.xlabel(x_motor)
@@ -410,7 +408,7 @@ def fly2d_reshape(hdr, spectrum, verbose=True):
 
 # TODO: change l, h to clim which defaults to 'auto'
 def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
-              fill_events=False, cmap='jet', cols=None,
+              fill_events=False, cmap='viridis', cols=None,
               channels=None, interp=None, interp2d=None):
     """Plot the results of a 2d fly scan
 
@@ -530,9 +528,10 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
         fig = plt.figure()
         ax2 = plt.subplot(111)
     else:
-        fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(10, 5))
+        #fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(10, 5))
+        fig, ax1 = plt.subplots(ncols=1,figsize=(8,5))
         fig.set_tight_layout(True)
-        ax1.imshow(spectrum2, extent=extent, interpolation='None', cmap=cmap,
+        imshow = ax1.imshow(spectrum2, extent=extent, interpolation='None', cmap=cmap,
                    vmin=clim[0], vmax=clim[1])
         np.savetxt(os.path.join(folder, 'data_scan_{}'.format(scan_id)),
                    spectrum2)
@@ -540,7 +539,9 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
         ax1.set_title('IMSHOW. ' + title)
         ax1.set_xlabel(x)
         ax1.set_ylabel(y)
+        fig.colorbar(imshow)
 
+    '''
     if extent is not None:
         # create the scatter plot version
         scatter = ax2.scatter(x_data, y_data, c=spectrum, marker='s', s=250,
@@ -555,7 +556,7 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
         ax2.invert_yaxis()
         fig.colorbar(scatter)
 
-
+    '''
     fig_path = os.path.join(folder,'data_scan_{}.png'.format(scan_id))
     print('\tSaving figure to: {}'.format(fig_path))
     fig.savefig(fig_path)
@@ -570,7 +571,7 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
     return fig, ax1, ax2
 
 
-def export(sid,num=1, export_folder='/home/xf03id/data_analysis/',
+def export(sid, num=1, export_folder='/data/users/2017Q1/Hruszkewycz_2017Q1/Data/',
            fields_excluded=['xspress3_ch1', 'xspress3_ch2', 'xspress3_ch3', 'merlin1']):
     for i in range(num):
         sid, df = _load_scan(sid, fill_events=False)
@@ -579,11 +580,17 @@ def export(sid,num=1, export_folder='/home/xf03id/data_analysis/',
         #non_objects = [name for name, col in df.iteritems()
         #               if col.dtype.name not in ('object', )]
         non_objects = [name for name in df.keys() if name not in fields_excluded]
-        print('fields inclued: {}'.format(sorted(non_objects)))
+        #print('fields inclued: {}'.format(sorted(non_objects)))
         #dump all data
         #non_objects = [name for name, col in df.iteritems()]
         df.to_csv(path, float_format='%1.5e', sep='\t',
                   columns=sorted(non_objects))
+        path = os.path.join(export_folder, 'scan_{}.h5'.format(sid))
+        filename = get_all_filenames(sid,'merlin1')
+        for fn in filename:
+            break
+        mycmd = ''.join(['scp', ' ', fn, ' ', path])
+        os.system(mycmd)
 
         #path = os.path.join('/home/xf03id/data_analysis/Amy_Aug2016/', 'scan_{}_raw.txt'.format(sid))
         #np.savetxt(path, (df['sclr1_ch4'], df['zpssx'], df['zpssy']), fmt='%1.5e')

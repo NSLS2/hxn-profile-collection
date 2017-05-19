@@ -13,10 +13,10 @@ hxntools.handlers.register()
 
 # - 2D pixel array detectors
 # -- Timepix 1
-# timepix1 = HxnTimepixDetector('XF:03IDC-ES{Tpx:1}', name='timepix1',
-#                               image_name='timepix1',
-#                               read_attrs=['hdf5', 'cam'])
-# timepix1.hdf5.read_attrs = []
+timepix1 = HxnTimepixDetector('XF:03IDC-ES{Tpx:1}', name='timepix1',
+                              image_name='timepix1',
+                              read_attrs=['hdf5', 'cam','stats1'])
+timepix1.hdf5.read_attrs = []
 
 # -- Timepix 2
 #timepix2 = HxnTimepixDetector('XF:03IDC-ES{Tpx:2}', name='timepix2',
@@ -90,7 +90,7 @@ angle_x = EpicsSignalRO('SR:C31-{AI}Aie3:Angle-x-Cal', name='angle_x')
 angle_y = EpicsSignalRO('SR:C31-{AI}Aie3:Angle-y-Cal', name='angle_y')
 
 # Diamond Quad BPMs in C hutch
-# quad = HxnBpm('SR:C12-BI{XBPM:1}', name='quad')
+quad = HxnBpm('XF:03ID{XBPM:17}', name='quad')
 
 
 sr_shutter_status = EpicsSignalRO('SR-EPS{PLC:1}Sts:MstrSh-Sts',

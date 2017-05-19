@@ -26,3 +26,11 @@ import pandas as pd
 pd.options.display.width = 180
 pd.options.display.max_rows = None
 pd.options.display.max_columns = 10
+
+def remove_names_maybe(obj, names):
+    for n in names:
+        try:
+            obj.read_attrs.remove(n)
+        except ValueError:
+            pass
+    return obj

@@ -11,13 +11,14 @@ from hxntools.device import NamedDevice
 
 # NOTE: NamedDevice will name components exactly as the 'name' argument
 #       specifies. Normally, it would be named based on the parent
+
 class HxnMLLSample(NamedDevice):
     ssx = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-ssx}Mtr', doc='fine_x')
     ssy = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-ssy}Mtr', doc='fine_y')
     ssz = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-ssz}Mtr', doc='fine_z')
     sth = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:1-Ax:0}Mtr', doc='theta')
 
-    sx = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:4-Ax:5}Mtr', doc='coarse x')
+    sxx = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:4-Ax:5}Mtr', doc='coarse x')
     sy = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:0}Mtr', doc='coarse y')
     sx1 = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:1}Mtr', doc='coarse x1')
     sz = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:2}Mtr', doc='coarse z')
@@ -35,18 +36,26 @@ ssz = smll.ssz
 
 sth = smll.sth
 
-sx = smll.sx
+sx = smll.sxx
 sy = smll.sy
 sx1 = smll.sx1
 sz = smll.sz
 # sz1 = smll.sz1
 
+smll = remove_names_maybe(smll, ['kill', 'zero'])
 
 class HxnMLLDiffractionSample(NamedDevice):
     '''MLL diffraction sample scanning stages'''
-    dssx = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-dssx}Mtr', doc='fine_x')
+    dsy = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:1-Ax:mlldiffy}Mtr', doc='dsy')
+    dsx = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:6-Ax:2}Mtr', doc='dsx')
+    dsz = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:6-Ax:3}Mtr', doc='dsz')
+    dsth = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:3-Ax:diffsth}Mtr', doc='dsth')
+    sbx = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:4-Ax:5}Mtr', doc='sx')
+    sbz = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:2}Mtr', doc='sz')
+    # dssx and dssz are swapped, due to the installation. (01/17/17, H. Yan)
+    dssz = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-dssx}Mtr', doc='fine_x')
     dssy = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-dssy}Mtr', doc='fine_y')
-    dssz = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-dssz}Mtr', doc='fine_z')
+    dssx = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-dssz}Mtr', doc='fine_z')
     kill = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1-Diff}Kill-Cmd.PROC', doc='kill all piezos')
 
 
@@ -54,7 +63,14 @@ smlld = HxnMLLDiffractionSample('', name='smlld')
 dssx = smlld.dssx
 dssy = smlld.dssy
 dssz = smlld.dssz
+dsx = smlld.dsx
+dsy = smlld.dsy
+dsz = smlld.dsz
+dsth = smlld.dsth
+sbx = smlld.sbx
+sbz = smlld.sbz
 
+smlld = remove_names_maybe(smlld, ['kill','zero'])
 
 class HxnAnc350_3(Device):
     '''3 axis ANC350'''
@@ -200,8 +216,8 @@ class PseudoMLLCoarseSample(PseudoAngleCorrection):
 
 
 pmllf = PseudoMLLFineSample('', name='pmllf')
-pssx = pmllf.x
-pssz = pmllf.z
+pssx = pmllf.px
+pssz = pmllf.pz
 # To tweak the angle, set pmllf.theta.put(15.1) for example
 
 

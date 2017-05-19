@@ -35,7 +35,7 @@ FlyPlan2D.scans = {frozenset({smll.ssx, smll.ssy}): Fly2D_MLL,
                    }
 
 
-# from hxnfly.callbacks import FlyLivePlot
+# from hxnfly.callbacks import FlyLivePloti
 from hxnfly.callbacks import (FlyRoiPlot, FlyLiveImage)
 from hxnfly.callbacks import FlyLiveCrossSection
 
@@ -50,30 +50,31 @@ from hxnfly.callbacks import FlyLiveCrossSection
 # A 1D ROI plot of aluminum from channels 1 to 3:
 # flyplot = FlyRoiPlot('Al', channels=[1, 2, 3])
 #
-live_im_plot = FlyLiveImage(['Co','Al','Ti','Cu'], channels=[1, 2, 3])
+live_im_plot = FlyLiveImage(['Co','Cu','Cr','Si'], channels=[1, 2, 3])
 # fly2dplot1 = FlyLiveCrossSection(['V'], channels=[1, 2, 3)
 
-pt_plot = FlyRoiPlot(['Ti'],
+pt_plot = FlyRoiPlot(['Cr'],
                      channels=[1, 2, 3],
                      )
 
 # NOTE: indicate which detectors can be used in fly scans. When a
 #       fly scan is run, all of those matching in gs.DETS will be
 #       used.
-fly_scannable_detectors = [xspress3, merlin1, zebra, sclr1]#, dexela1]
+#fly_scannable_detectors = [xspress3, zebra, sclr1, dexela1]
+fly_scannable_detectors = [xspress3, zebra, sclr1, merlin1]
+#fly_scannable_detectors = [xspress3, zebra, sclr1]
 fly1d = FlyPlan1D(usable_detectors=fly_scannable_detectors,
-                  scaler_channels=[1, 2, 3, 4],
-                  )
+                  scaler_channels=[1, 2, 3, 4, 5, 6, 7, 8])
 
 fly1d.sub_factories = [maybe_a_table]
 fly1d.subs = [pt_plot, ]
 
 fly2d = FlyPlan2D(usable_detectors=fly_scannable_detectors,
-                  scaler_channels=[1, 2, 3, 4])
+                  scaler_channels=[1, 2, 3, 4, 5, 6, 7, 8])
 fly2d.sub_factories = [maybe_a_table]
 fly2d.subs = [pt_plot, live_im_plot, ]
 
 flystep = FlyStep1D(usable_detectors=fly_scannable_detectors,
-                    scaler_channels=[1, 2, 3, 4])
+                    scaler_channels=[1, 2, 3, 4, 5, 6, 7, 8])
 flystep.sub_factories = [maybe_a_table]
 flystep.subs = [pt_plot, live_im_plot, ]

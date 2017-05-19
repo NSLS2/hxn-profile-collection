@@ -9,7 +9,7 @@ sclr1.scan_type_triggers['step'] = [zebra, merlin1, xspress3]
 sclr1.scan_type_triggers['fly'] = []
 sclr1.read_attrs = ['channels.chan1', 'channels.chan2', 'channels.chan3',
                     'channels.chan4', 'channels.chan5', 'channels.chan6',
-                    'channels.chan7','calculations.calc5',
+                    'channels.chan7','channels.chan8', 'calculations.calc5',
                     ]
 
 sclr1_ch1 = sclr1.channels.chan1

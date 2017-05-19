@@ -20,7 +20,9 @@ class HxnPrototypeMicroscope(Device):
     vz = Cpt(EpicsMotor, 'XF:03IDC-ES{MMC100:1-Ax:1}Mtr')
     cz = Cpt(EpicsMotor, 'XF:03IDC-ES{MMC100:1-Ax:2}Mtr')
     cx = Cpt(EpicsMotor, 'XF:03IDC-ES{MMC100:1-Ax:3}Mtr')
-    cy = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:6-Ax:1}Mtr')
+    cy = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:9-Ax:0}Mtr')
+    bz = Cpt(EpicsMotor, 'XF:03IDC-ES{MC:4-Ax:4}Mtr')
+    bx = Cpt(EpicsMotor, 'XF:03IDC-ES{MC:4-Ax:2}Mtr')
 
     bsx = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:3-Ax:1}Mtr')
     bsy = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:3-Ax:2}Mtr')
@@ -48,7 +50,8 @@ p_vz = p.vz
 p_cz = p.cz
 p_cx = p.cx
 p_cy = p.cy
-
+p_bz = p.bz
+p_bx = p.bx
 
 p_bsx = p.bsx
 p_bsy = p.bsy

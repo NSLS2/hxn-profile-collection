@@ -1,7 +1,10 @@
-from ophyd import (EpicsMotor, Device, Component as Cpt,
-                   EpicsSignalRO)
+import math
+from ophyd import (EpicsMotor, Device, Component as Cpt, Signal,
+                   EpicsSignalRO, PseudoPositioner, PseudoSingle)
 from ophyd.device import FormattedComponent as FCpt
-
+from ophyd.pseudopos import (real_position_argument,
+                             pseudo_position_argument)
+from hxntools.device import NamedDevice
 
 class BeamlineStatus(Device):
     shutter_status = Cpt(EpicsSignalRO, 'SR-EPS{PLC:1}Sts:MstrSh-Sts')
@@ -12,6 +15,63 @@ class BeamlineStatus(Device):
 beamline_status = BeamlineStatus('', name='beamline_status')
 
 
+class PseudoEnergyCal(PseudoPositioner, NamedDevice):
+    def __init__(self, prefix, **kwargs):
+        super().__init__(prefix, **kwargs)
+
+        # if theta changes, update the pseudo position
+        self.mono_angle.subscribe(self.parameter_updated)
+        self.energy.subscribe(self.parameter_updated)
+
+    def parameter_updated(self, value=None, **kwargs):
+        self._update_position()
+
+
+    @pseudo_position_argument
+    def forward(self, position):
+        angle = math.asin((12.39842)/(2 * 3.1355893 * position.energy)) * (180/math.pi)
+        return self.RealPosition(mono_angle = angle)
+
+    @real_position_argument
+    def inverse(self, position):
+        energy_kev = 12.39842 / (2. * 3.1355893 * math.sin(position.mono_angle*math.pi/180.))
+        return self.PseudoPosition(energy = energy_kev)
+
+class PseudoEnergyMotor(PseudoEnergyCal):
+    energy = Cpt(PseudoSingle,name='energy')
+    energy_setting = Cpt(EpicsSignal, 'XF:03ID{}Energy-SP')
+
+    mono_angle = Cpt(EpicsMotor, 'XF:03IDA-OP{Mon:1-Ax:Bragg}Mtr',name='mono_angle')
+
+monoe = PseudoEnergyMotor('',name='monoe')
+e = monoe.energy
+e_angle = monoe.mono_angle
+
+'''
+class BraggOffset(PseudoPositioner):
+    # psuedo axes
+    energy = Cpt(PseudoSingle)
+
+    # real axis
+    mono_bragg = Cpt(EpicsMotor, 'XF:03IDA-OP{Mon:1-Ax:Bragg}Mtr')
+
+    energy_setting = Cpt(EpicsSignal, 'XF:03ID{}Energy-SP')
+
+
+    @pseudo_position_argument
+    def forward(self, pseudo_position):
+        x = math.asin((12.39842)/(2 * 3.1355893 * pseudo_position.energy)) * (180/math.pi)
+        return self.RealPosition(mono_bragg=x,
+                                 energy_setting=pseudo_position.energy)
+
+    @real_position_argument
+    def inverse(self, real_position):
+        """Implement reverse transformation """
+        return self.PseudoPosition(energy=real_position.energy_setting)
+
+mono_e = BraggOffset(prefix='')
+'''
+
 class HxnDCM(Device):
     '''HXN DCM Device'''
     th = Cpt(EpicsMotor, 'XF:03IDA-OP{Mon:1-Ax:Bragg}Mtr')
@@ -20,7 +80,6 @@ class HxnDCM(Device):
     r = Cpt(EpicsMotor, 'XF:03IDA-OP{Mon:1-Ax:R}Mtr')
     pf = Cpt(EpicsMotor, 'XF:03IDA-OP{Mon:1-Ax:PF}Mtr')
     rf = Cpt(EpicsMotor, 'XF:03IDA-OP{Mon:1-Ax:RF}Mtr')
-
 
 dcm = HxnDCM('', name='dcm')
 #dcmth = dcm.th
