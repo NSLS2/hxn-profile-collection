@@ -2,7 +2,7 @@ from ophyd import (EpicsSignal, EpicsSignalRO)
 from ophyd import (Device, Component as Cpt)
 
 import hxntools.handlers
-from hxntools.detectors import (HxnTimepixDetector, HxnMerlinDetector,
+from hxntools.detectors import (HxnTimepixDetector, HxnMerlinDetector as _HMD,
                                 BeamStatusDetector, HxnMercuryDetector,
                                 HxnDexelaDetector)
 from hxntools.detectors.zebra import HxnZebra
@@ -25,6 +25,14 @@ timepix1.hdf5.read_attrs = []
 #timepix2.hdf5.read_attrs = []
 
 # -- Merlin 1
+class HxnMercuryDetector(_HMD):
+    hdf5 = Cpt(HDF5PluginWithFileStore, 'HDF1:',
+               read_attrs=[],
+               configuration_attrs=[],
+               write_path_template='/data/%Y/%m/%d/',
+               root='/data',
+               fs=db.fs)
+
 merlin1 = HxnMerlinDetector('XF:03IDC-ES{Merlin:1}', name='merlin1',
                             image_name='merlin1',
                             read_attrs=['hdf5', 'cam', 'stats1'])
