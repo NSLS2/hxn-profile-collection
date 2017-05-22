@@ -17,7 +17,7 @@ hxntools.handlers.register()
 # - 2D pixel array detectors
 # -- Timepix 1
 class HxnTimepixDetector(_HTD):
-    hdf5 = Cpt(_mhdf, 'HDF1:',
+    hdf5 = Cpt(_thdf, 'HDF1:',
                read_attrs=[],
                configuration_attrs=[],
                write_path_template='/data/%Y/%m/%d/',
@@ -37,7 +37,7 @@ timepix1.hdf5.read_attrs = []
 
 # -- Merlin 1
 class HxnMerlinDetector(_HMD):
-    hdf5 = Cpt(_thdf, 'HDF1:',
+    hdf5 = Cpt(_mhdf, 'HDF1:',
                read_attrs=[],
                configuration_attrs=[],
                write_path_template='/data/%Y/%m/%d/',

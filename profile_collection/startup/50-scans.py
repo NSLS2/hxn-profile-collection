@@ -19,9 +19,9 @@ d2scan = hxntools.scans.d2scan
 a2scan = hxntools.scans.a2scan
 scan_steps = hxntools.scans.scan_steps
 
-gs.DETS = [zebra, sclr1, timepix1, mercury1]#,dexela1]
+#gs.DETS = [zebra, sclr1, timepix1, mercury1]#,dexela1]
 #gs.DETS = [zebra, sclr1, xspress3, lakeshore2]
-#gs.DETS = [zebra, sclr1, merlin1, xspress3, lakeshore2]
+gs.DETS = [zebra, sclr1, merlin1, xspress3, lakeshore2]
 #gs.DETS = [zebra, sclr1, merlin1, xspress3, lakeshore2,dexela1]
 
 
