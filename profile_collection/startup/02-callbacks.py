@@ -7,17 +7,43 @@ from filestore.fs import FileStore
 
 _mds_config = {'host': 'xf03id-ca1',
                'port': 27017,
-               'database': 'datastore',
+               'database': 'datastore-new',
                'timezone': 'US/Eastern'}
 mds = MDS(_mds_config, auth=False)
 
 _fs_config = {'host': 'xf03id-ca1',
               'port': 27017,
-              'database': 'filestore'}
+              'database': 'filestore-new'}
 db = Broker(mds, FileStore(_fs_config))
 
+_mds_config_old = {'host': 'xf03id-ca1',
+               'port': 27017,
+               'database': 'datastore',
+               'timezone': 'US/Eastern'}
+mds_old = MDS(_mds_config_old, auth=False)
+
+_fs_config_old = {'host': 'xf03id-ca1',
+              'port': 27017,
+              'database': 'filestore'}
+db_old = Broker(mds_old, FileStore(_fs_config_old))
+
+
+
+# register handlers, by Li
+from hxntools.handlers.timepix import TimepixHDF5Handler
+#db.fs.register_handler(TimepixHDF5Handler._handler_name,
+#                       TimepixHDF5Handler, overwrite=True)
 
 register_builtin_handlers(db.fs)
+
+db.fs.register_handler(TimepixHDF5Handler._handler_name,
+                       TimepixHDF5Handler, overwrite=True)
+
+
+register_builtin_handlers(db_old.fs)
+
+db_old.fs.register_handler(TimepixHDF5Handler._handler_name,
+                           TimepixHDF5Handler, overwrite=True)
 
 def ensure_proposal_id(md):
     if 'proposal_id' not in md:
