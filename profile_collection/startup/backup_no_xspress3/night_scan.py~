@@ -1,0 +1,19 @@
+def night_scan():
+    print('this is a night scan')
+    ang_list = np.arange(73.4, 73.,-0.02)
+    print(ang_list)
+    num_ang = np.size(ang_list)
+    for ii in range(num_ang):
+        mov(zps.zpsth,ang_list[ii])
+        #RE(fly1d(zpssx, -.75, .75, 100, 0.1))
+        RE(fly1d(zpssx, -2.5, 2.5, 50, 0.1))
+        mov_to_line_center(-1,'Ga',threshold=5)
+        #RE(fly1d(zpssx, -.3, .3, 30, 0.2))
+        #mov_to_line_center(-1,'Ga',threshold=5,moveflag=1,movepiezoflag=1)
+        print('wait for 2 sec')
+        sleep(2)
+        RE(fly2d(zpssy, -0.9, 2.1, 30, zpssx, -0.9, 1.1, 20, 0.05))
+        RE(fly2d(zpssx, -.8, .8, 16, zpssy, -0.3, 0.3, 150, 0.2))
+
+        export(-1)
+    

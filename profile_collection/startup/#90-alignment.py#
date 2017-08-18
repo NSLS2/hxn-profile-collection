@@ -1,0 +1,44 @@
+from scipy.optimize import curve_fit
+
+def erfunc(z,a,b,c):
+    return c*(scipy.special.erf((z-a)/(b*np.sqrt(2.0)))+1.0)
+def erf_fit(sid,elem,mon='sclr1_ch4'):
+    plot(sid, elem, mon)
+    h=db[sid]
+    df=db.get_table(h)
+    xdata=df[mot]
+    ydata=(df['Det1_'+elem]+df['Det2_'+elem]+df['Det3_'+elem])/df[mon]
+    popt,pcov=curve_fit(erfunc,xdata,ydata)
+    fit_data=erfunc(xdata,popt[0],popt[1],popt[2]);
+    plt.plot(xdata,fit_data)
+    plt.title('FWHM = %.5f' % popt[1]*2.3548)
+                                                                                    
+def mll_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4'):
+    z_pos=np.zeros(z_nm+1)
+    fit_size=np.zeros(z_num+1)
+    z_step = (z_end - z_start)/z_num
+    init_sz = smlld.sbz.position
+    movr(smlld.sbz, z_start)
+    for i in range(z_num + 1):
+        if mot == 'dssy':
+            RE(fly1d(dssy, start, end, num, acq_time))
+        elif mot == 'dssx':
+            RE(fly1d(dssx, start, end, num, acq_time))
+        else:
+            raise KeyError('mot has to be dssx or dssy')
+        plot(-1, elem, mon)
+        #plt.title('sbz = %.3f' % smlld.sbz.position)
+        h=db[-1]
+        df=db.get_table(h)
+        xdata=df[mot]
+        ydata=(df['Det1_'+elem]+df['Det2_'+elem]+df['Det3_'+elem])/df[mon]
+        popt,pcov=curve_fit(erfunc,xdata,ydata)
+        fit_data=erfunc(xdata,popt[0],popt[1],popt[2]);
+        plt.plot(xdata,fit_data)
+        z_pos[i]=smlld.sbz.position
+        fit_size[i]=popt[1]*2.3548
+        plt.title('sbz = %.5f FWHM = %.5f' %(smlld.sbz.position,fit_size[i]))
+        movr(smlld.sbz, z_step)
+    mov(smlld.sbz, init_sz)
+    plt.figure()
+    plt.plot(z_pos,fit_size)

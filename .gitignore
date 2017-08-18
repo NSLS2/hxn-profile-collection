@@ -60,7 +60,8 @@ db
 log
 pid
 security
-history*.sqlite*
+#history*.sqlite*
+*.sqlite*
 profile_default
 
 *.swo
