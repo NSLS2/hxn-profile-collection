@@ -190,8 +190,8 @@ fe_ib = EpicsMotor('FE:C03A-OP{Slt:2-Ax:I}Mtr', name='fe_ib')
 fe_ob = EpicsMotor('FE:C03A-OP{Slt:1-Ax:O}Mtr', name='fe_ob')
 
 # Diamond XBPM motor
-xbpmb_x = EpicsMotor('XF:03IDB-OP{Slt:SSA1-Ax:8}Mtr', name='xbpmb_x')
-xbpmb_y = EpicsMotor('XF:03IDB-OP{Slt:SSA1-Ax:7}Mtr', name='xbpmb_y')
+# xbpmb_x = EpicsMotor('XF:03IDB-OP{Slt:SSA1-Ax:8}Mtr', name='xbpmb_x')
+# xbpmb_y = EpicsMotor('XF:03IDB-OP{Slt:SSA1-Ax:7}Mtr', name='xbpmb_y')
 
 # Shutter operation
 shutter_open = EpicsSignal('XF:03IDB-PPS{PSh}Cmd:Opn-Cmd', name = 'shutter_open')

@@ -1,3 +1,35 @@
+def position_scan_bp(dsx_list,dsy_list,x_range_list,x_num_list,y_range_list,y_num_list,exp_list):
+    x_list = np.array(dsx_list)
+    y_list = np.array(dsy_list)
+    x_range_list = np.array(x_range_list)
+    y_range_list = np.array(y_range_list)
+    x_num_list = np.array(x_num_list)
+    y_num_list = np.array(y_num_list)
+    exp_list = np.array(exp_list)
+
+    dsx_0 = smlld.dsx.position
+    dsy_0 = smlld.dsy.position
+
+    num_scan = np.size(x_list)
+
+    mov(ssa2.hgap,0.03)
+    mov(ssa2.vgap,0.02)
+
+    for i in range(num_scan):
+        print('move to position ',i+1,'/',num_scan)
+        mov(smlld.dsx,x_list[i])
+        mov(smlld.dsy,y_list[i])
+        RE(fly2d(smlld.dssx,-x_range_list[i]/2,x_range_list/2,x_num_list[i],smlld.dssy,-y_range_list[i]/2,y_range_list[i]/2,y_num_list[i],exp_list[i]))
+        plot2dfly(-1,'Er_L')
+        printfig()
+        print('wait 0.2 sec...')
+        sleep(0.2)
+
+    mov(smlld.dsx,dsx_0)
+    mov(smlld.dsy,dsy_0)
+    mov(ssa2.hgap,0.15)
+    mov(ssa2.vgap,0.05)
+
 def night_scan():
     print('this is a night scan')
     ang_list = np.arange(73.8, 72.8,-0.04)
@@ -63,3 +95,23 @@ def fermat_mosaic():
 
     mov(p_bx,bx_start)
     mov(p_cy,cy_start)
+
+def night_scan_bragg():
+    num_step = 6
+    for i in range(num_step):
+        RE(fly2d(zpssx, -1.5, 1.5, 150, zpssy, -0.8, 0.8, 80, 0.3))
+        movr(zps.zpssy,1)
+
+    mov(zps.zpssx,0)
+    mov(zps.zpssy,0)
+    RE(fly2d(zpssx, -1.5, 1.5, 150, zpssy, -0.8, 0.8, 80, 0.3))
+    shutter('close')
+
+def night_scan_repeat():
+    num_step = 10
+    for i in range(num_step):
+        print('scan ', i+1)
+        RE(fly2d(zpssx, -1.5, 1.5, 75, zpssy, -2, 2, 100, 0.4))
+        print('wait 30 min ...')
+        sleep(1800)
+    shutter('close')

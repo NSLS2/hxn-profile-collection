@@ -44,7 +44,7 @@ def shutter(cmd):
         sleep(5)
 
 
-def mll_z_linescan(z_start, z_end, z_num, mot, start, end, num, acq_time, elem='Pt'):
+def mll_z_linescan(z_start, z_end, z_num, mot, start, end, num, acq_time, elem='Pt_L'):
     z_step = (z_end - z_start)/z_num
     init_sz = smlld.sbz.position
     movr(smlld.sbz, z_start)
@@ -56,7 +56,7 @@ def mll_z_linescan(z_start, z_end, z_num, mot, start, end, num, acq_time, elem='
         else:
             raise KeyError('mot has to be dssx or dssy')
         plot(-1, elem, 'sclr1_ch4')
-        plt.title('sz = %.3f' % smlld.sbz.position)
+        plt.title('sbz = %.3f' % smlld.sbz.position)
         movr(smlld.sbz, z_step)
     mov(smlld.sbz, init_sz)
 
@@ -65,33 +65,47 @@ def mll_z_2dscan(z_start, z_end, z_num, mot1, start1, end1, num1, mot2, start2, 
     init_sz = smlld.sbz.position
     movr(smlld.sbz, z_start)
     for i in range(z_num + 1):
-        RE(fly2d(mot1, start1, end1, num1, mot2, start2, end2, num2, acq_tim))
+        RE(fly2d(mot1, start1, end1, num1, mot2, start2, end2, num2, acq_time))
         plot2dfly(-1, elem, 'sclr1_ch4')
         plt.title('sbz = %.3f' % smlld.sbz.position)
         movr(smlld.sbz, z_step)
     mov(smlld.sbz, init_sz)
 
+def zp_z_2dscan(z_start, z_end, z_num, mot1, start1, end1, num1, mot2, start2, end2, num2, acq_time, elem='Co'):
+    z_step = (z_end - z_start)/z_num
+    init_sz = zps.zpsz.position
+    movr(zps.zpsz, z_start/1000)
+    for i in range(z_num + 1):
+        RE(fly2d(mot1, start1, end1, num1, mot2, start2, end2, num2, acq_time))
+        plot2dfly(-1, elem, 'sclr1_ch4')
+        plt.title('zpsz = %.3f' % zps.zpsz.position)
+        movr(zps.zpsz, z_step/1000)
+    mov(zps.zpsz, init_sz)
+
 def go_det(det):
     if det == 'merlin':
-        diff.x.move(10, wait=False)
+        diff.x.move(-2.9, wait=False)
         sleep(0.5)
-        diff.y1.move(-10.7, wait=False)
+        diff.y1.move(-3.2, wait=False)
         sleep(0.5)
-        diff.y2.move(-10.7, wait=False)
+        diff.y2.move(-3.2, wait=False)
     elif det == 'cam11':
-#        diff.x.move(212.67, wait=False)
-        diff.x.move(206.97, wait=False)
+        diff.x.move(211.72, wait=False)
+#        diff.x.move(211.32, wait=False)
         sleep(0.5)
-        diff.y1.move(22.65, wait=False)
+        diff.y1.move(22.5, wait=False)
         sleep(0.5)
-        diff.y2.move(22.65, wait=False)
+        diff.y2.move(22.5, wait=False)
     elif det == 'tpx':
         mov(diff.x, -112)
         mov(diff.y1, -50)
         mov(diff.y2, -50)
+    elif det =='telescope':
+        mov(diff.x, -342.)
+        mov(diff.z,-50)
     else:
         print('Inout det is not defined. '
-              'Available ones are merlin, cam11 and tpx')
+              'Available ones are merlin, cam11, telescope and tpx')
 
 
 def go_energy(energy):
@@ -304,7 +318,7 @@ def rot_fit(x, y):
     x = np.array(x)
     y = -1 * np.array(y)
 
-    para = [1, 1, -1]
+    para = [0.1, -0.1, 0]
     #para = [4.23077509,   0.58659241,   0.21648658, -19.8329533]
     popt, pcov, y_fit = sin_offset_fit(x, y, para)
 
@@ -422,11 +436,90 @@ def find_mass_center_1d(array,x):
     mc = tmp / np.sum(array)
     return mc
 
+def mov_to_image_center_tmp(scan_id=-1, elem='W_L', bitflag=1, moveflag=1,piezomoveflag=1):
+    df2 = get_table(db[scan_id],fill=False)
+    xrf = np.asfarray(eval('df2.Det2_' + elem)) + np.asfarray(eval('df2.Det1_' + elem)) + np.asfarray(eval('df2.Det3_' + elem))
+    hdr = db[scan_id]['start']
+    x_motor = hdr['motor1']
+    y_motor = hdr['motor2']
+    x = np.asarray(df2[x_motor])
+    y = np.asarray(df2[y_motor])
+    I0 = np.asfarray(df2.sclr1_ch4)
+
+    scan_info=db[scan_id]
+    tmp = scan_info['start']
+    nx=tmp['plan_args']['num1']
+    ny=tmp['plan_args']['num2']
+
+    xrf = xrf/I0
+    xrf = np.asarray(np.reshape(xrf,(ny,nx)))
+
+    if bitflag:
+        xrf[xrf <= 0.2*np.max(xrf)] = 0.
+        xrf[xrf > 0.2*np.max(xrf)] = 1.
+
+    #plt.figure()
+    #plt.imshow(xrf)
+
+    b = ndimage.measurements.center_of_mass(xrf)
+
+    iy = np.int(np.round(b[0]))
+    ix = np.int(np.round(b[1]))
+    i_max = ix + iy * nx
+
+    x_cen = x[i_max]
+    y_cen = y[i_max]
+
+    xrf_proj = np.sum(xrf,axis=1)
+    xrf_proj_d = xrf_proj - np.roll(xrf_proj,1,0)
+    i_tip = np.where(xrf_proj_d > 0.1)
+    #print(i_tip[0][0])
+    y_cen = y[(i_tip[0][0])*nx]
+
+    #plt.figure()
+    #plt.plot(xrf_proj)
+    #plt.plot(xrf_proj_d)
+
+    if moveflag:
+        if x_motor == 'dssx':
+            if piezomoveflag:
+                print('move dssx to', x_cen)
+                mov(smlld.dssx,x_cen)
+            else:
+                print('move dsx by', x_cen)
+                movr(smlld.dsx, -1.*x_cen)
+            sleep(.1)
+
+        elif x_motor == 'dssz':
+            if piezomoveflag:
+                print('move dssz to', x_cen)
+                mov(smlld.dssz,x_cen)
+            else:
+                print('move dsz by', x_cen)
+                movr(smlld.dsz, x_cen)
+            sleep(.1)
+
+    if moveflag:
+        print('y center', y_cen)
+        if piezomoveflag:
+            print('move dssy to:', y_cen)
+            mov(smlld.dssy,y_cen)
+        else:
+            #movr(smlld.dsy, y_cen*0.001)
+            print('move dsy by:', y_cen*0.001)
+            movr(smlld.dsy, y_cen*0.001)
+    else:
+        print(x_cen,y_cen)
+
 def tomo_scan_list(angle_list, x_start, x_end, x_num,
               y_start, y_end, y_num, exposure):
-    x_0 = smlld.dsx.position
-    z_0 = smlld.dsz.position
-    y_0 = smlld.dsy.position
+    x_0 = smlld.dssx.position
+    z_0 = smlld.dssz.position
+    y_0 = smlld.dssy.position
+    th_0 = smlld.dsth.position
+    dx_0 = smlld.dsx.position
+    dz_0 = smlld.dsz.position
+    dy_0 = smlld.dsy.position
 
     angle_list = np.array(angle_list)
     angle_num = np.size(angle_list)
@@ -437,9 +530,10 @@ def tomo_scan_list(angle_list, x_start, x_end, x_num,
     y_end = np.float(y_end)
     y_num = np.int(y_num)
     exposure = np.float(exposure)
-
-    RE(fly2d(dssz, -8, 8, 80, dssy, -2, 2, 20, 0.05, return_speed=40))
-    RE(fly2d(dssz, -1, 1, 10, dssy, -1, 1, 10, 0.05, return_speed=40)) #dummy scan
+    offset_y = 0.32
+    offset_x = 0
+    #RE(fly2d(dssz, -8, 8, 80, dssy, -2, 2, 20, 0.05, return_speed=40))
+    #RE(fly2d(dssz, -1, 1, 10, dssy, -1, 1, 10, 0.05, return_speed=40)) #dummy scan
 
     for i in range(angle_num):
 
@@ -450,46 +544,104 @@ def tomo_scan_list(angle_list, x_start, x_end, x_num,
         #x_start_real = x_start / np.cos(angle*np.pi/180.)
         #x_end_real = x_end / np.cos(angle*np.pi/180.)
 
-        while (sclr2_ch4.get() < 150000):
+        while (sclr2_ch4.get() < 20000):
             sleep(60)
-            print('IC3 is lower than 150000, waiting...')
+            print('IC3 is lower than 20000, waiting...')
 
         if np.abs(angle_list[i]) <= 45:
             x_start_real = x_start / np.cos(angle_list[i] * np.pi / 180.)
             x_end_real = x_end / np.cos(angle_list[i] * np.pi / 180.)
-            RE(fly2d(smlld.dssx, -8, 8, 80, smlld.dssy,
-                     -2, 2, 20, 0.05, return_speed=40))
-            mov_to_image_cen_corr_dsx(-1)
+            #x_range = (x_end - x_start) / np.cos(angle_list[i] * np.pi / 180.)
+            #y_range = y_end - y_start
+            RE(fly2d(smlld.dssx, -10, 10, 100, smlld.dssy,-2.5, 2.5, 25, 0.05, return_speed=40))
+            #mov_to_image_cen_dsx(scan_id=-1, elem='Au_L', bitflag=0, moveflag=1,piezomoveflag=1)
+            mov_to_image_center_tmp(scan_id=-1, elem='W_L', bitflag=1, moveflag=1,piezomoveflag=0)
+            movr(smlld.dssy, offset_y)
+            #RE(fly1d(smlld.dssx,-15,15,100,0.2))
+            #mov_to_image_cen_corr_dsx(-1)
+            #mov_to_line_center_mll(scan_id=-1,elem='Au_L',threshold=0.2,moveflag=1,movepiezoflag=1)
+
+
             sleep(1)
             RE(fly2d(smlld.dssx,x_start_real,x_end_real,x_num,smlld.dssy,
                      y_start, y_end, y_num, exposure, return_speed=40))
-
+            #RE(fermat(smlld.dssx,smlld.dssy,x_range,y_range,0.05,1,exposure))
         else:
             x_start_real = x_start / np.abs(np.sin(angle_list[i] * np.pi / 180.))
             x_end_real = x_end / np.abs(np.sin(angle_list[i] * np.pi / 180.))
-            RE(fly2d(smlld.dssz, -8, 8, 80, smlld.dssy,
-                     -2, 2, 20, 0.05, return_speed=40))
-            mov_to_image_cen_corr_dsx(-1)
+            #x_range = (x_end - x_start) / np.abs(np.sin(angle_list[i] * np.pi / 180.))
+            #y_range = y_end - y_start
+            RE(fly2d(smlld.dssz, -10, 10, 100, smlld.dssy,-2.5, 2.5, 25, 0.05, return_speed=40))
+            #mov_to_image_cen_dsx(scan_id=-1, elem='Au_L', bitflag=0, moveflag=1,piezomoveflag=1)
+            mov_to_image_center_tmp(scan_id=-1, elem='W_L', bitflag=1, moveflag=1,piezomoveflag=0)
+            movr(smlld.dssy, offset_y)
+            #RE(fly1d(smlld.dssz,-15,15,100,0.2))
+            #mov_to_line_center_mll(scan_id=-1,elem='Au_L',threshold=0.2,moveflag=1,movepiezoflag=1)
             sleep(1)
             RE(fly2d(smlld.dssz,x_start_real,x_end_real,x_num, smlld.dssy,
                      y_start, y_end, y_num, exposure, return_speed = 40))
-
+            #RE(fermat(smlld.dssz,smlld.dssy,x_range,y_range,0.05,1, exposure))
         #mov_to_image_cen_smar(-1)
         #mov_to_image_cen_dsx(-1)
+        #merlin1.unstage()
+        movr(smlld.dssy,-1*offset_y)
+        print('waiting for 2 sec...')
+        sleep(2)
+    mov(smlld.dsth, th_0)
+    mov(smlld.dssx, x_0)
+    mov(smlld.dssy, y_0)
+    mov(smlld.dssz, z_0)
+    mov(smlld.dsx, dx_0)
+    mov(smlld.dsy, dy_0)
+    mov(smlld.dsz, dz_0)
+
+
+def scan_translate(step_size,step_num, x_start, x_end, x_num,
+              y_start, y_end, y_num, exposure):
+    x_0 = zps.smarx.position
+    z_0 = zps.smarz.position
+    y_0 = zps.smary.position
+    theta_0 = zps.zpsth.position
+
+    step_size = np.float(step_size)
+    step_num = np.int(step_num)
+    x_start = np.float(x_start)
+    x_end = np.float(x_end)
+    x_num = np.int(x_num)
+    y_start = np.float(y_start)
+    y_end = np.float(y_end)
+    y_num = np.int(y_num)
+    exposure = np.float(exposure)
+
+
+    for i in range(step_num):
+
+        while (sclr2_ch4.get() < 100000):
+            sleep(60)
+            print('IC3 is lower than 100000, waiting...')
+
+        RE(fly1d(zps.zpssx,-10,10,100,0.5))
+        mov_to_line_center(scan_id=-1,elem='Ba',threshold=0.2,moveflag=1,movepiezoflag=0)
+
+        RE(fly2d(zps.zpssx,x_start,x_end,x_num,zps.zpssy,
+                     y_start, y_end, y_num, exposure, return_speed=40))
+
+        movr(zps.smary,step_size/1000.)
+
         merlin1.unstage()
         print('waiting for 2 sec...')
         sleep(2)
-    mov(smlld.dsth, angle_list[0])
-    mov(smlld.dsx, x_0)
-    mov(smlld.dsy, y_0)
-    mov(smlld.dsz, z_0)
 
+    mov(zps.smarx, x_0)
+    mov(zps.smary, y_0)
+    mov(zps.smarz, z_0)
 
 def tomo_scan_list_zp(angle_list, x_start, x_end, x_num,
               y_start, y_end, y_num, exposure):
     x_0 = zps.smarx.position
     z_0 = zps.smarz.position
     y_0 = zps.smary.position
+    theta_0 = zps.zpsth.position
 
     angle_list = np.array(angle_list)
     angle_num = np.size(angle_list)
@@ -501,20 +653,19 @@ def tomo_scan_list_zp(angle_list, x_start, x_end, x_num,
     y_num = np.int(y_num)
     exposure = np.float(exposure)
 
-
     for i in range(angle_num):
 
         mov(zps.zpsth, angle_list[i])
 
-        while (sclr2_ch4.get() < 200000):
+        while (sclr2_ch4.get() < 100000):
             sleep(60)
-            print('IC3 is lower than 200000, waiting...')
+            print('IC3 is lower than 100000, waiting...')
 
         if np.abs(angle_list[i]) <= 45:
 
-            x_start_real = x_start / np.cos(angle_list[i] * np.pi / 180.)
-            x_end_real = x_end / np.cos(angle_list[i] * np.pi / 180.)
-
+            x_start_real = x_start / np.abs(np.cos(angle_list[i] * np.pi / 180.))
+            x_end_real = x_end / np.abs(np.cos(angle_list[i] * np.pi / 180.))
+            print(x_start_real,x_end_real)
 #            if angle_list[i] < -45:
 #                x_start_real = (x_start+1.5) / np.cos(angle_list[i] * np.pi / 180.)
 #                x_end_real = (x_end+1.5) / np.cos(angle_list[i] * np.pi / 180.)
@@ -523,24 +674,34 @@ def tomo_scan_list_zp(angle_list, x_start, x_end, x_num,
 #            RE(fly2d(zps.zpssx,-1.5,1.5,30,zps.zpssy,-1,1,20,0.1,return_speed=40))
 #            mov_to_image_cen_smar(-1)
 
+            RE(fly1d(zps.zpssx,-10,10,100,0.5))
+            mov_to_line_center(scan_id=-1,elem='Ba',threshold=0.2,moveflag=1,movepiezoflag=0)
+
             RE(fly2d(zps.zpssx,x_start_real,x_end_real,x_num,zps.zpssy,
                      y_start, y_end, y_num, exposure, return_speed=40))
 
         else:
             x_start_real = x_start / np.abs(np.sin(angle_list[i] * np.pi / 180.))
             x_end_real = x_end / np.abs(np.sin(angle_list[i] * np.pi / 180.))
+            print(x_start_real,x_end_real)
 #            RE(fly2d(zps.zpssz,-1.5,1.5,30,zps.zpssy,-1,1,20,0.1,return_speed=40))
 #            mov_to_image_cen_smar(-1)
+
+            RE(fly1d(zps.zpssz,-10,10,100,0.5))
+            mov_to_line_center(scan_id=-1,elem='Ba',threshold=0.2,moveflag=1,movepiezoflag=0)
+
             RE(fly2d(zps.zpssz,x_start_real,x_end_real,x_num, zps.zpssy,
                      y_start, y_end, y_num, exposure, return_speed = 40))
 
         merlin1.unstage()
         print('waiting for 2 sec...')
         sleep(2)
-    mov(zps.zpsth, angle_list[0])
-#    mov(zps.smarx, x_0)
-#    mov(zps.smary, y_0)
-#    mov(zps.smarz, z_0)
+
+
+    mov(zps.zpsth, theta_0)
+    mov(zps.smarx, x_0)
+    mov(zps.smary, y_0)
+    mov(zps.smarz, z_0)
 
 
 
@@ -728,7 +889,7 @@ def movr_zpz1(dz):
     movr(zp.zpz1, dz)
     #movr(zp.zpx, dz * 3.75)
     movr(zp.zpy, -dz*0.003091258)
-    movr(zp.zpx, (dz*0.003/40.33-dz*0.002))
+    movr(zp.zpx, (dz*0.003/40.33))
 
 
 def reset_tpx(num):
@@ -777,6 +938,21 @@ def move_fly_center(elem):
     #i_max = np.where(roi_data == np.max(roi_data))
     #mov(eval(scanned_axis),x[i_max[0]][0])
 
+def th_fly2d_mll(th_start, th_end, num, x_start, x_end, x_num, y_start, y_end, y_num, sec):
+    shutter('open')
+    th_step = (th_end - th_start) / num
+    movr(smlld.dsth, th_start)
+
+    for i in range(num + 1):
+        sleep(5)
+        #RE(fly1d(zpssx,-5,5,100,0.1))
+        #move_fly_center('Ge')
+        RE(fly2d(dssx, x_start, x_end, x_num, dssy, y_start, y_end, y_num, sec, return_speed=40))
+        movr(smlld.dsth, th_step)
+    movr(smlld.dsth, -(th_end + th_step))
+    shutter('close')
+
+
 def th_fly2d(th_start, th_end, num, x_start, x_end, x_num, y_start, y_end,
              y_num, sec):
     shutter('open')
@@ -785,14 +961,14 @@ def th_fly2d(th_start, th_end, num, x_start, x_end, x_num, y_start, y_end,
 
     for i in range(num + 1):
         sleep(5)
-        RE(fly1d(zpssx,-5,5,100,0.1))
-        move_fly_center('Ge')
+        #RE(fly1d(zpssx,-5,5,100,0.1))
+        #move_fly_center('Ge')
         RE(fly2d(zpssx, x_start, x_end, x_num, zpssy, y_start, y_end, y_num, sec, return_speed=40))
         movr(zps.zpsth, th_step)
     movr(zps.zpsth, -(th_end + th_step))
     shutter('close')
 
-
+    
 def mov_diff(gamma, delta, r=500, calc=0):
     diff_z = diff.z.position
 
@@ -931,7 +1107,7 @@ def zp_movr_samp(th, dx, dz):
 def zp_movr_lab(dx, dz):
     angle = zps.zpsth.position
     angle = angle*np.pi/180.0
-    angle = 14.2*np.pi/180
+    #angle = 14.2*np.pi/180
     delta_x = dx*np.cos(angle) - dz*np.sin(angle)
     delta_z = dx*np.sin(angle) + dz*np.cos(angle)
     movr(smarx, delta_x)
@@ -967,6 +1143,68 @@ def go_to_energy(energy_kev=7.13):
     movr_zpsz_new(dz)
 
 
+def multi_pos_scan(scan_list,
+                   x_range_list, x_num_list,
+                   y_range_list, y_num_list,
+                   exp_list):
+    """
+    Parameters
+    ----------
+    scan_list : list
+         list of pre-idetifed locations as scan_id
+
+    x_range_list, y_range_list : list
+         list of scanwidth, scan +/- value/2 for each point
+
+    x_num_list, y_num_list : list
+         Number of points at each scan location in
+
+    exp_list : list
+         Exposure time per location
+    """
+    for i, (scan, x_range, x_num, y_range, y_num, exposure) in enumerate(
+            zip(scan_list, x_range_list, x_num_list, y_range_list, y_num_list, exp_list)):
+        print('scan ', i, ' move to #', scan, 'position')
+        # TODO make this a plan
+        recover_mll_scan_pos(int(scan))
+        sleep(0.5)            
+        RE(fly2d(dssx,
+                 -x_range/2, x_range/2, x_num,
+                 dssy,
+                 -y_range/2, y_range/2, y_num,
+                 exposure))
+        sleep(0.5)
+        
+def multi_pos_scan_plan(scan_list,
+                        x_range_list, x_num_list,
+                        y_range_list, y_num_list,
+                        exp_list):
+    """
+    Parameters
+    ----------
+    scan_list : list
+         list of pre-idetifed locations as scan_id
+
+    x_range_list, y_range_list : list
+         list of scanwidth, scan +/- value/2 for each point
+
+    x_num_list, y_num_list : list
+         Number of points at each scan location in
+
+    exp_list : list
+         Exposure time per location
+    """
+    for i, (scan, x_range, x_num, y_range, y_num, exposure) in enumerate(
+            zip(scan_list, x_range_list, x_num_list, y_range_list, y_num_list, exp_list)):
+        print('scan ', i, ' move to #', scan, 'position')
+        yield from recover_mll_scan_pos_plan(int(scan))
+        yield from fly2d(dssx,
+                         -x_range/2, x_range/2, x_num,
+                         dssy,
+                         -y_range/2, y_range/2, y_num,
+                         exposure)
+
+
 def multi_pos_xanes():
     x_list = np.array([-2.836,-2.926,-2.925,-2.969])
     y_list = np.array([4.0728,4.098,4.1175,4.103])
@@ -983,7 +1221,6 @@ def multi_pos_xanes():
 
     e_list = np.array([7.115,7.116])
     exp_list = np.array([0.02,0.02])
-
     x_zero = 0
 
     for i in range(num_p):
@@ -1029,6 +1266,48 @@ def test_scan():
     exp = np.array([0.02,0.02])
     RE(fly2d(zps.zpssx,x_start,x_end,x_num,zps.zpssy,y_start,y_end,y_num,exp[1]))
     '''
+
+def xanes_scan_sim(x_start,x_end,x_num,y_start,y_end,y_num,exposure,scan_flag = True):
+    energy_list = np.array([16.118,16.135])  # keV unit
+    bragg_0 = dcm.th.position
+    ugap_0 = ugap.position
+    dsx_0 = smlld.dsx.position
+    dsy_0 = smlld.dsy.position
+    sbx_0 = smlld.sbx.position
+    sbz_0 = smlld.sbz.position
+
+    factor = 350 # um / keV
+
+    energy_0 = 16.118#12.39842 / (2.*3.1355893 * np.sin(bragg_0 * np.pi / 180.))
+    bragg_0 = np.arcsin(12.39842/(2.*3.1355893*energy_0)) * 180. / np.pi
+    bragg_list =np.arcsin(12.39842/(2.*3.1355893*energy_list)) * 180. / np.pi
+    num_point = np.size(energy_list)
+
+    print('energy list:', energy_list)
+    print('bragg list:',bragg_list)
+    print('current bragg angle',bragg_0)
+    print('current sbz',sbz_0)
+    #print(factor*(energy_list[1] - energy_0))
+    if scan_flag:
+        for i in range(num_point):
+            print('move to energy ', energy_list[i],'keV')
+            mov(dcm.th,bragg_list[i])
+            if i == 0:
+                print('move ugap to 7.419 for', energy_list[i], 'keV')
+                mov(ugap,7.419)
+                sleep(1)
+                print('move sbz by', factor*(energy_list[i] - energy_0))
+                movr(smlld.sbz, factor*(energy_list[i] - energy_0))
+            else:
+                print('move ugap to 7.429 for ',energy_list[i], 'keV')
+                mov(ugap,7.429)
+                sleep(1)
+                print('move sbz by', factor*(energy_list[i] - energy_list[i-1]))
+                movr(smlld.sbz, factor*(energy_list[i] - energy_list[i-1]))
+            RE(fly2d(smlld.dssx,x_start,x_end,x_num,smlld.dssy,y_start,y_end,y_num,exposure))
+        mov(dcm.th,bragg_0)
+        mov(smlld.sbz,sbz_0)
+        mov(ugap,ugap_0)
 
 def xanes_scan(energy_list,x_start,x_end,x_num,y_start,y_end,y_num,exposure,peak_flag=0,sign='max',elem='Fe',printflag=True):
 
@@ -1332,8 +1611,8 @@ def mov_sy(t_pos):
 
     dx, dz = sample_to_lab(dxp, dzp, alpha)
 
-    movr(sx, dx)
-    movr(sz, dz)
+    movr(sbx, dx)
+    movr(sbz, dz)
 
     sleep(5)
 
@@ -1349,9 +1628,9 @@ def mov_sy(t_pos):
 def movr_sz(dist):
     alpha = 15.0*np.pi/180
 
-    c_ssz = smll.ssz.position
-    c_ssy = smll.ssy.position
-    c_ssx = smll.ssx.position
+    c_ssz = smll.dssz.position
+    c_ssy = smll.dssy.position
+    c_ssx = smll.dssx.position
 
     print('Current ssx = %.3f' % c_ssx)
     print('Current ssy = %.3f' % c_ssy)
@@ -1360,21 +1639,21 @@ def movr_sz(dist):
     smll_kill_piezos()
 
     t_ssz = c_ssz + dist*np.cos(alpha)
-    dz = t_ssz - smll.ssz.position
-    dy = c_ssy - smll.ssy.position
+    dz = t_ssz - smll.dssz.position
+    dy = c_ssy - smll.dssy.position
 
-    movr(sz, dz)
-    movr(sy, dy)
+    movr(sbz, dz)
+    movr(dsy, dy/1000.0)
 
     sleep(5)
 
     smll_sync_piezos()
-    mov(ssy, c_ssy)
-    mov(ssz, t_ssz)
+    mov(dssy, c_ssy)
+    mov(dssz, t_ssz)
 
-    print('post-move x = %.3f' % smll.ssx.position)
-    print('Post-move y = %.3f' % smll.ssy.position)
-    print('Post-move z = %.3f' % smll.ssz.position)
+    print('post-move x = %.3f' % smll.dssx.position)
+    print('Post-move y = %.3f' % smll.dssy.position)
+    print('Post-move z = %.3f' % smll.dssz.position)
 
 def mov_sz(t_pos):
     alpha = 15.0*np.pi/180
@@ -1861,11 +2140,11 @@ def mov_to_image_cen_corr_dsx(scan_id=-1, elem='Pt',bitflag=1, moveflag=1):
 
 
 
-def mov_to_image_cen_dsx(scan_id=-1, elem='Au', bitflag=1, moveflag=1):
+def mov_to_image_cen_dsx(scan_id=-1, elem='Au', bitflag=1, moveflag=1,piezomoveflag=1,x_offset=0,y_offset=0):
 
     df2 = get_table(db[scan_id],fill=False)
     xrf = np.asfarray(eval('df2.Det2_' + elem)) + np.asfarray(eval('df2.Det1_' + elem)) + np.asfarray(eval('df2.Det3_' + elem))
-    xrf_Pt = np.asfarray(eval('df2.Det2_' + 'Ni')) + np.asfarray(eval('df2.Det1_' + 'Ni')) + np.asfarray(eval('df2.Det3_' + 'Ni'))
+    #xrf_Pt = np.asfarray(eval('df2.Det2_' + 'Ni')) + np.asfarray(eval('df2.Det1_' + 'Ni')) + np.asfarray(eval('df2.Det3_' + 'Ni'))
     hdr = db[scan_id]['start']
     x_motor = hdr['motor1']
     y_motor = hdr['motor2']
@@ -1881,15 +2160,16 @@ def mov_to_image_cen_dsx(scan_id=-1, elem='Au', bitflag=1, moveflag=1):
     xrf = xrf/I0
     xrf = np.asarray(np.reshape(xrf,(ny,nx)))
 
+    '''
     xrf_Pt = xrf_Pt/I0
     index_Pt = np.where(xrf_Pt == np.max(xrf_Pt))
     Pt_max_y = y[index_Pt]
     Pt_max_x = x[index_Pt]
     Pt_max_target_y = -0.5
     Pt_max_target_x = 0
-
-    Au_target_x = 0
-    Au_target_y = 0
+    '''
+    #x_offset = 0
+    #y_offset = -2.5
  #   print('move dsy by', Pt_max_target_y-Pt_max_y)
 
  #   movr(smlld.dsy,-1.*(Pt_max_target_y-Pt_max_y)*1.e-3)
@@ -1916,29 +2196,42 @@ def mov_to_image_cen_dsx(scan_id=-1, elem='Au', bitflag=1, moveflag=1):
         # movr(smlld.dsy,y_cen/1000.)
 
     if x_motor == 'dssx':
-       # print('move dsz,by', Pt_max_x-Pt_max_target_x, 'um')
-       # print('move dsx by ',-1.*x_cen)
-       print('move dsx by', 1*(Au_target_x-x_cen))
-       if moveflag:
-            movr(smlld.dsx, 1.*(Au_target_x-x_cen))
+        # print('move dsz,by', Pt_max_x-Pt_max_target_x, 'um')
+        #print('move dsx by', 1*(x_cen - target_x))
+        if moveflag:
+            if piezomoveflag:
+                print('move dssx to', (x_cen+x_offset))
+                mov(smlld.dssx,(x_cen+x_offset))
+            else:
+                movr(smlld.dsx, -1.*(x_cen+x_offset))
             #movr(smlld.dsz, Pt_max_x-Pt_max_target_x)
             #mov(zps.zpssx,0)
-            sleep(.1)
+        sleep(.1)
 
     elif x_motor == 'dssz':
         #print('move dsx,by', -1*(Pt_max_x-Pt_max_target_x) , 'um')
-        #print('move dsz by ',x_cen)
-        print('move dsz by', -1*(Au_target_x-x_cen))
+        print('x center ',x_cen)
+        #print('move dsz by', (x_cen+x_offset))
         if moveflag:
-            #movr(smlld.dsz, x_cen)
-            movr(smlld.dsz, -1*(Au_target_x-x_cen))
+            if piezomoveflag:
+                print('move dssz to', (x_cen+x_offset))
+                mov(smlld.dssz,(x_cen + x_offset))
+            else:
+                print('move dsz by', (x_cen+x_offset))
+                movr(smlld.dsz, (x_cen + x_offset))
 #        movr(smlld.dsx, -1*(Pt_max_x-Pt_max_target_x))
         #mov(zps.zpssx,0)
-        sleep(.1)
-    print('move dsy by:', -1*(Au_target_y-y_cen*0.001))
+    sleep(.1)
+
     if moveflag:
-        #movr(smlld.dsy, y_cen*0.001)
-        movr(smlld.dsy, -1*(Au_target_y-y_cen*0.001))
+        print('y center', y_cen)
+        if piezomoveflag:
+            print('move dssy to:', (y_cen +y_offset)*0.001)
+            mov(smlld.dssy,(y_cen - y_offset))
+        else:
+            #movr(smlld.dsy, y_cen*0.001)
+            print('move dsy by:', (y_cen +y_offset)*0.001)
+            movr(smlld.dsy, (y_cen + y_offset)*0.001)
     #mov(zps.zpssy,0)
     sleep(.1)
 
@@ -2059,34 +2352,75 @@ def mov_to_line_center(scan_id=-1,elem='Ga',threshold=0,moveflag=1,movepiezoflag
     hdr=db[scan_id]['start']
     x_motor = hdr['motor']
     x = np.asarray(df2[x_motor])
-    xrf[xrf<threshold] = 0.
+    xrf[xrf<(np.max(xrf)*threshold)] = 0.
+    xrf[xrf>=(np.max(xrf)*threshold)] = 1.
     #print(x)
     #print(xrf)
     mc = find_mass_center_1d(xrf,x)
     print(mc)
     if moveflag:
         if x_motor == 'zpssx':
-            if((mc < 2.) and movepiezoflag):
-                movr(zps.zpssx,mc)
-            else:
-                movr(zps.smarx,(mc-zps.zpssx.position)/1000.)
+            #if((mc < .2) and movepiezoflag):
+            mov(zps.zpssx,mc)
+            #else:
+            #    movr(zps.smarx,(mc)/1000.)
         if x_motor == 'zpssy':
-            if((mc < 2.) and movepiezoflag):
-                movr(zps.zpssy,mc)
-            else:
-                movr(zps.smary,(mc-zps.zpssy.position)/1000.)
+            #if((mc < .2) and movepiezoflag):
+            mov(zps.zpssy,mc)
+            #else:
+            #    movr(zps.smary,(mc-zps.zpssy.position)/1000.)
+        if x_motor == 'zpssz':
+            #if((mc < .2) and movepiezoflag):
+            mov(zps.zpssz,mc)
+            #else:
+            #    movr(zps.smarz,(mc)/1000.)
     else:
         if x_motor == 'zpssx':
-            print('move smarx to '+np.str(mc/1000.))
+            print('move smarx by '+np.str(mc/1000.))
         if x_motor == 'zpssy':
-            print('move smary to '+np.str(mc/1000.))
+            print('move smary by '+np.str(mc/1000.))
 
+
+def mov_to_line_center_mll(scan_id=-1,elem='Au',threshold=0,moveflag=1,movepiezoflag=0):
+    df2 = get_table(db[scan_id],fill=False)
+    xrf = np.asfarray(eval('df2.Det2_' + elem)) + np.asfarray(eval('df2.Det1_' + elem)) + np.asfarray(eval('df2.Det3_' + elem))
+    hdr=db[scan_id]['start']
+    x_motor = hdr['motor']
+    x = np.asarray(df2[x_motor])
+    xrf[xrf<(np.max(xrf)*threshold)] = 0.
+    xrf[xrf>=(np.max(xrf)*threshold)] = 1.
+    #print(x)
+    #print(xrf)
+    mc = find_mass_center_1d(xrf,x)
+    print(mc)
+    if moveflag:
+        if x_motor == 'dssx':
+            if(movepiezoflag):
+                mov(smlld.dssx,mc)
+            else:
+                movr(smlld.dsx,-1*mc)
+        if x_motor == 'dssy':
+            if(movepiezoflag):
+                mov(smlld.dssy,mc)
+            else:
+                movr(smlld.dsy,mc/1000.)
+        if x_motor == 'dssz':
+            if(movepiezoflag):
+                mov(smlld.dssz,mc)
+            else:
+                movr(smlld.dsz,mc)
+    else:
+        if x_motor == 'dssx':
+            print('move dssx by '+np.str(mc))
+        if x_motor == 'dssz':
+            print('move dssz by '+np.str(mc))
 
 def mov_to_image_cen_zpss(scan_id=-1, elem='Ni', bitflag=1):
 
     df2 = get_table(db[scan_id],fill=False)
     xrf = np.asfarray(eval('df2.Det2_' + elem)) + np.asfarray(eval('df2.Det1_' + elem)) + np.asfarray(eval('df2.Det3_' + elem))
-    x = np.asarray(df2.zpssx)
+    #x = np.asarray(df2.zpssx)
+    x = np.asarray(df2.zpssz)
     y = np.asarray(df2.zpssy)
     I0 = np.asfarray(df2.sclr1_ch4)
 
@@ -2112,10 +2446,10 @@ def mov_to_image_cen_zpss(scan_id=-1, elem='Ni', bitflag=1):
     x_cen = x[i_max]
     y_cen = y[i_max]
     #print('move smarx, smary by', x_cen, y_cen)
-    print('move zpssx, zpssy to ',x_cen, y_cen)
+    print('move zpssz, zpssy to ',x_cen, y_cen)
 
     #movr(zps.smarx, x_cen*0.001)
-    mov(zps.zpssx,x_cen)
+    mov(zps.zpssz,x_cen)
     sleep(.1)
     #movr(zps.smary, y_cen*0.001)
     mov(zps.zpssy,y_cen)
@@ -2200,33 +2534,127 @@ def over_night_scan_Sima():
         print('sleeping 2 sec')
         sleep(2)
 
+def extract_mll_scan_pos(scan_id):
+    data = get_table(db[scan_id], stream_name='baseline')
+    dsx_pos = data.dsx[1]
+    dsy_pos = data.dsy[1]
+    dsz_pos = data.dsz[1]
+    dsth_pos = data.dsth[1]
+    sbx_pos = data.sbx[1]
+    sbz_pos = data.sbz[1]
+    dssx_pos = data.dssx[1]
+    dssy_pos = data.dssy[1]
+    dssz_pos = data.dssz[1]
+    #fdet1_x = data.fdet1_x[1]
+    #print(ssx,ssy,ssz)
+
+    print('scan '+np.str(scan_id))
+    print('dsx:',dsx_pos, ', dsy:',dsy_pos, ', dsz:',dsz_pos,', dsth:',dsth_pos)
+    print('sbx:',sbx_pos, ', sbz:',sbz_pos)
+    print('dssx:',dssx_pos,', dssy:',dssy_pos,', dssz:',dssz_pos)
+    
+    return {
+        smlld.dsz: dsz_pos,
+        smlld.dsx: dsx_pos,
+        smlld.dsy: dsy_pos,
+        smlld.dsth: dsth_pos,
+        smlld.dssx: dssx_pos,
+        smlld.dssy: dssy_pos,
+        smlld.dssz: dssz_pos,
+        smlld.sbx: sbx_pos,
+        smlld.sbz: sbz_pos}
+
+    
+def recover_mll_scan_pos_plan(scan_id, base_moveflag=True):
+    coarse_motors = [smlld.dsz, smlld.dsx, smlld.dsy, smlld.dsth]
+    piezo_motors = [smlld.dssx, smlld.dssy, smlld.dssz]
+    base_motors = [smlld.sbx, smlld.sbz]
+    
+    targets = extract_mll_scan_pos(scan_id)
+    cur_postions = {}
+    for m in coarse_motors + piezo_motors + base_motors:
+        cur_pos[m] = (yield from bp.read(m))
+        
+    grp_name = 'recover_moves'
+    
+    for m in coarse_motors + piezo_motors:
+        yield from bp.abs_set(m, targets[m], group=grp_name)
+    if base_moveflag:
+        for m in base_motors:
+            yield from bp.abs_set(m, targets[m], group=grp_name)
+    yield from bp.wait(grp_name)
+
+    return cur_pos
+    
+def recover_mll_scan_pos(scan_id,moveflag=True,base_moveflag=True,det_moveflag=False):
+    data = get_table(db[scan_id], stream_name='baseline')
+    dsx_pos = data.dsx[1]
+    dsy_pos = data.dsy[1]
+    dsz_pos = data.dsz[1]
+    dsth_pos = data.dsth[1]
+    sbx_pos = data.sbx[1]
+    sbz_pos = data.sbz[1]
+    dssx_pos = data.dssx[1]
+    dssy_pos = data.dssy[1]
+    dssz_pos = data.dssz[1]
+    #fdet1_x = data.fdet1_x[1]
+    #print(ssx,ssy,ssz)
+
+    print('scan '+np.str(scan_id))
+    print('dsx:',dsx_pos, ', dsy:',dsy_pos, ', dsz:',dsz_pos,', dsth:',dsth_pos)
+    print('sbx:',sbx_pos, ', sbz:',sbz_pos)
+    print('dssx:',dssx_pos,', dssy:',dssy_pos,', dssz:',dssz_pos)
+
+    if moveflag:
+        #if det_moveflag:
+        #    mov(fdet1.x,fdet1_x)
+        #    print('moving flourescence det, wait 5 sec ...')
+        #    sleep(5)
+        mov(smlld.dsz,dsz_pos)
+        mov(smlld.dsx,dsx_pos)
+        mov(smlld.dsy,dsy_pos)
+        mov(smlld.dsth,dsth_pos)
+        mov(smlld.dssx,dssx_pos)
+        mov(smlld.dssy,dssy_pos)
+        mov(smlld.dssz,dssz_pos)
+        if base_moveflag:
+            mov(smlld.sbx,sbx_pos)
+            mov(smlld.sbz,sbz_pos)
 
 def recover_zp_scan_pos(scan_id,zp_move_flag=0,smar_move_flag=0):
     data = get_table(db[scan_id],stream_name='baseline')
     bragg = data.dcm_th[1]
     zpz1 = data.zpz1[1]
-    zpx = data.zpx[1]
-    zpy = data.zpy[1]
+    #zpx = data.zpx[1]
+    #zpy = data.zpy[1]
     smarx = data.smarx[1]
     smary = data.smary[1]
     smarz = data.smarz[1]
+    ssx = data.zpssx[1]
+    ssy = data.zpssy[1]
+    ssz = data.zpssz[1]
+    #print(ssx,ssy,ssz)
 
     print('scan '+np.str(scan_id))
     print('dcm_th:'+np.str(bragg))
-    print('zpz1: '+np.str(zpz1)+', zpx:'+np.str(zpx)+', zpy:'+np.str(zpy))
+    #print('zpz1: '+np.str(zpz1)+', zpx:'+np.str(zpx)+', zpy:'+np.str(zpy))
+    print('zpz1:', np.str(zpz1))
     print('smarx:'+np.str(smarx)+', smary:'+np.str(smary)+', smarz:'+np.str(smarz))
 
     if zp_move_flag:
         mov(dcm.th,bragg)
         mov(zp.zpz1,zpz1)
-        mov(zp.zpx,zpx)
-        mov(zp.zpy,zpy)
+        #mov(zp.zpx,zpx)
+        #mov(zp.zpy,zpy)
 
     if smar_move_flag:
         #mov(dcm.th,bragg)
         mov(zps.smarx,smarx)
         mov(zps.smary,smary)
         mov(zps.smarz,smarz)
+        mov(zps.zpssx,ssx)
+        mov(zps.zpssy,ssy)
+        mov(zps.zpssz,ssz)
 
 def stitch_mosaic(start_scan_id, end_scan_id, nx_mosaic, ny_mosaic,elem,norm=None,clim=None,channels=None,cmap='viridis',fill_events=False):
     num_frame = end_scan_id - start_scan_id + 1
@@ -2297,4 +2725,71 @@ def stitch_mosaic(start_scan_id, end_scan_id, nx_mosaic, ny_mosaic,elem,norm=Non
     ax1.set_ylabel('smary')
     fig.colorbar(imshow)
 
+def export_merlin(sid,num=1):
+    for i in range(num):
+        sid, df = _load_scan(sid, fill_events=False)
+        path = os.path.join('/data/users/2017Q2/Robinson_TaS2/', 'scan_{}.txt'.format(sid))
+        print('Scan {}. Saving to {}'.format(sid, path))
+        #non_objects = [name for name, col in df.iteritems() if col.dtype.name not in ('object', )]
+        #dump all data
+        non_objects = [name for name, col in df.iteritems()]
+        df.to_csv(path, float_format='%1.5e', sep='\t',
+                  columns=sorted(non_objects))
+
+        path = os.path.join('/data/users/2017Q2/Robinson_TaS2/', 'scan_{}_scaler.txt'.format(sid))
+        #np.savetxt(path, (df['sclr1_ch3'], df['p_ssx'], df['p_ssy']), fmt='%1.5e')
+        #np.savetxt(path, (df['sclr1_ch4'], df['zpssx'], df['zpssy']), fmt='%1.5e')
+        filename = get_all_filenames(sid,'merlin1')
+        num_subscan = len(filename)
+        if num_subscan == 1:
+            for fn in filename:
+                break
+            path = os.path.join('/data/users/2017Q2/Robinson_TaS2/', 'scan_{}.h5'.format(sid))
+            mycmd = ''.join(['scp', ' ', fn, ' ', path])
+            os.system(mycmd)
+        else:
+            h = db[sid]
+            images = db.get_images(h,name='merlin1')
+            path = os.path.join('/data/users/2017Q2/Robinson_TaS2/', 'scan_{}.h5'.format(sid))
+            f = h5py.File(path, 'w')
+            dset = f.create_dataset('/entry/instrument/detector/data', data=images)
+            f.close()
+            '''''
+            j = 1
+            for fn in filename:
+                path = os.path.join('/home/hyan/export/', 'scan_{}_{}.h5'.format(sid, j))
+                mycmd = ''.join(['scp', ' ', fn, ' ', path])
+                os.system(mycmd)
+                j = j + 1
+            '''''
+        sid = sid + 1
+
+def position_scan(dsx_list,dsy_list,x_range_list,x_num_list,y_range_list,y_num_list,exp_list):
+    x_list = np.array(dsx_list)
+    y_list = np.array(dsy_list)
+    x_range_list = np.array(x_range_list)
+    y_range_list = np.array(y_range_list)
+    x_num_list = np.array(x_num_list)
+    y_num_list = np.array(y_num_list)
+    exp_list = np.array(exp_list)
+
+    dsx_0 = smlld.dsx.position
+    dsy_0 = smlld.dsy.position
+    num_scan = np.size(x_list)
+    #mov(ssa2.hgap,0.03)
+    #mov(ssa2.vgap,0.02)
+    for i in range(num_scan):
+        print('move to position ',i+1,'/',num_scan)
+        mov(smlld.dsx,x_list[i])
+        mov(smlld.dsy,y_list[i])
+        RE(fly2d(smlld.dssx,-x_range_list[i]/2,x_range_list[i]/2,x_num_list[i]/1,smlld.dssy,-y_range_list[i]/2,y_range_list[i]/2,y_num_list[i]/1,exp_list[i]/1))
+        #plot2dfly(-1,'Er_L')
+        #printfig()
+        print('wait 0.2 sec...')
+        sleep(0.2)
+
+    mov(smlld.dsx,dsx_0)
+    mov(smlld.dsy,dsy_0)
+    #mov(ssa2.hgap,0.15)
+    #mov(ssa2.vgap,0.05)
 

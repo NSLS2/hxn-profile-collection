@@ -23,7 +23,7 @@ RE.md['config'] = {}
 RE.md['beamline_id'] = 'HXN'
 
 RE.verbose = True
-RE.ignore_callback_exceptions = True
+RE.ignore_callback_exceptions = False
 
 # Allow scans to be run by using the prefix '<' instead of typing RE(...)
 register_transform('RE', prefix='<')

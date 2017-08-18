@@ -571,7 +571,7 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
     return fig, ax1, ax2
 
 
-def export(sid, num=1, export_folder='/data/users/2017Q1/Hruszkewycz_2017Q1/Data/',
+def export(sid, num=1, export_folder='/data/users/2017Q2/Hruszkewycz_2017Q2/Data/',
            fields_excluded=['xspress3_ch1', 'xspress3_ch2', 'xspress3_ch3', 'merlin1']):
     for i in range(num):
         sid, df = _load_scan(sid, fill_events=False)
