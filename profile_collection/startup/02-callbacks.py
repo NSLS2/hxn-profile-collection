@@ -14,7 +14,7 @@ mds = MDS(_mds_config, auth=False)
 _fs_config = {'host': 'xf03id-ca1',
               'port': 27017,
               'database': 'filestore-new'}
-db = Broker(mds, FileStore(_fs_config))
+db_new = Broker(mds, FileStore(_fs_config))
 
 _mds_config_old = {'host': 'xf03id-ca1',
                'port': 27017,
@@ -28,22 +28,53 @@ _fs_config_old = {'host': 'xf03id-ca1',
 db_old = Broker(mds_old, FileStore(_fs_config_old))
 
 
-
-# register handlers, by Li
+from hxntools.handlers.xspress3 import Xspress3HDF5Handler
 from hxntools.handlers.timepix import TimepixHDF5Handler
-#db.fs.register_handler(TimepixHDF5Handler._handler_name,
-#                       TimepixHDF5Handler, overwrite=True)
 
-register_builtin_handlers(db.fs)
+register_builtin_handlers(db_new.fs)
 
-db.fs.register_handler(TimepixHDF5Handler._handler_name,
-                       TimepixHDF5Handler, overwrite=True)
+db_new.fs.register_handler(Xspress3HDF5Handler.HANDLER_NAME,
+                           Xspress3HDF5Handler)
+db_new.fs.register_handler(TimepixHDF5Handler._handler_name,
+                           TimepixHDF5Handler, overwrite=True)
 
 
 register_builtin_handlers(db_old.fs)
-
+db_old.fs.register_handler(Xspress3HDF5Handler.HANDLER_NAME,
+                           Xspress3HDF5Handler)
 db_old.fs.register_handler(TimepixHDF5Handler._handler_name,
                            TimepixHDF5Handler, overwrite=True)
+
+
+# wrapper for two databases
+class Broker_New(Broker):
+
+    def __getitem__(self, key):
+        try:
+            return db_new[key]
+        except ValueError:
+            return db_old[key]
+
+    def get_table(self, *args, **kwargs):
+        try:
+            return db_new.get_table(*args, **kwargs)
+        except:
+            return db_old.get_table(*args, **kwargs)
+
+    def get_images(self, *args, **kwargs):
+        try:
+            return db_new.get_images(*args, **kwargs)
+        except:
+            return db_old.get_images(*args, **kwargs)
+
+
+
+db = Broker_New(mds, FileStore(_fs_config))
+
+
+
+
+
 
 def ensure_proposal_id(md):
     if 'proposal_id' not in md:
