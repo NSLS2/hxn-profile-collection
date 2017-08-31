@@ -4,7 +4,6 @@ from time import sleep
 import os
 
 from scipy.optimize import curve_fit
-from databroker import db, get_table
 from ophyd import mov, movr
 from scipy import ndimage
 
@@ -437,7 +436,7 @@ def find_mass_center_1d(array,x):
     return mc
 
 def mov_to_image_center_tmp(scan_id=-1, elem='W_L', bitflag=1, moveflag=1,piezomoveflag=1):
-    df2 = get_table(db[scan_id],fill=False)
+    df2 = db.get_table(db[scan_id],fill=False)
     xrf = np.asfarray(eval('df2.Det2_' + elem)) + np.asfarray(eval('df2.Det1_' + elem)) + np.asfarray(eval('df2.Det3_' + elem))
     hdr = db[scan_id]['start']
     x_motor = hdr['motor1']
@@ -968,7 +967,7 @@ def th_fly2d(th_start, th_end, num, x_start, x_end, x_num, y_start, y_end,
     movr(zps.zpsth, -(th_end + th_step))
     shutter('close')
 
-    
+
 def mov_diff(gamma, delta, r=500, calc=0):
     diff_z = diff.z.position
 
@@ -1167,14 +1166,14 @@ def multi_pos_scan(scan_list,
         print('scan ', i, ' move to #', scan, 'position')
         # TODO make this a plan
         recover_mll_scan_pos(int(scan))
-        sleep(0.5)            
+        sleep(0.5)
         RE(fly2d(dssx,
                  -x_range/2, x_range/2, x_num,
                  dssy,
                  -y_range/2, y_range/2, y_num,
                  exposure))
         sleep(0.5)
-        
+
 def multi_pos_scan_plan(scan_list,
                         x_range_list, x_num_list,
                         y_range_list, y_num_list,
@@ -1979,7 +1978,7 @@ def mov_zpsz(t_pos):
 
 
 def plot_fermat(scan_id,elem='Ga',norm=1):
-    df = get_table(db[scan_id],fill=False)
+    df = db.get_table(db[scan_id],fill=False)
     x = np.asarray(df.zpssx)
     y = np.asarray(df.zpssy)
     io = np.asfarray(df.sclr1_ch4)
@@ -2006,7 +2005,7 @@ def plot_fermat(scan_id,elem='Ga',norm=1):
 
 def mov_to_image_cen_zpsx(scan_id=-1, elem='Ni', bitflag=1):
 
-    df2 = get_table(db[scan_id],fill=False)
+    df2 = db.get_table(db[scan_id],fill=False)
     xrf = np.asfarray(eval('df2.Det2_' + elem)) + np.asfarray(eval('df2.Det1_' + elem)) + np.asfarray(eval('df2.Det3_' + elem))
     x = np.asarray(df2.zpssx)
     y = np.asarray(df2.zpssy)
@@ -2042,7 +2041,7 @@ def mov_to_image_cen_zpsx(scan_id=-1, elem='Ni', bitflag=1):
 
 
 def retreat_xrf_roi(scan_id = -1, elem='Au', bitflag=1):
-    df2 = get_table(db[scan_id],fill=False)
+    df2 = db.get_table(db[scan_id],fill=False)
     xrf = np.asfarray(eval('df2.Det2_' + elem)) + np.asfarray(eval('df2.Det1_' + elem)) + np.asfarray(eval('df2.Det3_' + elem))
     I0 = np.asfarray(df2.sclr1_ch4)
 
@@ -2070,7 +2069,7 @@ def mov_to_image_cen_corr_dsx(scan_id=-1, elem='Pt',bitflag=1, moveflag=1):
     #nx,ny = np.shape(image)
     max_y,max_x = np.where(corr == np.max(corr))
 
-    df2 = get_table(db[scan_id],fill=False)
+    df2 = db.get_table(db[scan_id],fill=False)
     hdr = db[scan_id]['start']
     x_motor = hdr['motor1']
     y_motor = hdr['motor2']
@@ -2142,7 +2141,7 @@ def mov_to_image_cen_corr_dsx(scan_id=-1, elem='Pt',bitflag=1, moveflag=1):
 
 def mov_to_image_cen_dsx(scan_id=-1, elem='Au', bitflag=1, moveflag=1,piezomoveflag=1,x_offset=0,y_offset=0):
 
-    df2 = get_table(db[scan_id],fill=False)
+    df2 = db.get_table(db[scan_id],fill=False)
     xrf = np.asfarray(eval('df2.Det2_' + elem)) + np.asfarray(eval('df2.Det1_' + elem)) + np.asfarray(eval('df2.Det3_' + elem))
     #xrf_Pt = np.asfarray(eval('df2.Det2_' + 'Ni')) + np.asfarray(eval('df2.Det1_' + 'Ni')) + np.asfarray(eval('df2.Det3_' + 'Ni'))
     hdr = db[scan_id]['start']
@@ -2239,7 +2238,7 @@ def mov_to_image_cen_dsx(scan_id=-1, elem='Au', bitflag=1, moveflag=1,piezomovef
 
 def calc_image_cen_smar(scan_id=-1, elem='Er', bitflag=1, movflag=1):
 
-    df2 = get_table(db[scan_id],fill=False)
+    df2 = db.get_table(db[scan_id],fill=False)
     xrf = np.asfarray(eval('df2.Det2_' + elem)) + np.asfarray(eval('df2.Det1_' + elem)) + np.asfarray(eval('df2.Det3_' + elem))
     hdr = db[scan_id]['start']
     x_motor = hdr['motor1']
@@ -2282,7 +2281,7 @@ def calc_image_cen_smar(scan_id=-1, elem='Er', bitflag=1, movflag=1):
 
 def mov_to_image_cen_smar(scan_id=-1, elem='Er', bitflag=1, movflag=1):
 
-    df2 = get_table(db[scan_id],fill=False)
+    df2 = db.get_table(db[scan_id],fill=False)
     xrf = np.asfarray(eval('df2.Det2_' + elem)) + np.asfarray(eval('df2.Det1_' + elem)) + np.asfarray(eval('df2.Det3_' + elem))
     hdr = db[scan_id]['start']
     x_motor = hdr['motor1']
@@ -2347,7 +2346,7 @@ def mov_to_image_cen_smar(scan_id=-1, elem='Er', bitflag=1, movflag=1):
 
 
 def mov_to_line_center(scan_id=-1,elem='Ga',threshold=0,moveflag=1,movepiezoflag=0):
-    df2 = get_table(db[scan_id],fill=False)
+    df2 = db.get_table(db[scan_id],fill=False)
     xrf = np.asfarray(eval('df2.Det2_' + elem)) + np.asfarray(eval('df2.Det1_' + elem)) + np.asfarray(eval('df2.Det3_' + elem))
     hdr=db[scan_id]['start']
     x_motor = hdr['motor']
@@ -2382,7 +2381,7 @@ def mov_to_line_center(scan_id=-1,elem='Ga',threshold=0,moveflag=1,movepiezoflag
 
 
 def mov_to_line_center_mll(scan_id=-1,elem='Au',threshold=0,moveflag=1,movepiezoflag=0):
-    df2 = get_table(db[scan_id],fill=False)
+    df2 = db.get_table(db[scan_id],fill=False)
     xrf = np.asfarray(eval('df2.Det2_' + elem)) + np.asfarray(eval('df2.Det1_' + elem)) + np.asfarray(eval('df2.Det3_' + elem))
     hdr=db[scan_id]['start']
     x_motor = hdr['motor']
@@ -2417,7 +2416,7 @@ def mov_to_line_center_mll(scan_id=-1,elem='Au',threshold=0,moveflag=1,movepiezo
 
 def mov_to_image_cen_zpss(scan_id=-1, elem='Ni', bitflag=1):
 
-    df2 = get_table(db[scan_id],fill=False)
+    df2 = db.get_table(db[scan_id],fill=False)
     xrf = np.asfarray(eval('df2.Det2_' + elem)) + np.asfarray(eval('df2.Det1_' + elem)) + np.asfarray(eval('df2.Det3_' + elem))
     #x = np.asarray(df2.zpssx)
     x = np.asarray(df2.zpssz)
@@ -2535,7 +2534,7 @@ def over_night_scan_Sima():
         sleep(2)
 
 def extract_mll_scan_pos(scan_id):
-    data = get_table(db[scan_id], stream_name='baseline')
+    data = db.get_table(db[scan_id], stream_name='baseline')
     dsx_pos = data.dsx[1]
     dsy_pos = data.dsy[1]
     dsz_pos = data.dsz[1]
@@ -2552,7 +2551,7 @@ def extract_mll_scan_pos(scan_id):
     print('dsx:',dsx_pos, ', dsy:',dsy_pos, ', dsz:',dsz_pos,', dsth:',dsth_pos)
     print('sbx:',sbx_pos, ', sbz:',sbz_pos)
     print('dssx:',dssx_pos,', dssy:',dssy_pos,', dssz:',dssz_pos)
-    
+
     return {
         smlld.dsz: dsz_pos,
         smlld.dsx: dsx_pos,
@@ -2564,19 +2563,19 @@ def extract_mll_scan_pos(scan_id):
         smlld.sbx: sbx_pos,
         smlld.sbz: sbz_pos}
 
-    
+
 def recover_mll_scan_pos_plan(scan_id, base_moveflag=True):
     coarse_motors = [smlld.dsz, smlld.dsx, smlld.dsy, smlld.dsth]
     piezo_motors = [smlld.dssx, smlld.dssy, smlld.dssz]
     base_motors = [smlld.sbx, smlld.sbz]
-    
+
     targets = extract_mll_scan_pos(scan_id)
     cur_postions = {}
     for m in coarse_motors + piezo_motors + base_motors:
         cur_pos[m] = (yield from bp.read(m))
-        
+
     grp_name = 'recover_moves'
-    
+
     for m in coarse_motors + piezo_motors:
         yield from bp.abs_set(m, targets[m], group=grp_name)
     if base_moveflag:
@@ -2585,9 +2584,9 @@ def recover_mll_scan_pos_plan(scan_id, base_moveflag=True):
     yield from bp.wait(grp_name)
 
     return cur_pos
-    
+
 def recover_mll_scan_pos(scan_id,moveflag=True,base_moveflag=True,det_moveflag=False):
-    data = get_table(db[scan_id], stream_name='baseline')
+    data = db.get_table(db[scan_id], stream_name='baseline')
     dsx_pos = data.dsx[1]
     dsy_pos = data.dsy[1]
     dsz_pos = data.dsz[1]
@@ -2622,7 +2621,7 @@ def recover_mll_scan_pos(scan_id,moveflag=True,base_moveflag=True,det_moveflag=F
             mov(smlld.sbz,sbz_pos)
 
 def recover_zp_scan_pos(scan_id,zp_move_flag=0,smar_move_flag=0):
-    data = get_table(db[scan_id],stream_name='baseline')
+    data = db.get_table(db[scan_id],stream_name='baseline')
     bragg = data.dcm_th[1]
     zpz1 = data.zpz1[1]
     #zpx = data.zpx[1]
@@ -2668,7 +2667,7 @@ def stitch_mosaic(start_scan_id, end_scan_id, nx_mosaic, ny_mosaic,elem,norm=Non
 
         scan_id, df = _load_scan(scan_id, fill_events=fill_events)
         hdr = db[scan_id]['start']
-        data = get_table(db[scan_id],stream_name='baseline')
+        data = db.get_table(db[scan_id],stream_name='baseline')
 
         if i == 0:
             nx_flyscan, ny_flyscan = get_flyscan_dimensions(hdr)
@@ -2792,4 +2791,3 @@ def position_scan(dsx_list,dsy_list,x_range_list,x_num_list,y_range_list,y_num_l
     mov(smlld.dsy,dsy_0)
     #mov(ssa2.hgap,0.15)
     #mov(ssa2.vgap,0.05)
-

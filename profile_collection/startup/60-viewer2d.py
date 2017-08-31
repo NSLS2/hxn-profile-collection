@@ -9,8 +9,6 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
-import databroker
-from databroker import (get_table, db)
 # from xray_vision.qt_widgets import CrossSectionMainWindow
 # from xray_vision.backend.mpl.cross_section_2d import CrossSection
 from scipy.interpolate import interp1d, interp2d
