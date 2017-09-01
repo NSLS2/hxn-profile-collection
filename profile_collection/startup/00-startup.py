@@ -85,16 +85,16 @@ class Broker_New(Broker):
             return db_old[key]
 
     def get_table(self, *args, **kwargs):
-        try:
-            return db_new.get_table(*args, **kwargs)
-        except:
-            return db_old.get_table(*args, **kwargs)
+        result = db_new.get_table(*args, **kwargs)
+        if len(result) == 0:
+            result = db_old.get_table(*args, **kwargs)
+        return result
 
     def get_images(self, *args, **kwargs):
-        try:
-            return db_new.get_images(*args, **kwargs)
-        except:
-            return db_old.get_images(*args, **kwargs)
+        result = db_new.get_images(*args, **kwargs)
+        if len(result) == 0:
+            result = db_old.get_images(*args, **kwargs)
+        return result
 
 
 db = Broker_New(mds, FileStore(_fs_config))
