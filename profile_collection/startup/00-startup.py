@@ -92,10 +92,11 @@ class Broker_New(Broker):
         return pd.concat(result)
 
     def get_images(self, *args, **kwargs):
-        result_old = db_old.get_images(*args, **kwargs)
-        result_new = db_new.get_images(*args, **kwargs)
-        result = [result_old, result_new]
-        return pd.concat(result)
+        try:
+            result = db_new.get_images(*args, **kwargs)
+        except IndexError:
+            result = db_old.get_images(*args, **kwargs)
+        return result
 
 
 db = Broker_New(mds, FileStore(_fs_config))
