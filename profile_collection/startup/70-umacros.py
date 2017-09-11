@@ -89,7 +89,7 @@ def go_det(det):
         sleep(0.5)
         diff.y2.move(-3.2, wait=False)
     elif det == 'cam11':
-        diff.x.move(211.72, wait=False)
+        diff.x.move(211.62, wait=False)
 #        diff.x.move(211.32, wait=False)
         sleep(0.5)
         diff.y1.move(22.5, wait=False)

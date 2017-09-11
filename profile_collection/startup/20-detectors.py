@@ -109,7 +109,7 @@ angle_x = EpicsSignalRO('SR:C31-{AI}Aie3:Angle-x-Cal', name='angle_x')
 angle_y = EpicsSignalRO('SR:C31-{AI}Aie3:Angle-y-Cal', name='angle_y')
 
 # Diamond Quad BPMs in C hutch
-# quad = HxnBpm('XF:03ID{XBPM:17}', name='quad')
+quad = HxnBpm('XF:03ID{XBPM:17}', name='quad')
 
 
 sr_shutter_status = EpicsSignalRO('SR-EPS{PLC:1}Sts:MstrSh-Sts',

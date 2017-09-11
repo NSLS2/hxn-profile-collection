@@ -177,3 +177,9 @@ crl = HxnXYPitchPositioner('XF:03IDA-OP{Lens:CRL', name='crl')
 #
 # # nanoBPM3@SSA2
 # nano3y = EpicsMotor('XF:03IDC-OP{BPM:7-Ax:Y}Mtr', name='nano3y')
+
+qbpm_x = EpicsMotor('XF:03IDB-OP{Slt:SSA1-Ax:8}Mtr', name='qbpm_x')
+qbpm_y = EpicsMotor('XF:03IDB-OP{Slt:SSA1-Ax:7}Mtr', name='qbpm_y')
+
+
+

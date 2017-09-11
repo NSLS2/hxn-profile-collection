@@ -3,6 +3,7 @@ import logging
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import faulthandler
 faulthandler.enable()
 plt.ion()
@@ -85,16 +86,16 @@ class Broker_New(Broker):
             return db_old[key]
 
     def get_table(self, *args, **kwargs):
-        result = db_new.get_table(*args, **kwargs)
-        if len(result) == 0:
-            result = db_old.get_table(*args, **kwargs)
-        return result
+        result_old = db_old.get_table(*args, **kwargs)
+        result_new = db_new.get_table(*args, **kwargs)
+        result = [result_old, result_new]
+        return pd.concat(result)
 
     def get_images(self, *args, **kwargs):
-        result = db_new.get_images(*args, **kwargs)
-        if len(result) == 0:
-            result = db_old.get_images(*args, **kwargs)
-        return result
+        result_old = db_old.get_images(*args, **kwargs)
+        result_new = db_new.get_images(*args, **kwargs)
+        result = [result_old, result_new]
+        return pd.concat(result)
 
 
 db = Broker_New(mds, FileStore(_fs_config))
