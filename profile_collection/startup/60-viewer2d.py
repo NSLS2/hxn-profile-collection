@@ -407,7 +407,7 @@ def fly2d_reshape(hdr, spectrum, verbose=True):
 # TODO: change l, h to clim which defaults to 'auto'
 def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
               fill_events=False, cmap='viridis', cols=None,
-              channels=None, interp=None, interp2d=None):
+              channels=None, interp=None, interp2d=None, save_output=True):
     """Plot the results of a 2d fly scan
 
     Parameters
@@ -440,6 +440,8 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
     interp2d : {'linear', 'cubic', 'quintic'}, optional
         Interpolate the data on the 2D mesh defined by positioners x and y,
         in both the x and y directions (NOTE: _extremely_ slow)
+    save_output : Boolen, optional
+        save txt output or not.
     """
 
     if channels is None:
@@ -490,10 +492,10 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
     folder = os.path.join('/data/output/',
                           '{}{:0>2}{:0>2}/'.format(dt.year, dt.month, dt.day))
 
-    if not os.path.exists(folder):
-        os.makedirs(folder)
-
-    print('Scan {}. Saving to: {}'.format(scan_id, folder))
+    if save_output is True:
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+        print('Scan {}. Saving to: {}'.format(scan_id, folder))
 
     if len(spectrum) != total_points:
         print('Padding data (points=%d expected=%d)' % (len(spectrum),
@@ -531,8 +533,9 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
         fig.set_tight_layout(True)
         imshow = ax1.imshow(spectrum2, extent=extent, interpolation='None', cmap=cmap,
                    vmin=clim[0], vmax=clim[1])
-        np.savetxt(os.path.join(folder, 'data_scan_{}'.format(scan_id)),
-                   spectrum2)
+        if save_output is True:
+            np.savetxt(os.path.join(folder, 'data_scan_{}'.format(scan_id)),
+                       spectrum2)
 
         ax1.set_title('IMSHOW. ' + title)
         ax1.set_xlabel(x)
@@ -555,13 +558,15 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
         fig.colorbar(scatter)
 
     '''
-    fig_path = os.path.join(folder,'data_scan_{}.png'.format(scan_id))
-    print('\tSaving figure to: {}'.format(fig_path))
-    fig.savefig(fig_path)
 
-    text_path = os.path.join(folder,'data_x_y_ch_{}'.format(scan_id))
-    print('\tSaving text positions to: {}'.format(text_path))
-    np.savetxt(text_path, np.vstack((x_data, y_data, spectrum)).T)
+    if save_output is True:
+        fig_path = os.path.join(folder,'data_scan_{}.png'.format(scan_id))
+        print('\tSaving figure to: {}'.format(fig_path))
+        fig.savefig(fig_path)
+
+        text_path = os.path.join(folder,'data_x_y_ch_{}'.format(scan_id))
+        print('\tSaving text positions to: {}'.format(text_path))
+        np.savetxt(text_path, np.vstack((x_data, y_data, spectrum)).T)
 
     var_name = 'S_%d_%s' % (scan_id, elem)
     globals()[var_name] = spectrum2
