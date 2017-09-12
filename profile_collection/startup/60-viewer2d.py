@@ -606,6 +606,8 @@ def get_all_filenames(scan_id, key='merlin1'):
                 'AD_HDF5': RawHandler,
                 'TPX_HDF5': RawHandler,
                 }
+    # this is easy to change under new databroker
+    # hdr = db[scan_id], hdr.db.reg.
     filenames = [filestore.api.retrieve(uid, handlers)[0]
                  for uid in list(df[key])]
 
