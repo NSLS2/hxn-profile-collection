@@ -246,3 +246,16 @@ def nightscan():
     RE(fly2d(dssx,-1,1,200,dssy,-1,1,200,0.2))
     shutter('close')
 
+
+def ms_night_scan():
+    RE(fermat(dssx,dssy,0.6,0.6,0.01,1.5,1))
+    RE(fermat(dssx,dssy,0.6,0.6,0.01,1.5,2))
+    movr(sbz,30)
+    RE(fly2d(dssx,-0.3,0.3,60,dssy,-0.3,0.3,60,1))
+    RE(fermat(dssx,dssy,0.6,0.6,0.01,1.5,1))
+    #RE(fly2d(dssx,-0.3,0.3,60,dssy,-0.3,0.3,60,2))
+    RE(fermat(dssx,dssy,0.6,0.6,0.01,1.5,2))
+    movr(sbz,-30)
+    #RE(fly2d(dssx,-0.3,0.3,60,dssy,-0.3,0.3,60,1.5))
+    RE(mesh(dssy,-0.3,0.3,60,dssx,-0.3,0.3,60,time=2))
+    shutter('close')
