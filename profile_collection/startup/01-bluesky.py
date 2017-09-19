@@ -9,9 +9,6 @@ from bluesky.plans import *
 from bluesky.utils import (install_qt_kicker, register_transform)
 from bluesky.global_state import (get_gs, abort, stop, resume)
 
-from databroker import (DataBroker as db, get_events, get_images, get_table,
-                        get_fields, restream, process)
-
 
 # The following line allows bluesky and pyqt4 GUIs to play nicely together:
 install_qt_kicker()
