@@ -246,7 +246,6 @@ def nightscan():
     RE(fly2d(dssx,-1,1,200,dssy,-1,1,200,0.2))
     shutter('close')
 
-
 def ms_night_scan():
     RE(fermat(dssx,dssy,0.6,0.6,0.01,1.5,1))
     RE(fermat(dssx,dssy,0.6,0.6,0.01,1.5,2))
@@ -259,3 +258,78 @@ def ms_night_scan():
     #RE(fly2d(dssx,-0.3,0.3,60,dssy,-0.3,0.3,60,1.5))
     RE(mesh(dssy,-0.3,0.3,60,dssx,-0.3,0.3,60,time=2))
     shutter('close')
+
+def ms_night_scan_2():
+    mov(sbz,-80)
+    mov(dssx,0.5)
+    mov(dssy,-0.5)
+    RE(fermat(dssx,dssy,1.2,1.2,0.0125,1,2))
+    mov(sbz,-75)
+    mov(dssx,0.475)
+    mov(dssy,-0.55)
+    RE(fermat(dssx,dssy,1.2,1.2,0.0125,1,2))
+    mov(sbz,-70)
+    mov(dssx,0.45)
+    mov(dssy,-0.6)
+    RE(fermat(dssx,dssy,1.2,1.2,0.0125,1,2))
+    mov(sbz,-65)
+    mov(dssx,0.425)
+    mov(dssy,-0.65)
+    RE(fermat(dssx,dssy,1.2,1.2,0.0125,1,2))
+    mov(sbz,-60)
+    mov(dssx,0.4)
+    mov(dssy,-0.7)
+    RE(fermat(dssx,dssy,1.2,1.2,0.0125,1,2))
+
+    '''
+    RE(fermat(dssx,dssy,1.,1.,0.008,1,0.5));RE(fly2d(dssx,-0.5,0.5,100,dssy,-0.5,0.5,100,0.05));RE(fly2d(dssx,-0.5,0.5,100,dssy,-0.5,0.5,100,0.25))
+    '''
+    
+    #RE(fly2d(dssx,-0.6,0.6,60,dssy,-0.6,0.6,60,2))
+    #RE(fly2d(dssx,-0.6,0.6,120,dssy,-0.6,0.6,120,1))
+
+def mosaic_night():
+    for i in range(10):
+        movr(dsy,0.03)
+        for j in range(10):
+            movr(dsx,30)
+            RE(fly2d(dssx,-15,15,50,dssy,-15,15,50,0.05))
+        movr(dsx,-300)
+
+def multi_pos_fermat():
+    recover_mll_scan_pos(34862,1,0,0)
+    RE(fly2d(dssx,-0.5,0.5,100,dssy,-0.5,0.5,100,0.2))
+    recover_mll_scan_pos(34852,1,0,0)
+    RE(fly2d(dssx,-0.5,0.5,100,dssy,-0.5,0.5,100,0.2))
+    recover_mll_scan_pos(34853,1,0,0)
+    RE(fly2d(dssx,-0.5,0.5,100,dssy,-0.5,0.5,100,0.2))
+    recover_mll_scan_pos(34854,1,0,0)
+    RE(fly2d(dssx,-0.5,0.5,100,dssy,-0.5,0.5,100,0.2))
+    recover_mll_scan_pos(34855,1,0,0)
+    RE(fly2d(dssx,-0.5,0.5,100,dssy,-0.5,0.5,100,0.2))
+    recover_mll_scan_pos(34856,1,0,0)
+    RE(fly2d(dssx,-0.5,0.5,100,dssy,-0.5,0.5,100,0.2))
+    recover_mll_scan_pos(34858,1,0,0)
+    RE(fly2d(dssx,-0.5,0.5,100,dssy,-0.5,0.5,100,0.2))
+    recover_mll_scan_pos(34859,1,0,0)
+    RE(fly2d(dssx,-0.5,0.5,100,dssy,-0.5,0.5,100,0.2))
+
+def ms_night_scan_3():
+    mov(sbz,-350)
+    mov(dssx,-0.4)
+    mov(dssy,-0.2)
+    RE(fly2d(dssx,-1,1,100,dssy,-1.3,1.3,130,0.2))
+    RE(fly2d(dssx,-1,1,100,dssy,-1.3,1.3,130,0.2))
+    mov(sbz,-330)
+    mov(dssx,-0.4)
+    mov(dssy,-0.4)
+    RE(fly2d(dssx,-1,1,100,dssy,-1.3,1.3,130,0.2))
+    RE(fly2d(dssx,-1,1,100,dssy,-1.3,1.3,130,0.2))
+    RE(fermat(dssx,dssy,2,2.6,0.03,1,time=0.5))
+    RE(fermat(dssx,dssy,2,2.6,0.03,1,time=0.5))
+    #RE(fly2d(dssx,-1,1,100,dssy,-1.3,1.3,130,0.2))
+    #RE(fly2d(dssx,-1,1,100,dssy,-1.3,1.3,130,0.2))	
+    RE(fermat(dssx,dssy,2,2.6,0.02,1,time=0.5))
+    RE(fermat(dssx,dssy,2,2.6,0.02,1,time=0.5))
+
+    

@@ -21,7 +21,7 @@ scan_steps = hxntools.scans.scan_steps
 
 #gs.DETS = [zebra, sclr1, timepix1]#,dexela1]
 #gs.DETS = [zebra, sclr1, xspress3, lakeshore2]
-gs.DETS = [zebra, sclr1, merlin1, xspress3, lakeshore2,quad]
+gs.DETS = [zebra, sclr1, merlin1, merlin2, xspress3, lakeshore2,quad]
 #gs.DETS = [zebra, sclr1, merlin1, lakeshore2]
 
 #gs.DETS = [zebra, sclr1, merlin1, xspress3, lakeshore2,dexela1]
@@ -41,5 +41,5 @@ descs = {d.name: set(d.describe()) for d in bp.separate_devices(ophyd.commands.i
 gs.PLOT_Y = 'sclr1_ch5_calc' #'dexela_roi1_tot' #'sclr1_ch5_calc' #'Det2_Cr'
 gs.OVERPLOT = False
 #gs.BASELINE_DEVICES = [dcm, m1, m2, beamline_status, smll, vmll, hmll, ssa2, zp]
-gs.BASELINE_DEVICES = [dcm, m1, m2, beamline_status, smll, vmll, hmll, ssa2, mllosa, zp, zps,smlld,fdet1]
+gs.BASELINE_DEVICES = [dcm, m1, m2, beamline_status, smll, vmll, hmll, ssa2, mllosa, zp, zps,smlld,fdet1,diff]
 #gs.BASELINE_DEVICES = [dcm, m1, m2, beamline_status, smll, vmll, hmll, ssa2, bpm1, bpm2, smlld]

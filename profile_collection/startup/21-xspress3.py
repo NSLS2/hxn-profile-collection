@@ -11,11 +11,11 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
     channel3 = Cpt(Xspress3Channel, 'C3_', channel_num=3)
     # Currently only using three channels. Uncomment these to enable more
     # channels:
-    # channel4 = C(Xspress3Channel, 'C4_', channel_num=4)
-    # channel5 = C(Xspress3Channel, 'C5_', channel_num=5)
-    # channel6 = C(Xspress3Channel, 'C6_', channel_num=6)
-    # channel7 = C(Xspress3Channel, 'C7_', channel_num=7)
-    # channel8 = C(Xspress3Channel, 'C8_', channel_num=8)
+    channel4 = Cpt(Xspress3Channel, 'C4_', channel_num=4)
+    # channel5 = Cpt(Xspress3Channel, 'C5_', channel_num=5)
+    # channel6 = Cpt(Xspress3Channel, 'C6_', channel_num=6)
+    # channel7 = Cpt(Xspress3Channel, 'C7_', channel_num=7)
+    # channel8 = Cpt(Xspress3Channel, 'C8_', channel_num=8)
 
     hdf5 = Cpt(Xspress3FileStore, 'HDF5:',
                write_path_template='/data/%Y/%m/%d/',
@@ -56,11 +56,11 @@ energy_M_list = np.array([1646,1712,1775,1840,1907,1976,2048,2118,2191,2267,2342
 
 
 def xspress3_roi_setup():
-    elem_list = np.array(['Si','W_L','K','S','Cl','Ca','Zn','P','Mn','Cr','Fe','Co','Cu','Ni','Pt_L','Au_L'])
+    elem_list = np.array(['Ga','Ni','Cu','In_L','Mo','Fe','Cr','Se_L','Cd_L','Cr','Fe','Zn','S','Pt_L','Co','Au_L'])
     num_elem = np.size(elem_list)
     if num_elem > 16:
         num_elem = 16
-    for channel in [xspress3.channel1, xspress3.channel2, xspress3.channel3]:
+    for channel in [xspress3.channel1, xspress3.channel2, xspress3.channel3, xspress3.channel4]:
         for i in range(num_elem):
             if elem_list[i] in elem_K_list:
                 energy = energy_K_list[elem_K_list == elem_list[i]]
@@ -86,7 +86,7 @@ def xspress3_roi_setup():
         #channel.set_roi(2, 3850, 4140, name='Bi_M')
         #channel.set_roi(2, 3300, 3600, name='Sn')
         channel.set_roi(4, 8250, 8550, name='W')
-        channel.set_roi(2, 4690, 4990, name='Ce')
+        #channel.set_roi(2, 4690, 4990, name='Ce')
         #channel.set_roi(3, 4150, 4450, name='Cs')
         #channel.set_roi(2, 2019, 2319, name='Nb')
         #channel.set_roi(3, 5700, 6000, name='Eu')
@@ -117,7 +117,7 @@ def xspress3_roi_setup():
         #channel.set_roi(13, 8487, 8787, name='Zn')
         channel.set_roi(13, 8000, 8300, name='Ta')
         channel.set_roi(14, 7330, 7630, name='Ni')
-        #channel.set_roi(15, 7950, 8150, name='Cu')
+        channel.set_roi(2, 7950, 8150, name='Cu')
         channel.set_roi(15, 9300, 9600, name='Pt')
         #channel.set_roi(16, 11775, 12075, name='Br')
         #channel.set_roi(16, 9736, 10036, name='Ge')

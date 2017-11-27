@@ -574,10 +574,12 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
     return fig, ax1, ax2
 
 
-def export(sid, num=1, export_folder='/data/users/2017Q2/Hruszkewycz_2017Q2/Data/',
+def export(sid, export_folder,num=1,
            fields_excluded=['xspress3_ch1', 'xspress3_ch2', 'xspress3_ch3', 'merlin1']):
     for i in range(num):
         sid, df = _load_scan(sid, fill_events=False)
+        #hdf = db(sid)
+        #df = db.get_table(hdr)
         path = os.path.join(export_folder, 'scan_{}.txt'.format(sid))
         print('Scan {}. Saving to {}'.format(sid, path))
         #non_objects = [name for name, col in df.iteritems()
@@ -587,19 +589,24 @@ def export(sid, num=1, export_folder='/data/users/2017Q2/Hruszkewycz_2017Q2/Data
         #dump all data
         #non_objects = [name for name, col in df.iteritems()]
         df.to_csv(path, float_format='%1.5e', sep='\t',
-                  columns=sorted(non_objects))
+                  columns=df[sorted(non_objects)])
         path = os.path.join(export_folder, 'scan_{}.h5'.format(sid))
         filename = get_all_filenames(sid,'merlin1')
-        for fn in filename:
-            break
-        mycmd = ''.join(['scp', ' ', fn, ' ', path])
-        os.system(mycmd)
-
-        #path = os.path.join('/home/xf03id/data_analysis/Amy_Aug2016/', 'scan_{}_raw.txt'.format(sid))
-        #np.savetxt(path, (df['sclr1_ch4'], df['zpssx'], df['zpssy']), fmt='%1.5e')
-
+        num_subscan = len(filename)
+        if num_subscan == 1:
+            for fn in filename:
+                break
+            mycmd = ''.join(['scp', ' ', fn, ' ', path])
+            os.system(mycmd)
+            #num_subscan=-1
+        else:
+            h = db[sid]
+            images = db.get_images(h,name='merlin1')
+            f = h5py.File(path, 'w')
+            dset = f.create_dataset('/entry/instrument/detector/data', data=images)
+            f.close()
+        print('Scan {}. Saving to {}'.format(sid, path))
         sid = sid + 1
-    # return df
 
 
 def get_all_filenames(scan_id, key='merlin1'):

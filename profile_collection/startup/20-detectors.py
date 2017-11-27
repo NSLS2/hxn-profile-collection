@@ -49,6 +49,13 @@ merlin1 = HxnMerlinDetector('XF:03IDC-ES{Merlin:1}', name='merlin1',
                             read_attrs=['hdf5', 'cam', 'stats1'])
 merlin1.hdf5.read_attrs = []
 
+
+merlin2 = HxnMerlinDetector('XF:03IDC-ES{Merlin:2}', name='merlin2',
+                            image_name='merlin2',
+                            read_attrs=['hdf5', 'cam', 'stats1'])
+merlin1.hdf5.read_attrs = []
+
+
 # -- Dexela 1 (Dexela 1512 GigE-V24)
 #dexela1 = HxnDexelaDetector('XF:03IDC-ES{Dexela:1}', name='dexela1',
 #                            image_name='dexela1',
@@ -57,9 +64,9 @@ merlin1.hdf5.read_attrs = []
 
 # - Other detectors and triggering devices
 # -- DXP Mercury (1 channel)
-mercury1 = HxnMercuryDetector('XF:03IDC-ES{DXP:1}', name='mercury1')
-mercury1.read_attrs = ['dxp', 'mca']
-mercury1.dxp.read_attrs = []
+#mercury1 = HxnMercuryDetector('XF:03IDC-ES{DXP:1}', name='mercury1')
+#mercury1.read_attrs = ['dxp', 'mca']
+#mercury1.dxp.read_attrs = []
 
 # -- Quantum Detectors Zebra
 zebra = HxnZebra('XF:03IDC-ES{Zeb:1}:', name='zebra')
