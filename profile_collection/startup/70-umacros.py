@@ -89,12 +89,12 @@ def go_det(det):
         sleep(0.5)
         diff.y2.move(-3.2, wait=False)
     elif det == 'cam11':
-        diff.x.move(211.62, wait=False)
+        diff.x.move(211.17, wait=False)
 #        diff.x.move(211.32, wait=False)
         sleep(0.5)
-        diff.y1.move(22.5, wait=False)
+        diff.y1.move(22.6, wait=False)
         sleep(0.5)
-        diff.y2.move(22.5, wait=False)
+        diff.y2.move(22.6, wait=False)
     elif det == 'tpx':
         mov(diff.x, -112)
         mov(diff.y1, -50)
@@ -274,7 +274,8 @@ def mosaic_scan(x_start, x_end, x_num, y_start, y_end, y_num):
 
         for j in range(x_num):
             print(i,j,zps.smarx.position,zps.smary.position)
-            RE(fly2d(zpssx, -15, 15, 30, zpssy, -15, 15, 30, 0.05, return_speed=40))
+            RE(fly2d(zpssx, -10, 10, 200, zpssy, -10, 10, 200, 0.1, return_speed=40))
+            merlin1.unstage()
             scan_id,df=_load_scan(-1,fill_events=False)
             current_smarx = zps.smarx.position
             current_smary = zps.smary.position

@@ -66,8 +66,8 @@ pt_plot = FlyRoiPlot(['Cu'],
 # NOTE: indicate which detectors can be used in fly scans. When a
 #       fly scan is run, all of those matching in gs.DETS will be
 #       used.
-fly_scannable_detectors = [xspress3, zebra, merlin1, sclr1]
-#fly_scannable_detectors = [xspress3, zebra, sclr1,merlin1]
+fly_scannable_detectors = [xspress3, zebra, merlin2, sclr1]
+#fly_scannable_detectors = [xspress3, zebra, sclr1, merlin1]
 #fly_scannable_detectors = [merlin1, zebra, sclr1]
 fly1d = FlyPlan1D(usable_detectors=fly_scannable_detectors,
                   scaler_channels=[1, 2, 3, 4, 5, 6, 7, 8])
