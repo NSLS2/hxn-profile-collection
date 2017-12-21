@@ -5,6 +5,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import faulthandler
+from metadatastore.mds import MDS
+from databroker import Broker
+from databroker.core import register_builtin_handlers
+from filestore.fs import FileStore
+from hxntools.handlers.xspress3 import Xspress3HDF5Handler
+from hxntools.handlers.timepix import TimepixHDF5Handler
+
+
 faulthandler.enable()
 plt.ion()
 
@@ -21,19 +29,12 @@ logging.getLogger('hxnfly').setLevel(logging.DEBUG)
 logging.getLogger('hxntools').setLevel(logging.DEBUG)
 logging.getLogger('ppmac').setLevel(logging.INFO)
 
-import pandas as pd
 
 # Flyscan results are shown using pandas. Maximum rows/columns to use when
 # printing the table:
 pd.options.display.width = 180
 pd.options.display.max_rows = None
 pd.options.display.max_columns = 10
-
-
-from metadatastore.mds import MDS
-from databroker import Broker
-from databroker.core import register_builtin_handlers
-from filestore.fs import FileStore
 
 _mds_config = {'host': 'xf03id-ca1',
                'port': 27017,
@@ -47,19 +48,16 @@ _fs_config = {'host': 'xf03id-ca1',
 db_new = Broker(mds, FileStore(_fs_config))
 
 _mds_config_old = {'host': 'xf03id-ca1',
-               'port': 27017,
-               'database': 'datastore',
-               'timezone': 'US/Eastern'}
+                   'port': 27017,
+                   'database': 'datastore',
+                   'timezone': 'US/Eastern'}
 mds_old = MDS(_mds_config_old, auth=False)
 
 _fs_config_old = {'host': 'xf03id-ca1',
-              'port': 27017,
-              'database': 'filestore'}
+                  'port': 27017,
+                  'database': 'filestore'}
 db_old = Broker(mds_old, FileStore(_fs_config_old))
 
-
-from hxntools.handlers.xspress3 import Xspress3HDF5Handler
-from hxntools.handlers.timepix import TimepixHDF5Handler
 
 register_builtin_handlers(db_new.fs)
 
