@@ -12,7 +12,6 @@ from filestore.fs import FileStore
 from hxntools.handlers.xspress3 import Xspress3HDF5Handler
 from hxntools.handlers.timepix import TimepixHDF5Handler
 
-
 faulthandler.enable()
 plt.ion()
 
@@ -59,19 +58,18 @@ _fs_config_old = {'host': 'xf03id-ca1',
 db_old = Broker(mds_old, FileStore(_fs_config_old))
 
 
-register_builtin_handlers(db_new.fs)
+def _hxn_register_handlers(inp_db):
+    "helper function to register handlers to both assert registries"
+    register_builtin_handlers(inp_db.fs)
+    inp_db.fs.register_handler(Xspress3HDF5Handler.HANDLER_NAME,
+                               Xspress3HDF5Handler)
+    inp_db.fs.register_handler(TimepixHDF5Handler._handler_name,
+                               TimepixHDF5Handler, overwrite=True)
 
-db_new.fs.register_handler(Xspress3HDF5Handler.HANDLER_NAME,
-                           Xspress3HDF5Handler)
-db_new.fs.register_handler(TimepixHDF5Handler._handler_name,
-                           TimepixHDF5Handler, overwrite=True)
 
-
-register_builtin_handlers(db_old.fs)
-db_old.fs.register_handler(Xspress3HDF5Handler.HANDLER_NAME,
-                           Xspress3HDF5Handler)
-db_old.fs.register_handler(TimepixHDF5Handler._handler_name,
-                           TimepixHDF5Handler, overwrite=True)
+_hxn_register_handlers(db_new)
+_hxn_register_handlers(db_old)
+del _hxn_register_handlers
 
 
 # wrapper for two databases
