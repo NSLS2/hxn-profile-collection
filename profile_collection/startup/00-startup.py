@@ -58,18 +58,7 @@ class Broker_New(Broker):
 
 db = Broker_New(mds, Registry(_fs_config))
 
-from hxntools.handlers.xspress3 import Xspress3HDF5Handler
-from hxntools.handlers.timepix import TimepixHDF5Handler
-
-
-def _hxn_register_handlers(inp_db):
-    "helper function to register handlers to both assert registries"
-    inp_db.reg.register_handler(Xspress3HDF5Handler.HANDLER_NAME,
-                                Xspress3HDF5Handler)
-    inp_db.reg.register_handler(TimepixHDF5Handler._handler_name,
-                                TimepixHDF5Handler, overwrite=True)
-
-
+from hxntools.handlers import register as _hxn_register_handlers
 _hxn_register_handlers(db_new)
 _hxn_register_handlers(db_old)
 del _hxn_register_handlers
