@@ -46,21 +46,53 @@ def shutter(cmd):
     yield from bps.sleep(5)
 
 
-def mll_z_linescan(z_start, z_end, z_num, mot, start, end, num, acq_time, elem='Pt_L'):
-    z_step = (z_end - z_start)/z_num
+def mll_z_linescan(z_start, z_end, z_num,
+                   mot,
+                   start, end, num,
+                   acq_time,
+                   elem='Pt_L'):
+    """
+    Parameters
+    ----------
+    z_start, z_stop : float
+        start and stop position relative to the current position
+
+    z_num : int
+        The number of z postions to measure at
+
+    mot : {'dssx', 'dssy'}
+        The string name of the motor to fly
+
+    start, end : float
+        the start and stop for the fly motor, passed to
+        `fly1d`.
+
+    num : int
+        Number of positions in the fly scan,  passed to
+        `fly1d`.
+
+    acq_time : float
+        Acquire time (in s(??),  passed to
+        `fly1d`.
+
+    elem : str, optional
+        The element to plot.  Passed to the custom `plot` function
+        defined in 60-viewer2d.py
+    """
+    z_step = (z_end - z_start) / z_num
     init_sz = smlld.sbz.position
-    movr(smlld.sbz, z_start)
+    mot = {'dssx': dssx, 'dssy': dssy}[mot]
+
+    yield from bps.movr(smlld.sbz, z_start)
+
     for i in range(z_num + 1):
-        if mot == 'dssy':
-            RE(fly1d(dssy, start, end, num, acq_time))
-        elif mot == 'dssx':
-            RE(fly1d(dssx, start, end, num, acq_time))
-        else:
-            raise KeyError('mot has to be dssx or dssy')
+        yield from fly1d(mot, start, end, num, acq_time)
+
         plot(-1, elem, 'sclr1_ch4')
         plt.title('sbz = %.3f' % smlld.sbz.position)
-        movr(smlld.sbz, z_step)
-    mov(smlld.sbz, init_sz)
+        yield from bps.movr(smlld.sbz, z_step)
+    yield from bps.mov(smlld.sbz, init_sz)
+
 
 def mll_z_2dscan(z_start, z_end, z_num, mot1, start1, end1, num1, mot2, start2, end2, num2, acq_time, elem='Au'):
     z_step = (z_end - z_start)/z_num
