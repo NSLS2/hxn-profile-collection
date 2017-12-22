@@ -1,23 +1,14 @@
+import pandas as pd
+
 # Make ophyd listen to pyepics.
 from ophyd import setup_ophyd
 setup_ophyd()
-
-# Set up a RunEngine and use metadata backed by a sqlite file.
-from bluesky import RunEngine
-from bluesky.utils import get_history
-RE = RunEngine(get_history())
-RE.md['group'] = ''
-RE.md['config'] = {}
-RE.md['beamline_id'] = 'HXN'
-RE.verbose = True
-
 
 # Set up a Broker.
 # TODO clean this up
 from databroker import Broker
 from databroker.headersource.mongo import MDS
 from databroker.assets.mongo import Registry
-from databroker.core import register_builtin_handlers
 
 _mds_config = {'host': 'xf03id-ca1',
                'port': 27017,
@@ -40,10 +31,6 @@ _fs_config_old = {'host': 'xf03id-ca1',
                   'port': 27017,
                   'database': 'filestore'}
 db_old = Broker(mds_old, Registry(_fs_config_old))
-
-RE.subscribe(db_new.insert)
-
-import pandas as pd
 
 
 # wrapper for two databases
@@ -77,7 +64,6 @@ from hxntools.handlers.timepix import TimepixHDF5Handler
 
 def _hxn_register_handlers(inp_db):
     "helper function to register handlers to both assert registries"
-    register_builtin_handlers(inp_db.fs)
     inp_db.fs.register_handler(Xspress3HDF5Handler.HANDLER_NAME,
                                Xspress3HDF5Handler)
     inp_db.fs.register_handler(TimepixHDF5Handler._handler_name,
@@ -94,6 +80,11 @@ from nslsii import configure_base, configure_olog
 configure_base(get_ipython().user_ns, db_new)
 configure_olog(get_ipython().user_ns)
 
+# set some default meta-data
+RE.md['group'] = ''
+RE.md['config'] = {}
+RE.md['beamline_id'] = 'HXN'
+RE.verbose = True
 
 # set up some HXN specific callbacks
 from ophyd.callbacks import UidPublish
@@ -104,8 +95,7 @@ from ophyd import EpicsSignal
 uid_signal = EpicsSignal('XF:03IDC-ES{BS-Scan}UID-I', name='uid_signal')
 uid_broadcaster = UidPublish(uid_signal)
 scan_number_printer = HxnScanNumberPrinter()
-hxn_scan_status = HxnScanStatus('XF:03IDC-ES{Status}ScanRunning-I',
-                                name='hxn_scan_status')
+hxn_scan_status = HxnScanStatus('XF:03IDC-ES{Status}ScanRunning-I')
 
 # Pass on only start/stop documents to a few subscriptions
 for _event in ('start', 'stop'):
