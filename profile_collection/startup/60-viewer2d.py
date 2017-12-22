@@ -597,14 +597,15 @@ def export(sid, num=1,
 
 def get_all_filenames(scan_id, key='merlin1'):
     scan_id, df = _load_scan(scan_id, fill_events=False)
-    from filestore.path_only_handlers import (AreaDetectorTiffPathOnlyHandler,
-                                              RawHandler)
+    from databroker.assets.path_only_handlers import (
+        AreaDetectorTiffPathOnlyHandler, RawHandler)
+
     handlers = {'AD_TIFF': AreaDetectorTiffPathOnlyHandler,
                 'XSP3': RawHandler,
                 'AD_HDF5': RawHandler,
                 'TPX_HDF5': RawHandler,
                 }
-    filenames = [filestore.api.retrieve(uid, handlers)[0]
+    filenames = [db.reg.retrieve(uid, handlers)[0]
                  for uid in list(df[key])]
 
     if len(set(filenames)) != len(filenames):
