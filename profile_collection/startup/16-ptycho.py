@@ -1,6 +1,4 @@
-from ophyd import (EpicsMotor, Device, Component as Cpt,
-                   PVPositioner)
-
+from ophyd import (EpicsMotor, Device, Component as Cpt)
 
 
 class HxnPrototypeMicroscope(Device):
