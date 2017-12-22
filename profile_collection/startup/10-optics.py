@@ -51,31 +51,6 @@ monoe = PseudoEnergyMotor('', name='monoe')
 e = monoe.energy
 e_angle = monoe.mono_angle
 
-'''
-class BraggOffset(PseudoPositioner):
-    # psuedo axes
-    energy = Cpt(PseudoSingle)
-
-    # real axis
-    mono_bragg = Cpt(EpicsMotor, 'XF:03IDA-OP{Mon:1-Ax:Bragg}Mtr')
-
-    energy_setting = Cpt(EpicsSignal, 'XF:03ID{}Energy-SP')
-
-
-    @pseudo_position_argument
-    def forward(self, pseudo_position):
-        x = math.asin((12.39842)/(2 * 3.1355893 * pseudo_position.energy)) * (180/math.pi)
-        return self.RealPosition(mono_bragg=x,
-                                 energy_setting=pseudo_position.energy)
-
-    @real_position_argument
-    def inverse(self, real_position):
-        """Implement reverse transformation """
-        return self.PseudoPosition(energy=real_position.energy_setting)
-
-mono_e = BraggOffset(prefix='')
-'''
-
 
 class HxnDCM(Device):
     '''HXN DCM Device'''
