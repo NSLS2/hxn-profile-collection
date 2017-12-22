@@ -111,6 +111,7 @@ def scatter_plot(scan_id, namex, namey, elem='Pt', channels=None, norm=None):
     plt.show()
 
 
+# TODO turn into a callback
 def plot(scan_id, elem='Pt', norm=None,
          center_method='com', log=0, e_flag=0):
     plt.figure()
