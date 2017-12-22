@@ -1,7 +1,6 @@
 import bluesky.plan_stubs as bps
 import matplotlib.pyplot as plt
 import numpy as np
-from time import sleep
 import os
 
 from scipy.optimize import curve_fit
