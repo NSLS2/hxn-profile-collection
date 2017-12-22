@@ -29,9 +29,9 @@ def focusmerlin(cnttime):
 
 
 def printfig():
-    plt.savefig('/home/xf03id/Desktop/temp.png', bbox_inches='tight',
+    plt.savefig('/tmp/temp.png', bbox_inches='tight',
                 pad_inches=4)
-    os.system("lp -d HXN-printer-1 /home/xf03id/Desktop/temp.png")
+    os.system("lp -d HXN-printer-1 /tmp/temp.png")
 
 
 def shutter(cmd):
