@@ -586,9 +586,7 @@ def export(sid, num=1,
         df.to_csv(path, float_format='%1.5e', sep='\t',
                   columns=sorted(non_objects))
         path = os.path.join(export_folder, 'scan_{}.h5'.format(sid))
-        filename = get_all_filenames(sid, 'merlin1')
-        for fn in filename:
-            break
+        fn, = get_all_filenames(sid, 'merlin1')
         mycmd = ''.join(['scp', ' ', fn, ' ', path])
         os.system(mycmd)
 
