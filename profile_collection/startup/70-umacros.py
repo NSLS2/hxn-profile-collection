@@ -34,16 +34,16 @@ def printfig():
 
 
 def shutter(cmd):
-    if cmd == 'open':
-        shutter_open.put(1)
-        sleep(5)
-        shutter_open.put(1)
-        sleep(5)
-    elif cmd == 'close':
-        shutter_close.put(1)
-        sleep(5)
-        shutter_close.put(1)
-        sleep(5)
+    # TODO get 3 button shutter setup
+    target_map = {'open': shutter_open,
+                  'close': shutter_close}
+
+    target = target_map[cmd.lower()]
+
+    yield from bps.abs_set(target, 1)
+    yield from bps.sleep(5)
+    yield from bps.abs_set(target, 1)
+    yield from bps.sleep(5)
 
 
 def mll_z_linescan(z_start, z_end, z_num, mot, start, end, num, acq_time, elem='Pt_L'):
