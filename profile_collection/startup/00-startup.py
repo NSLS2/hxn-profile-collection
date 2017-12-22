@@ -64,10 +64,10 @@ from hxntools.handlers.timepix import TimepixHDF5Handler
 
 def _hxn_register_handlers(inp_db):
     "helper function to register handlers to both assert registries"
-    inp_db.fs.register_handler(Xspress3HDF5Handler.HANDLER_NAME,
-                               Xspress3HDF5Handler)
-    inp_db.fs.register_handler(TimepixHDF5Handler._handler_name,
-                               TimepixHDF5Handler, overwrite=True)
+    inp_db.reg.register_handler(Xspress3HDF5Handler.HANDLER_NAME,
+                                Xspress3HDF5Handler)
+    inp_db.reg.register_handler(TimepixHDF5Handler._handler_name,
+                                TimepixHDF5Handler, overwrite=True)
 
 
 _hxn_register_handlers(db_new)
