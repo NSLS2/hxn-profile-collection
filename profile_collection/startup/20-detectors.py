@@ -10,10 +10,6 @@ from hxntools.detectors.merlin import HDF5PluginWithFileStore as _mhdf
 from hxntools.detectors.timepix import HDF5PluginWithFileStore as _thdf
 from hxntools.detectors.zebra import HxnZebra
 
-# Register all HXN-specific handlers so that filestore can load all detector
-# spectra and images directly:
-hxntools.handlers.register()
-
 # - 2D pixel array detectors
 # -- Timepix 1
 class HxnTimepixDetector(_HTD):
