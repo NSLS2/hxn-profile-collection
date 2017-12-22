@@ -1,8 +1,4 @@
 from bluesky.suspenders import (SuspendFloor, SuspendBoolHigh, SuspendBoolLow)
-from bluesky.global_state import get_gs
-
-gs = get_gs()
-RE = gs.RE
 
 
 # Here are some conditions that will cause scans to pause automatically:
