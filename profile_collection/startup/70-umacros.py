@@ -1,27 +1,31 @@
+import bluesky.plan_stubs as bps
 import matplotlib.pyplot as plt
 import numpy as np
 from time import sleep
 import os
 
 from scipy.optimize import curve_fit
-from ophyd import mov, movr
 from scipy import ndimage
 
 import sys
 from datetime import datetime
 import shutil
 
-import scipy
 from scipy import signal
 
+
 def focusmerlin(cnttime):
-    merlin1.cam.acquire.put(0)
-    merlin1.cam.acquire_time.put(cnttime)
-    merlin1.cam.acquire_period.put(cnttime)
-    merlin1.cam.trigger_mode.put(0)
-    merlin1.cam.image_mode.put(2)
-    sleep(.2)
-    merlin1.cam.acquire.put(1)
+    yield from bps.abs_set(merlin1.cam.acquire, 0)
+    yield from bps.abs_set(merlin1.cam.acquire_time,
+                           cnttime)
+    yield from bps.abs_set(merlin1.cam.acquire_period,
+                           cnttime)
+    yield from bps.abs_set(merlin1.cam.trigger_mode,
+                           0)
+    yield from bps.abs_set(merlin1.cam.image_mode,
+                           2)
+    yield from bps.sleep(.2)
+    yield from bps.abs_set(merlin1.cam.acquire, 1)
 
 
 def printfig():
