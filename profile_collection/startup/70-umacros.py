@@ -1,3 +1,4 @@
+import IPython
 import bluesky.plan_stubs as bps
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,6 +12,18 @@ from datetime import datetime
 import shutil
 
 from scipy import signal
+
+_ns = IPython.get_ipython().user_ns
+merlin1 = _ns['merlin1']
+shutter_open = _ns['shutter_open']
+shutter_close = _ns['shutter_close']
+smlld = _ns['smlld']
+dssy = _ns['dssy']
+dssx = _ns['dssx']
+elem = _ns['elem']
+plot = _ns['plot']
+fly1d = _ns['fly1d']
+del _ns
 
 
 def focusmerlin(cnttime):
