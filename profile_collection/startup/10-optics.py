@@ -1,7 +1,7 @@
 import math
 from ophyd import (EpicsMotor, Device, Component as Cpt,
                    EpicsSignalRO, PseudoPositioner, PseudoSingle,
-                   EpicsSignal)
+                   EpicsSignal, MotorBundle)
 from ophyd.device import FormattedComponent as FCpt
 from ophyd.pseudopos import (real_position_argument,
                              pseudo_position_argument)
@@ -52,7 +52,7 @@ e = monoe.energy
 e_angle = monoe.mono_angle
 
 
-class HxnDCM(Device):
+class HxnDCM(MotorBundle):
     '''HXN DCM Device'''
     th = Cpt(EpicsMotor, 'XF:03IDA-OP{Mon:1-Ax:Bragg}Mtr')
     x = Cpt(EpicsMotor, 'XF:03IDA-OP{Mon:1-Ax:X}Mtr')
@@ -66,7 +66,7 @@ dcm = HxnDCM('', name='dcm')
 # dcmth = dcm.th
 
 
-class HxnMirror1(Device):
+class HxnMirror1(MotorBundle):
     '''HXN Mirror 1 device (HCM)'''
     x = Cpt(EpicsMotor, 'XF:03IDA-OP{Mir:1-Ax:X}Mtr')
     y = Cpt(EpicsMotor, 'XF:03IDA-OP{Mir:1-Ax:Y}Mtr')
@@ -78,7 +78,7 @@ class HxnMirror1(Device):
 m1 = HxnMirror1('', name='m1')
 
 
-class HxnMirror2(Device):
+class HxnMirror2(MotorBundle):
     '''HXN Mirror 2 device (HFM)'''
     x = Cpt(EpicsMotor, 'XF:03IDA-OP{Mir:2-Ax:X}Mtr')
     y = Cpt(EpicsMotor, 'XF:03IDA-OP{Mir:2-Ax:Y}Mtr')
@@ -126,13 +126,13 @@ class HxnI400(Device):
 s1_bpm = HxnI400('XF:03IDA-BI{Slt:1}', name='s1_bpm')
 
 
-class HxnXYPositioner(Device):
+class HxnXYPositioner(MotorBundle):
     '''HXN X/Y positioner device'''
     x = Cpt(EpicsMotor, '-Ax:X}Mtr')
     y = Cpt(EpicsMotor, '-Ax:Y}Mtr')
 
 
-class HxnXYPitchPositioner(Device):
+class HxnXYPitchPositioner(MotorBundle):
     '''HXN X/Y/Pitch positioner'''
     x = Cpt(EpicsMotor, '-Ax:X}Mtr')
     y = Cpt(EpicsMotor, '-Ax:Y}Mtr')
