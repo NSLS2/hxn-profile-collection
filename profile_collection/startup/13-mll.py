@@ -9,6 +9,15 @@ from ophyd.pseudopos import (real_position_argument,
 from hxntools.device import NamedDevice
 
 
+def remove_names_maybe(obj, names):
+    for n in names:
+        try:
+            obj.read_attrs.remove(n)
+        except ValueError:
+            pass
+    return obj
+
+
 # NOTE: NamedDevice will name components exactly as the 'name' argument
 #       specifies. Normally, it would be named based on the parent
 

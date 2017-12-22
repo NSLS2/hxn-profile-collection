@@ -141,12 +141,3 @@ pd.options.display.max_columns = 10
 # enable < shortcut to replace RE(
 from bluesky.utils import register_transform
 register_transform('RE', prefix='<')
-
-
-def remove_names_maybe(obj, names):
-    for n in names:
-        try:
-            obj.read_attrs.remove(n)
-        except ValueError:
-            pass
-    return obj
