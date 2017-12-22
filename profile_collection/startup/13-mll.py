@@ -238,10 +238,3 @@ pssz = pmllf.pz
 pmllc = PseudoMLLCoarseSample('', name='pmllc')
 psx = pmllc.x
 psz = pmllc.z
-
-
-def movr_hth(angle):
-    radian = angle * math.pi / 180.0
-    correction = -1. * math.tan(radian) * 34376.6
-    movr(hmll.th, angle)
-    movr(hmll.coarse_x, correction)
