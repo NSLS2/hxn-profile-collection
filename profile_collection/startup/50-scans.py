@@ -3,6 +3,7 @@
 
 import hxntools.scans
 import bluesky.plans as bp
+from bluesky.utils import separate_devices
 import ophyd
 
 hxntools.scans.setup(RE)
@@ -21,14 +22,15 @@ dets1 = [zebra, sclr1, timepix1]
 dets2 = [zebra, sclr1, xspress3, lakeshore2]
 dets3 = [zebra, sclr1, merlin1, xspress3, lakeshore2,quad]
 dets4 = [zebra, sclr1, merlin1, lakeshore2]
-dets5 = [zebra, sclr1, merlin1, xspress3, lakeshore2,dexela1]
+dets5 = [zebra, sclr1, merlin1, xspress3, lakeshore2]
+#dets5 = [zebra, sclr1, merlin1, xspress3, lakeshore2,dexela1]
 
 
 # define all the position names and save them to baseline
 # need to remove confict names
 conflict_name = ['pmllf', 'zplab', 'pmllc']
 descs = {d.name: set(d.describe())
-         for d in bp.separate_devices
+         for d in separate_devices
          (ophyd.utils.instances_from_namespace(ophyd.PositionerBase))}
 
 # sd.baseline = [dcm, m1, m2, beamline_status, smll, vmll, hmll, ssa2, zp]
