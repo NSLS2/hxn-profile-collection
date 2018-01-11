@@ -2728,7 +2728,7 @@ def stitch_mosaic(start_scan_id, end_scan_id, nx_mosaic, ny_mosaic,elem,norm=Non
 def export_merlin(sid,num=1):
     for i in range(num):
         sid, df = _load_scan(sid, fill_events=False)
-        path = os.path.join('/data/users/2017Q2/Robinson_TaS2/', 'scan_{}.txt'.format(sid))
+        path = os.path.join('/data/users/2017Q3/Hruszkewycz_2017Q3/', 'scan_{}.txt'.format(sid))
         print('Scan {}. Saving to {}'.format(sid, path))
         #non_objects = [name for name, col in df.iteritems() if col.dtype.name not in ('object', )]
         #dump all data
@@ -2736,7 +2736,7 @@ def export_merlin(sid,num=1):
         df.to_csv(path, float_format='%1.5e', sep='\t',
                   columns=sorted(non_objects))
 
-        path = os.path.join('/data/users/2017Q2/Robinson_TaS2/', 'scan_{}_scaler.txt'.format(sid))
+        path = os.path.join('/data/users/2017Q3/Hruszkewycz_2017Q3/', 'scan_{}_scaler.txt'.format(sid))
         #np.savetxt(path, (df['sclr1_ch3'], df['p_ssx'], df['p_ssy']), fmt='%1.5e')
         #np.savetxt(path, (df['sclr1_ch4'], df['zpssx'], df['zpssy']), fmt='%1.5e')
         filename = get_all_filenames(sid,'merlin1')
@@ -2744,13 +2744,13 @@ def export_merlin(sid,num=1):
         if num_subscan == 1:
             for fn in filename:
                 break
-            path = os.path.join('/data/users/2017Q2/Robinson_TaS2/', 'scan_{}.h5'.format(sid))
+            path = os.path.join('/data/users/2017Q3/Hruszkewycz_2017Q3/', 'scan_{}.h5'.format(sid))
             mycmd = ''.join(['scp', ' ', fn, ' ', path])
             os.system(mycmd)
         else:
             h = db[sid]
             images = db.get_images(h,name='merlin1')
-            path = os.path.join('/data/users/2017Q2/Robinson_TaS2/', 'scan_{}.h5'.format(sid))
+            path = os.path.join('/data/users/2017Q3/Hruszkewycz_2017Q3/', 'scan_{}.h5'.format(sid))
             f = h5py.File(path, 'w')
             dset = f.create_dataset('/entry/instrument/detector/data', data=images)
             f.close()

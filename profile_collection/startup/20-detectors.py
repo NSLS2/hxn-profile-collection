@@ -50,10 +50,10 @@ merlin1 = HxnMerlinDetector('XF:03IDC-ES{Merlin:1}', name='merlin1',
 merlin1.hdf5.read_attrs = []
 
 
-merlin2 = HxnMerlinDetector('XF:03IDC-ES{Merlin:2}', name='merlin2',
-                            image_name='merlin2',
-                            read_attrs=['hdf5', 'cam', 'stats1'])
-merlin1.hdf5.read_attrs = []
+#merlin2 = HxnMerlinDetector('XF:03IDC-ES{Merlin:2}', name='merlin2',
+#                            image_name='merlin2',
+#                            read_attrs=['hdf5', 'cam', 'stats1'])
+#merlin2.hdf5.read_attrs = []
 
 
 # -- Dexela 1 (Dexela 1512 GigE-V24)

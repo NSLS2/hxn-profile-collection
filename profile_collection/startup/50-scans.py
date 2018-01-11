@@ -21,16 +21,15 @@ scan_steps = hxntools.scans.scan_steps
 
 #gs.DETS = [zebra, sclr1, timepix1]#,dexela1]
 #gs.DETS = [zebra, sclr1, xspress3, lakeshore2]
-gs.DETS = [zebra, sclr1, merlin2, xspress3, lakeshore2,quad]
-#gs.DETS = [zebra, sclr1, merlin1, lakeshore2]
+#gs.DETS = [zebra, sclr1, merlin2, xspress3, lakeshore2,quad]
+gs.DETS = [zebra, sclr1, merlin1, xspress3]
 
 #gs.DETS = [zebra, sclr1, merlin1, xspress3, lakeshore2,dexela1]
 
 
 #gs.DETS = [zebra, sclr1, timepix1]
 #gs.TABLE_COLS = ['p_ssx', 'p_ssy', 'p_ssz','sclr1_ch2','sclr1_ch3', 'sclr1_ch4']
-gs.TABLE_COLS = ['sclr1_ch2','sclr1_ch3', 'sclr1_ch4', 'sclr1_ch5', 'sclr1_ch5_calc', 'ssx', 'ssy', 'ssz',
-                 't_base', 't_sample', 't_vlens', 't_hlens']
+gs.TABLE_COLS = ['sclr1_ch2','sclr1_ch3', 'sclr1_ch4', 'zpssx', 'zpssy', 'zpssz']
 
 # define all the position names and save them to baseline
 # need to remove confict names
