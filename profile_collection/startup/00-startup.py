@@ -1,39 +1,14 @@
-import sys
-import logging
-
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-import faulthandler
-faulthandler.enable()
-plt.ion()
-
-handler = logging.StreamHandler(sys.stderr)
-fmt = logging.Formatter("%(asctime)-15s [%(name)5s:%(levelname)s] %(message)s")
-handler.setFormatter(fmt)
-handler.setLevel(logging.INFO)
-
-logging.getLogger('hxntools').addHandler(handler)
-logging.getLogger('hxnfly').addHandler(handler)
-logging.getLogger('ppmac').addHandler(handler)
-
-logging.getLogger('hxnfly').setLevel(logging.DEBUG)
-logging.getLogger('hxntools').setLevel(logging.DEBUG)
-logging.getLogger('ppmac').setLevel(logging.INFO)
-
 import pandas as pd
 
-# Flyscan results are shown using pandas. Maximum rows/columns to use when
-# printing the table:
-pd.options.display.width = 180
-pd.options.display.max_rows = None
-pd.options.display.max_columns = 10
+# Make ophyd listen to pyepics.
+from ophyd import setup_ophyd
+setup_ophyd()
 
-
-from metadatastore.mds import MDS
+# Set up a Broker.
+# TODO clean this up
 from databroker import Broker
-from databroker.core import register_builtin_handlers
-from filestore.fs import FileStore
+from databroker.headersource.mongo import MDS
+from databroker.assets.mongo import Registry
 
 _mds_config = {'host': 'xf03id-ca1',
                'port': 27017,
@@ -44,36 +19,18 @@ mds = MDS(_mds_config, auth=False)
 _fs_config = {'host': 'xf03id-ca1',
               'port': 27017,
               'database': 'filestore-new'}
-db_new = Broker(mds, FileStore(_fs_config))
+db_new = Broker(mds, Registry(_fs_config))
 
 _mds_config_old = {'host': 'xf03id-ca1',
-               'port': 27017,
-               'database': 'datastore',
-               'timezone': 'US/Eastern'}
+                   'port': 27017,
+                   'database': 'datastore',
+                   'timezone': 'US/Eastern'}
 mds_old = MDS(_mds_config_old, auth=False)
 
 _fs_config_old = {'host': 'xf03id-ca1',
-              'port': 27017,
-              'database': 'filestore'}
-db_old = Broker(mds_old, FileStore(_fs_config_old))
-
-
-from hxntools.handlers.xspress3 import Xspress3HDF5Handler
-from hxntools.handlers.timepix import TimepixHDF5Handler
-
-register_builtin_handlers(db_new.fs)
-
-db_new.fs.register_handler(Xspress3HDF5Handler.HANDLER_NAME,
-                           Xspress3HDF5Handler)
-db_new.fs.register_handler(TimepixHDF5Handler._handler_name,
-                           TimepixHDF5Handler, overwrite=True)
-
-
-register_builtin_handlers(db_old.fs)
-db_old.fs.register_handler(Xspress3HDF5Handler.HANDLER_NAME,
-                           Xspress3HDF5Handler)
-db_old.fs.register_handler(TimepixHDF5Handler._handler_name,
-                           TimepixHDF5Handler, overwrite=True)
+                  'port': 27017,
+                  'database': 'filestore'}
+db_old = Broker(mds_old, Registry(_fs_config_old))
 
 
 # wrapper for two databases
@@ -99,13 +56,77 @@ class Broker_New(Broker):
         return result
 
 
-db = Broker_New(mds, FileStore(_fs_config))
+db = Broker_New(mds, Registry(_fs_config))
+
+from hxntools.handlers import register as _hxn_register_handlers
+_hxn_register_handlers(db_new)
+_hxn_register_handlers(db_old)
+del _hxn_register_handlers
+# do the rest of the standard configuration
+from IPython import get_ipython
+from nslsii import configure_base, configure_olog
+
+configure_base(get_ipython().user_ns, db_new)
+configure_olog(get_ipython().user_ns)
+
+# set some default meta-data
+RE.md['group'] = ''
+RE.md['config'] = {}
+RE.md['beamline_id'] = 'HXN'
+RE.verbose = True
+
+# set up some HXN specific callbacks
+from ophyd.callbacks import UidPublish
+from hxntools.scan_number import HxnScanNumberPrinter
+from hxntools.scan_status import HxnScanStatus
+from ophyd import EpicsSignal
+
+uid_signal = EpicsSignal('XF:03IDC-ES{BS-Scan}UID-I', name='uid_signal')
+uid_broadcaster = UidPublish(uid_signal)
+scan_number_printer = HxnScanNumberPrinter()
+hxn_scan_status = HxnScanStatus('XF:03IDC-ES{Status}ScanRunning-I')
+
+# Pass on only start/stop documents to a few subscriptions
+for _event in ('start', 'stop'):
+    RE.subscribe(scan_number_printer, _event)
+    RE.subscribe(uid_broadcaster, _event)
+    RE.subscribe(hxn_scan_status, _event)
 
 
-def remove_names_maybe(obj, names):
-    for n in names:
-        try:
-            obj.read_attrs.remove(n)
-        except ValueError:
-            pass
-    return obj
+def ensure_proposal_id(md):
+    if 'proposal_id' not in md:
+        raise ValueError("You forgot the proposal id.")
+# RE.md_validator = ensure_proposal_id
+
+
+# be nice on segfaults
+import faulthandler
+faulthandler.enable()
+
+# set up logging framework
+import logging
+import sys
+
+handler = logging.StreamHandler(sys.stderr)
+fmt = logging.Formatter("%(asctime)-15s [%(name)5s:%(levelname)s] %(message)s")
+handler.setFormatter(fmt)
+handler.setLevel(logging.INFO)
+
+logging.getLogger('hxntools').addHandler(handler)
+logging.getLogger('hxnfly').addHandler(handler)
+logging.getLogger('ppmac').addHandler(handler)
+
+logging.getLogger('hxnfly').setLevel(logging.DEBUG)
+logging.getLogger('hxntools').setLevel(logging.DEBUG)
+logging.getLogger('ppmac').setLevel(logging.INFO)
+
+
+# Flyscan results are shown using pandas. Maximum rows/columns to use when
+# printing the table:
+pd.options.display.width = 180
+pd.options.display.max_rows = None
+pd.options.display.max_columns = 10
+
+# enable < shortcut to replace RE(
+from bluesky.utils import register_transform
+register_transform('RE', prefix='<')

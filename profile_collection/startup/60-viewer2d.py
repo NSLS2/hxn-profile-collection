@@ -1,11 +1,8 @@
 import os
 import sys
 import numpy as np
-import filestore
-import filestore.api
 from datetime import datetime
 
-import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
@@ -16,9 +13,8 @@ from scipy.interpolate import interp1d, interp2d
 
 def plot2d(scan_id, elem, norm='sclr1_ch4'):
     scan_id, df = _load_scan(scan_id, fill_events=False)
-    scan_info=db[scan_id]
+    scan_info = db[scan_id]
     tmp = scan_info['start']
-    #tmp = tmp.split()
     x_motor = tmp['motors'][0]
     y_motor = tmp['motors'][1]
 
@@ -38,11 +34,12 @@ def plot2d(scan_id, elem, norm='sclr1_ch4'):
                df['Det3_{}'.format(elem)])
 
     if norm is not None:
-        mon = np.reshape(df[norm], (col,row))
+        mon = np.reshape(df[norm], (col, row))
         plt.figure()
         data = np.reshape(det, (col, row))
         plt.title('Scan %d: %s (normalized to %s)' % (scan_id, elem, norm))
-        plt.imshow(data/mon, interpolation='None',extent=[x_start,x_end,y_end,y_start])
+        plt.imshow(data/mon, interpolation='None',
+                   extent=[x_start, x_end, y_end, y_start])
         plt.xlabel(x_motor)
         plt.ylabel(y_motor)
         plt.colorbar()
@@ -50,7 +47,8 @@ def plot2d(scan_id, elem, norm='sclr1_ch4'):
         plt.figure()
         data = np.reshape(det, (col, row))
         plt.title('Scan %d: %s' % (scan_id, elem))
-        plt.imshow(data, interpolation='None',extent=[x_start,x_end,y_end,y_start])
+        plt.imshow(data, interpolation='None',
+                   extent=[x_start, x_end, y_end, y_start])
         plt.xlabel(x_motor)
         plt.ylabel(y_motor)
         plt.colorbar()
@@ -84,7 +82,7 @@ def dev(scan_id, namex, namey):
     # return data
 
 
-def scatter_plot(scan_id, namex,namey, elem='Pt', channels=None, norm=None):
+def scatter_plot(scan_id, namex, namey, elem='Pt', channels=None, norm=None):
     plt.figure()
     plt.title(elem)
     if channels is None:
@@ -94,26 +92,28 @@ def scatter_plot(scan_id, namex,namey, elem='Pt', channels=None, norm=None):
     y = df[namey]
     data = np.sum(df['Det%d_%s' % (chan, elem)]
                   for chan in channels)
-    #data = df[elem]
     x = np.asarray(x)
     y = np.asarray(y)
     data = np.asarray(data)
     if norm is not None:
         norm_v = df[norm]
-        plt.scatter(x,y, c=data / (norm_v + 1.e-8),s=200)
+        plt.scatter(x, y, c=(data / (norm_v + 1.e-8)), s=200)
         plt.gca().invert_yaxis()
-        plt.axes().set_aspect('equal','datalim')
+        plt.axes().set_aspect('equal', 'datalim')
         plt.xlabel(namex)
         plt.ylabel(namey)
     else:
-        plt.scatter(x,y, c=data,s=200)
+        plt.scatter(x, y, c=data, s=200)
         plt.gca().invert_yaxis()
-        plt.axes().set_aspect('equal','datalim')
+        plt.axes().set_aspect('equal', 'datalim')
         plt.xlabel(namex)
         plt.ylabel(namey)
     plt.show()
 
-def plot(scan_id, elem='Pt', norm=None,center_method='com',log=0,e_flag=0):
+
+# TODO turn into a callback
+def plot(scan_id, elem='Pt', norm=None,
+         center_method='com', log=0, e_flag=0):
     plt.figure()
     scan_id, df = _load_scan(scan_id, fill_events=False)
     hdr = db[scan_id]['start']
@@ -151,8 +151,8 @@ def plot(scan_id, elem='Pt', norm=None,center_method='com',log=0,e_flag=0):
     if norm is not None:
         norm_v = df[norm]
         if log:
-            plt.plot(x,np.log10(data / (norm_v+1.e-8)))
-            plt.plot(x,np.log10(data / (norm_v + 1.e-8)),'bo')
+            plt.plot(x, np.log10(data / (norm_v+1.e-8)))
+            plt.plot(x, np.log10(data / (norm_v + 1.e-8)), 'bo')
         else:
             plt.plot(x, data / (norm_v + 1.e-8))
             plt.plot(x, data / (norm_v + 1.e-8), 'bo')
@@ -164,8 +164,8 @@ def plot(scan_id, elem='Pt', norm=None,center_method='com',log=0,e_flag=0):
         plt.title('Scan %d' % (scan_id))
     else:
         if log:
-            plt.plot(x,np.log10(data+1.e-8))
-            plt.plot(x,np.log10(data+1.e-8),'bo')
+            plt.plot(x, np.log10(data+1.e-8))
+            plt.plot(x, np.log10(data+1.e-8), 'bo')
         else:
             plt.plot(x, data)
             plt.plot(x, data, 'bo')
@@ -180,14 +180,12 @@ def plot(scan_id, elem='Pt', norm=None,center_method='com',log=0,e_flag=0):
             plt.figure()
             plt.plot(x[:-1], diff)
             plt.plot(x[:-1], diff, 'bo')
-            mc = find_mass_center(data)
-            #plt.title('center of mass: %d',x[mc])
         except Exception as ex:
             print('Failed to plot derivative: ({}) {}'
                   ''.format(ex.__class__.__name__, ex))
             raise
 
-    plt.title('Scan %d: %s    Start time: %s' % (scan_id, elem, scan_start_time))
+    plt.title('Scan %d: %s\tStart time: %s' % (scan_id, elem, scan_start_time))
     plt.show()
 
 
@@ -242,7 +240,8 @@ def find_mass_center(array):
     mc = np.round(tmp / np.sum(array))
     return mc
 
-def plotfly(scan_id, elem='Pt', norm=None,center_method='com'):
+
+def plotfly(scan_id, elem='Pt', norm=None, center_method='com'):
     plt.figure()
     scan_id, df = _load_scan(scan_id, fill_events=False)
     hdr = db[scan_id]['start']
@@ -275,7 +274,8 @@ def plotfly(scan_id, elem='Pt', norm=None,center_method='com'):
         i_max = np.where(diff == np.max(diff))
         i_min = np.where(diff == np.min(diff))
         i_center = np.round((i_max[0][0]+i_min[0][0])/2)+1
-        plt.title('Scan %d: %s (deriv)' % (scan_id, elem)+' Center: '+np.str(x[i_center]))
+        plt.title(('Scan %d: %s (deriv)' % (scan_id, elem) +
+                   ' Center: '+np.str(x[i_center])))
     except Exception as ex:
         print('Failed to plot derivative: ({}) {}'
               ''.format(ex.__class__.__name__, ex))
@@ -288,7 +288,8 @@ def plotfly(scan_id, elem='Pt', norm=None,center_method='com'):
     plt.plot(x, roi_data, 'bo')
     plt.xlabel(scanned_axis)
     plt.ylabel(elem)
-    plt.title('Scan %d: %s    Start time: %s' % (scan_id, elem, scan_start_time))
+    plt.title(
+        'Scan %d: %s    Start time: %s' % (scan_id, elem, scan_start_time))
     plt.show()
 
 
@@ -469,9 +470,8 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
     y_data = np.asarray(df[y])
 
     if norm is not None:
-        monitor = np.asarray(df[norm],dtype=np.float32)
+        monitor = np.asarray(df[norm], dtype=np.float32)
         spectrum = spectrum/(monitor + 1e-8)
-
 
     nx, ny = get_flyscan_dimensions(hdr)
     total_points = nx * ny
@@ -526,11 +526,11 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
         fig = plt.figure()
         ax2 = plt.subplot(111)
     else:
-        #fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(10, 5))
-        fig, ax1 = plt.subplots(ncols=1,figsize=(8,5))
+        # fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(10, 5))
+        fig, ax1 = plt.subplots(ncols=1, figsize=(8, 5))
         fig.set_tight_layout(True)
-        imshow = ax1.imshow(spectrum2, extent=extent, interpolation='None', cmap=cmap,
-                   vmin=clim[0], vmax=clim[1])
+        imshow = ax1.imshow(spectrum2, extent=extent, interpolation='None',
+                            cmap=cmap, vmin=clim[0], vmax=clim[1])
         np.savetxt(os.path.join(folder, 'data_scan_{}'.format(scan_id)),
                    spectrum2)
 
@@ -555,11 +555,11 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
         fig.colorbar(scatter)
 
     '''
-    fig_path = os.path.join(folder,'data_scan_{}.png'.format(scan_id))
+    fig_path = os.path.join(folder, 'data_scan_{}.png'.format(scan_id))
     print('\tSaving figure to: {}'.format(fig_path))
     fig.savefig(fig_path)
 
-    text_path = os.path.join(folder,'data_x_y_ch_{}'.format(scan_id))
+    text_path = os.path.join(folder, 'data_x_y_ch_{}'.format(scan_id))
     print('\tSaving text positions to: {}'.format(text_path))
     np.savetxt(text_path, np.vstack((x_data, y_data, spectrum)).T)
 
@@ -569,44 +569,42 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
     return fig, ax1, ax2
 
 
-def export(sid, num=1, export_folder='/data/users/2017Q2/Hruszkewycz_2017Q2/Data/',
-           fields_excluded=['xspress3_ch1', 'xspress3_ch2', 'xspress3_ch3', 'merlin1']):
+def export(sid, num=1,
+           export_folder='/data/users/2017Q2/Hruszkewycz_2017Q2/Data/',
+           fields_excluded=['xspress3_ch1', 'xspress3_ch2',
+                            'xspress3_ch3', 'merlin1']):
     for i in range(num):
         sid, df = _load_scan(sid, fill_events=False)
         path = os.path.join(export_folder, 'scan_{}.txt'.format(sid))
         print('Scan {}. Saving to {}'.format(sid, path))
-        #non_objects = [name for name, col in df.iteritems()
+        # non_objects = [name for name, col in df.iteritems()
         #               if col.dtype.name not in ('object', )]
-        non_objects = [name for name in df.keys() if name not in fields_excluded]
-        #print('fields inclued: {}'.format(sorted(non_objects)))
-        #dump all data
-        #non_objects = [name for name, col in df.iteritems()]
+        non_objects = [name for name in df.keys()
+                       if name not in fields_excluded]
+        # print('fields inclued: {}'.format(sorted(non_objects)))
+        # dump all data
+        # non_objects = [name for name, col in df.iteritems()]
         df.to_csv(path, float_format='%1.5e', sep='\t',
                   columns=sorted(non_objects))
         path = os.path.join(export_folder, 'scan_{}.h5'.format(sid))
-        filename = get_all_filenames(sid,'merlin1')
-        for fn in filename:
-            break
+        fn, = get_all_filenames(sid, 'merlin1')
         mycmd = ''.join(['scp', ' ', fn, ' ', path])
         os.system(mycmd)
 
-        #path = os.path.join('/home/xf03id/data_analysis/Amy_Aug2016/', 'scan_{}_raw.txt'.format(sid))
-        #np.savetxt(path, (df['sclr1_ch4'], df['zpssx'], df['zpssy']), fmt='%1.5e')
-
         sid = sid + 1
-    # return df
 
 
 def get_all_filenames(scan_id, key='merlin1'):
     scan_id, df = _load_scan(scan_id, fill_events=False)
-    from filestore.path_only_handlers import (AreaDetectorTiffPathOnlyHandler,
-                                              RawHandler)
+    from databroker.assets.path_only_handlers import (
+        AreaDetectorTiffPathOnlyHandler, RawHandler)
+
     handlers = {'AD_TIFF': AreaDetectorTiffPathOnlyHandler,
                 'XSP3': RawHandler,
                 'AD_HDF5': RawHandler,
                 'TPX_HDF5': RawHandler,
                 }
-    filenames = [filestore.api.retrieve(uid, handlers)[0]
+    filenames = [db.reg.retrieve(uid, handlers)[0]
                  for uid in list(df[key])]
 
     if len(set(filenames)) != len(filenames):

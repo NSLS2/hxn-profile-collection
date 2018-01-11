@@ -10,10 +10,6 @@ from hxntools.detectors.merlin import HDF5PluginWithFileStore as _mhdf
 from hxntools.detectors.timepix import HDF5PluginWithFileStore as _thdf
 from hxntools.detectors.zebra import HxnZebra
 
-# Register all HXN-specific handlers so that filestore can load all detector
-# spectra and images directly:
-hxntools.handlers.register()
-
 # - 2D pixel array detectors
 # -- Timepix 1
 class HxnTimepixDetector(_HTD):
@@ -117,7 +113,7 @@ sr_shutter_status = EpicsSignalRO('SR-EPS{PLC:1}Sts:MstrSh-Sts',
 sr_beam_current = EpicsSignalRO('SR:C03-BI{DCCT:1}I:Real-I',
                                 name='sr_beam_current')
 
-det_beamstatus = BeamStatusDetector(min_current=100.0)
+det_beamstatus = BeamStatusDetector(min_current=100.0, name='det_beamstatus')
 
 #Temporary EPICS PV  detectors
 #dexela_roi1_tot = EpicsSignalRO('XF:03IDC-ES{Dexela:1}Stats1:Total_RBV', name='dexela_roi1_tot')

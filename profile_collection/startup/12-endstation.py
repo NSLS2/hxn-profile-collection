@@ -1,7 +1,8 @@
-from ophyd import (EpicsMotor, Device, Component as Cpt,
-                   EpicsSignalRO, PVPositioner)
+from ophyd import (EpicsMotor, Component as Cpt,
+                   MotorBundle)
 
-class HxnSSAperture(Device):
+
+class HxnSSAperture(MotorBundle):
     hgap = Cpt(EpicsMotor, '-Ax:XAp}Mtr')
     vgap = Cpt(EpicsMotor, '-Ax:YAp}Mtr')
     hcen = Cpt(EpicsMotor, '-Ax:X}Mtr')
@@ -20,7 +21,7 @@ bpm6_y = EpicsMotor('XF:03IDB-OP{BPM:6-Ax:Y}Mtr', name='bpm6_y')
 s3 = HxnSlitA('XF:03IDC-OP{Slt:3', name='s3')
 
 
-class HxnTurboPmacController(Device):
+class HxnTurboPmacController(MotorBundle):
     m1 = Cpt(EpicsMotor, '-Ax:1}Mtr')
     m2 = Cpt(EpicsMotor, '-Ax:2}Mtr')
     m3 = Cpt(EpicsMotor, '-Ax:3}Mtr')
@@ -37,7 +38,7 @@ mc3 = HxnTurboPmacController('XF:03IDC-ES{MC:3', name='mc3')
 mc4 = HxnTurboPmacController('XF:03IDC-ES{MC:4', name='mc4')
 
 
-class HxnSlitB(Device):
+class HxnSlitB(MotorBundle):
     '''HXN slit device, with X/Y/Z/top'''
     vgap = Cpt(EpicsMotor, '-Ax:X}Mtr')
     vcen = Cpt(EpicsMotor, '-Ax:Y}Mtr')
@@ -61,7 +62,7 @@ mc8 = HxnTurboPmacController('XF:03IDC-ES{MC:8', name='mc8')
 # mc9 = HxnTurboPmacController('XF:03IDC-ES{MC:9', name='mc9')
 
 
-class HxnSlitC(Device):
+class HxnSlitC(MotorBundle):
     '''HXN slit device, with vertical/horizontal gaps/centers'''
     vgap = Cpt(EpicsMotor, '-Ax:Vgap}Mtr')
     vcen = Cpt(EpicsMotor, '-Ax:Vcen}Mtr')
@@ -76,7 +77,7 @@ s6 = HxnSlitC('XF:03IDC-ES{Slt:6', name='s6')
 # mc10 = HxnTurboPmacController('XF:03IDC-ES{MC:10', name='mc10')
 
 
-class HxnDetectorPositioner(Device):
+class HxnDetectorPositioner(MotorBundle):
     '''HXN X/Y positioner device'''
     x = Cpt(EpicsMotor, '-Ax:X}Mtr')
     y = Cpt(EpicsMotor, '-Ax:Y}Mtr')
@@ -92,7 +93,7 @@ bs_y = EpicsMotor('XF:03IDC-ES{MC:12-Ax:5}Mtr', name='bs_y')
 mc12 = HxnTurboPmacController('XF:03IDC-ES{MC:12', name='mc12')
 
 
-class DetectorStation(Device):
+class DetectorStation(MotorBundle):
     z = Cpt(EpicsMotor, '-Ax:Z}Mtr')
     x = Cpt(EpicsMotor, '-Ax:X}Mtr')
     y1 = Cpt(EpicsMotor, '-Ax:Y1}Mtr')

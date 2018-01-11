@@ -1,12 +1,20 @@
 import math
 from ophyd import (Device, EpicsMotor, Signal, Component as Cpt,
-                   PseudoSingle, PseudoPositioner,
-                   movr)
+                   PseudoSingle, PseudoPositioner, EpicsSignal)
 
 from ophyd.pseudopos import (real_position_argument,
                              pseudo_position_argument)
 
 from hxntools.device import NamedDevice
+
+
+def remove_names_maybe(obj, names):
+    for n in names:
+        try:
+            obj.read_attrs.remove(n)
+        except ValueError:
+            pass
+    return obj
 
 
 # NOTE: NamedDevice will name components exactly as the 'name' argument
@@ -23,8 +31,10 @@ class HxnMLLSample(NamedDevice):
     sx1 = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:1}Mtr', doc='coarse x1')
     sz = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:2}Mtr', doc='coarse z')
 
-    kill = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1}KillAll-Cmd.PROC', doc='kill all piezos')
-    zero = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1}KillZero-Cmd.PROC', doc='zero all piezos')
+    kill = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1}KillAll-Cmd.PROC',
+               doc='kill all piezos')
+    zero = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1}KillZero-Cmd.PROC',
+               doc='zero all piezos')
     # sz1 = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:3}Mtr', doc='coarse z1')
     # sz1 was replaced with vz when controller 2 died
 
@@ -42,7 +52,9 @@ sx1 = smll.sx1
 sz = smll.sz
 # sz1 = smll.sz1
 
+
 smll = remove_names_maybe(smll, ['kill', 'zero'])
+
 
 class HxnMLLDiffractionSample(NamedDevice):
     '''MLL diffraction sample scanning stages'''
@@ -56,7 +68,8 @@ class HxnMLLDiffractionSample(NamedDevice):
     dssz = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-dssx}Mtr', doc='fine_x')
     dssy = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-dssy}Mtr', doc='fine_y')
     dssx = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-dssz}Mtr', doc='fine_z')
-    kill = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1-Diff}Kill-Cmd.PROC', doc='kill all piezos')
+    kill = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1-Diff}Kill-Cmd.PROC',
+               doc='kill all piezos')
 
 
 smlld = HxnMLLDiffractionSample('', name='smlld')
@@ -70,7 +83,8 @@ dsth = smlld.dsth
 sbx = smlld.sbx
 sbz = smlld.sbz
 
-smlld = remove_names_maybe(smlld, ['kill','zero'])
+smlld = remove_names_maybe(smlld, ['kill', 'zero'])
+
 
 class HxnAnc350_3(Device):
     '''3 axis ANC350'''
@@ -224,10 +238,3 @@ pssz = pmllf.pz
 pmllc = PseudoMLLCoarseSample('', name='pmllc')
 psx = pmllc.x
 psz = pmllc.z
-
-
-def movr_hth(angle):
-    radian = angle * math.pi / 180.0
-    correction = -1. * math.tan(radian) * 34376.6
-    movr(hmll.th, angle)
-    movr(hmll.coarse_x, correction)

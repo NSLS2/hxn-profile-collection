@@ -1,6 +1,6 @@
 import math
 
-from ophyd import (Device, PVPositionerPC, EpicsMotor, Signal, EpicsSignal,
+from ophyd import (PVPositionerPC, EpicsMotor, Signal, EpicsSignal,
                    EpicsSignalRO, Component as Cpt, FormattedComponent as FCpt,
                    PseudoSingle, PseudoPositioner,
                    )
@@ -62,6 +62,7 @@ class HxnZPSample(NamedDevice):
     zero = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1-ZP}Zero-Cmd.PROC')
     mode = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1-ZP}Mode-I')
 
+
 zps = HxnZPSample('', name='zps')
 zpssx = zps.zpssx
 zpssy = zps.zpssy
@@ -70,7 +71,9 @@ smarx = zps.smarx
 smary = zps.smary
 smarz = zps.smarz
 
+
 zps = remove_names_maybe(zps, ['kill', 'zero'])
+
 
 class HxnZP_OSA(NamedDevice):
     zposax = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:5-Ax:0}Mtr', doc='coarse x')
