@@ -137,3 +137,9 @@ try:
     print('Done')
 except KeyboardInterrupt:
     print('Xspress3 ROI configuration cancelled.')
+
+xspress3.hints = {'fields': []}
+
+def hint_xspress_element(elm):
+    elm = elm.upper()
+    xspress3.hints['fields'] = [f'Det{j}_{elm}_sum' for j in (1, 2, 3)]

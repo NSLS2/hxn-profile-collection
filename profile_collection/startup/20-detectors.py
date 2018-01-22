@@ -24,6 +24,7 @@ timepix1 = HxnTimepixDetector('XF:03IDC-ES{Tpx:1}', name='timepix1',
                               image_name='timepix1',
                               read_attrs=['hdf5', 'cam','stats1'])
 timepix1.hdf5.read_attrs = []
+timepix1.hints = {'fields': []}
 
 # -- Timepix 2
 #timepix2 = HxnTimepixDetector('XF:03IDC-ES{Tpx:2}', name='timepix2',
@@ -44,6 +45,7 @@ merlin1 = HxnMerlinDetector('XF:03IDC-ES{Merlin:1}', name='merlin1',
                             image_name='merlin1',
                             read_attrs=['hdf5', 'cam', 'stats1'])
 merlin1.hdf5.read_attrs = []
+merlin1.hints = {'fields': []}
 
 # -- Dexela 1 (Dexela 1512 GigE-V24)
 #dexela1 = HxnDexelaDetector('XF:03IDC-ES{Dexela:1}', name='dexela1',

@@ -13,18 +13,6 @@ import shutil
 
 from scipy import signal
 
-_ns = IPython.get_ipython().user_ns
-merlin1 = _ns['merlin1']
-shutter_open = _ns['shutter_open']
-shutter_close = _ns['shutter_close']
-smlld = _ns['smlld']
-dssy = _ns['dssy']
-dssx = _ns['dssx']
-elem = _ns['elem']
-plot = _ns['plot']
-fly1d = _ns['fly1d']
-del _ns
-
 
 def focusmerlin(cnttime):
     yield from bps.abs_set(merlin1.cam.acquire, 0)
@@ -131,25 +119,16 @@ def zp_z_2dscan(z_start, z_end, z_num, mot1, start1, end1, num1, mot2, start2, e
 
 def go_det(det):
     if det == 'merlin':
-        diff.x.move(-2.9, wait=False)
-        sleep(0.5)
-        diff.y1.move(-3.2, wait=False)
-        sleep(0.5)
-        diff.y2.move(-3.2, wait=False)
+        yield from bps.mov(diff.x, -5.9, diff.y1, -8.2, diff.y2, -8.2)
+        #yield from bps.mov(diff.y1,-3.2)
+        #yield from bps.mov(diff.y2,-3.2)
     elif det == 'cam11':
-        diff.x.move(211.62, wait=False)
-#        diff.x.move(211.32, wait=False)
-        sleep(0.5)
-        diff.y1.move(22.5, wait=False)
-        sleep(0.5)
-        diff.y2.move(22.5, wait=False)
-    elif det == 'tpx':
-        mov(diff.x, -112)
-        mov(diff.y1, -50)
-        mov(diff.y2, -50)
+        yield from bps.mov(diff.x,211.42, diff.y1, 22.65, diff.y2, 22.65)
+        #yield from bps.mov(diff.y1,22.65)
+        #yield from bps.mov(diff.y2,22.65)
     elif det =='telescope':
-        mov(diff.x, -342.)
-        mov(diff.z,-50)
+        yield from bps.mov(diff.x,-342, diff.z, -50)
+        #yield from bps.mov(diff.z,-50)
     else:
         print('Inout det is not defined. '
               'Available ones are merlin, cam11, telescope and tpx')
@@ -933,10 +912,10 @@ def tomo_slice_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
 
 
 def movr_zpz1(dz):
-    movr(zp.zpz1, dz)
+    yield from bps.movr(zp.zpz1, dz)
     #movr(zp.zpx, dz * 3.75)
-    movr(zp.zpy, -dz*0.003091258)
-    movr(zp.zpx, (dz*0.003/40.33))
+    yield from bps.movr(zp.zpy, -dz*0.003091258)
+    yield from bps.movr(zp.zpx, (dz*0.003/40.33)+ dz*0.01/2.0)
 
 
 def reset_tpx(num):
@@ -2393,7 +2372,7 @@ def mov_to_image_cen_smar(scan_id=-1, elem='Er', bitflag=1, movflag=1):
     sleep(.1)
 
 
-def mov_to_line_center(scan_id=-1,elem='Ga',threshold=0,moveflag=1,movepiezoflag=0):
+def mov_to_line_center(scan_id=-1,elem='Ga',threshold=0,moveflag=0,movepiezoflag=0):
     df2 = db.get_table(db[scan_id],fill=False)
     xrf = np.asfarray(eval('df2.Det2_' + elem)) + np.asfarray(eval('df2.Det1_' + elem)) + np.asfarray(eval('df2.Det3_' + elem))
     hdr=db[scan_id]['start']
@@ -2408,17 +2387,17 @@ def mov_to_line_center(scan_id=-1,elem='Ga',threshold=0,moveflag=1,movepiezoflag
     if moveflag:
         if x_motor == 'zpssx':
             #if((mc < .2) and movepiezoflag):
-            mov(zps.zpssx,mc)
+            yield from bps.mov(zps.zpssx,mc)
             #else:
             #    movr(zps.smarx,(mc)/1000.)
         if x_motor == 'zpssy':
             #if((mc < .2) and movepiezoflag):
-            mov(zps.zpssy,mc)
+            yield from bps.mov(zps.zpssy,mc)
             #else:
             #    movr(zps.smary,(mc-zps.zpssy.position)/1000.)
         if x_motor == 'zpssz':
             #if((mc < .2) and movepiezoflag):
-            mov(zps.zpssz,mc)
+            yield from bps.mov(zps.zpssz,mc)
             #else:
             #    movr(zps.smarz,(mc)/1000.)
     else:
@@ -2426,7 +2405,7 @@ def mov_to_line_center(scan_id=-1,elem='Ga',threshold=0,moveflag=1,movepiezoflag
             print('move smarx by '+np.str(mc/1000.))
         if x_motor == 'zpssy':
             print('move smary by '+np.str(mc/1000.))
-
+    return mc
 
 def mov_to_line_center_mll(scan_id=-1,elem='Au',threshold=0,moveflag=1,movepiezoflag=0):
     df2 = db.get_table(db[scan_id],fill=False)
