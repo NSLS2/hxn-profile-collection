@@ -41,10 +41,12 @@ from hxntools.handlers.timepix import TimepixHDF5Handler
 db.fs.register_handler(TimepixHDF5Handler._handler_name, TimepixHDF5Handler, overwrite=True)
 
 '''
+import h5py
 def my_export(sid,num=1, interval=1):
     for i in range(num):
         #sid, df = _load_scan(sid, fill_events=False)
         h = db[sid]
+        sid = h.start['scan_id']
         df = db.get_table(h)
         dir = os.path.join('/data/home/hyan/export','scan_{:06d}'.format((sid//10000)*10000))
         if os.path.exists(dir) == False:
@@ -78,9 +80,10 @@ def my_export(sid,num=1, interval=1):
             os.system(mycmd)
             #num_subscan=-1
         else:
-            h = db[sid]
+            #h = db[sid]
             #df = db.get_table(h,fill=False)
-            images = db.get_images(h,name='merlin1')
+            images = list(db[sid].data('merlin1'))
+            imgs = np.squeeze(images)
             '''
             num_frame, tmp = np.shape(df)
             for i in range(num_frame):
@@ -94,7 +97,7 @@ def my_export(sid,num=1, interval=1):
             '''
             path = os.path.join(dir, 'scan_{}.h5'.format(sid))
             f = h5py.File(path, 'w')
-            dset = f.create_dataset('/entry/instrument/detector/data', data=images)
+            dset = f.create_dataset('/entry/instrument/detector/data', data=imgs)
             f.close()
 
         print('Scan {}. Saving to {}'.format(sid, path))

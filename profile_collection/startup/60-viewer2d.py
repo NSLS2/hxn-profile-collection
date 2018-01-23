@@ -570,11 +570,14 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
 
 
 def export(sid, num=1,
-           export_folder='/data/users/2017Q2/Hruszkewycz_2017Q2/Data/',
+           export_folder='/data/users/2018Q1/Murray_2018Q1/',
            fields_excluded=['xspress3_ch1', 'xspress3_ch2',
                             'xspress3_ch3', 'merlin1']):
     for i in range(num):
         sid, df = _load_scan(sid, fill_events=False)
+        #h = db[sid]
+        #sid = h.start['scan_id']
+        #df = h.table
         path = os.path.join(export_folder, 'scan_{}.txt'.format(sid))
         print('Scan {}. Saving to {}'.format(sid, path))
         # non_objects = [name for name, col in df.iteritems()
