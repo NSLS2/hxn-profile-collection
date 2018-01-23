@@ -19,6 +19,10 @@ susp_enabled = SuspendBoolLow(beamline_status.beamline_enabled,
                               tripped_message='beamline is not enabled',
                               )
 
+susp_cryo_cooler = SuspendBoolHigh(beamline_status.cryo_filling,
+                                   sleep=60*10,
+                                   tripped_message='Cyrocooler is refilling')
+
 # NOTE: to enable or disable the suspenders, (un)comment the following:
 # Install all suspenders:
 #RE.install_suspender(susp_current)

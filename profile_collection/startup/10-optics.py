@@ -13,6 +13,8 @@ class BeamlineStatus(Device):
     beam_current = Cpt(EpicsSignalRO, 'SR:C03-BI{DCCT:1}I:Real-I')
     beamline_enabled = Cpt(EpicsSignalRO,
                            'SR:C03-EPS{PLC:1}Sts:ID_BE_Enbl-Sts')
+    cryo_filling = Cpt(EpicsSignalRO,
+                           'XF:03IDA-OP{CC:1}V3_STS')
 
 
 beamline_status = BeamlineStatus('', name='beamline_status')
