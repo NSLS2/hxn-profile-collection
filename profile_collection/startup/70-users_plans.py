@@ -989,9 +989,9 @@ def th_fly2d(th_start, th_end, num, x_start, x_end, x_num, y_start, y_end,
         sleep(5)
         #RE(fly1d(zpssx,-5,5,100,0.1))
         #move_fly_center('Ge')
-        RE(fly2d(zpssx, x_start, x_end, x_num, zpssy, y_start, y_end, y_num, sec, return_speed=40))
-        movr(zps.zpsth, th_step)
-    movr(zps.zpsth, -(th_end + th_step))
+        yield from fly2d(dets1,zpssx, x_start, x_end, x_num, zpssy, y_start, y_end, y_num, sec, return_speed=40)
+        yield from bps.movr(zps.zpsth, th_step)
+    yield from bps.movr(zps.zpsth, -(th_end + th_step))
     shutter('close')
 
 
@@ -1034,8 +1034,11 @@ def mov_diff(gamma, delta, r=500, calc=0):
         print('diff_x = ', -x_yaw, ' diff_cz = ', dz,
               ' diff_y1 = ', y1, ' diff_y2 = ', y2)
         if calc == 0:
-            print('wait for 1 sec, hit Ctrl+c to quit the operation')
-            sleep(1)
+
+            print('wait for 3 sec, hit Ctrl+c to quit the operation')
+            sleep(3)
+            yield from bps.mov(diff.y1,y1,diff.y2,y2,diff.x,-x_yaw,diff.yaw,gamma*180.0/np.pi,diff.cz,dz)
+            '''
             diff.y1.move(y1, wait=False)
             sleep(0.5)
             diff.y2.move(y2, wait=False)
@@ -1045,6 +1048,7 @@ def mov_diff(gamma, delta, r=500, calc=0):
             diff.yaw.move(gamma * 180. / np.pi, wait=False)
             sleep(0.5)
             diff.cz.move(dz, wait=False)
+            '''
             while (diff.x.moving is True or diff.y1.moving is True or diff.y2.moving is True or diff.yaw.moving is True):
                 sleep(2)
         else:
@@ -2408,11 +2412,13 @@ def mov_to_line_center(scan_id=-1,elem='Ga',threshold=0,moveflag=0,movepiezoflag
     return mc
 
 def mov_to_line_center_mll(scan_id=-1,elem='Au',threshold=0,moveflag=1,movepiezoflag=0):
-    df2 = db.get_table(db[scan_id],fill=False)
-    xrf = np.asfarray(eval('df2.Det2_' + elem)) + np.asfarray(eval('df2.Det1_' + elem)) + np.asfarray(eval('df2.Det3_' + elem))
-    hdr=db[scan_id]['start']
-    x_motor = hdr['motor']
-    x = np.asarray(df2[x_motor])
+    h = db[scan_id]
+    scan_id  = h.start['scan_id']
+    df2 = h.table()
+    xrf = np.array(df2['Det2_' + elem]) + np.array(df2['Det1_' + elem]) + np.array(df2['Det3_' + elem])
+
+    x_motor = h.start['motor']
+    x = np.array(df2[x_motor])
     xrf[xrf<(np.max(xrf)*threshold)] = 0.
     xrf[xrf>=(np.max(xrf)*threshold)] = 1.
     #print(x)
