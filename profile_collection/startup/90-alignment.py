@@ -184,6 +184,24 @@ def pos2angle(col,row):
     gamma = np.arccos(pos[2]/np.sqrt(pos_xy[0]**2+pos_xy[1]**2+pos_xy[2]**2))*180.0/np.pi
     return (gamma,delta,tth)
 
+
+def return_line_center(sid,elem='Cr'):
+    h = db[sid]
+
+    df2 = h.table()
+    xrf = np.array(df2['Det2_' + elem]+df2['Det1_' + elem] + df2['Det3_' + elem])
+    threshold = np.max(xrf)/10.0
+    x_motor = h.start['motor']
+    x = np.array(df2[x_motor])
+    #print(x)
+    #print(xrf)
+    xrf[xrf<(np.max(xrf)*0.25)] = 0.
+    xrf[xrf>=(np.max(xrf)*0.25)] = 1.
+    mc = find_mass_center_1d(xrf,x)
+    return mc
+
+
+
 def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Cr', move_flag=0):
     a_step = (a_end - a_start)/a_num
     x = np.zeros(a_num+1)
@@ -194,23 +212,26 @@ def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Cr'
         yield from bps.mov(zps.zpsth, x[i])
         if np.abs(x[i]) > 45:
             yield from fly1d(dets1,zpssz,start,end,num,acq_time)
-            tmp = yield from mov_to_line_center(-1, elem)
+            tmp = return_line_center(-1, elem)
             y[i] = tmp*np.sin(x[i]*np.pi/180.0)
         else:
             yield from fly1d(dets1,zpssx,start,end,num,acq_time)
-            tmp = yield from mov_to_line_center(-1,elem)
+            tmp = return_line_center(-1,elem)
             y[i] = tmp*np.cos(x[i]*np.pi/180.0)
-
+        print('y=',y[i])
     y = -1*np.array(y)
     x = np.array(x)
     r0, dr, offset = rot_fit_2(x,y)
     yield from bps.mov(zps.zpsth, 0)
     dx = -dr*np.sin(offset*np.pi/180)/1000.0
     dz = -dr*np.cos(offset*np.pi/180)/1000.0
-    print(dx,dz)
+
+    print('dx=',dx,'   ', 'dz=',dz)
+
     if move_flag:
         yield from bps.movr(zps.smarx, dx)
         yield from bps.movr(zps.smarz, dz)
+
 
     return x,y
 
