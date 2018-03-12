@@ -38,7 +38,7 @@ sclr2 = StruckScaler('XF:03IDC-ES{Sclr:2}', name='sclr2')
 sclr2.read_attrs = ['channels', 'calculations']
 sclr2.channels.read_attrs = [f'chan{j}' for j in range(1, 6)]
 sclr2.calculations.read_attrs = ['calc5']
-sclr2.hints = {'fields': [f'sclr2_ch{j}' for j in (1, 2, 3)]}
+sclr2.hints = {'fields': [f'sclr2_ch{j}' for j in (2, 3, 4)]}
 
 sclr2_ch1 = sclr2.channels.chan1
 sclr2_ch2 = sclr2.channels.chan2

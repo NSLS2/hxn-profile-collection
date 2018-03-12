@@ -1,10 +1,16 @@
 from scipy.optimize import curve_fit
+import scipy
+
+def erfunc3(z,a,b,c,d,e):
+    return d+e*z+c*(scipy.special.erf((z-a)/(b*np.sqrt(2.0)))+1.0)
+def erfunc4(z,a,b,c,d,e):
+    return d+e*z+c*(1.0-scipy.special.erf((z-a)/(b*np.sqrt(2.0))))
 
 def erfunc1(z,a,b,c):
     return c*(scipy.special.erf((z-a)/(b*np.sqrt(2.0)))+1.0)
 def erfunc2(z,a,b,c):
     return c*(1.0-scipy.special.erf((z-a)/(b*np.sqrt(2.0))))
-def erf_fit(sid,mot,elem,mon='sclr1_ch4'):
+def erf_fit(sid,mot,elem,mon='sclr1_ch4',linear_flag=True):
 
     h=db[sid]
     sid=h['start']['scan_id']
@@ -25,11 +31,20 @@ def erf_fit(sid,mot,elem,mon='sclr1_ch4'):
     y_half_mean = np.mean(ydata[0:half_size])
     edge_pos=find_edge(xdata,ydata,10)
     if y_half_mean < y_mean:
-        popt,pcov=curve_fit(erfunc1,xdata,ydata, p0=[edge_pos,0.05,0.5])
-        fit_data=erfunc1(xdata,popt[0],popt[1],popt[2]);
+        if linear_flag == False:
+            popt,pcov=curve_fit(erfunc1,xdata,ydata, p0=[edge_pos,0.05,0.5])
+            fit_data=erfunc1(xdata,popt[0],popt[1],popt[2]);
+        else:
+            popt,pcov=curve_fit(erfunc3,xdata,ydata, p0=[edge_pos,0.05,0.5,0,0])
+            fit_data=erfunc3(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
     else:
-        popt,pcov=curve_fit(erfunc2,xdata,ydata,p0=[edge_pos,0.05,0.5])
-        fit_data=erfunc2(xdata,popt[0],popt[1],popt[2]);
+        if linear_flag == False:
+            popt,pcov=curve_fit(erfunc2,xdata,ydata,p0=[edge_pos,0.05,0.5])
+            fit_data=erfunc2(xdata,popt[0],popt[1],popt[2]);
+        else:
+            popt,pcov=curve_fit(erfunc4,xdata,ydata,p0=[edge_pos,0.05,0.5,0,0])
+            fit_data=erfunc4(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
+
     #print('a={} b={} c={}'.format(popt[0],popt[1],popt[2]))
     plt.plot(xdata,fit_data)
     plt.title('sid= %d edge = %.3f, FWHM = %.2f nm' % (sid,popt[0], popt[1]*2.3548*1000.0))
@@ -202,7 +217,7 @@ def return_line_center(sid,elem='Cr'):
 
 
 
-def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Cr', move_flag=0):
+def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Ta_L', move_flag=0):
     a_step = (a_end - a_start)/a_num
     x = np.zeros(a_num+1)
     y = np.zeros(a_num+1)
@@ -212,11 +227,11 @@ def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Cr'
         yield from bps.mov(zps.zpsth, x[i])
         if np.abs(x[i]) > 45:
             yield from fly1d(dets1,zpssz,start,end,num,acq_time)
-            tmp = return_line_center(-1, elem)
+            tmp = return_line_center(-1, elem=elem)
             y[i] = tmp*np.sin(x[i]*np.pi/180.0)
         else:
             yield from fly1d(dets1,zpssx,start,end,num,acq_time)
-            tmp = return_line_center(-1,elem)
+            tmp = return_line_center(-1,elem=elem)
             y[i] = tmp*np.cos(x[i]*np.pi/180.0)
         print('y=',y[i])
     y = -1*np.array(y)

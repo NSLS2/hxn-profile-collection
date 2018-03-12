@@ -25,7 +25,7 @@ susp_cryo_cooler = SuspendBoolHigh(beamline_status.cryo_filling,
 
 # NOTE: to enable or disable the suspenders, (un)comment the following:
 # Install all suspenders:
-RE.install_suspender(susp_current)
-RE.install_suspender(susp_shutter)
-RE.install_suspender(susp_enabled)
-RE.install_suspender(susp_cryo_cooler)
+#RE.install_suspender(susp_current)
+#RE.install_suspender(susp_shutter)
+#RE.install_suspender(susp_enabled)
+#RE.install_suspender(susp_cryo_cooler)

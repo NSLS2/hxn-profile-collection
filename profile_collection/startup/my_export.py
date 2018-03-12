@@ -1,47 +1,5 @@
-'''
-import os
-import h5py
-import numpy as np
-import matplotlib.pyplot as plt
-import sys
-from scipy import ndimage
-#from databroker import get_table, db
-
-from hxntools.handlers import register
-import filestore
-register()
-
-from metadatastore.mds import MDS
-from databroker import Broker
-from databroker.core import register_builtin_handlers
-from filestore.fs import FileStore
-_mds_config = {'host': 'xf03id-ca1',
-               'port': 27017,
-               'database': 'datastore-new',
-               'timezone': 'US/Eastern'}
-mds = MDS(_mds_config)
-_fs_config = {'host': 'xf03id-ca1',
-              'port': 27017,
-              'database': 'filestore-new'}
-db = Broker(mds, FileStore(_fs_config))
-
-_mds_config_old = {'host': 'xf03id-ca1',
-                   'port': 27017,
-                   'database': 'datastore',
-                   'timezone': 'US/Eastern'}
-mds_old = MDS(_mds_config_old)
-
-_fs_config_old = {'host': 'xf03id-ca1',
-                  'port': 27017,
-                  'database': 'filestore'}
-db_old = Broker(mds_old, FileStore(_fs_config_old))
 
 
-from hxntools.handlers.timepix import TimepixHDF5Handler
-db.fs.register_handler(TimepixHDF5Handler._handler_name, TimepixHDF5Handler, overwrite=True)
-
-'''
-import h5py
 def my_export(sid,num=1, interval=1):
     for i in range(num):
         #sid, df = _load_scan(sid, fill_events=False)
@@ -69,9 +27,9 @@ def my_export(sid,num=1, interval=1):
         #np.savetxt(path, (df['sclr1_ch3'], df['p_ssx'], df['p_ssy']), fmt='%1.5e')
         np.savetxt(path, (df['sclr1_ch4'], df['zpssx'], df['zpssy']), fmt='%1.5e')
 
-        #filename = get_all_filenames(sid,'merlin1')
-        #num_subscan = len(filename)
-        num_subscan = 2
+        filename = get_path(sid,'merlin1')
+        num_subscan = len(filename)
+        #num_subscan = 2
         if num_subscan == 1:
             for fn in filename:
                 break

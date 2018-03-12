@@ -26,7 +26,7 @@ class PseudoEnergyCal(PseudoPositioner, NamedDevice):
 
         # if theta changes, update the pseudo position
         self.mono_angle.subscribe(self.parameter_updated)
-        self.energy.subscribe(self.parameter_updated)
+        # self.energy.subscribe(self.parameter_updated)
 
     def parameter_updated(self, value=None, **kwargs):
         self._update_position()
