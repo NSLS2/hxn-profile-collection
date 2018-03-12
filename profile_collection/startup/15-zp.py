@@ -64,6 +64,7 @@ class HxnZPSample(NamedDevice):
 
 
 zps = HxnZPSample('', name='zps')
+zpsth = zps.zpsth
 zpssx = zps.zpssx
 zpssy = zps.zpssy
 zpssz = zps.zpssz

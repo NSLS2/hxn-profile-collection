@@ -66,8 +66,22 @@ del _hxn_register_handlers
 from IPython import get_ipython
 from nslsii import configure_base, configure_olog
 
-configure_base(get_ipython().user_ns, db_new)
+configure_base(get_ipython().user_ns, db_new, bec=False)
 configure_olog(get_ipython().user_ns)
+
+from bluesky.callbacks.best_effort import BestEffortCallback
+bec = BestEffortCallback()
+
+# un import *
+ns = get_ipython().user_ns
+for m in [bp, bps, bpp]:
+    for n in dir(m):
+        if (not n.startswith('_')
+               and n in ns
+               and getattr(ns[n], '__module__', '')  == m.__name__):
+            del ns[n]
+del ns
+from bluesky.magics import BlueskyMagics
 
 # set some default meta-data
 RE.md['group'] = ''
@@ -128,5 +142,6 @@ pd.options.display.max_rows = None
 pd.options.display.max_columns = 10
 
 # enable < shortcut to replace RE(
+from bluesky.plan_stubs import  mov
 from bluesky.utils import register_transform
 register_transform('RE', prefix='<')
