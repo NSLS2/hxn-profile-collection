@@ -65,9 +65,9 @@ class HxnMLLDiffractionSample(NamedDevice):
     sbx = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:4-Ax:5}Mtr', doc='sx')
     sbz = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:2}Mtr', doc='sz')
     # dssx and dssz are swapped, due to the installation. (01/17/17, H. Yan)
-    dssz = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-dssx}Mtr', doc='fine_x')
+    dssx = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-dssx}Mtr', doc='fine_x')
     dssy = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-dssy}Mtr', doc='fine_y')
-    dssx = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-dssz}Mtr', doc='fine_z')
+    dssz = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-dssz}Mtr', doc='fine_z')
     kill = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1-Diff}Kill-Cmd.PROC',
                doc='kill all piezos')
 

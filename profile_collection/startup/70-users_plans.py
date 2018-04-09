@@ -95,16 +95,16 @@ def mll_z_linescan(z_start, z_end, z_num,
     yield from bps.mov(smlld.sbz, init_sz)
 
 
-def mll_z_2dscan(z_start, z_end, z_num, mot1, start1, end1, num1, mot2, start2, end2, num2, acq_time, elem='Au'):
+def mll_z_fly2d(z_start, z_end, z_num, mot1, start1, end1, num1, mot2, start2, end2, num2, acq_time, elem='Au'):
     z_step = (z_end - z_start)/z_num
     init_sz = smlld.sbz.position
-    movr(smlld.sbz, z_start)
+    yield from bps.movr(smlld.sbz, z_start)
     for i in range(z_num + 1):
-        RE(fly2d(mot1, start1, end1, num1, mot2, start2, end2, num2, acq_time))
+        yield from fly2d(dets1,mot1, start1, end1, num1, mot2, start2, end2, num2, acq_time,return_speed=40)
         plot2dfly(-1, elem, 'sclr1_ch4')
         plt.title('sbz = %.3f' % smlld.sbz.position)
-        movr(smlld.sbz, z_step)
-    mov(smlld.sbz, init_sz)
+        yield from bps.movr(smlld.sbz, z_step)
+    yield from bps.mov(smlld.sbz, init_sz)
 
 def zp_z_2dscan(z_start, z_end, z_num, mot1, start1, end1, num1, mot2, start2, end2, num2, acq_time, elem='Co'):
     z_step = (z_end - z_start)/z_num
@@ -119,7 +119,7 @@ def zp_z_2dscan(z_start, z_end, z_num, mot1, start1, end1, num1, mot2, start2, e
 
 def go_det(det):
     if det == 'merlin':
-        yield from bps.mov(diff.x, 7.7, diff.y1, 5.3, diff.y2, 5.3)
+        yield from bps.mov(diff.x, 7.7, diff.y1, 0.3, diff.y2, 0.3)
         #yield from bps.mov(diff.y1,-3.2)
         #yield from bps.mov(diff.y2,-3.2)
     elif det == 'cam11':
@@ -466,7 +466,7 @@ def find_mass_center_1d(array,x):
     mc = tmp / np.sum(array)
     return mc
 
-def mov_to_image_center_tmp(scan_id=-1, elem='W_L', bitflag=1, moveflag=1,piezomoveflag=1):
+def mov_to_image_center_tmp(scan_id=-1, elem='Au_L', bitflag=1, moveflag=1,piezomoveflag=1):
     df2 = db.get_table(db[scan_id],fill=False)
     xrf = np.asfarray(eval('df2.Det2_' + elem)) + np.asfarray(eval('df2.Det1_' + elem)) + np.asfarray(eval('df2.Det3_' + elem))
     hdr = db[scan_id]['start']
@@ -835,7 +835,7 @@ def tomo_scan_list_zp_no_move(angle_list, x_start, x_end, x_num,
 
 
 
-def tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
+def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
               y_start, y_end, y_num, exposure):
 
     angle_start = np.float(angle_start)
@@ -857,7 +857,7 @@ def tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
         #    sleep(60)
 
         angle = angle_start + i * angle_step
-        mov(smlld.dsth, angle)
+        yield from bps.mov(smlld.dsth, angle)
         #x_start_real = x_start / np.cos(angle*np.pi/180.)
         #x_end_real = x_end / np.cos(angle*np.pi/180.)
 
@@ -879,31 +879,40 @@ def tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
         mc = find_mass_center(data)
         mov(zps.zpsx, x[mc]-0.001)
         '''
-        while (sclr2_ch4.get() < 150000):
-            sleep(60)
-            print('IC3 is lower than 150000, waiting...')
+        while (sclr2_ch4.get() < 15000):
+            yield from bps.sleep(60)
+            print('IC3 is lower than 15000, waiting...')
 
         if np.abs(angle) <= 45:
+
+            yield from fly2d(dets1, smlld.dssz,-5,5,50,smlld.dssy,
+                     -5, 5, 50, 0.05, return_speed=40)
+            yield from mov_to_image_cen_dsx(-1)
+            
             x_start_real = x_start / np.cos(angle * np.pi / 180.)
             x_end_real = x_end / np.cos(angle * np.pi / 180.)
             #RE(fly2d(zpssx, x_start_real, x_end_real, x_num, zpssy,
             #         y_start, y_end, y_num, exposure, return_speed=40))
-            RE(fly2d(smlld.dssz,x_start_real,x_end_real,x_num,smlld.dssy,
-                     y_start, y_end, y_num, exposure, return_speed=40))
+            yield from fly2d(dets1, smlld.dssz,x_start_real,x_end_real,x_num,smlld.dssy,
+                     y_start, y_end, y_num, exposure, return_speed=40)
 
         else:
+            yield from fly2d(dets1, smlld.dssx,-5,5,50,smlld.dssy,
+                     -5, 5, 50, 0.05, return_speed=40)
+            yield from mov_to_image_cen_dsx(-1)
+            
             x_start_real = x_start / np.abs(np.sin(angle * np.pi / 180.))
             x_end_real = x_end / np.abs(np.sin(angle * np.pi / 180.))
             #RE(fly2d(zpssz, x_start_real, x_end_real, x_num, zpssy,
             #         y_start, y_end, y_num, exposure, return_speed=40))
-            Re(fly2d(smlld.dssx,x_start_real,x_end_real,x_num, smlld.dssy,
-                     y_start, y_end, y_num, exposure, return_speed = 40))
+            yield from fly2d(dets1, smlld.dssx,x_start_real,x_end_real,x_num, smlld.dssy,
+                     y_start, y_end, y_num, exposure, return_speed = 40)
 
         #mov_to_image_cen_smar(-1)
-        mov_to_image_cen_dsx(-1)
+        yield from mov_to_image_cen_dsx(-1)
         merlin1.unstage()
         print('waiting for 5 sec...')
-        sleep(5)
+        yield from bps.sleep(5)
     #mov(zps.zpsth, 0)
 
 
@@ -2292,7 +2301,7 @@ def mov_to_image_cen_corr_dsx(scan_id=-1, elem='Pt',bitflag=1, moveflag=1):
 
 
 
-def mov_to_image_cen_dsx(scan_id=-1, elem='Au', bitflag=1, moveflag=1,piezomoveflag=1,x_offset=0,y_offset=0):
+def mov_to_image_cen_dsx(scan_id=-1, elem='Ni', bitflag=1, moveflag=1,piezomoveflag=1,x_offset=0,y_offset=0):
 
     df2 = db.get_table(db[scan_id],fill=False)
     xrf = np.asfarray(eval('df2.Det2_' + elem)) + np.asfarray(eval('df2.Det1_' + elem)) + np.asfarray(eval('df2.Det3_' + elem))
@@ -2353,12 +2362,12 @@ def mov_to_image_cen_dsx(scan_id=-1, elem='Au', bitflag=1, moveflag=1,piezomovef
         if moveflag:
             if piezomoveflag:
                 print('move dssx to', (x_cen+x_offset))
-                mov(smlld.dssx,(x_cen+x_offset))
+                yield from bps.mov(smlld.dssx,(x_cen+x_offset))
             else:
-                movr(smlld.dsx, -1.*(x_cen+x_offset))
+                yield from bps.movr(smlld.dsx, -1.*(x_cen+x_offset))
             #movr(smlld.dsz, Pt_max_x-Pt_max_target_x)
             #mov(zps.zpssx,0)
-        sleep(.1)
+        yield from bps.sleep(.1)
 
     elif x_motor == 'dssz':
         #print('move dsx,by', -1*(Pt_max_x-Pt_max_target_x) , 'um')
@@ -2367,25 +2376,25 @@ def mov_to_image_cen_dsx(scan_id=-1, elem='Au', bitflag=1, moveflag=1,piezomovef
         if moveflag:
             if piezomoveflag:
                 print('move dssz to', (x_cen+x_offset))
-                mov(smlld.dssz,(x_cen + x_offset))
+                yield from bps.mov(smlld.dssz,(x_cen + x_offset))
             else:
                 print('move dsz by', (x_cen+x_offset))
-                movr(smlld.dsz, (x_cen + x_offset))
+                yield from bps.movr(smlld.dsz, (x_cen + x_offset))
 #        movr(smlld.dsx, -1*(Pt_max_x-Pt_max_target_x))
         #mov(zps.zpssx,0)
-    sleep(.1)
+    yield from bps.sleep(.1)
 
     if moveflag:
         print('y center', y_cen)
         if piezomoveflag:
             print('move dssy to:', (y_cen +y_offset)*0.001)
-            mov(smlld.dssy,(y_cen - y_offset))
+            yield from bps.mov(smlld.dssy,(y_cen - y_offset))
         else:
             #movr(smlld.dsy, y_cen*0.001)
             print('move dsy by:', (y_cen +y_offset)*0.001)
-            movr(smlld.dsy, (y_cen + y_offset)*0.001)
+            yield from bps.movr(smlld.dsy, (y_cen + y_offset)*0.001)
     #mov(zps.zpssy,0)
-    sleep(.1)
+    yield from bps.sleep(.1)
 
 
 
@@ -2948,6 +2957,7 @@ def position_scan(dsx_list,dsy_list,x_range_list,x_num_list,y_range_list,y_num_l
     #mov(ssa2.vgap,0.05)
 
 
+
 def tt_scan():
     yield from recover_zp_scan_pos(42343,1,1)
     yield from fly2d(dets1,zpssx, -10, 10, 250, zpssy, -10, 10, 250, 0.05)
@@ -2961,4 +2971,11 @@ def tt_scan():
     yield from fly2d(dets1,zpssx, -10, 10, 250, zpssy, -10, 10, 250, 0.05)
     yield from recover_zp_scan_pos(42321,1,1)
     yield from fly2d(dets1,zpssx, -10, 10, 250, zpssy, -10, 10, 250, 0.05)
+
+
+def movr_mll_sbz(d):
+    print(d,0.01*d,-0.01*d)
+    yield from bps.movr(sbz,d)
+    yield from bps.movr(dsx,0.01*d)
+    yield from bps.movr(dsy,-0.01*d)
 

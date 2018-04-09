@@ -6,6 +6,8 @@ def my_export(sid,num=1, interval=1):
         h = db[sid]
         sid = h.start['scan_id']
         df = db.get_table(h)
+        mots = h.start['motors']
+
         dir = os.path.join('/data/home/hyan/export','scan_{:06d}'.format((sid//10000)*10000))
         if os.path.exists(dir) == False:
             print('{} does not exist.'.format(dir))
@@ -25,7 +27,7 @@ def my_export(sid,num=1, interval=1):
                   columns=sorted(non_objects))
         path = os.path.join(dir,'scan_{}_scaler.txt'.format(sid))
         #np.savetxt(path, (df['sclr1_ch3'], df['p_ssx'], df['p_ssy']), fmt='%1.5e')
-        np.savetxt(path, (df['sclr1_ch4'], df['zpssx'], df['zpssy']), fmt='%1.5e')
+        np.savetxt(path, (df['sclr1_ch4'], df[mots[0]], df[mots[1]]), fmt='%1.5e')
 
         filename = get_path(sid,'merlin1')
         num_subscan = len(filename)

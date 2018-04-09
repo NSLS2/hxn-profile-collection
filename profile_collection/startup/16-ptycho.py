@@ -56,3 +56,14 @@ p_bsy = p.bsy
 p_bsz = p.bsz
 
 p_vth = p.vth
+
+class HxnPrototypeSample(Device):
+    bx = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:9-Ax:3}Mtr')
+    by = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:9-Ax:2}Mtr')
+    bz = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:9-Ax:1}Mtr')
+
+
+ps = HxnPrototypeSample('', name='ps')
+ps_bx = ps.bx
+ps_by = ps.by
+ps_bz = ps.bz

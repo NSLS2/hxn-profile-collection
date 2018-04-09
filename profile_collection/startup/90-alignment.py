@@ -10,12 +10,13 @@ def erfunc1(z,a,b,c):
     return c*(scipy.special.erf((z-a)/(b*np.sqrt(2.0)))+1.0)
 def erfunc2(z,a,b,c):
     return c*(1.0-scipy.special.erf((z-a)/(b*np.sqrt(2.0))))
-def erf_fit(sid,mot,elem,mon='sclr1_ch4',linear_flag=True):
+def erf_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
 
     h=db[sid]
     sid=h['start']['scan_id']
-    df=db.get_table(h)
-    xdata=df[mot]
+    df=h.table()
+    mots=h.start['motors']
+    xdata=df[mots[0]]
     xdata=np.array(xdata,dtype=float)
     #x_mean=np.mean(xdata)
     #xdata=xdata-x_mean
@@ -48,21 +49,54 @@ def erf_fit(sid,mot,elem,mon='sclr1_ch4',linear_flag=True):
     #print('a={} b={} c={}'.format(popt[0],popt[1],popt[2]))
     plt.plot(xdata,fit_data)
     plt.title('sid= %d edge = %.3f, FWHM = %.2f nm' % (sid,popt[0], popt[1]*2.3548*1000.0))
+    plt.xlabel(mots[0])
     return (popt[0],popt[1]*2.3548*1000.0)
+
+def data_erf_fit(xdata,ydata,linear_flag=True):
+
+    xdata=np.array(xdata,dtype=float)
+    ydata=np.array(ydata,dtype=float)
+    y_min=np.min(ydata)
+    y_max=np.max(ydata)
+    ydata=(ydata-y_min)/y_max
+    plt.figure()
+    plt.plot(xdata,ydata,'bo')
+    y_mean = np.mean(ydata)
+    half_size = int (len(ydata)/2)
+    y_half_mean = np.mean(ydata[0:half_size])
+    edge_pos=find_edge(xdata,ydata,10)
+    if y_half_mean < y_mean:
+        if linear_flag == False:
+            popt,pcov=curve_fit(erfunc1,xdata,ydata, p0=[edge_pos,0.05,0.5])
+            fit_data=erfunc1(xdata,popt[0],popt[1],popt[2]);
+        else:
+            popt,pcov=curve_fit(erfunc3,xdata,ydata, p0=[edge_pos,0.05,0.5,0,0])
+            fit_data=erfunc3(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
+    else:
+        if linear_flag == False:
+            popt,pcov=curve_fit(erfunc2,xdata,ydata,p0=[edge_pos,0.05,0.5])
+            fit_data=erfunc2(xdata,popt[0],popt[1],popt[2]);
+        else:
+            popt,pcov=curve_fit(erfunc4,xdata,ydata,p0=[edge_pos,0.05,0.5,0,0])
+            fit_data=erfunc4(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
+
+    #print('a={} b={} c={}'.format(popt[0],popt[1],popt[2]))
+    plt.plot(xdata,fit_data)
+    plt.title('sid= %d edge = %.3f, FWHM = %.2f nm' % (sid,popt[0], popt[1]*2.3548*1000.0))
+    return (popt[0],popt[1]*2.3548*1000.0)
+
+
 
 def mll_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4'):
     z_pos=np.zeros(z_num+1)
     fit_size=np.zeros(z_num+1)
     z_step = (z_end - z_start)/z_num
     init_sz = smlld.sbz.position
-    movr(smlld.sbz, z_start)
+    yield from bps.movr(smlld.sbz, z_start)
     for i in range(z_num + 1):
-        if mot == 'dssy':
-            RE(fly1d(dssy, start, end, num, acq_time))
-        elif mot == 'dssx':
-            RE(fly1d(dssx, start, end, num, acq_time))
-        else:
-            raise KeyError('mot has to be dssx or dssy')
+
+        yield from fly1d(dets1, mot, start, end, num, acq_time)
+
         #plot(-1, elem, mon)
         #plt.title('sbz = %.3f' % smlld.sbz.position)
         '''
@@ -94,13 +128,14 @@ def mll_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem=
         fit_size[i]=popt[1]*2.3548*1000
         plt.title('sid = %d sbz = %.3f um FWHM = %.2f nm' %(sid,smlld.sbz.position,fit_size[i]))
         '''
-        edge_pos,fwhm=erf_fit(-1,mot,elem,mon)
+        edge_pos,fwhm=erf_fit(-1,elem,mon)
         fit_size[i]=fwhm
         z_pos[i]=smlld.sbz.position
-        movr(smlld.sbz, z_step)
-    mov(smlld.sbz, init_sz)
+        yield from bps.movr(smlld.sbz, z_step)
+    yield from bps.mov(smlld.sbz, init_sz)
     plt.figure()
     plt.plot(z_pos,fit_size,'bo')
+    plt.xlabel('sbz')
 
 def find_edge(xdata,ydata,size):
     set_point=0.5
@@ -113,42 +148,40 @@ def find_edge(xdata,ydata,size):
     index=scipy.argmin(zdata)
     index=index+j
     return xdata[index]
-def hmll_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4'):
+def hmll_z_alignment(z_start, z_end, z_num, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4'):
     z_pos=np.zeros(z_num+1)
     fit_size=np.zeros(z_num+1)
     z_step = (z_end - z_start)/z_num
     init_hz = hmll.hz.position
-    movr(hmll.hz, z_start)
+    yield from bps.movr(hmll.hz, z_start)
     for i in range(z_num + 1):
-        if mot == 'dssx':
-            RE(fly1d(dssx, start, end, num, acq_time))
-        else:
-            raise KeyError('mot has to be dssx')
-        edge_pos,fwhm=erf_fit(-1,mot,elem,mon)
+        yield from fly1d(dets1,dssz, start, end, num, acq_time)
+        edge_pos,fwhm=erf_fit(-1,elem,mon)
         fit_size[i]=fwhm
         z_pos[i]=hmll.hz.position
-        movr(hmll.hz, z_step)
-    mov(hmll.hz, init_hz)
+        yield from bps.movr(hmll.hz, z_step)
+    yield from bps.mov(hmll.hz, init_hz)
     plt.figure()
     plt.plot(z_pos,fit_size,'bo')
-def vmll_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4'):
+    plt.xlabel('hz')
+
+def vmll_z_alignment(z_start, z_end, z_num, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4'):
     z_pos=np.zeros(z_num+1)
     fit_size=np.zeros(z_num+1)
     z_step = (z_end - z_start)/z_num
     init_vz = vmll.vz.position
-    movr(vmll.vz, z_start)
+    yield from bps.movr(vmll.vz, z_start)
     for i in range(z_num + 1):
-        if mot == 'dssy':
-            RE(fly1d(dssy, start, end, num, acq_time))
-        else:
-            raise KeyError('mot has to be dssx')
-        edge_pos,fwhm=erf_fit(-1,mot,elem,mon)
+        yield from fly1d(dets1,dssy, start, end, num, acq_time)
+        edge_pos,fwhm=erf_fit(-1,elem,mon)
+        #plt.title('vz={}'.format(vmll.vz.position),loc='right')
         fit_size[i]=fwhm
         z_pos[i]=vmll.vz.position
-        movr(vmll.vz, z_step)
-    mov(vmll.vz, init_vz)
+        yield from bps.movr(vmll.vz, z_step)
+    yield from bps.mov(vmll.vz, init_vz)
     plt.figure()
     plt.plot(z_pos,fit_size,'bo')
+    plt.xlabel('vz')
 
 def zp_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4'):
     z_pos=np.zeros(z_num+1)
@@ -249,5 +282,66 @@ def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Ta_
 
 
     return x,y
+
+
+def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt_L', move_flag=0):
+    a_step = (a_end - a_start)/a_num
+    x = np.zeros(a_num+1)
+    y = np.zeros(a_num+1)
+    orig_th = smlld.dsth.position
+    for i in range(a_num+1):
+        x[i] = a_start + i*a_step
+        yield from bps.mov(smlld.dsth, x[i])
+        if np.abs(x[i]) > 45:
+            yield from fly1d(dets1,dssx,start,end,num,acq_time)
+            tmp = return_line_center(-1, elem=elem)
+            y[i] = tmp*np.sin(x[i]*np.pi/180.0)
+        else:
+            yield from fly1d(dets1,dssz,start,end,num,acq_time)
+            tmp = return_line_center(-1,elem=elem)
+            y[i] = -tmp*np.cos(x[i]*np.pi/180.0)
+        print('y=',y[i])
+    y = -1*np.array(y)
+    x = np.array(x)
+    r0, dr, offset = rot_fit_2(x,y)
+    yield from bps.mov(smlld.dsth, 0)
+    dx = -dr*np.sin(offset*np.pi/180)
+    dz = -dr*np.cos(offset*np.pi/180)
+
+    print('dx=',dx,'   ', 'dz=',dz)
+
+    if move_flag:
+        yield from bps.movr(smlld.dsx, dx)
+        yield from bps.movr(smlld.dsz, dz)
+
+
+    return x,y
+
+def check_baseline(sid,name):
+    h = db[sid]
+    bl = h.table('baseline')
+    dsmll_list = ['dsx','dsy','dsz','dsth','sbx','sbz','dssx','dssy','dssz']
+    vmll_list = ['vx','vy','vz','vchi','vth']
+    hmll_list = ['hx','hy','hz','hth']
+    mllosa_list = ['osax','osay','osaz']
+    mllbs_list = ['mll_bsx','mll_bsy','mll_bsz','mll_bsth']
+
+    if name =='dsmll':
+        print(bl[dsmll_list])
+    elif name == 'vmll':
+        print(bl[vmll_list])
+    elif name == 'hmll':
+        print(bl[hmll_list])
+    elif name == 'mllosa':
+        print(bl[mllosa_list])
+    elif name == 'mll':
+        print(bl[dsmll_list])
+        print(bl[vmll_list])
+        print(bl[hmll_list])
+        print(bl[mllosa_list])
+    else:
+        print(name,bl[name])
+
+
 
 

@@ -570,9 +570,9 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
 
 
 def export(sid, num=1,
-           export_folder='/data/users/2018Q1/Hruszkewycz_2018Q1/',
+           export_folder='/data/users/2018Q1/Bajt_2018Q1/',
            fields_excluded=['xspress3_ch1', 'xspress3_ch2',
-                            'xspress3_ch3', 'merlin1']):
+                            'xspress3_ch3', 'merlin2']):
     for i in range(num):
         #sid, df = _load_scan(sid, fill_events=False)
         h = db[sid]
@@ -590,7 +590,7 @@ def export(sid, num=1,
         df.to_csv(path, float_format='%1.5e', sep='\t',
                   columns=sorted(non_objects))
         path = os.path.join(export_folder, 'scan_{}.h5'.format(sid))
-        filename = get_path(sid, 'merlin1')
+        filename = get_path(sid, 'merlin2')
         num_subscan = len(filename)
         if num_subscan == 1:
             for fn in filename:
@@ -598,7 +598,7 @@ def export(sid, num=1,
             mycmd = ''.join(['cp', ' ', fn, ' ', path])
             os.system(mycmd)
         else:
-            imgs = list(h.data('merlin1'))
+            imgs = list(h.data('merlin2'))
             imgs = np.squeeze(imgs)
             #path = os.path.join(export_folder, 'scan_{}.h5'.format(sid))
             f = h5py.File(path, 'w')
@@ -644,9 +644,10 @@ def plot_img_sum(sid, det = 'merlin1', roi_flag=False,x_cen=0,y_cen=0,size=0):
     h = db[sid]
     sid = h.start['scan_id']
     imgs = list(h.data(det))
+    #imgs = np.array(imgs)
     imgs = np.array(np.squeeze(imgs))
     df = h.table()
-    mon = np.array(df['sclr1_ch4'])
+    #mon = np.array(df['sclr1_ch3']/1.0)
     #plt.figure()
     #plt.imshow(imgs[0],clim=[0,50])
     if roi_flag:
@@ -667,6 +668,7 @@ def plot_img_sum(sid, det = 'merlin1', roi_flag=False,x_cen=0,y_cen=0,size=0):
         plt.subplot(1,2,2)
         plt.semilogy(x,tot)
         plt.title('sid={}'.format(sid))
+        #data_erf_fit(x,tot)
     elif num_mots == 2:
         tot = np.sum(imgs,2)
         tot = np.array(np.sum(tot,1))
