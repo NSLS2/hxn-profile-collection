@@ -32,6 +32,21 @@ _fs_config_old = {'host': 'xf03id-ca1',
                   'database': 'filestore'}
 db_old = Broker(mds_old, Registry(_fs_config_old))
 
+### Cluster Broker
+
+_mds_config_cluster = {'host': 'xf03id1-mdb01',
+               'port': 27017,
+               'database': 'datastore-new',
+               'timezone': 'US/Eastern'}
+mds_cluster = MDS(_mds_config_cluster, auth=False)
+
+_fs_config_cluster = {'host': 'xf03id1-mdb01',
+              'port': 27017,
+              'database': 'filestore-new'}
+
+_db_cluster = Broker(mds_cluster, Registry(_fs_config_cluster))
+
+#f_composite = open("compositedb.out", "w")
 
 # wrapper for two databases
 class Broker_New(Broker):
@@ -55,18 +70,24 @@ class Broker_New(Broker):
             result = db_old.get_images(*args, **kwargs)
         return result
 
+    def insert(self, name, doc):
+        _db_cluster.insert(name, doc)
+        return db_new.insert(name, doc)
+
 
 db = Broker_New(mds, Registry(_fs_config))
 
 from hxntools.handlers import register as _hxn_register_handlers
 _hxn_register_handlers(db_new)
+#_hxn_register_handlers(_db_cluster)
 _hxn_register_handlers(db_old)
 del _hxn_register_handlers
 # do the rest of the standard configuration
 from IPython import get_ipython
 from nslsii import configure_base, configure_olog
 
-configure_base(get_ipython().user_ns, db_new, bec=False)
+# configure_base(get_ipython().user_ns, db_new, bec=False)
+configure_base(get_ipython().user_ns, db, bec=False)
 configure_olog(get_ipython().user_ns)
 
 from bluesky.callbacks.best_effort import BestEffortCallback
