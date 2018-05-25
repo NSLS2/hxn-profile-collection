@@ -56,7 +56,7 @@ bpm7_y = EpicsMotor('XF:03IDC-ES{BPM:7-Ax:Y}Mtr', name='bpm7_y')
 
 mc7 = HxnTurboPmacController('XF:03IDC-ES{MC:7', name='mc7')
 
-questar_f = EpicsMotor('XF:03IDC-ES{MC:8-Ax:1}Mtr', name='questar_f')
+# questar_f = EpicsMotor('XF:03IDC-ES{MC:8-Ax:1}Mtr', name='questar_f')
 
 mc8 = HxnTurboPmacController('XF:03IDC-ES{MC:8', name='mc8')
 # mc9 = HxnTurboPmacController('XF:03IDC-ES{MC:9', name='mc9')
