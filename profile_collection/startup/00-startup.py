@@ -100,7 +100,7 @@ class CompositeRegistry(Registry):
         run_start=None
         ignore_duplicate_error=False
         duplicate_exc=None
-  
+
         if root is None:
             root = ''
 
@@ -166,10 +166,10 @@ class CompositeRegistry(Registry):
         return ret
 
     def register_datum(self, resource_uid, datum_kwargs, validate=False):
-  
+
         if validate:
             raise RuntimeError('validate not implemented yet')
-        
+
         datum_uid = str(uuid.uuid4())
 
         # db2 database
@@ -179,7 +179,7 @@ class CompositeRegistry(Registry):
         ret_db2 = datum_db2['datum_id']
 
         # db1 database
-        
+
         col = self._datum_col
         datum = self._api.insert_datum(col, resource_uid, datum_uid, datum_kwargs, {}, None)
         ret = datum['datum_id']
@@ -187,13 +187,13 @@ class CompositeRegistry(Registry):
         return ret
 
     def _doc_or_uid_to_uid(self, doc_or_uid):
- 
+
         if not isinstance(doc_or_uid, six.string_types):
             try:
                 doc_or_uid = doc_or_uid['uid']
             except TypeError:
                 pass
-            
+
         return doc_or_uid
 
     def _bulk_insert_datum(self, col, resource, datum_ids,
@@ -202,7 +202,7 @@ class CompositeRegistry(Registry):
         resource_id = self._doc_or_uid_to_uid(resource)
 
         bulk = col.initialize_unordered_bulk_op()
-        
+
         d_uids = deque()
 
         for d_id, d_kwargs in zip(datum_ids, datum_kwarg_list):
@@ -212,29 +212,29 @@ class CompositeRegistry(Registry):
             apply_to_dict_recursively(dm, sanitize_np)
             bulk.insert(dm)
             d_uids.append(dm['datum_id'])
-            
+
         bulk_res = bulk.execute()
 
         # f_benchmark.write(" _bulk_insert_datum: bulk_res: {0}  \n".format(bulk_res))
         # f_benchmark.flush()
-        
+
         return d_uids
 
     def bulk_register_datum_table(self, resource_uid, dkwargs_table,
                                   validate=False):
- 
+
         if validate:
             raise RuntimeError('validate not implemented yet')
 
         d_ids = [str(uuid.uuid4()) for j in range(len(dkwargs_table))]
-        
+
         dkwargs_table = pd.DataFrame(dkwargs_table)
         datum_kwarg_list = [ dict(r) for _, r in dkwargs_table.iterrows()]
 
         method_name = "bulk_register_datum_table"
 
         # db2 database
-        
+
         col_db2 = fs_db2['datum']
 
         t1 = datetime.now();
@@ -273,7 +273,7 @@ class Broker_New(Broker):
         if name == "start":
             f_benchmark.write("\n scan_id: {} \n".format(doc['scan_id']))
             f_benchmark.flush()
-                
+
         t1 = datetime.now();
         ret1 = db2.insert(name, doc)
         t2 = datetime.now()
@@ -285,13 +285,13 @@ class Broker_New(Broker):
         t4 = datetime.now()
 
         _write_to_file(db1_name, name, t3, t4);
-        
+
         return ret2
 
 db = Broker_New(mds_db1, CompositeRegistry(_fs_config_db1))
 
 from hxntools.handlers import register as _hxn_register_handlers
-_hxn_register_handlers(db1)
+_hxn_register_handlers(db)
 #_hxn_register_handlers(db_old)
 del _hxn_register_handlers
 # do the rest of the standard configuration
