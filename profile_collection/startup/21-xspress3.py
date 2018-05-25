@@ -142,3 +142,27 @@ except KeyboardInterrupt:
 def hint_xspress_element(elm):
     elm = elm.upper()
     xspress3.hints['fields'] = [f'Det{j}_{elm}' for j in (1, 2, 3)]
+
+
+def configure_xspress3(sclr):
+    sclr.configuration_attrs = sclr.component_names
+    sclr.flyer_timestamps.kind = 'omitted'
+    sclr.roi_data.kind = 'omitted'
+    sclr.make_directories.kind = 'omitted'
+    sclr.rewindable.kind = 'omitted'
+    for k, chan in sclr.channels.items():
+        chan.configuration_names.kind = 'config'
+        chan.vis_enabled.kind = 'omitted'
+        chan.rois.kind = 'normal'
+        chan.rois.num_rois.kind = 'config'
+        for n in chan.rois.component_names:
+            if 'roi' in n and n != 'num_rois':
+                roi = getattr(chan.rois, n)
+                roi.kind = 'normal'
+                roi.value.kind = 'normal'
+                roi.value_sum.kind = 'omitted'
+            else:
+                attr = getattr(chan.rois, n)
+                attr.kind = 'config'
+
+configure_xspress3(xspress3)
