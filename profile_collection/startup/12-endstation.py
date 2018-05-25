@@ -93,7 +93,8 @@ bs_y = EpicsMotor('XF:03IDC-ES{MC:12-Ax:5}Mtr', name='bs_y')
 mc12 = HxnTurboPmacController('XF:03IDC-ES{MC:12', name='mc12')
 
 
-class DetectorStation(MotorBundle):
+class DetectorStation(PseudoPositioner):
+    # Real axis
     z = Cpt(EpicsMotor, '-Ax:Z}Mtr')
     x = Cpt(EpicsMotor, '-Ax:X}Mtr')
     y1 = Cpt(EpicsMotor, '-Ax:Y1}Mtr')
@@ -102,6 +103,91 @@ class DetectorStation(MotorBundle):
     cx = Cpt(EpicsMotor, '-Ax:C1}Mtr')
     cy = Cpt(EpicsMotor, '-Ax:C2}Mtr')
     cz = Cpt(EpicsMotor, '-Ax:C3}Mtr')
+
+    # pseudo axis
+    gamma = Cpt(PseudoSingle)
+    delta = Cpt(PseudoSingle)
+    r = Cpt(PseudoSingle)
+
+    @pseudo_position_argument
+    def forward(self, position):
+        gamma = np.deg2rad(position.gamma)
+        delta = np.deg2rad(position.delta)
+        r = position.r
+
+        beta = np.deg2rad(89.337)
+
+        diff_z = self.z.position
+
+        z_yaw = 574.668 + 581.20 + diff_z
+        z1 = 574.668 + 395.2 + diff_z
+        z2 = z1 + 380
+        d = 395.2
+
+        x_yaw = sin(gamma) * z_yaw / sin(beta + gamma)
+        R_yaw = sin(beta) * z_yaw / sin(beta + gamma)
+        R1 = R_yaw - (z_yaw - z1)
+        R2 = R_yaw - (z_yaw - z2)
+        y1 = tan(delta) * R1
+        y2 = tan(delta) * R2
+        R_det = R1 / cos(delta) - d
+        dz = r - R_det
+        if x_yaw > 787 or x_yaw < -200:
+            raise ValueError(f'diff_x = {-x_yaw}'
+                              ' out of range, move diff_z '
+                              'upstream and try again')
+        elif dz < -250 or dz > 0:
+            raise ValueError(f'diff_cz = {dz}'
+                              ' out of range, move diff_z up or down stream and try again')
+        elif y1 > 750:
+            raise ValueError(f'diff_y1 = {y1} out of range, move diff_z upstream '
+                  'and try again')
+        elif y2 > 1000:
+            raise ValueError(f'diff_y2 = {y2} out of range, move diff_z upstream '
+                  'and try again')
+
+        return self.RealPosition(z=diff_z,
+                                 x=-x_yaw,
+                                 y1=y1,
+                                 y2=y2,
+                                 yaw=np.rad2deg(gamma),
+                                 cx=self.cx.position,
+                                 cy=self.cy.position,
+                                 cz=dz)
+
+    @real_position_argument
+    def inverse(self, position):
+        diff_z = position.z
+        diff_yaw = np.deg2rad(position.yaw)
+        diff_cz = position.cz
+        diff_x = position.x
+        diff_y1 = position.y1
+        diff_y2 = position.y2
+
+        gamma = diff_yaw
+        beta = 89.337 * np.pi / 180
+        z_yaw = 574.668 + 581.20 + diff_z
+        z1 = 574.668 + 395.2 + diff_z
+        z2 = z1 + 380
+        d = 395.2
+
+        x_yaw = sin(gamma) * z_yaw / sin(beta + gamma)
+        R_yaw = sin(beta) * z_yaw / sin(beta + gamma)
+        R1 = R_yaw - (z_yaw - z1)
+        R2 = R_yaw - (z_yaw - z2)
+
+
+        if abs(x_yaw + diff_x) > 3:
+            gamma = delta = r = np.nan
+        elif abs(diff_y1 / R1 - diff_y2 / R2) > 0.01:
+            gamma = delta = r = np.nan
+        else:
+            delta = arctan(diff_y1 / R1)
+            r = R1 / cos(delta) - d + diff_cz
+
+        return self.PseudoPosition(gamma=np.rad2deg(gamma),
+                                   delta=np.rad2deg(delta),
+                                   r=r)
 
 
 diff = DetectorStation('XF:03IDC-ES{Diff', name='diff')
