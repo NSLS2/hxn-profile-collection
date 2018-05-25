@@ -1175,7 +1175,11 @@ def mov_diff(gamma, delta, r=500, calc=0):
 
             print('wait for 3 sec, hit Ctrl+c to quit the operation')
             yield from bps.sleep(3)
-            yield from bps.mov(diff.y1,y1,diff.y2,y2,diff.x,-x_yaw,diff.yaw,gamma*180.0/np.pi,diff.cz,dz)
+            yield from bps.mov(diff.y1,y1,
+                               diff.y2,y2,
+                               diff.x,-x_yaw,
+                               diff.yaw,gamma*180.0/np.pi,
+                               diff.cz,dz)
             '''
             diff.y1.move(y1, wait=False)
             sleep(0.5)
