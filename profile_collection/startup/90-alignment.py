@@ -243,11 +243,29 @@ def return_line_center(sid,elem='Cr'):
     x = np.array(df2[x_motor])
     #print(x)
     #print(xrf)
-    xrf[xrf<(np.max(xrf)*0.25)] = 0.
-    xrf[xrf>=(np.max(xrf)*0.25)] = 1.
+    xrf[xrf<(np.max(xrf)*0.2)] = 0.
+    xrf[xrf>=(np.max(xrf)*0.2)] = 1.
     mc = find_mass_center_1d(xrf,x)
     return mc
 
+
+def return_tip_pos(sid,elem='Cr'):
+    h = db[sid]
+
+    df2 = h.table()
+    xrf = np.array(df2['Det2_' + elem]+df2['Det1_' + elem] + df2['Det3_' + elem])
+    threshold = np.max(xrf)/10.0
+    x_motor = h.start['motor']
+    x = np.array(df2[x_motor])
+    #print(x)
+    #print(xrf)
+    #xrf[xrf<(np.max(xrf)*0.5)] = 0.
+    #xrf[xrf>=(np.max(xrf)*0.5)] = 1.
+    #mc = find_mass_center_1d(xrf,x)
+    xrf_d = np.diff(xrf)
+    peak_index = np.where(xrf_d == np.max(xrf_d))
+    #print(x[peak_index[0][0]+1])
+    return x[peak_index[0][0]+1]
 
 
 def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Ta_L', move_flag=0):
@@ -341,7 +359,80 @@ def check_baseline(sid,name):
         print(bl[mllosa_list])
     else:
         print(name,bl[name])
+        return(bl[name].data[0])
 
 
+def check_info(sid):
+    h = db[sid]
+    sid = h.start['scan_id']
+    scan_time = datetime.fromtimestamp(h.start['time'])
+    scan_uid = h.start['uid']
+    scan_type = h.start['plan_name']
+    scan_motors = h.start['motors']
+    num_motors = len(scan_motors)
+    det_list = h.start['detectors']
+    exp_time = h.start['exposure_time']
+    print('sid = {}'.format(sid), 'uid = ', scan_uid, scan_time)
+    if num_motors == 1:
+        mot1 = scan_motors[0]
+        s1 = h.start['scan_start1']
+        e1 = h.start['scan_end1']
+        n1 = h.start['num1']
+        print(scan_type,mot1,s1,e1,n1,exp_time)
+    elif num_motors == 2:
+        mot1 = scan_motors[0]
+        s1 = h.start['scan_start1']
+        e1 = h.start['scan_end1']
+        n1 = h.start['num1']
+        mot2 = scan_motors[1]
+        s2 = h.start['scan_start2']
+        e2 = h.start['scan_end2']
+        n2 = h.start['num2']
+        print(scan_type, mot1,s1,e1,n1,mot2,s2,e2,n2,exp_time)
+
+    print('detectors = ', det_list)
+
+def scan_command(sid):
+    h = db[sid]
+    sid = h.start['scan_id']
+    scan_type = h.start['plan_name']
+    scan_motors = h.start['motors']
+    num_motors = len(scan_motors)    
+    exp_time = h.start['exposure_time']
+    if num_motors == 1:
+        mot1 = scan_motors[0]
+        s1 = h.start['scan_start']
+        e1 = h.start['scan_end']
+        n1 = h.start['num']
+        return(mot1+' {:1.3f} {:1.3f} {:d} {:1.3f}'.format(s1,e1,n1,exp_time))
+    elif num_motors == 2:
+        mot1 = scan_motors[0]
+        s1 = h.start['scan_start1']
+        e1 = h.start['scan_end1']
+        n1 = h.start['num1']
+        mot2 = scan_motors[1]
+        s2 = h.start['scan_start2']
+        e2 = h.start['scan_end2']
+        n2 = h.start['num2']
+        return(mot1+' {:1.3f} {:1.3f} {:d}'.format(s1,e1,n1)+' '+mot2+' {:1.3f} {:1.3f} {:d} {:1.3f}'.format(s2,e2,n2,exp_time))
+        
+class ScanInfo:
+    plan = ''
+    time = ''
+    command = ''
+    status = ''
+    det = ''
+    sid = ''
+
+def scan_info(sid):
+    si = ScanInfo()
+    h = db[sid]
+    si.sid = '{:d}'.format(h.start['scan_id'])
+    si.time = datetime.fromtimestamp(h.start['time']).isoformat()
+    si.plan = h.start['plan_name']
+    si.status = h.stop['exit_status']
+    si.command = scan_command(sid)
+    si.det = h.start['detectors']
+    return(si) 
 
 
