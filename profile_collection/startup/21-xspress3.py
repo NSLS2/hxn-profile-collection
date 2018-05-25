@@ -138,7 +138,6 @@ try:
 except KeyboardInterrupt:
     print('Xspress3 ROI configuration cancelled.')
 
-xspress3.hints = {'fields': []}
 
 def hint_xspress_element(elm):
     elm = elm.upper()
