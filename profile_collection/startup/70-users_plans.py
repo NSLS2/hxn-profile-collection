@@ -367,15 +367,15 @@ def rot_fit(x, y):
 
 def coarse_align_rot(x, y, pix_size):
     r0, dr, offset = rot_fit_2(x,y)
-    zps_kill_piezos()
-    mov(zps.zpsth, 0)
-    dx = -dr*np.sin(offset*np.pi/180)*pix_size/1000.0
-    dz = -dr*np.cos(offset*np.pi/180)*pix_size/1000.0
+    #zps_kill_piezos()
+    #mov(zps.zpsth, 0)
+    dx = -dr*np.sin(offset*np.pi/180)*pix_size
+    dz = -dr*np.cos(offset*np.pi/180)*pix_size
     print(dx,dz)
     #movr(zps.smarx, dx)
     #movr(zps.smarz, dz)
-    movr(smlld.dsx,dx*1000.)
-    movr(smlld.dsz,dz*1000.)
+    #movr(smlld.dsx,dx*1000.)
+    #movr(smlld.dsz,dz*1000.)
 
 
 def linear_fit(x, y):
@@ -858,6 +858,29 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
 
         angle = angle_start + i * angle_step
         yield from bps.mov(smlld.dsth, angle)
+
+
+        if np.abs(angle) <= 45:
+            yield from bps.mov(dssz,0)
+            yield from fly1d(dets1,dssz, -15, 15, 200, 0.2)
+
+            xc = return_line_center(-1,'Au_L')
+            yield from bps.mov(dssz,xc)
+        else:
+            yield from bps.mov(dssx,0)
+            yield from fly1d(dets1,dssx, -15, 15, 200, 0.2)
+            xc = return_line_center(-1,'Au_L')
+            yield from bps.mov(dssx,xc)
+
+        plot(-1,'Au_L')
+        plt.title('x_pos = {}'.format(xc))
+        yield from fly1d(dets1,dssy, -2.0, 2.0, 100, 0.2)
+        yc = return_tip_pos(-1,'Pt_L')
+        plot(-1,'Pt_L')
+        plt.title('y_pos = {}'.format(yc))
+        yield from bps.mov(dssy,yc+1.0)
+
+
         #x_start_real = x_start / np.cos(angle*np.pi/180.)
         #x_end_real = x_end / np.cos(angle*np.pi/180.)
 
@@ -885,10 +908,10 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
 
         if np.abs(angle) <= 45:
 
-            yield from fly2d(dets1, smlld.dssz,-5,5,50,smlld.dssy,
-                     -5, 5, 50, 0.05, return_speed=40)
-            yield from mov_to_image_cen_dsx(-1)
-            
+            #yield from fly2d(dets1, smlld.dssz,-5,5,50,smlld.dssy,
+            #         -5, 5, 50, 0.05, return_speed=40)
+            #yield from mov_to_image_cen_dsx(-1)
+
             x_start_real = x_start / np.cos(angle * np.pi / 180.)
             x_end_real = x_end / np.cos(angle * np.pi / 180.)
             #RE(fly2d(zpssx, x_start_real, x_end_real, x_num, zpssy,
@@ -897,10 +920,10 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
                      y_start, y_end, y_num, exposure, return_speed=40)
 
         else:
-            yield from fly2d(dets1, smlld.dssx,-5,5,50,smlld.dssy,
-                     -5, 5, 50, 0.05, return_speed=40)
-            yield from mov_to_image_cen_dsx(-1)
-            
+            #yield from fly2d(dets1, smlld.dssx,-5,5,50,smlld.dssy,
+            #         -5, 5, 50, 0.05, return_speed=40)
+            #yield from mov_to_image_cen_dsx(-1)
+
             x_start_real = x_start / np.abs(np.sin(angle * np.pi / 180.))
             x_end_real = x_end / np.abs(np.sin(angle * np.pi / 180.))
             #RE(fly2d(zpssz, x_start_real, x_end_real, x_num, zpssy,
@@ -909,7 +932,7 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
                      y_start, y_end, y_num, exposure, return_speed = 40)
 
         #mov_to_image_cen_smar(-1)
-        yield from mov_to_image_cen_dsx(-1)
+        #yield from mov_to_image_cen_dsx(-1)
         merlin1.unstage()
         print('waiting for 5 sec...')
         yield from bps.sleep(5)
@@ -1037,18 +1060,19 @@ def move_fly_center(elem):
     #mov(eval(scanned_axis),x[i_max[0]][0])
 
 def th_fly2d_mll(th_start, th_end, num, x_start, x_end, x_num, y_start, y_end, y_num, sec):
-    shutter('open')
+    yield from shutter('open')
     th_step = (th_end - th_start) / num
-    movr(smlld.dsth, th_start)
+    yield from bps.movr(smlld.dsth, th_start)
 
     for i in range(num + 1):
-        sleep(5)
+        yield from bps.sleep(5)
         #RE(fly1d(zpssx,-5,5,100,0.1))
         #move_fly_center('Ge')
-        RE(fly2d(dssx, x_start, x_end, x_num, dssy, y_start, y_end, y_num, sec, return_speed=40))
-        movr(smlld.dsth, th_step)
-    movr(smlld.dsth, -(th_end + th_step))
-    shutter('close')
+        yield from fly2d(dets1, dssz, x_start, x_end, x_num, dssy, y_start, y_end, y_num, sec, return_speed=40)
+        plot2dfly(-1,'Au_L')
+        yield from bps.movr(smlld.dsth, th_step)
+    yield from bps.movr(smlld.dsth, -(th_end + th_step))
+    yield from shutter('close')
 
 
 def th_fly2d(th_start, th_end, num, mot1, x_start, x_end, x_num, mot2, y_start, y_end,
@@ -2978,4 +3002,42 @@ def movr_mll_sbz(d):
     yield from bps.movr(sbz,d)
     yield from bps.movr(dsx,0.01*d)
     yield from bps.movr(dsy,-0.01*d)
+
+
+def trans_view():
+    yield from go_det('cam11')
+
+    yield from bps.movr(mllbs.bsx,500)
+    yield from bps.movr(mllbs.bsy,-500)
+
+    yield from bps.movr(mllosa.osax,2700)
+
+    yield from bps.movr(vmll.vy,500)
+    yield from bps.movr(hmll.hx,-500)
+
+
+    yield from bps.movr(ssa2.hgap,1)
+    yield from bps.movr(ssa2.vgap,1)
+
+    yield from bps.movr(s5.hgap,2)
+    yield from bps.movr(s5.vgap,2)
+
+def merlin_view():
+
+    yield from bps.movr(ssa2.hgap,-1)
+    yield from bps.movr(ssa2.vgap,-1)
+
+    yield from bps.movr(s5.hgap,-2)
+    yield from bps.movr(s5.vgap,-2)
+
+    yield from bps.movr(mllbs.bsx,-500)
+    yield from bps.movr(mllbs.bsy,500)
+
+    yield from bps.movr(osax,-2700)
+
+    yield from bps.movr(vmll.vy,-500)
+    yield from bps.movr(hmll.hx,500)
+
+    yield from go_det('merlin')
+
 
