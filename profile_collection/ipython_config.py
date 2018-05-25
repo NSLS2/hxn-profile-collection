@@ -221,7 +221,7 @@ c.TerminalInteractiveShell.show_rewritten_input = True
 # it is not applied if there are no more arguments on the line, and '2' for
 # 'full' autocall, where all callable objects are automatically called (even if
 # no arguments are present).
-c.TerminalInteractiveShell.autocall = 2
+c.TerminalInteractiveShell.autocall = 0
 
 # Number of lines of your screen, used to control printing of very long strings.
 # Strings longer than this number of lines will be sent through a pager instead
@@ -295,7 +295,7 @@ c.TerminalInteractiveShell.autocall = 2
 # c.TerminalInteractiveShell.deep_reload = False
 
 # Start logging to the given file in append mode.
-c.TerminalInteractiveShell.logappend = '/nfs/xf03id/logs/ophyd_user_log_xf03id.log'
+c.TerminalInteractiveShell.logappend = '/home/xf03id/logs/ophyd_user_log_xf03id.log'
 
 #
 # c.TerminalInteractiveShell.xmode = 'Context'

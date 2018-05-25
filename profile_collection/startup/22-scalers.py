@@ -7,10 +7,16 @@ sclr1 = HxnTriggeringScaler('XF:03IDC-ES{Sclr:1}', name='sclr1')
 # let the scans know which detectors sclr1 triggers:
 sclr1.scan_type_triggers['step'] = [zebra, merlin1, xspress3]
 sclr1.scan_type_triggers['fly'] = []
-sclr1.read_attrs = ['channels.chan1', 'channels.chan2', 'channels.chan3',
-                    'channels.chan4', 'channels.chan5', 'channels.chan6',
-                    'channels.chan7','channels.chan8', 'calculations.calc5',
-                    ]
+
+
+sclr1.read_attrs = ['channels', 'calculations']
+sclr1.channels.read_attrs = [f'chan{j}' for j in range(1, 6)]
+sclr1.calculations.read_attrs = ['calc5']
+sclr1.hints = {'fields': [f'sclr1_ch{j}' for j in (1, 2, 3)]}
+
+#[.chan1', 'channels.chan2', 'channels.chan3',
+#                    'channels.chan4', 'channels.chan5', 'channels.chan6',
+#                    'channels.chan7','channels.chan8', 'calculations.calc5',
 
 sclr1_ch1 = sclr1.channels.chan1
 sclr1_ch2 = sclr1.channels.chan2
@@ -29,7 +35,10 @@ for mca in sclr1_mca:
 # -- scaler 2, on the other hand, is just used as a regular scaler, however the
 #    user desires
 sclr2 = StruckScaler('XF:03IDC-ES{Sclr:2}', name='sclr2')
-sclr2.read_attrs = sclr1.read_attrs
+sclr2.read_attrs = ['channels', 'calculations']
+sclr2.channels.read_attrs = [f'chan{j}' for j in range(1, 6)]
+sclr2.calculations.read_attrs = ['calc5']
+sclr2.hints = {'fields': [f'sclr2_ch{j}' for j in (2, 3, 4)]}
 
 sclr2_ch1 = sclr2.channels.chan1
 sclr2_ch2 = sclr2.channels.chan2
@@ -54,3 +63,7 @@ def setup_scaler_names(scaler, channel_format, calc_format):
 
 setup_scaler_names(sclr1, 'sclr1_ch{}', 'sclr1_ch{}_calc')
 setup_scaler_names(sclr2, 'sclr2_ch{}', 'sclr2_ch{}_calc')
+
+def hint_sclr_channels(sclr, chans):
+    nm = sclr.name
+    sclr.hints = {'fields': [f'{nm}_ch{j}' for j in chans]}

@@ -2,7 +2,7 @@ import os
 import sys
 import numpy as np
 from datetime import datetime
-
+import h5py
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
@@ -570,11 +570,14 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
 
 
 def export(sid, num=1,
-           export_folder='/data/users/2017Q2/Hruszkewycz_2017Q2/Data/',
+           export_folder='/data/users/2018Q1/Bajt_2018Q1/',
            fields_excluded=['xspress3_ch1', 'xspress3_ch2',
-                            'xspress3_ch3', 'merlin1']):
+                            'xspress3_ch3', 'merlin2']):
     for i in range(num):
-        sid, df = _load_scan(sid, fill_events=False)
+        #sid, df = _load_scan(sid, fill_events=False)
+        h = db[sid]
+        sid = h.start['scan_id']
+        df = h.table()
         path = os.path.join(export_folder, 'scan_{}.txt'.format(sid))
         print('Scan {}. Saving to {}'.format(sid, path))
         # non_objects = [name for name, col in df.iteritems()
@@ -587,11 +590,37 @@ def export(sid, num=1,
         df.to_csv(path, float_format='%1.5e', sep='\t',
                   columns=sorted(non_objects))
         path = os.path.join(export_folder, 'scan_{}.h5'.format(sid))
-        fn, = get_all_filenames(sid, 'merlin1')
-        mycmd = ''.join(['scp', ' ', fn, ' ', path])
-        os.system(mycmd)
-
+        filename = get_path(sid, 'merlin2')
+        num_subscan = len(filename)
+        if num_subscan == 1:
+            for fn in filename:
+                break
+            mycmd = ''.join(['cp', ' ', fn, ' ', path])
+            os.system(mycmd)
+        else:
+            imgs = list(h.data('merlin2'))
+            imgs = np.squeeze(imgs)
+            #path = os.path.join(export_folder, 'scan_{}.h5'.format(sid))
+            f = h5py.File(path, 'w')
+            dset = f.create_dataset('/entry/instrument/detector/data', data=imgs)
+            f.close()
+        print('Scan {}. Saving to {}'.format(sid, path))
         sid = sid + 1
+
+
+def get_path(scan_id, key_name='merlin1', db=db):
+    """Return file path with given scan id and keyname.
+    """
+    import os
+    h = db[scan_id]
+    e = list(db.get_events(h, fields=[key_name]))
+    id_list = [v.data[key_name] for v in e]
+    rootpath = db.reg.resource_given_datum_id(id_list[0])['root']
+    flist = [db.reg.resource_given_datum_id(idv)['resource_path'] for idv in id_list]
+    flist = set(flist)
+    fpath = [os.path.join(rootpath, file_path) for file_path in flist]
+    return fpath
+
 
 
 def get_all_filenames(scan_id, key='merlin1'):
@@ -610,3 +639,67 @@ def get_all_filenames(scan_id, key='merlin1'):
     if len(set(filenames)) != len(filenames):
         return set(filenames)
     return filenames
+
+def plot_img_sum(sid, det = 'merlin1', roi_flag=False,x_cen=0,y_cen=0,size=0):
+    h = db[sid]
+    sid = h.start['scan_id']
+    imgs = list(h.data(det))
+    #imgs = np.array(imgs)
+    imgs = np.array(np.squeeze(imgs))
+    df = h.table()
+    #mon = np.array(df['sclr1_ch3']/1.0)
+    #plt.figure()
+    #plt.imshow(imgs[0],clim=[0,50])
+    if roi_flag:
+        imgs = imgs[:,x_cen-size//2:x_cen+size//2,y_cen-size//2:y_cen+size//2]
+    mots = h.start['motors']
+    num_mots = len(mots)
+    #df = h.table()
+    if num_mots == 1:
+        x = df[mots[0]]
+        x = np.array(x)
+        tot = np.sum(imgs,2)
+        tot = np.array(np.sum(tot,1))
+        #tot = tot/mon
+        plt.figure()
+        plt.subplot(1,2,1)
+        plt.plot(x,tot)
+        plt.title('sid={}'.format(sid))
+        plt.subplot(1,2,2)
+        plt.semilogy(x,tot)
+        plt.title('sid={}'.format(sid))
+        #data_erf_fit(x,tot)
+    elif num_mots == 2:
+        tot = np.sum(imgs,2)
+        tot = np.array(np.sum(tot,1))
+        dim1 = h.start['num1']
+        dim2 = h.start['num2']
+        x = np.array(df[mots[0]])
+        y = np.array(df[mots[1]])
+        extent = (np.nanmin(x), np.nanmax(x),np.nanmax(y), np.nanmin(y))
+        plt.figure()
+        #tot = tot/mon
+        image = tot.reshape(dim2,dim1)
+        plt.imshow(image,extent=extent)
+        plt.title('sid={} ROI SUM'.format(sid))
+
+def plot_xanes(sid, ref_sid=0,overlay=0):
+    h = db[sid]
+    sid = h.start['scan_id']
+    df = h.table()
+    energy = df['energy']
+
+    if ref_sid != 0:
+        ref_h = db[ref_sid]
+        ref_df = ref_h.table()
+        ref = ref_df['sclr1_ch5_calc']
+        absorb = - np.log(df['sclr1_ch5_calc']/ref)
+    else:
+        absorb = -np.log(df['sclr1_ch5_calc'])
+
+    if overlay==0:
+        plt.figure()
+
+    plt.plot(energy,absorb)
+    plt.title('sid={}'.format(sid))
+
