@@ -61,7 +61,7 @@ class HxnMLLDiffractionSample(NamedDevice):
     dsy = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:1-Ax:mlldiffy}Mtr', doc='dsy')
     dsx = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:6-Ax:2}Mtr', doc='dsx')
     dsz = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:6-Ax:3}Mtr', doc='dsz')
-    dsth = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:3-Ax:diffsth}Mtr', doc='dsth')
+    #dsth = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:3-Ax:diffsth}Mtr', doc='dsth')
     sbx = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:4-Ax:5}Mtr', doc='sx')
     sbz = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:2}Mtr', doc='sz')
     # dssx and dssz are swapped, due to the installation. (01/17/17, H. Yan)
@@ -79,7 +79,7 @@ dssz = smlld.dssz
 dsx = smlld.dsx
 dsy = smlld.dsy
 dsz = smlld.dsz
-dsth = smlld.dsth
+#dsth = smlld.dsth
 sbx = smlld.sbx
 sbz = smlld.sbz
 
@@ -158,8 +158,8 @@ mllosa = HxnMLL_OSA('', name='mllosa')
 
 
 class HxnMLLBeamStop(NamedDevice):
-    bsx = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:5-Ax:0}Mtr')
-    bsy = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:5-Ax:1}Mtr')
+    bsx = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:6-Ax:0}Mtr')
+    bsy = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:6-Ax:1}Mtr')
 
 
 mllbs = HxnMLLBeamStop('', name='mllbs')
