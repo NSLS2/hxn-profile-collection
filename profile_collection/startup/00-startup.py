@@ -10,6 +10,8 @@ from databroker import Broker
 from databroker.headersource.mongo import MDS
 from databroker.assets.mongo import Registry
 
+from databroker.headersource.core import doc_or_uid_to_uid
+
 from datetime import timedelta, datetime, tzinfo
 
 import pymongo
@@ -65,7 +67,7 @@ mongo_client = MongoClient(db2_addr, 27017)
 
 # Benchmark file
 
-f_benchmark = open("benchmark.out", "a+")
+f_benchmark = open("/home/xf03id/benchmark.out", "a+")
 
 # Composite Repository
 
@@ -167,10 +169,12 @@ class CompositeRegistry(Registry):
 
     def register_datum(self, resource_uid, datum_kwargs, validate=False):
 
+        ts =  str(datetime.now().timestamp())
+
         if validate:
             raise RuntimeError('validate not implemented yet')
 
-        datum_uid = str(uuid.uuid4())
+        datum_uid = ts + '-' + str(uuid.uuid4())
 
         # db2 database
 
@@ -220,13 +224,14 @@ class CompositeRegistry(Registry):
 
         return d_uids
 
-    def bulk_register_datum_table(self, resource_uid, dkwargs_table,
-                                  validate=False):
+    def bulk_register_datum_table(self, resource_uid, dkwargs_table, validate=False):
+
+        ts =  str(datetime.now().timestamp())
 
         if validate:
             raise RuntimeError('validate not implemented yet')
-
-        d_ids = [str(uuid.uuid4()) for j in range(len(dkwargs_table))]
+	
+        d_ids = [ts + '-' + str(uuid.uuid4()) for j in range(len(dkwargs_table))]
 
         dkwargs_table = pd.DataFrame(dkwargs_table)
         datum_kwarg_list = [ dict(r) for _, r in dkwargs_table.iterrows()]
@@ -266,7 +271,101 @@ db2 = Broker(mds_db2, CompositeRegistry(_fs_config_db2))
 
 
 # wrapper for two databases
-class Broker_New(Broker):
+
+_mds_config = {'host': 'xf03id1-mdb01',
+               'port': 27017,
+               'database': 'datastore-new',
+               'timezone': 'US/Eastern'}
+
+mds = MDS(_mds_config, auth=False)
+
+_fs_config = {'host': 'xf03id1-mdb01',
+              'port': 27017,
+              'database': 'filestore-new'}
+db_new = Broker(mds, Registry(_fs_config))
+
+_mds_config_old = {'host': 'xf03id1-mdb01',
+                   'port': 27017,
+                   'database': 'datastore',
+                   'timezone': 'US/Eastern'}
+mds_old = MDS(_mds_config_old, auth=False)
+
+_fs_config_old = {'host': 'xf03id1-mdb01',
+                  'port': 27017,
+                  'database': 'filestore'}
+db_old = Broker(mds_old, Registry(_fs_config_old))
+
+
+class CompositeBroker(Broker):
+
+    def __getitem__(self, key):
+        try:
+            return db_new[key]
+        except ValueError:
+            return db_old[key]
+
+    def get_table(self, *args, **kwargs):
+        result_old = db_old.get_table(*args, **kwargs)
+        result_new = db_new.get_table(*args, **kwargs)
+        result = [result_old, result_new]
+        return pd.concat(result)
+
+    def get_images(self, *args, **kwargs):
+        try:
+            result = db_new.get_images(*args, **kwargs)
+        except IndexError:
+            result = db_old.get_images(*args, **kwargs)
+        return result
+
+    # databroker.headersource.MDSROTemplate
+    def _bulk_insert_events(self, event_col, descriptor, events, validate, ts):
+        
+        descriptor_uid = doc_or_uid_to_uid(descriptor)
+
+        bulk = event_col.initialize_ordered_bulk_op()
+        
+        for ev in events:
+            data = dict(ev['data'])
+            
+            # Replace any filled data with the datum_id stashed in 'filled'.
+            for k, v in six.iteritems(ev.get('filled', {})):
+                if v:
+                    data[k] = v
+            # Convert any numpy types to native Python types.
+            apply_to_dict_recursively(data, sanitize_np)
+            timestamps = dict(ev['timestamps'])
+            apply_to_dict_recursively(timestamps, sanitize_np)
+            
+            # check keys, this could be expensive
+            if validate:
+                if data.keys() != timestamps.keys():
+                    raise ValueError(
+                        BAD_KEYS_FMT.format(data.keys(),
+                                            timestamps.keys()))
+            ev_uid = ts + '-' + ev['uid']
+
+            ev_out = dict(descriptor=descriptor_uid, uid=ev_uid,
+                          data=data, timestamps=timestamps,
+                          time=ev['time'],
+                          seq_num=ev['seq_num'])
+            
+            bulk.insert(ev_out)
+
+        return bulk.execute()
+        
+    # databroker.headersource.MDSROTemplate
+    # databroker.headersource.MDSRO(MDSROTemplate)
+    def _insert(self, name, doc, event_col, ts):
+
+        for desc_uid, events in doc.items():
+            # If events is empty, mongo chokes.
+            if not events:
+                continue
+            self._bulk_insert_events(event_col,
+                                     descriptor=desc_uid,
+                                     events=events,
+                                     validate=False, ts=ts)
+
 
     def insert(self, name, doc):
 
@@ -274,25 +373,34 @@ class Broker_New(Broker):
             f_benchmark.write("\n scan_id: {} \n".format(doc['scan_id']))
             f_benchmark.flush()
 
+        ts =  str(datetime.now().timestamp())
+
         t1 = datetime.now();
-        ret1 = db2.insert(name, doc)
+        if name in {'bulk_events'}:
+            ret1 = self._insert(name, doc, db2.mds._event_col, ts)
+        else:
+            ret1 = db2.insert(name, doc) 
+ 
         t2 = datetime.now()
 
         _write_to_file(db2_name, name, t1, t2);
 
         t3 = datetime.now();
-        ret2 = db1.insert(name, doc)
+        if name in {'bulk_events'}:
+            ret2 = self._insert(name, doc, db1.mds._event_col, ts)
+        else:
+            ret2 = db1.insert(name, doc)
         t4 = datetime.now()
 
         _write_to_file(db1_name, name, t3, t4);
 
         return ret2
 
-db = Broker_New(mds_db1, CompositeRegistry(_fs_config_db1))
+db = CompositeBroker(mds_db1, CompositeRegistry(_fs_config_db1))
 
 from hxntools.handlers import register as _hxn_register_handlers
-_hxn_register_handlers(db)
-#_hxn_register_handlers(db_old)
+_hxn_register_handlers(db_new)
+_hxn_register_handlers(db_old)
 del _hxn_register_handlers
 # do the rest of the standard configuration
 from IPython import get_ipython
