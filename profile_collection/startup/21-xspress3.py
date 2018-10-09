@@ -56,7 +56,7 @@ energy_M_list = np.array([1646,1712,1775,1840,1907,1976,2048,2118,2191,2267,2342
 
 
 def xspress3_roi_setup():
-    elem_list = np.array(['Ca','S','P','Ni','Cl','K','Ce_L','Si','Mn','Cr','Zn','Er_L','Cu','Fe','Pt_L','Au_L'])
+    elem_list = np.array(['Co','Si','Mg','Ni','Ba_L','Cl','Pt_L','W_L','Mn','Cr','As','Ge','Cu','Fe','Zn','Au_L'])
     num_elem = np.size(elem_list)
     if num_elem > 16:
         num_elem = 16
