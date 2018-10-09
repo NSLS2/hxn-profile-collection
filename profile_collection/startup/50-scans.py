@@ -30,9 +30,9 @@ dets5 = [zebra, sclr1, xspress3, dexela1]
 # define all the position names and save them to baseline
 # need to remove confict names
 conflict_name = ['pmllf', 'zplab', 'pmllc']
-descs = {d.name: set(d.describe())
-         for d in bu.separate_devices
-         (ophyd.utils.instances_from_namespace(ophyd.PositionerBase))}
+#descs = {d.name: set(d.describe())
+#         for d in bu.separate_devices
+#         (ophyd.utils.instances_from_namespace(ophyd.PositionerBase))}
 
 # sd.baseline = [dcm, m1, m2, beamline_status, smll, vmll, hmll, ssa2, zp]
 # sd.baseline = [dcm, m1, m2, beamline_status, smll, vmll, hmll, ssa2, bpm1, bpm2, smlld]
