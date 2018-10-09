@@ -51,12 +51,12 @@ class HxnZPSample(NamedDevice):
     zpsx = Cpt(EpicsMotor, 'XF:03IDC-ES{ZpPI:1-zpsx}Mtr', doc='coarse x')
     zpsz = Cpt(EpicsMotor, 'XF:03IDC-ES{ZpPI:1-zpsz}Mtr', doc='coarse z')
 
-    smarx = Cpt(SmarpodTranslationAxis, axis=2, doc='smarpod x')
-    smary = Cpt(SmarpodTranslationAxis, axis=3, doc='smarpod y')
-    smarz = Cpt(SmarpodTranslationAxis, axis=1, doc='smarpod z')
-    smarthx = Cpt(SmarpodRotationAxis, axis=2, doc='smarpod theta around x')
-    smarthy = Cpt(SmarpodRotationAxis, axis=3, doc='smarpod theta around y')
-    smarthz = Cpt(SmarpodRotationAxis, axis=1, doc='smarpod theta around z')
+    #smarx = Cpt(SmarpodTranslationAxis, axis=2, doc='smarpod x')
+    #smary = Cpt(SmarpodTranslationAxis, axis=3, doc='smarpod y')
+    #smarz = Cpt(SmarpodTranslationAxis, axis=1, doc='smarpod z')
+    #smarthx = Cpt(SmarpodRotationAxis, axis=2, doc='smarpod theta around x')
+    #smarthy = Cpt(SmarpodRotationAxis, axis=3, doc='smarpod theta around y')
+    #smarthz = Cpt(SmarpodRotationAxis, axis=1, doc='smarpod theta around z')
 
     kill = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1-ZP}Kill-Cmd.PROC')
     zero = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1-ZP}Zero-Cmd.PROC')
@@ -68,9 +68,10 @@ zpsth = zps.zpsth
 zpssx = zps.zpssx
 zpssy = zps.zpssy
 zpssz = zps.zpssz
-smarx = zps.smarx
-smary = zps.smary
-smarz = zps.smarz
+
+#smarx = zps.smarx
+#smary = zps.smary
+#smarz = zps.smarz
 
 
 zps = remove_names_maybe(zps, ['kill', 'zero'])
