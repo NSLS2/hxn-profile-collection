@@ -73,6 +73,36 @@ def my_export(sid,num=1, interval=1):
         '''
         sid = sid + interval
 
+def my_export_1d(sid_start, sid_end, name_list, interval = 1, det = 'merlin1'):
+    for i in range (sid_start, sid_end+1,interval):
+        hdr = db[i]
+        df = hdr.table()
+        sid = hdr.start['scan_id']
+        dir = os.path.join('/data/home/hyan/export','scan_{:06d}'.format((sid//10000)*10000))
+        if os.path.exists(dir) == False:
+            print('{} does not exist.'.format(dir))
+            mycmd = ''.join(['mkdir',' ',dir])
+            os.system(mycmd)
+            if os.path.exists(dir):
+                print('{} created successfully'.format(dir))
+            else:
+                print('Can''t create {}. Quit exporting '.format(dir))
+                return
+        path = os.path.join(dir, 'scan_{}.txt'.format(sid))
+        df.to_csv(path, float_format='%1.5e', sep='\t', columns=name_list)
+        print('Scan {}. Saving to {}'.format(sid, path))
+        images = list(db[sid].data(det))
+        images = np.squeeze(images)
+        path = os.path.join(dir, 'scan_{}.h5'.format(sid))
+        f = h5py.File(path, 'w')
+        dset = f.create_dataset('/entry/instrument/detector/data', data=images)
+        f.close()
+        print('Scan {}. Saving to {}'.format(sid, path))
+
+        
+
+
+
 '''
 def get_all_filenames(scan_id, key='merlin1'):
     #scan_id, df = _load_scan(scan_id, fill_events=False)

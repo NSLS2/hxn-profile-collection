@@ -703,3 +703,20 @@ def plot_xanes(sid, ref_sid=0,overlay=0):
     plt.plot(energy,absorb)
     plt.title('sid={}'.format(sid))
 
+'''
+def show_width():
+    yield from fly1d(dets1,dssz,-5,5,200,0.2)
+    yield from fly1d(dets1,dssx,-5,5,200,0.2)
+    plt.figure()
+    h = db[-1]
+    data = h.table()
+    x1 = data['dssx']
+    y1 = data['Det1_Pt_L']+data['Det2_Pt_L']+data['Det3_Pt_L']
+    plt.plot(x1,y1)
+
+    h = db[-2]
+    data = h.table()
+    x2 = -data['dssz']
+    y2 = data['Det1_Pt_L']+data['Det2_Pt_L']+data['Det3_Pt_L']
+    plt.plot(x2,y2,'red')
+'''

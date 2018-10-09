@@ -6,7 +6,8 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import cm, inch
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.platypus import Paragraph, Frame, Image
-from reportlab.lib.enums import TA_LEFT, TA_CENTER 
+from reportlab.lib.enums import TA_LEFT, TA_CENTER
+from reportlab.lib.colors import Color, white, black, blue, red
 from datetime import date
 import pickle
 import os.path
@@ -22,15 +23,18 @@ DPI=300
 global PDF_CTS
 PDF_CTS = 1
 
+global BOUND
+BOUND = 1
+
 class exp_info:
     fname = 'eLog.pdf'
     date = date.today().isoformat()
     sample = ''
     experimenter = ''
-    pic = '' 
+    pic = ''
 
 global G_INFO
-G_INFO = exp_info() 
+G_INFO = exp_info()
 
 if os.path.isfile(PDF_FILE):
     infoFile = open(PDF_FILE,'rb')
@@ -44,7 +48,7 @@ PDF_C = Canvas('tmp_fig.pdf',pagesize=letter)
 
 
 styles = getSampleStyleSheet()
- 
+
 
 class fig_info:
     def __init__(self,title,note):
@@ -88,24 +92,24 @@ class FigPage:
         #imgdata = cStringIO.StringIO()
         self.fig.savefig('tmp_img.png',dpi=DPI,format='png')
         #imgdata.seek(0)  # rewind the data
-        image = Image('tmp_img.png',3.75*inch,2.75*inch)
+        image = Image('tmp_img.png',3.5*inch,2.75*inch)
         story = []
         story.append(Paragraph(self.fig_info.title,styleN))
         story.append(image)
         story.append(Paragraph(self.fig_info.note,styleN))
         if np.mod(self.pos,2):
             col = 1
-            row = (self.pos-1)/2 + 1 
-        else:        
+            row = (self.pos-1)/2 + 1
+        else:
             col = 2
-            row = self.pos/2 
-        f = Frame(((col-1)*4+0.15)*inch, (7.5-(row-1)*3.5)*inch, 4.25*inch, 3.25*inch, showBoundary=0)
+            row = self.pos/2
+        f = Frame(((col-1)*4+0.15)*inch, (7.5-(row-1)*3.5)*inch, 4.*inch, 3.25*inch, showBoundary=BOUND)
         f.addFromList(story,self.c)
 
 class PicPage:
     def __init__(self,c,picFile,fig_info, pos):
         self.c = c
-        self.image = Image(picFile,3.75*inch,2.75*inch)
+        self.image = Image(picFile,3.5*inch,2.75*inch)
         self.fig_info = fig_info
         self.pos = pos
     def create(self):
@@ -121,7 +125,7 @@ class PicPage:
         else:
             col = 2
             row = self.pos/2
-        f = Frame(((col-1)*4+0.15)*inch, (7.5-(row-1)*3.5)*inch, 4.25*inch, 3.25*inch, showBoundary=0)
+        f = Frame(((col-1)*4+0.15)*inch, (7.5-(row-1)*3.5)*inch, 4.*inch, 3.25*inch, showBoundary=BOUND)
         f.addFromList(story,self.c)
 
 class NotePage:
@@ -140,7 +144,26 @@ class NotePage:
         else:
             col = 2
             row = self.pos/2
-        f = Frame(((col-1)*4+0.15)*inch, (7.5-(row-1)*3.5)*inch, 4.25*inch, 3.25*inch, showBoundary=0)
+        f = Frame(((col-1)*4+0.15)*inch, (7.5-(row-1)*3.5)*inch, 4.*inch, 3.25*inch, showBoundary=BOUND)
+        f.addFromList(story,self.c)
+
+class BlankPage:
+    def __init__(self,c,pos):
+        self.c = c
+        self.pos = pos
+    def create(self):
+        styleN = styles['Normal']
+        styleN.alignment = TA_CENTER
+        story = []
+        self.c.setFillColor(white)
+        story.append(self.c.rect(0,0,4.*inch,3.25*inch,fill=1))
+        if np.mod(self.pos,2):
+            col = 1
+            row = (self.pos-1)/2 + 1
+        else:
+            col = 2
+            row = self.pos/2
+        f = Frame(((col-1)*4+0.15)*inch, (7.5-(row-1)*3.5)*inch, 4.*inch, 3.25*inch, showBoundary=BOUND)
         f.addFromList(story,self.c)
 
 
@@ -150,7 +173,7 @@ def setup_pdf():
         infoFile = open(PDF_FILE,'rb')
         new_info = pickle.load(infoFile)
     else:
-        new_info = exp_info() 
+        new_info = exp_info()
     print('Create a pdf eLog file and record experiment information. Press ENTER to accept existing values.')
     tmp_file = input('Please enter file name '+'('+new_info.fname+')'+':')
     if tmp_file != '':
@@ -175,7 +198,7 @@ def setup_pdf():
     infoFile = open(PDF_FILE,'wb')
     pickle.dump(new_info,infoFile)
     G_INFO = new_info
-    
+
 def insertTitle():
     global G_INFO
     if os.path.isfile(G_INFO.fname):
@@ -275,9 +298,13 @@ def insertNote():
 def undo_pdf():
     global PDF_CTS
     if PDF_CTS == 1:
-        print('Page has been saved. You can not undo the change')
+        print('Page has been saved to the disk. You cannot roll back the block number and erase content.')
     else:
         PDF_CTS = PDF_CTS -1
+        fp = BlankPage(PDF_C,PDF_CTS)
+        fp.create()
+        print('Block number is rolled back by 1 and content in it is erased.')
+
 
 def save_page():
     global PDF_CTS
@@ -285,6 +312,13 @@ def save_page():
     if PDF_CTS != 1:
         PDF_C.save()
         PDF_CTS = 1
+        if os.path.isfile(G_INFO.fname):
+            pdf_append(G_INFO.fname,'tmp_fig.pdf')
+        else:
+            os.rename('tmp_fig.pdf',G_INFO.fname)
+        print('Page has been saved.')
+    else:
+        print('Page has been saved.')
 
 def pdf_append(file1,file2):
     merger = PdfFileMerger()
@@ -292,7 +326,7 @@ def pdf_append(file1,file2):
     merger.append(PdfFileReader(open(file2,'rb')))
     merger.write(file1)
 
-def output2pdf(sid_start,sid_end,elem):
+def output2pdf(sid_start,sid_end,elem, mot_name=''):
     for i in range(sid_start,sid_end):
         si = scan_info(i)
         if si.status == 'success':
@@ -310,10 +344,11 @@ def output2pdf(sid_start,sid_end,elem):
                 plot2dfly(i,elem,'sclr1_ch4')
                 #time.sleep(1)
                 title = si.command
-                dsth = check_baseline(i,'dsth')
-                #smarx = check_baseline(i,'smarx')
-                #smary = check_baseline(i,'smary')
-                note = 'dsth={:1.3f}'.format(dsth)
+                if mot_name == '':
+                    note = ''
+                else:
+                    mot_pos = check_baseline(i, mot_name)
+                    note = mot_name+'={:1.3f}'.format(mot_pos)
                 insertFig(note,title)
                 plt.close()
 

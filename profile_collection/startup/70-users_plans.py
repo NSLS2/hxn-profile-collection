@@ -119,11 +119,11 @@ def zp_z_2dscan(z_start, z_end, z_num, mot1, start1, end1, num1, mot2, start2, e
 
 def go_det(det):
     if det == 'merlin':
-        yield from bps.mov(diff.x, 7.7, diff.y1, 0.3, diff.y2, 0.3)
+        yield from bps.mov(diff.x, 13.7, diff.y1, 0.3, diff.y2, 0.3)
         #yield from bps.mov(diff.y1,-3.2)
         #yield from bps.mov(diff.y2,-3.2)
     elif det == 'cam11':
-        yield from bps.mov(diff.x,211.17+0.05, diff.y1, 22.85, diff.y2, 22.85)
+        yield from bps.mov(diff.x,218.32, diff.y1, 22.75, diff.y2, 22.75)
         #yield from bps.mov(diff.y1,22.65)
         #yield from bps.mov(diff.y2,22.65)
     elif det =='telescope':
@@ -500,11 +500,11 @@ def mov_to_image_center_tmp(scan_id=-1, elem='Au_L', bitflag=1, moveflag=1,piezo
     x_cen = x[i_max]
     y_cen = y[i_max]
 
-    xrf_proj = np.sum(xrf,axis=1)
-    xrf_proj_d = xrf_proj - np.roll(xrf_proj,1,0)
-    i_tip = np.where(xrf_proj_d > 0.1)
+    #xrf_proj = np.sum(xrf,axis=1)
+    #xrf_proj_d = xrf_proj - np.roll(xrf_proj,1,0)
+    #i_tip = np.where(xrf_proj_d > 0.1)
     #print(i_tip[0][0])
-    y_cen = y[(i_tip[0][0])*nx]
+    #y_cen = y[(i_tip[0][0])*nx]
 
     #plt.figure()
     #plt.plot(xrf_proj)
@@ -837,7 +837,9 @@ def tomo_scan_list_zp_no_move(angle_list, x_start, x_end, x_num,
 
 def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
               y_start, y_end, y_num, exposure):
-
+    #if os.path.isfile('rotCali'):
+    #    caliFile = open('rotCali','rb')
+    #    y = pickle.load(caliFile)
     angle_start = np.float(angle_start)
     angle_end = np.float(angle_end)
     angle_num = np.int(angle_num)
@@ -861,26 +863,53 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
 
 
         if np.abs(angle) <= 45:
-            yield from bps.mov(dssz,0)
-            yield from fly1d(dets1,dssz, -15, 15, 200, 0.2)
+            #yield from bps.mov(dssz,0)
+            yield from fly1d(dets1,dssz, -5, 5, 200, 0.05)
 
-            xc = return_line_center(-1,'Au_L')
+            xc = return_line_center(-1,'Ni')
             yield from bps.mov(dssz,xc)
         else:
-            yield from bps.mov(dssx,0)
-            yield from fly1d(dets1,dssx, -15, 15, 200, 0.2)
-            xc = return_line_center(-1,'Au_L')
+            #yield from bps.mov(dssx,0)
+            yield from fly1d(dets1,dssx, -5, 5, 200, 0.05)
+            xc = return_line_center(-1,'Ni')
+            yield from bps.mov(dssx,xc)
+        
+        yield from fly1d(dets1,dssy, -5, 7, 120, 0.05)
+        yc,yw = erf_fit(-1,'W_L')
+        yield from bps.mov(dssy,yc-4.2)
+
+
+        if np.abs(angle) <= 45:
+            #yield from bps.mov(dssz,0)
+            yield from fly1d(dets1,dssz, -5, 5, 200, 0.05)
+
+            xc = return_line_center(-1,'Ni')
+            yield from bps.mov(dssz,xc)
+        else:
+            #yield from bps.mov(dssx,0)
+            yield from fly1d(dets1,dssx, -5, 5, 200, 0.05)
+            xc = return_line_center(-1,'Ni')
             yield from bps.mov(dssx,xc)
 
-        plot(-1,'Au_L')
+
+        #yield from bps.mov(dssy,0)
+        #yield from fly1d(dets1,dssy, -5, 5, 100, 0.05)
+        #yc = return_line_center(-1,'Ni') 
+        #yield from bps.mov(dssy,yc)
+        '''
+        plt.figure()
+        plt.subplot(121)
+        plot(-2,'Au_L','sclr1_ch4')
         plt.title('x_pos = {}'.format(xc))
-        yield from fly1d(dets1,dssy, -2.0, 2.0, 100, 0.2)
-        yc = return_tip_pos(-1,'Pt_L')
-        plot(-1,'Pt_L')
-        plt.title('y_pos = {}'.format(yc))
-        yield from bps.mov(dssy,yc+1.0)
-
-
+        '''
+        #plt.subplot(122)
+        #plot(-1,'Au_L','sclr1_ch4')
+        #plt.title('y_pos = {}'.format(yc))
+        
+        #yield from bps.mov(dssy,yc+0.5)
+        #insertFig(note='dsth = {}'.format(check_baseline(-1,'dsth')),title='y position')
+        #plt.close()
+    
         #x_start_real = x_start / np.cos(angle*np.pi/180.)
         #x_end_real = x_end / np.cos(angle*np.pi/180.)
 
@@ -933,9 +962,13 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
 
         #mov_to_image_cen_smar(-1)
         #yield from mov_to_image_cen_dsx(-1)
+        plot2dfly(-1,'Ni')
+        insertFig(note='dsth = {}'.format(check_baseline(-1,'dsth')))
+        plt.close()
         merlin1.unstage()
-        print('waiting for 5 sec...')
-        yield from bps.sleep(5)
+        print('waiting for 2 sec...')
+        yield from bps.sleep(2)
+    save_page()
     #mov(zps.zpsth, 0)
 
 
@@ -1091,6 +1124,32 @@ def th_fly2d(th_start, th_end, num, mot1, x_start, x_end, x_num, mot2, y_start, 
         yield from bps.sleep(5)
     yield from bps.movr(zps.zpsth, -(th_end + th_step))
     yield from bps.sleep(2)
+    #shutter('close')
+
+def th_dscan(m_th, th_start, th_end, num, mot, x_start, x_end, x_num, sec):
+    #shutter('open')
+    th_step = (th_end - th_start) / num
+    yield from bps.movr(m_th, th_start)
+    yield from bps.sleep(2)
+    for i in range(num + 1):
+
+        yield from fly1d(dets1,dssz,-1,1,100,0.1)
+        tmp = return_line_center(-1, 'Ge')
+        yield from bps.mov(dssz,tmp)
+        yield from dscan(dets1, mot, x_start, x_end, x_num, sec)
+        yield from bps.sleep(2)
+        yield from bps.movr(m_th, th_step)
+        yield from bps.sleep(2)
+        plotScan(-1)
+        yield from bps.sleep(2)
+        insertFig(note = 'Oslo Dev 10',title ='ver. (dssy) vs. det row sum')
+        plt.close()
+        plot(-1,'Ge','sclr1_ch4')
+        insertFig(note = 'Oslo',title ='Ge Fluorescence')
+    yield from bps.movr(m_th, -(th_end + th_step))
+    yield from bps.sleep(2)
+    save_page()
+
     #shutter('close')
 
 def th_fly2d_h(th_start, th_end, num, offset, mot1, x_start, x_end, x_num, mot2, y_start, y_end,
@@ -2801,16 +2860,16 @@ def recover_mll_scan_pos(scan_id,moveflag=True,base_moveflag=True,det_moveflag=F
         #    mov(fdet1.x,fdet1_x)
         #    print('moving flourescence det, wait 5 sec ...')
         #    sleep(5)
-        mov(smlld.dsz,dsz_pos)
-        mov(smlld.dsx,dsx_pos)
-        mov(smlld.dsy,dsy_pos)
-        mov(smlld.dsth,dsth_pos)
-        mov(smlld.dssx,dssx_pos)
-        mov(smlld.dssy,dssy_pos)
-        mov(smlld.dssz,dssz_pos)
+        yield from bps.mov(smlld.dsz,dsz_pos)
+        yield from bps.mov(smlld.dsx,dsx_pos)
+        yield from bps.mov(smlld.dsy,dsy_pos)
+        yield from bps.mov(smlld.dsth,dsth_pos)
+        yield from bps.mov(smlld.dssx,dssx_pos)
+        yield from bps.mov(smlld.dssy,dssy_pos)
+        yield from bps.mov(smlld.dssz,dssz_pos)
         if base_moveflag:
-            mov(smlld.sbx,sbx_pos)
-            mov(smlld.sbz,sbz_pos)
+            yield from bps.mov(smlld.sbx,sbx_pos)
+            yield from bps.mov(smlld.sbz,sbz_pos)
 
 def recover_zp_scan_pos(scan_id,zp_move_flag=0,smar_move_flag=0):
     data = db.get_table(db[scan_id],stream_name='baseline')
@@ -3044,4 +3103,114 @@ def merlin_view():
 
     yield from go_det('merlin')
 
+def fill_angle_scans():
+    '''
+    print('-83 deg')
+    yield from recover_mll_scan_pos(52365,1,0,0)
+    x_start_real = -2 / np.abs(np.sin(83 * np.pi / 180.))
+    x_end_real = 2 / np.abs(np.sin(83 * np.pi / 180.))
+    yield from fly2d(dets1, smlld.dssx,x_start_real,x_end_real,160, smlld.dssy, -2, 2, 160, 0.04, return_speed = 40)
+    plot2dfly(-1,'Ni')
+    insertFig(note='dsth = {}'.format(check_baseline(-1,'dsth')))
+    plt.close()
+    merlin1.unstage()
 
+    print('-49 deg')
+    yield from recover_mll_scan_pos(52420,1,0,0)
+    x_start_real = -2 / np.abs(np.sin(49 * np.pi / 180.))
+    x_end_real = 2 / np.abs(np.sin(49 * np.pi / 180.))
+    yield from fly2d(dets1, smlld.dssx,x_start_real,x_end_real,160, smlld.dssy, -2, 2, 160, 0.04, return_speed = 40)
+    plot2dfly(-1,'Ni')
+    insertFig(note='dsth = {}'.format(check_baseline(-1,'dsth')))
+    plt.close()
+    merlin1.unstage()
+    '''
+    print('-43 deg')
+    yield from recover_mll_scan_pos(52651,1,0,0)
+    x_start_real = -2 / np.abs(np.cos(43 * np.pi / 180.))
+    x_end_real = 2 / np.abs(np.cos(43 * np.pi / 180.))
+    yield from fly2d(dets1, smlld.dssz,x_start_real,x_end_real,160, smlld.dssy, -2, 2, 160, 0.04, return_speed = 40)
+    plot2dfly(-1,'Ni')
+    insertFig(note='dsth = {}'.format(check_baseline(-1,'dsth')))
+    plt.close()
+    merlin1.unstage()
+
+    print('-41 deg')
+    yield from recover_mll_scan_pos(52653,1,0,0)
+    x_start_real = -2 / np.abs(np.cos(41 * np.pi / 180.))
+    x_end_real = 2 / np.abs(np.cos(41 * np.pi / 180.))
+    yield from fly2d(dets1, smlld.dssz,x_start_real,x_end_real,160, smlld.dssy, -2, 2, 160, 0.04, return_speed = 40)
+    plot2dfly(-1,'Ni')
+    insertFig(note='dsth = {}'.format(check_baseline(-1,'dsth')))
+    plt.close()
+    merlin1.unstage()
+
+    print('-23 deg')
+    yield from recover_mll_scan_pos(52656,1,0,0)
+    x_start_real = -2 / np.abs(np.cos(23 * np.pi / 180.))
+    x_end_real = 2 / np.abs(np.cos(23 * np.pi / 180.))
+    yield from fly2d(dets1, smlld.dssz,x_start_real,x_end_real,160, smlld.dssy, -2, 2, 160, 0.04, return_speed = 40)
+    plot2dfly(-1,'Ni')
+    insertFig(note='dsth = {}'.format(check_baseline(-1,'dsth')))
+    plt.close()
+    merlin1.unstage()
+
+    print('0 deg')
+    yield from recover_mll_scan_pos(52658,1,0,0)
+    #x_start_real = -2 / np.abs(np.cos(43 * np.pi / 180.))
+    #x_end_real = 2 / np.abs(np.cos(43 * np.pi / 180.))
+    yield from fly2d(dets1, smlld.dssz,-2,2,160, smlld.dssy, -2, 2, 160, 0.04, return_speed = 40)
+    plot2dfly(-1,'Ni')
+    insertFig(note='dsth = {}'.format(check_baseline(-1,'dsth')))
+    plt.close()
+    merlin1.unstage()
+
+    print('11 deg')
+    yield from recover_mll_scan_pos(52662,1,0,0)
+    x_start_real = -2 / np.abs(np.cos(11 * np.pi / 180.))
+    x_end_real = 2 / np.abs(np.cos(11 * np.pi / 180.))
+    yield from fly2d(dets1, smlld.dssz,x_start_real,x_end_real,160, smlld.dssy, -2, 2, 160, 0.04, return_speed = 40)
+    plot2dfly(-1,'Ni')
+    insertFig(note='dsth = {}'.format(check_baseline(-1,'dsth')))
+    plt.close()
+    merlin1.unstage()
+
+    print('21 deg')
+    yield from recover_mll_scan_pos(52665,1,0,0)
+    x_start_real = -2 / np.abs(np.cos(21 * np.pi / 180.))
+    x_end_real = 2 / np.abs(np.cos(21 * np.pi / 180.))
+    yield from fly2d(dets1, smlld.dssz,x_start_real,x_end_real,160, smlld.dssy, -2, 2, 160, 0.04, return_speed = 40)
+    plot2dfly(-1,'Ni')
+    insertFig(note='dsth = {}'.format(check_baseline(-1,'dsth')))
+    plt.close()
+    merlin1.unstage()
+
+    print('0 deg')
+    yield from recover_mll_scan_pos(52658,1,0,0)
+    #x_start_real = -2 / np.abs(np.cos(43 * np.pi / 180.))
+    #x_end_real = 2 / np.abs(np.cos(43 * np.pi / 180.))
+    yield from fly2d(dets1, smlld.dssz,-2,2,200, smlld.dssy, -2, 2, 200, 0.04, return_speed = 40)
+    plot2dfly(-1,'Ni')
+    insertFig(note='dsth = {}'.format(check_baseline(-1,'dsth')))
+    plt.close()
+    merlin1.unstage()
+
+    print('-85 deg')
+    yield from recover_mll_scan_pos(52370,1,0,0)
+    x_start_real = -2 / np.abs(np.sin(85 * np.pi / 180.))
+    x_end_real = 2 / np.abs(np.sin(85 * np.pi / 180.))
+    yield from fly2d(dets1, smlld.dssx,x_start_real,x_end_real,200, smlld.dssy, -2, 2, 200, 0.04, return_speed = 40)
+    plot2dfly(-1,'Ni')
+    insertFig(note='dsth = {}'.format(check_baseline(-1,'dsth')))
+    plt.close()
+    merlin1.unstage()
+
+    print('81 deg')
+    yield from recover_mll_scan_pos(52619,1,0,0)
+    x_start_real = -2 / np.abs(np.sin(81 * np.pi / 180.))
+    x_end_real = 2 / np.abs(np.sin(81 * np.pi / 180.))
+    yield from fly2d(dets1, smlld.dssx,x_start_real,x_end_real,200, smlld.dssy, -2, 2, 200, 0.04, return_speed = 40)
+    plot2dfly(-1,'Ni')
+    insertFig(note='dsth = {}'.format(check_baseline(-1,'dsth')))
+    plt.close()
+    merlin1.unstage()
