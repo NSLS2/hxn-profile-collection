@@ -484,5 +484,38 @@ pd.options.display.max_columns = 10
 
 # enable < shortcut to replace RE(
 from bluesky.plan_stubs import  mov
-from bluesky.utils import register_transform
+# from bluesky.utils import register_transform
+
+def register_transform(RE, *, prefix='<'):
+    '''Register RunEngine IPython magic convenience transform
+    Assuming the default parameters
+    This maps `< stuff(*args, **kwargs)` -> `RE(stuff(*args, **kwargs))`
+    RE is assumed to be available in the global namespace
+    Parameters
+    ----------
+    RE : str
+        The name of a valid RunEngine instance in the global IPython namespace
+    prefix : str, optional
+        The prefix to trigger this transform on.  If this collides with
+        valid python syntax or an existing transform you are on your own.
+    '''
+    import IPython
+    # from IPython.core.inputtransformer2 import StatelessInputTransformer
+
+ #   @StatelessInputTransformer.wrap
+    def tr_re(lines):
+        new_lines = []
+        for line in lines:
+            if line.startswith(prefix):
+                line = line[len(prefix):].strip()
+                new_lines.append('{}({})'.format(RE, line))
+            else:
+                new_lines.append(line)
+        return new_lines
+            
+    ip = IPython.get_ipython()
+    # ip.input_splitter.line_transforms.append(tr_re())
+    # ip.input_transformer_manager.logical_line_transforms.append(tr_re())
+    ip.input_transformer_manager.line_transforms.append(tr_re)
+
 register_transform('RE', prefix='<')
