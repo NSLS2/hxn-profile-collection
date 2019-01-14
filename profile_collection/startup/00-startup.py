@@ -27,9 +27,6 @@ from collections import deque
 db1_name = 'rs'
 db1_addr = 'mongodb://xf03id1-mdb01:27027,xf03id1-mdb02:27027,xf03id1-mdb03:27027/?replicaSet=mongors'
 
-# db1_name = 'ca1'
-# db1_addr = 'xf03id-ca1'
-
 _mds_config_db1 = {'host': db1_addr,
                    'port': 27027,
                    'database': 'datastore-2',
@@ -41,18 +38,11 @@ _fs_config_db1 = {'host': db1_addr,
 
 # DB2
 
-db2_addr = 'xf03id-ca1'
+db2_addr = 'xf03id1-mdb03'
 
-db2_name = 'ca1-1'
+db2_name = 'mdb03-1'
 db2_datastore = 'datastore-1'
 db2_filestore = 'filestore-1'
-
-#db2_name = 'ca1'
-#db2_datastore = 'datastore-new'
-#db2_filestore = 'filestore-new'
-
-# db2_name = 'mdb01'
-# db2_addr = 'xf03id1-mdb01'
 
 _mds_config_db2 = {'host': db2_addr,
                    'port': 27017,
@@ -70,6 +60,8 @@ mongo_client = MongoClient(db2_addr, 27017)
 f_benchmark = open("/home/xf03id/benchmark.out", "a+")
 
 # Composite Repository
+
+datum_counts = {}
 
 fs_db2 = mongo_client[db2_filestore]
 
@@ -140,6 +132,8 @@ class CompositeRegistry(Registry):
                               path_semantics='posix'):
 
         uid = str(uuid.uuid4())
+
+        datum_counts[uid] = 0
 
         method_name = "register_resource"
 
@@ -226,12 +220,17 @@ class CompositeRegistry(Registry):
 
     def bulk_register_datum_table(self, resource_uid, dkwargs_table, validate=False):
 
-        ts =  str(datetime.now().timestamp())
+        res_uid = resource_uid['uid']
+        datum_count = datum_counts[res_uid]
 
         if validate:
             raise RuntimeError('validate not implemented yet')
-	
-        d_ids = [ts + '-' + str(uuid.uuid4()) for j in range(len(dkwargs_table))]
+
+        # ts =  str(datetime.now().timestamp())
+        # d_ids = [ts + '-' + str(uuid.uuid4()) for j in range(len(dkwargs_table))]
+        
+        d_ids = [res_uid + '/' + str(datum_count+j) for j in range(len(dkwargs_table))]
+        datum_counts[res_uid] = datum_count + len(dkwargs_table)
 
         dkwargs_table = pd.DataFrame(dkwargs_table)
         datum_kwarg_list = [ dict(r) for _, r in dkwargs_table.iterrows()]
@@ -329,6 +328,7 @@ class CompositeBroker(Broker):
         if name == "start":
             f_benchmark.write("\n scan_id: {} \n".format(doc['scan_id']))
             f_benchmark.flush()
+            datum_counts = {}
 
         ts =  str(datetime.now().timestamp())
 
@@ -440,7 +440,42 @@ pd.options.display.width = 180
 pd.options.display.max_rows = None
 pd.options.display.max_columns = 10
 
-# enable < shortcut to replace RE(
+
 from bluesky.plan_stubs import  mov
 # from bluesky.utils import register_transform
-# register_transform('RE', prefix='<')
+
+def register_transform(RE, *, prefix='<'):
+    '''Register RunEngine IPython magic convenience transform
+    Assuming the default parameters
+    This maps `< stuff(*args, **kwargs)` -> `RE(stuff(*args, **kwargs))`
+    RE is assumed to be available in the global namespace
+    Parameters
+    ----------
+    RE : str
+        The name of a valid RunEngine instance in the global IPython namespace
+    prefix : str, optional
+        The prefix to trigger this transform on.  If this collides with
+        valid python syntax or an existing transform you are on your own.
+    '''
+    import IPython
+    # from IPython.core.inputtransformer2 import StatelessInputTransformer
+
+ #   @StatelessInputTransformer.wrap
+    def tr_re(lines):
+        new_lines = []
+        for line in lines:
+            if line.startswith(prefix):
+                line = line[len(prefix):].strip()
+                new_lines.append('{}({})'.format(RE, line))
+            else:
+                new_lines.append(line)
+        return new_lines
+            
+    ip = IPython.get_ipython()
+    # ip.input_splitter.line_transforms.append(tr_re())
+    # ip.input_transformer_manager.logical_line_transforms.append(tr_re())
+    ip.input_transformer_manager.line_transforms.append(tr_re)
+
+register_transform('RE', prefix='<')
+
+
