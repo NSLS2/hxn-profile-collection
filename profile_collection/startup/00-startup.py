@@ -163,12 +163,17 @@ class CompositeRegistry(Registry):
 
     def register_datum(self, resource_uid, datum_kwargs, validate=False):
 
-        ts =  str(datetime.now().timestamp())
-
         if validate:
             raise RuntimeError('validate not implemented yet')
 
-        datum_uid = ts + '-' + str(uuid.uuid4())
+        # ts =  str(datetime.now().timestamp())
+        # datum_uid = ts + '-' + str(uuid.uuid4())
+
+        res_uid = resource_uid
+        datum_count = datum_counts[res_uid]
+        
+        datum_uid = res_uid + '/' + str(datum_count)
+        datum_counts[res_uid] = datum_count + 1   
 
         # db2 database
 
