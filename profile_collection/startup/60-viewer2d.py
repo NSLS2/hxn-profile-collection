@@ -34,9 +34,9 @@ def plot2d(scan_id, elem, norm='sclr1_ch4'):
                df['Det3_{}'.format(elem)])
 
     if norm is not None:
-        mon = np.reshape(df[norm], (col, row))
+        mon = np.reshape(df[norm].values, (col, row))
         plt.figure()
-        data = np.reshape(det, (col, row))
+        data = np.reshape(det.values, (col, row))
         plt.title('Scan %d: %s (normalized to %s)' % (scan_id, elem, norm))
         plt.imshow(data/mon, interpolation='None',
                    extent=[x_start, x_end, y_end, y_start])
@@ -45,7 +45,7 @@ def plot2d(scan_id, elem, norm='sclr1_ch4'):
         plt.colorbar()
     else:
         plt.figure()
-        data = np.reshape(det, (col, row))
+        data = np.reshape(det.values, (col, row))
         plt.title('Scan %d: %s' % (scan_id, elem))
         plt.imshow(data, interpolation='None',
                    extent=[x_start, x_end, y_end, y_start])
