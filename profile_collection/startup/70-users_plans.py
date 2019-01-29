@@ -123,7 +123,7 @@ def go_det(det):
         #yield from bps.mov(diff.y1,-3.2)
         #yield from bps.mov(diff.y2,-3.2)
     elif det == 'cam11':
-        yield from bps.mov(diff.x,218.32, diff.y1, 22.75, diff.y2, 22.75)
+        yield from bps.mov(diff.x,218.92, diff.y1, 22.75, diff.y2, 22.75)
         #yield from bps.mov(diff.y1,22.65)
         #yield from bps.mov(diff.y2,22.65)
     elif det =='telescope':
