@@ -71,6 +71,8 @@ f_benchmark = open("/home/xf03id/benchmark.out", "a+")
 
 # Composite Repository
 
+datum_counts = {}
+
 fs_db2 = mongo_client[db2_filestore]
 
 def sanitize_np(val):
@@ -141,6 +143,8 @@ class CompositeRegistry(Registry):
 
         uid = str(uuid.uuid4())
 
+        datum_counts[uid] = 0
+
         method_name = "register_resource"
 
         # db2 database
@@ -169,12 +173,17 @@ class CompositeRegistry(Registry):
 
     def register_datum(self, resource_uid, datum_kwargs, validate=False):
 
-        ts =  str(datetime.now().timestamp())
-
         if validate:
             raise RuntimeError('validate not implemented yet')
 
-        datum_uid = ts + '-' + str(uuid.uuid4())
+        # ts =  str(datetime.now().timestamp())
+        # datum_uid = ts + '-' + str(uuid.uuid4())
+
+        res_uid = resource_uid
+        datum_count = datum_counts[res_uid]
+        
+        datum_uid = res_uid + '/' + str(datum_count)
+        datum_counts[res_uid] = datum_count + 1   
 
         # db2 database
 
@@ -226,12 +235,17 @@ class CompositeRegistry(Registry):
 
     def bulk_register_datum_table(self, resource_uid, dkwargs_table, validate=False):
 
-        ts =  str(datetime.now().timestamp())
+        res_uid = resource_uid['uid']
+        datum_count = datum_counts[res_uid]
 
         if validate:
             raise RuntimeError('validate not implemented yet')
-	
-        d_ids = [ts + '-' + str(uuid.uuid4()) for j in range(len(dkwargs_table))]
+
+        # ts =  str(datetime.now().timestamp())
+        # d_ids = [ts + '-' + str(uuid.uuid4()) for j in range(len(dkwargs_table))]
+        
+        d_ids = [res_uid + '/' + str(datum_count+j) for j in range(len(dkwargs_table))]
+        datum_counts[res_uid] = datum_count + len(dkwargs_table)
 
         dkwargs_table = pd.DataFrame(dkwargs_table)
         datum_kwarg_list = [ dict(r) for _, r in dkwargs_table.iterrows()]
@@ -372,6 +386,7 @@ class CompositeBroker(Broker):
         if name == "start":
             f_benchmark.write("\n scan_id: {} \n".format(doc['scan_id']))
             f_benchmark.flush()
+            datum_counts = {}
 
         ts =  str(datetime.now().timestamp())
 
