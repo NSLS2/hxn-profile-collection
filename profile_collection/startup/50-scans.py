@@ -6,6 +6,31 @@ import bluesky.plans as bp
 import bluesky.utils as bu
 import ophyd
 
+import functools
+from bluesky import (plans, Msg)
+from bluesky import plan_patterns
+
+def _pre_scan(dets, total_points, count_time):
+    yield Msg('hxn_next_scan_id')
+    yield Msg('hxn_scan_setup', detectors=dets, total_points=total_points,
+              count_time=count_time)
+
+
+@functools.wraps(plans.relative_spiral)
+def relative_spiral(dets, x_motor, y_motor, x_range, y_range, dr, nth,
+                    time=None, *, per_step=None, md=None, tilt=0.0):
+    
+    cyc = plan_patterns.spiral(x_motor, y_motor, x_motor.position,
+                                      y_motor.position, x_range, y_range, dr,
+                                      nth, tilt=tilt)    
+    total_points = len(cyc)
+
+    yield from _pre_scan(dets, total_points=total_points, count_time=time)
+    return (yield from plans.relative_spiral(
+        dets, x_motor, y_motor, x_range,
+        y_range, dr, nth, per_step=per_step,
+        md=md, tilt=tilt))
+
 hxntools.scans.setup(RE=RE)
 ct = bpp.subs_decorator(bec)(hxntools.scans.count)
 ascan = bpp.subs_decorator(bec)(hxntools.scans.absolute_scan)
