@@ -4,7 +4,6 @@ from hxntools.detectors.xspress3 import (Xspress3FileStore,
                                          Xspress3Channel)
 from hxntools.detectors.hxn_xspress3 import HxnXspress3DetectorBase
 
-
 class HxnXspress3Detector(HxnXspress3DetectorBase):
     channel1 = Cpt(Xspress3Channel, 'C1_', channel_num=1)
     channel2 = Cpt(Xspress3Channel, 'C2_', channel_num=2)
@@ -33,6 +32,56 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
             read_attrs = ['channel1', 'channel2', 'channel3', 'hdf5']
         super().__init__(prefix, configuration_attrs=configuration_attrs,
                          read_attrs=read_attrs, **kwargs)
+        self._dispatch_cid = None
+
+
+    def stage(self, *args, **kwargs):
+        ret = super().stage(*args, **kwargs)
+
+        # clear any existing callback
+        if self._dispatch_cid is not None:
+            self.hdf5.num_captured.clear_sub(self._dispatch_cid)
+            self._dispatch_cid = None
+
+
+        # always install the callback
+        def _handle_spectrum_capture(old_value, value, timestamp, **kwargs):
+            # if we get called and we are in fly mode, rip self off and bail
+            # the flyscan takes care of this its self, but does not tell us we are in fly
+            # mode until after we are staged
+            if self.mode_settings.scan_type.get() != 'step':
+                if self._dispatch_cid is not None:
+                    self.hdf5.num_captured.clear_sub(self._dispatch_cid)
+                    self._dispatch_cid = None
+                return
+            # grab the time and the previous value from the callback payload
+            trigger_time = timestamp
+            self._abs_trigger_count = old_value
+            # dispatch for all of the channels
+            for sn in self.read_attrs:
+                if sn.startswith('channel') and '.' not in sn:
+                    ch = getattr(self, sn)
+                    self.dispatch(ch.name, trigger_time)
+                    print(ch.name, trigger_time, self._abs_trigger_count)
+
+            self._abs_trigger_count = value
+
+        # do the actual subscribe
+        self._dispatch_cid = self.hdf5.num_captured.subscribe(
+            _handle_spectrum_capture,
+            run=False)
+
+        return ret
+
+    def unstage(self, *args, **kwargs):
+
+        try:
+            if self._dispatch_cid is not None:
+                self.hdf5.num_captured.clear_sub(self._dispatch_cid)
+                self._dispatch_cid = None
+        finally:
+            return super().unstage(*args, **kwargs)
+
 
 
 xspress3 = HxnXspress3Detector('XF:03IDC-ES{Xsp:1}:', name='xspress3')
@@ -56,7 +105,7 @@ energy_M_list = np.array([1646,1712,1775,1840,1907,1976,2048,2118,2191,2267,2342
 
 
 def xspress3_roi_setup():
-    elem_list = np.array(['Co','Si','Mg','Ni','Ba_L','Cl','Pt_L','W_L','Mn','Cr','As','Ge','Cu','Fe','Zn','Au_L'])
+    elem_list = np.array(['Co','Si','Mg','Ni','Ba_L','Cl','Pt_L','W_L','Mn','Cr','Al','Ti','Cu','Fe','Zn','Au_L'])
     num_elem = np.size(elem_list)
     if num_elem > 16:
         num_elem = 16
