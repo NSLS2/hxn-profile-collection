@@ -35,8 +35,13 @@ hxntools.scans.setup(RE=RE)
 ct = bpp.subs_decorator(bec)(hxntools.scans.count)
 ascan = bpp.subs_decorator(bec)(hxntools.scans.absolute_scan)
 dscan = bpp.subs_decorator(bec)(hxntools.scans.relative_scan)
-fermat = bpp.subs_decorator(bec)(hxntools.scans.relative_fermat)
-spiral = bpp.subs_decorator(bec)(hxntools.scans.relative_spiral)
+
+# fermat = bpp.subs_decorator(bec)(hxntools.scans.relative_fermat)
+fermat = bpp.subs_decorator(bec_hxn)(hxntools.scans.relative_fermat)
+
+# spiral = bpp.subs_decorator(bec)(hxntools.scans.relative_spiral)
+spiral = bpp.subs_decorator(bec_hxn)(relative_spiral)
+
 mesh = bpp.subs_decorator(bec)(hxntools.scans.absolute_mesh)
 dmesh = bpp.subs_decorator(bec)(hxntools.scans.relative_mesh)
 d2scan = bpp.subs_decorator(bec)(hxntools.scans.d2scan)
