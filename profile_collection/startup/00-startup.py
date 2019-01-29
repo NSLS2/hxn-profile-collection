@@ -445,7 +445,7 @@ pd.options.display.width = 180
 pd.options.display.max_rows = None
 pd.options.display.max_columns = 10
 
-# enable < shortcut to replace RE(
+
 from bluesky.plan_stubs import  mov
 # from bluesky.utils import register_transform
 
@@ -482,3 +482,5 @@ def register_transform(RE, *, prefix='<'):
     ip.input_transformer_manager.line_transforms.append(tr_re)
 
 register_transform('RE', prefix='<')
+
+
