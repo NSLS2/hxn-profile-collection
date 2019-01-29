@@ -246,3 +246,8 @@ def nightscan():
     RE(fly2d(dssx,-1,1,200,dssy,-1,1,200,0.2))
     shutter('close')
 
+
+def recover_and_scan():
+    yield from recover_mll_scan_pos(53769, True, False, False)
+    yield from fly2d(dets1, dssx, -3, 3, 120, dssy, -3, 3, 120, 0.05, return_speed=40) 
+
