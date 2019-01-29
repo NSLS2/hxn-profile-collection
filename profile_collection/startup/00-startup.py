@@ -24,35 +24,25 @@ from collections import deque
 
 # DB1
 
-db1_name = 'mdb01'
-db1_addr = 'xf03id1-mdb01'
-
-# db1_name = 'ca1'
-# db1_addr = 'xf03id-ca1'
+db1_name = 'rs'
+db1_addr = 'mongodb://xf03id1-mdb01:27027,xf03id1-mdb02:27027,xf03id1-mdb03:27027/?replicaSet=mongors'
 
 _mds_config_db1 = {'host': db1_addr,
-                   'port': 27017,
-                   'database': 'datastore-new',
+                   'port': 27027,
+                   'database': 'datastore-2',
                    'timezone': 'US/Eastern'}
 
 _fs_config_db1 = {'host': db1_addr,
-                  'port': 27017,
-                  'database': 'filestore-new'}
+                  'port': 27027,
+                  'database': 'filestore-2'}
 
 # DB2
 
-db2_addr = 'xf03id-ca1'
+db2_addr = 'xf03id1-mdb03'
 
-db2_name = 'ca1-1'
+db2_name = 'mdb03-1'
 db2_datastore = 'datastore-1'
 db2_filestore = 'filestore-1'
-
-#db2_name = 'ca1'
-#db2_datastore = 'datastore-new'
-#db2_filestore = 'filestore-new'
-
-# db2_name = 'mdb01'
-# db2_addr = 'xf03id1-mdb01'
 
 _mds_config_db2 = {'host': db2_addr,
                    'port': 27017,
@@ -286,50 +276,7 @@ db2 = Broker(mds_db2, CompositeRegistry(_fs_config_db2))
 
 # wrapper for two databases
 
-_mds_config = {'host': 'xf03id1-mdb01',
-               'port': 27017,
-               'database': 'datastore-new',
-               'timezone': 'US/Eastern'}
-
-mds = MDS(_mds_config, auth=False)
-
-_fs_config = {'host': 'xf03id1-mdb01',
-              'port': 27017,
-              'database': 'filestore-new'}
-db_new = Broker(mds, Registry(_fs_config))
-
-_mds_config_old = {'host': 'xf03id1-mdb01',
-                   'port': 27017,
-                   'database': 'datastore',
-                   'timezone': 'US/Eastern'}
-mds_old = MDS(_mds_config_old, auth=False)
-
-_fs_config_old = {'host': 'xf03id1-mdb01',
-                  'port': 27017,
-                  'database': 'filestore'}
-db_old = Broker(mds_old, Registry(_fs_config_old))
-
-
 class CompositeBroker(Broker):
-
-    def __getitem__(self, key):
-        try:
-            return db_new[key]
-        except ValueError:
-            return db_old[key]
-
-    def get_table(self, *args, **kwargs):
-        result_old = db_old.get_table(*args, **kwargs)
-        result_new = db_new.get_table(*args, **kwargs)
-        result = [result_old, result_new]
-        return pd.concat(result)
-
-    def get_images(self, *args, **kwargs):
-        try:
-            result = db_new.get_images(*args, **kwargs)
-        except IndexError:
-            result = db_old.get_images(*args, **kwargs)
-        return result
 
     # databroker.headersource.MDSROTemplate
     def _bulk_insert_events(self, event_col, descriptor, events, validate, ts):
@@ -414,8 +361,9 @@ class CompositeBroker(Broker):
 db = CompositeBroker(mds_db1, CompositeRegistry(_fs_config_db1))
 
 from hxntools.handlers import register as _hxn_register_handlers
-_hxn_register_handlers(db_new)
-_hxn_register_handlers(db_old)
+# _hxn_register_handlers(db_new)
+# _hxn_register_handlers(db_old)
+_hxn_register_handlers(db)
 del _hxn_register_handlers
 # do the rest of the standard configuration
 from IPython import get_ipython
