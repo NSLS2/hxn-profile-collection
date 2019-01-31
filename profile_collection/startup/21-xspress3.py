@@ -62,7 +62,7 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
                 if sn.startswith('channel') and '.' not in sn:
                     ch = getattr(self, sn)
                     self.dispatch(ch.name, trigger_time)
-                    print(ch.name, trigger_time, self._abs_trigger_count)
+                    #print(ch.name, trigger_time, self._abs_trigger_count)
 
             self._abs_trigger_count = value
 
@@ -204,6 +204,7 @@ def configure_xspress3(sclr):
         chan.vis_enabled.kind = 'omitted'
         chan.rois.kind = 'normal'
         chan.rois.num_rois.kind = 'config'
+        chan.name = chan.name.replace('annel', '')
         for n in chan.rois.component_names:
             if 'roi' in n and n != 'num_rois':
                 roi = getattr(chan.rois, n)
