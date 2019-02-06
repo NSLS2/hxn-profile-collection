@@ -3,6 +3,8 @@ from ophyd.device import (Component as Cpt)
 from hxntools.detectors.xspress3 import (Xspress3FileStore,
                                          Xspress3Channel)
 from hxntools.detectors.hxn_xspress3 import HxnXspress3DetectorBase
+import threading
+from ophyd import DeviceStatus
 
 class HxnXspress3Detector(HxnXspress3DetectorBase):
     channel1 = Cpt(Xspress3Channel, 'C1_', channel_num=1)
@@ -33,6 +35,7 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
         super().__init__(prefix, configuration_attrs=configuration_attrs,
                          read_attrs=read_attrs, **kwargs)
         self._dispatch_cid = None
+        self._spec_saved = threading.Event()
 
 
     def stage(self, *args, **kwargs):
@@ -65,6 +68,7 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
                     #print(ch.name, trigger_time, self._abs_trigger_count)
 
             self._abs_trigger_count = value
+            self._spec_saved.set()
 
         # do the actual subscribe
         self._dispatch_cid = self.hdf5.num_captured.subscribe(
@@ -72,6 +76,24 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
             run=False)
 
         return ret
+
+    def trigger(self):
+        self.sts = sts = DeviceStatus(self)
+        # in the not step case, just return a done status object
+        if self.mode_settings.scan_type.get() != 'step':
+            sts._finished()
+            return sts
+        self._spec_saved.clear()
+        
+        def monitor():
+            success = self._spec_saved.wait(60)
+            sts._finished(success=success)
+            
+        # hold a ref for gc reasons
+        self._th = threading.Thread(target=monitor)
+        self._th.start()
+        return sts
+
 
     def unstage(self, *args, **kwargs):
 
