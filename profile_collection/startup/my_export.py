@@ -1,11 +1,11 @@
 
 
-def my_export(sid,num=1, interval=1):
+def my_export(sid,num=1, interval=1,det = 'merlin1', mon = 'sclr1_ch4'):
     for i in range(num):
         #sid, df = _load_scan(sid, fill_events=False)
         h = db[sid]
         sid = h.start['scan_id']
-        df = db.get_table(h)
+        df = h.table()
         mots = h.start['motors']
 
         dir = os.path.join('/data/home/hyan/export','scan_{:06d}'.format((sid//10000)*10000))
@@ -27,9 +27,9 @@ def my_export(sid,num=1, interval=1):
                   columns=sorted(non_objects))
         path = os.path.join(dir,'scan_{}_scaler.txt'.format(sid))
         #np.savetxt(path, (df['sclr1_ch3'], df['p_ssx'], df['p_ssy']), fmt='%1.5e')
-        np.savetxt(path, (df['sclr1_ch4'], df[mots[0]], df[mots[1]]), fmt='%1.5e')
+        np.savetxt(path, (df[mon], df[mots[0]], df[mots[1]]), fmt='%1.5e')
 
-        filename = get_path(sid,'merlin1')
+        filename = get_path(sid,det)
         num_subscan = len(filename)
         #num_subscan = 2
         if num_subscan == 1:
@@ -42,7 +42,7 @@ def my_export(sid,num=1, interval=1):
         else:
             #h = db[sid]
             #df = db.get_table(h,fill=False)
-            images = list(db[sid].data('merlin1'))
+            images = list(db[sid].data(det))
             imgs = np.squeeze(images)
             '''
             num_frame, tmp = np.shape(df)
@@ -99,7 +99,7 @@ def my_export_1d(sid_start, sid_end, name_list, interval = 1, det = 'merlin1'):
         f.close()
         print('Scan {}. Saving to {}'.format(sid, path))
 
-        
+
 
 
 

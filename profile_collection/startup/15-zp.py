@@ -51,12 +51,12 @@ class HxnZPSample(NamedDevice):
     zpsx = Cpt(EpicsMotor, 'XF:03IDC-ES{ZpPI:1-zpsx}Mtr', doc='coarse x')
     zpsz = Cpt(EpicsMotor, 'XF:03IDC-ES{ZpPI:1-zpsz}Mtr', doc='coarse z')
 
-    #smarx = Cpt(SmarpodTranslationAxis, axis=2, doc='smarpod x')
-    #smary = Cpt(SmarpodTranslationAxis, axis=3, doc='smarpod y')
-    #smarz = Cpt(SmarpodTranslationAxis, axis=1, doc='smarpod z')
-    #smarthx = Cpt(SmarpodRotationAxis, axis=2, doc='smarpod theta around x')
-    #smarthy = Cpt(SmarpodRotationAxis, axis=3, doc='smarpod theta around y')
-    #smarthz = Cpt(SmarpodRotationAxis, axis=1, doc='smarpod theta around z')
+    smarx = Cpt(SmarpodTranslationAxis, axis=2, doc='smarpod x')
+    smary = Cpt(SmarpodTranslationAxis, axis=3, doc='smarpod y')
+    smarz = Cpt(SmarpodTranslationAxis, axis=1, doc='smarpod z')
+    smarthx = Cpt(SmarpodRotationAxis, axis=2, doc='smarpod theta around x')
+    smarthy = Cpt(SmarpodRotationAxis, axis=3, doc='smarpod theta around y')
+    smarthz = Cpt(SmarpodRotationAxis, axis=1, doc='smarpod theta around z')
 
     kill = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1-ZP}Kill-Cmd.PROC')
     zero = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1-ZP}Zero-Cmd.PROC')
@@ -69,9 +69,9 @@ zpssx = zps.zpssx
 zpssy = zps.zpssy
 zpssz = zps.zpssz
 
-#smarx = zps.smarx
-#smary = zps.smary
-#smarz = zps.smarz
+smarx = zps.smarx
+smary = zps.smary
+smarz = zps.smarz
 
 
 zps = remove_names_maybe(zps, ['kill', 'zero'])
@@ -105,13 +105,17 @@ class HxnZonePlate(NamedDevice):
     zpx = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:2-Ax:zpx}Mtr', doc='coarse zp x')
     zpy = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:2-Ax:zpy}Mtr', doc='coarse zp y')
     zpz = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:2-Ax:zpz}Mtr', doc='coarse zp z')
+    # zpsx = Cpt(EpicsMotor, 'XF:03IDC-ES{ZpPI:1-zpsx}Mtr', doc = 'base x')
+    # zpsz = Cpt(EpicsMotor, 'XF:03IDC-ES{ZpPI:1-zpsz}Mtr', doc = 'base z')
+
 
     # long travel range z holding the ZP
     zpz1 = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:1-Ax:zpz1}Mtr', doc='long range z')
 
 
 zp = HxnZonePlate('', name='zp')
-
+# zpsx = zp.zpsx
+# zpsz = zp.zpsz
 
 class FineSampleLabX(PseudoPositioner, NamedDevice):
     '''Pseudo positioner definition for zoneplate fine sample positioner

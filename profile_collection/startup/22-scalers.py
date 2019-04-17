@@ -5,7 +5,8 @@ from hxntools.struck_scaler import (HxnTriggeringScaler, StruckScaler)
 #    that up:
 sclr1 = HxnTriggeringScaler('XF:03IDC-ES{Sclr:1}', name='sclr1')
 # let the scans know which detectors sclr1 triggers:
-sclr1.scan_type_triggers['step'] = [zebra, merlin1, xspress3]
+# sclr1.scan_type_triggers['step'] = [zebra, merlin1, xspress3]
+sclr1.scan_type_triggers['step'] = [zebra, xspress3]
 sclr1.scan_type_triggers['fly'] = []
 
 

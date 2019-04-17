@@ -19,10 +19,10 @@ def _pre_scan(dets, total_points, count_time):
 @functools.wraps(plans.relative_spiral)
 def relative_spiral(dets, x_motor, y_motor, x_range, y_range, dr, nth,
                     time=None, *, per_step=None, md=None, tilt=0.0):
-    
+
     cyc = plan_patterns.spiral(x_motor, y_motor, x_motor.position,
                                       y_motor.position, x_range, y_range, dr,
-                                      nth, tilt=tilt)    
+                                      nth, tilt=tilt)
     total_points = len(cyc)
 
     yield from _pre_scan(dets, total_points=total_points, count_time=time)
@@ -49,7 +49,7 @@ a2scan = bpp.subs_decorator(bec)(hxntools.scans.a2scan)
 scan_steps = bpp.subs_decorator(bec)(hxntools.scans.scan_steps)
 
 dets1 = [zebra, sclr1, merlin1, xspress3]
-dets2 = [zebra, sclr1, merlin2,xspress3]
+dets2 = [zebra, sclr1, merlin1, xspress3, merlin2]
 #dets2 = [zebra, sclr1, xspress3, lakeshore2]
 dets3 = [zebra, sclr1, merlin1, xspress3, lakeshore2]
 dets4 = [zebra, sclr1, merlin1, lakeshore2]
@@ -66,7 +66,7 @@ conflict_name = ['pmllf', 'zplab', 'pmllc']
 
 # sd.baseline = [dcm, m1, m2, beamline_status, smll, vmll, hmll, ssa2, zp]
 # sd.baseline = [dcm, m1, m2, beamline_status, smll, vmll, hmll, ssa2, bpm1, bpm2, smlld]
-sd.baseline = [dcm, m1, m2, beamline_status, smll, vmll, hmll, ssa2, mllosa, zp, zps, smlld, fdet1, diff]
+sd.baseline = [ugap, dcm, m1, m2, beamline_status, smll, vmll, hmll, ssa2, mllosa, zp, zps, smlld, fdet1, diff]
 
 BlueskyMagics.positioners = [d for  d in
                              bu.separate_devices(

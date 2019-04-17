@@ -156,7 +156,7 @@ def mll_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem=
         plt.title('sid = %d sbz = %.3f um FWHM = %.2f nm' %(sid,smlld.sbz.position,fit_size[i]))
         '''
         edge_pos,fwhm=erf_fit(-1,elem,mon)
-        fit_size[i]=fwhm
+        fit_size[i]= fwhm
         z_pos[i]=smlld.sbz.position
         yield from bps.movr(smlld.sbz, z_step)
     yield from bps.mov(smlld.sbz, init_sz)
@@ -193,7 +193,7 @@ def hmll_z_alignment(z_start, z_end, z_num, start, end, num, acq_time, elem='Pt_
     init_hz = hmll.hz.position
     yield from bps.movr(hmll.hz, z_start)
     for i in range(z_num + 1):
-        yield from fly1d(dets1,dssz, start, end, num, acq_time)
+        yield from fly1d(dets1,dssx, start, end, num, acq_time)
         edge_pos,fwhm=erf_fit(-1,elem,mon)
         fit_size[i]=fwhm
         z_pos[i]=hmll.hz.position
@@ -238,26 +238,28 @@ def vmll_z_alignment(z_start, z_end, z_num, start, end, num, acq_time, elem='Pt_
     plt.plot(z_pos,fit_size,'bo')
     plt.xlabel('vz')
 
-def zp_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4'):
+def zp_z_alignment(z_start, z_end, z_num, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4'):
+    print('moves the zone plate incrementally and find the focus with a linescan at each position')
     z_pos=np.zeros(z_num+1)
     fit_size=np.zeros(z_num+1)
     z_step = (z_end - z_start)/z_num
-    init_zpz1 = zp.zpz1.position
-    movr_zpz1(z_start)
+    init_sz = zp.zpz1.position
+
+    yield from movr_zpz1(z_start)
     for i in range(z_num + 1):
-        if mot == 'zpssx':
-            RE(fly1d(zpssx, start, end, num, acq_time))
-        elif mot == 'zpssy':
-            RE(fly1d(zpssy, start, end, num, acq_time))
-        else:
-            raise KeyError('mot has to be zpssx or zpssy')
-        edge_pos,fwhm=erf_fit(-1,mot,elem,mon)
-        fit_size[i]=fwhm
+
+        yield from fly1d(dets1, zpssy, start, end, num, acq_time)
+        edge_pos,fwhm=erf_fit(-1,elem,mon,linear_flag=False)
+        fit_size[i]= fwhm
         z_pos[i]=zp.zpz1.position
-        movr_zpz1(z_step)
-    movr_zpz1(-z_end)
+        yield from movr_zpz1(z_step)
+        merlin1.unstage()
+        xspress3.unstage()
+    yield from movr_zpz1(-1*z_end)
     plt.figure()
     plt.plot(z_pos,fit_size,'bo')
+    plt.xlabel('zpz1')
+
 
 def pos2angle(col,row):
     pix = 74.8
@@ -288,18 +290,24 @@ def pos2angle(col,row):
     return (gamma,delta,tth)
 
 
-def return_line_center(sid,elem='Cr'):
+def return_line_center(sid,elem='Cr',threshold=0.2):
     h = db[sid]
 
     df2 = h.table()
     xrf = np.array(df2['Det2_' + elem]+df2['Det1_' + elem] + df2['Det3_' + elem])
-    threshold = np.max(xrf)/10.0
+    #threshold = np.max(xrf)/10.0
     x_motor = h.start['motors']
     x = np.array(df2[x_motor[0]])
+
+    #xrf = xrf * -1
+    #xrf = xrf - np.min(xrf)
+
     #print(x)
     #print(xrf)
-    xrf[xrf<(np.max(xrf)*0.2)] = 0.
-    xrf[xrf>=(np.max(xrf)*0.2)] = 1.
+    xrf[xrf<(np.max(xrf)*threshold)] = 0.
+    #index = np.where(xrf == 0.)
+    #xrf[:index[0][0]] = 0.
+    #xrf[xrf>=(np.max(xrf)*threshold)] = 1.
     mc = find_mass_center_1d(xrf,x)
     return mc
 
@@ -323,7 +331,7 @@ def return_tip_pos(sid,elem='Cr'):
     return x[peak_index[0][0]+1]
 
 
-def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Ta_L', move_flag=0):
+def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt_L', move_flag=0):
     a_step = (a_end - a_start)/a_num
     x = np.zeros(a_num+1)
     y = np.zeros(a_num+1)
@@ -343,7 +351,7 @@ def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Ta_
     y = -1*np.array(y)
     x = np.array(x)
     r0, dr, offset = rot_fit_2(x,y)
-    yield from bps.mov(zps.zpsth, 0)
+    yield from bps.mov(zps.zpsth, orig_th)
     dx = -dr*np.sin(offset*np.pi/180)/1000.0
     dz = -dr*np.cos(offset*np.pi/180)/1000.0
 
@@ -367,20 +375,25 @@ def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt
         x[i] = a_start + i*a_step
         yield from bps.mov(smlld.dsth, x[i])
         if np.abs(x[i]) > 45:
-            yield from fly1d(dets1,dssx,start,end,num,acq_time)
+            yield from fly1d(dets1,dssz,start,end,num,acq_time)
             tmp = return_line_center(-1, elem=elem)
             y[i] = tmp*np.sin(x[i]*np.pi/180.0)
         else:
-            yield from fly1d(dets1,dssz,start,end,num,acq_time)
+            yield from fly1d(dets1,dssx,start,end,num,acq_time)
             tmp = return_line_center(-1,elem=elem)
             y[i] = -tmp*np.cos(x[i]*np.pi/180.0)
         #yield from fly1d(dets1,dssy,start,end,num,acq_time)
         #tmp = return_line_center(-1, elem=elem)
         #v[i] = tmp
         #print('h_cen= ',y[i],'v_cen = ',v[i])
+        plot(-1,elem,'sclr1_ch4')
+        #insertFig(note='dsth = {}'.format(check_baseline(-1,'dsth')))
+        plt.close()
+
     y = -1*np.array(y)
     x = np.array(x)
     r0, dr, offset = rot_fit_2(x,y)
+    #insertFig(note='dsth: {} {}'.format(a_start,a_end))
     yield from bps.mov(smlld.dsth, 0)
     dx = -dr*np.sin(offset*np.pi/180)
     dz = -dr*np.cos(offset*np.pi/180)
@@ -393,58 +406,13 @@ def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt
 
     #plt.figure()
     #plt.plot(x,v)
-    
+
     x = np.array(x)
     y = -np.array(y)
     print(x)
     print(y)
-    caliFIle = open('rotCali','wb')
-    pickle.dump(y,CaliFile)
-   
-
-
-
-def mll_rot_alignment_test(a_start, a_end, a_num, start, end, num, acq_time, dy, elem='Pt_L', move_flag=0):
-    a_step = (a_end - a_start)/a_num
-    x = np.zeros(a_num+1)
-    y = np.zeros(a_num+1)
-    v = np.zeros(a_num+1)
-    orig_th = smlld.dsth.position
-    for i in range(a_num+1):
-        x[i] = a_start + i*a_step
-        yield from bps.mov(smlld.dsth, x[i])
-        yield from bps.mov(sbx, dy[i])
-        if np.abs(x[i]) > 45:
-            yield from fly1d(dets1,dssx,start,end,num,acq_time)
-            tmp = return_line_center(-1, elem=elem)
-            y[i] = tmp*np.sin(x[i]*np.pi/180.0)
-        else:
-            yield from fly1d(dets1,dssz,start,end,num,acq_time)
-            tmp = return_line_center(-1,elem=elem)
-            y[i] = -tmp*np.cos(x[i]*np.pi/180.0)
-        #yield from fly1d(dets1,dssy,start,end,num,acq_time)
-        #tmp = return_line_center(-1, elem=elem)
-        #v[i] = tmp
-        #print('h_cen= ',y[i],'v_cen = ',v[i])
-    y = -1*np.array(y)
-    x = np.array(x)
-    r0, dr, offset = rot_fit_2(x,y)
-    yield from bps.mov(smlld.dsth, 0)
-    dx = -dr*np.sin(offset*np.pi/180)
-    dz = -dr*np.cos(offset*np.pi/180)
-
-    print('dx=',dx,'   ', 'dz=',dz)
-
-    if move_flag:
-        yield from bps.movr(smlld.dsx, dx)
-        yield from bps.movr(smlld.dsz, dz)
-
-    #plt.figure()
-    #plt.plot(x,v)
-    print(x)
-    print(y)
-
-
+    #caliFIle = open('rotCali','wb')
+    #pickle.dump(y,CaliFile)
 
 
 def mll_rot_v_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4'):

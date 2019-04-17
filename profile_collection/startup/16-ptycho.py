@@ -4,9 +4,14 @@ from ophyd import (EpicsMotor, Device, Component as Cpt)
 class HxnPrototypeMicroscope(Device):
     vx = Cpt(EpicsMotor, 'XF:03IDC-ES{Proto:1-Ax:1}Mtr')
     vy = Cpt(EpicsMotor, 'XF:03IDC-ES{Proto:1-Ax:2}Mtr')
-    vt = Cpt(EpicsMotor, 'XF:03IDC-ES{Proto:1-Ax:3}Mtr')
-    vchi = Cpt(EpicsMotor, 'XF:03IDC-ES{Proto:1-Ax:4}Mtr')
-    osat = Cpt(EpicsMotor, 'XF:03IDC-ES{Proto:1-Ax:5}Mtr')
+    vz = Cpt(EpicsMotor, 'XF:03IDC-ES{MC:4-Ax:8}Mtr')
+
+    v_rz = Cpt(EpicsMotor, 'XF:03IDC-ES{Proto:1-Ax:3}Mtr')
+    v_rx = Cpt(EpicsMotor, 'XF:03IDC-ES{Proto:1-Ax:4}Mtr')
+    v_ry = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:4-Ax:1}Mtr')
+
+    osa_rz = Cpt(EpicsMotor, 'XF:03IDC-ES{Proto:1-Ax:5}Mtr')
+    osa_ry = Cpt(EpicsMotor,'XF:03IDC-ES{MC:4-Ax:1}Mtr')
     osay = Cpt(EpicsMotor, 'XF:03IDC-ES{Proto:1-Ax:6}Mtr')
     osax = Cpt(EpicsMotor, 'XF:03IDC-ES{Proto:1-Ax:7}Mtr')
     osaz = Cpt(EpicsMotor, 'XF:03IDC-ES{Proto:1-Ax:8}Mtr')
@@ -18,24 +23,28 @@ class HxnPrototypeMicroscope(Device):
     #vz = Cpt(EpicsMotor, 'XF:03IDC-ES{MMC100:1-Ax:1}Mtr')
     #cz = Cpt(EpicsMotor, 'XF:03IDC-ES{MMC100:1-Ax:2}Mtr')
     #cx = Cpt(EpicsMotor, 'XF:03IDC-ES{MMC100:1-Ax:3}Mtr')
-    cy = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:9-Ax:0}Mtr')
-    bz = Cpt(EpicsMotor, 'XF:03IDC-ES{MC:4-Ax:4}Mtr')
-    bx = Cpt(EpicsMotor, 'XF:03IDC-ES{MC:4-Ax:2}Mtr')
+    #cy = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:9-Ax:0}Mtr')
+    #bz = Cpt(EpicsMotor, 'XF:03IDC-ES{MC:4-Ax:4}Mtr')
+    #bx = Cpt(EpicsMotor, 'XF:03IDC-ES{MC:4-Ax:2}Mtr')
 
     bsx = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:3-Ax:1}Mtr')
-    bsy = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:3-Ax:2}Mtr')
-    bsz = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:3-Ax:3}Mtr')
+    bsy = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:3-Ax:3}Mtr')
+    bsz = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:3-Ax:2}Mtr')
 
-    vth = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:4-Ax:1}Mtr')
+    #vth = Cpt(EpicsMotor, 'XF:03IDC-ES{MCS:4-Ax:1}Mtr')
 
 
 p = HxnPrototypeMicroscope('', name='p')
 
 p_vx = p.vx
 p_vy = p.vy
-p_vt = p.vt
-p_vchi = p.vchi
-p_osat = p.osat
+p_vz = p.vz
+p_v_rx = p.v_rx
+p_v_ry = p.v_ry
+p_v_rz = p.v_rz
+
+p_osa_rz = p.osa_rz
+p_osa_ry = p.osa_ry
 p_osay = p.osay
 p_osax = p.osax
 p_osaz = p.osaz
@@ -47,23 +56,33 @@ p_osaz = p.osaz
 #p_vz = p.vz
 #p_cz = p.cz
 #p_cx = p.cx
-p_cy = p.cy
-p_bz = p.bz
-p_bx = p.bx
+#p_cy = p.cy
+#p_bz = p.bz
+#p_bx = p.bx
 
 p_bsx = p.bsx
 p_bsy = p.bsy
 p_bsz = p.bsz
 
-p_vth = p.vth
+#p_vth = p.vth
 
 class HxnPrototypeSample(Device):
-    bx = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:9-Ax:3}Mtr')
-    by = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:9-Ax:2}Mtr')
-    bz = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:9-Ax:1}Mtr')
+    sbx = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:9-Ax:3}Mtr')
+    sby = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:9-Ax:2}Mtr')
+    sbz = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:9-Ax:1}Mtr')
 
 
 ps = HxnPrototypeSample('', name='ps')
-ps_bx = ps.bx
-ps_by = ps.by
-ps_bz = ps.bz
+p_sbx = ps.sbx
+p_sby = ps.sby
+p_sbz = ps.sbz
+
+class HxnPrototypePhasePlate(Device):
+    pp_x = Cpt(EpicsMotor, 'XF:03IDC-ES{PPlate:X}Mtr')
+    pp_y = Cpt(EpicsMotor, 'XF:03IDC-ES{PPlate:Y}Mtr')
+
+pp = HxnPrototypePhasePlate('',name='pp')
+p_pp_x = pp.pp_x
+p_pp_y = pp.pp_y
+
+

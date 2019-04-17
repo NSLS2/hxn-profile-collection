@@ -117,6 +117,13 @@ xbpm = HxnBpm('SR:C03-BI{XBPM:1}', name='xbpm')
 angle_x = EpicsSignalRO('SR:C31-{AI}Aie3:Angle-x-Cal', name='angle_x')
 angle_y = EpicsSignalRO('SR:C31-{AI}Aie3:Angle-y-Cal', name='angle_y')
 
+xbpmc_yp =  EpicsSignalRO('XF:03ID-BI{EM:BPM2}PosY:MeanValue_RBV', name='xbpmc_yp')
+
+xbpmb_xp =  EpicsSignalRO('XF:03ID-BI{EM:BPM1}PosX:MeanValue_RBV', name='xbpmb_xp')
+xbpmb_yp =  EpicsSignalRO('XF:03ID-BI{EM:BPM1}PosY:MeanValue_RBV', name='xbpmb_yp')
+
+
+
 # Diamond Quad BPMs in C hutch
 quad = HxnBpm('XF:03ID{XBPM:17}', name='quad')
 

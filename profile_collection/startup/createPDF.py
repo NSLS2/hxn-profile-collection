@@ -15,7 +15,7 @@ import numpy as np
 from PyPDF2 import PdfFileMerger, PdfFileReader
 
 global PDF_FILE
-PDF_FILE = 'eLog_info.obj'
+PDF_FILE = '/GPFS/XF03ID1/home/xf03id/startup/eLog_info.obj'
 
 global DPI
 DPI=300

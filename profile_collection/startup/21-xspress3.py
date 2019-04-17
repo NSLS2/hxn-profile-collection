@@ -84,11 +84,11 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
             sts._finished()
             return sts
         self._spec_saved.clear()
-        
+
         def monitor():
             success = self._spec_saved.wait(60)
             sts._finished(success=success)
-            
+
         # hold a ref for gc reasons
         self._th = threading.Thread(target=monitor)
         self._th.start()
@@ -127,7 +127,7 @@ energy_M_list = np.array([1646,1712,1775,1840,1907,1976,2048,2118,2191,2267,2342
 
 
 def xspress3_roi_setup():
-    elem_list = np.array(['Co','Si','Mg','Ni','Ba_L','Cl','Pt_L','W_L','Mn','Cr','Al','Ti','Cu','Fe','Zn','Au_L'])
+    elem_list = np.array(['Co','Si','Mg','Ni','Ir_L','Cl','Pt_L','W_L','Mn','Cr','Se','Ti','Cu','Fe','Ga','Au_L'])
     num_elem = np.size(elem_list)
     if num_elem > 16:
         num_elem = 16
