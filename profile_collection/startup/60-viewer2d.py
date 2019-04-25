@@ -463,10 +463,12 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
     hdr = db[scan_id]['start']
     if x is None:
         x = hdr['motor1']
+        #x = hdr['motors'][0]
     x_data = np.asarray(df[x])
 
     if y is None:
         y = hdr['motor2']
+        #y = hdr['motors'][1]
     y_data = np.asarray(df[y])
 
     if norm is not None:
@@ -721,9 +723,8 @@ def plot_img_sum(sid, det = 'merlin1', roi_flag=False,x_cen=0,y_cen=0,size=0):
         extent = (np.nanmin(x), np.nanmax(x),np.nanmax(y), np.nanmin(y))
         plt.figure()
         tot =np.divide(tot, mon)
-        idx = np.where(abs(tot - np.mean(tot)) >3*np.std(tot))
-        tot[idx[0]] = np.mean(tot)
-
+        #idx = np.where(abs(tot - np.mean(tot)) >3*np.std(tot))
+        #tot[idx[0]] = np.mean(tot)
         #tot = tot[abs(tot - np.mean(tot)) < 3 * np.std(tot)]
         image = tot.reshape(dim2,dim1)
         plt.imshow(image,extent=extent)

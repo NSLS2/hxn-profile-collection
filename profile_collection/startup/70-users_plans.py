@@ -123,7 +123,7 @@ def go_det(det):
         #yield from bps.mov(diff.y1,-3.2)
         #yield from bps.mov(diff.y2,-3.2)
     elif det == 'cam11':
-        yield from bps.mov(diff.x,219.02, diff.y1, 22.05, diff.y2, 22.05)
+        yield from bps.mov(diff.x,218.52, diff.y1, 22.05, diff.y2, 22.05)
         #yield from bps.mov(diff.y1,22.65)
         #yield from bps.mov(diff.y2,22.65)
     elif det =='telescope':
@@ -1165,21 +1165,34 @@ def th_fly2d_mll(th_start, th_end, num, x_start, x_end, x_num, y_start, y_end, y
 
 def th_fly2d(th_start, th_end, num, mot1, x_start, x_end, x_num, mot2, y_start, y_end,
              y_num, sec):
-    #shutter('open')
+    yield from shutter('open')
     th_step = (th_end - th_start) / num
     yield from bps.movr(zps.zpsth, th_start)
     yield from bps.sleep(5)
     for i in range(num + 1):
-
-        #RE(fly1d(zpssx,-5,5,100,0.1))
+        yield from shutter('open')
+        yield from bps.mov(zpssy, 5.5)
+        yield from bps.mov(zpssx, 0)
+        yield from fly1d(dets1,zpssx,-14,14,140,0.05)
+        corr_x_pos = return_line_center(-1,'Ni',0.5)
+        yield from bps.mov(zpssx, (corr_x_pos-0.5))
+        yield from bps.mov(zpssy, -0.2)
         #move_fly_center('Ge')
         yield from fly2d(dets1,mot1, x_start, x_end, x_num, mot2, y_start, y_end, y_num, sec)
         yield from bps.sleep(2)
         yield from bps.movr(zps.zpsth, th_step)
         yield from bps.sleep(5)
+        yield from shutter('close')
+        insertFig(note=' ', title=' ')
+        plt.close()
+        plot_img_sum(-1, 'merlin1')
+        insertFig(note=' ', title=' ')
+        plt.close()
+
     yield from bps.movr(zps.zpsth, -(th_end + th_step))
     yield from bps.sleep(2)
-    #shutter('close')
+    yield from shutter('close')
+    save_page()
 
 def th_dscan(m_th, th_start, th_end, num, mot, x_start, x_end, x_num, sec):
     #shutter('open')
@@ -1270,7 +1283,7 @@ def mov_diff(gamma, delta, r=500, calc=0):
 
     print('Make sure all motors are zeroed properly, '
           'otherwise calculation will be wrong.')
-    if x_yaw > 787 or x_yaw < -200:
+    if x_yaw > 797 or x_yaw < -200:
         print('diff_x = ', -x_yaw,
               ' out of range, move diff_z upstream and try again')
     elif dz < -250 or dz > 0:

@@ -342,10 +342,12 @@ def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt_
         if np.abs(x[i]) > 45:
             yield from fly1d(dets1,zpssz,start,end,num,acq_time)
             tmp = return_line_center(-1, elem=elem)
+            #edge,fwhm = erf_fit(-1,elem = elem)
             y[i] = tmp*np.sin(x[i]*np.pi/180.0)
         else:
             yield from fly1d(dets1,zpssx,start,end,num,acq_time)
             tmp = return_line_center(-1,elem=elem)
+            #edge,fwhm = erf_fit(-1,elem = elem)
             y[i] = tmp*np.cos(x[i]*np.pi/180.0)
         print('y=',y[i])
     y = -1*np.array(y)

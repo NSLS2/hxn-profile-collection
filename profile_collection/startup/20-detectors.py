@@ -39,6 +39,35 @@ class HxnMerlinDetector(_HMD):
                write_path_template='/data/%Y/%m/%d/',
                root='/data',
                fs=db.fs)
+    
+    def stage(self):
+        import itertools
+        for j in itertools.count():
+            try:
+                return super().stage()
+            except TimeoutError:
+                N_try = 20
+                if j < 20:
+                    print(f"failed to stage on try{j}/{N_try}, may try again")
+                    continue
+                else:
+                    raise
+
+    def unstage(self, *args, **kwargs):
+        import itertools
+        for j in itertools.count():
+            try:   
+                ret = super().unstage()
+            except TimeoutError:
+                N_try = 20
+                if j < N_try:
+                    print(f"failed to unstage on attempt {j}/{N_try}, may try again")
+                    continue    
+                else:
+                    raise
+            else:
+                break
+        return ret
 
 merlin1 = HxnMerlinDetector('XF:03IDC-ES{Merlin:1}', name='merlin1',
                             image_name='merlin1',
@@ -52,16 +81,39 @@ merlin2 = HxnMerlinDetector('XF:03IDC-ES{Merlin:2}', name='merlin2',
 merlin2.hdf5.read_attrs = []
 
 # -- Dexela 1 (Dexela 1512 GigE-V24)
-#class HxnDexelaDetector(_HMD):
-#    hdf5 = Cpt(_mhdf, 'HDF1:',
-#               read_attrs=[],
-#               configuration_attrs=[],
-#               write_path_template='c:\Dexela\Yijin_YBCO_2018Q1',
-#               root='c:',
-#               fs=db.fs)
-dexela1 = HxnDexelaDetector('XF:03IDC-ES{Dexela:1}', name='dexela1',
-                            image_name='dexela1',
-                            read_attrs=['hdf5', 'cam','stats1'])
+class HxnDexelaDetectorSS(HxnDexelaDetector):
+    def stage(self):
+        import itertools
+        for j in itertools.count():
+            try:
+                return super().stage()
+            except TimeoutError:
+                N_try = 20
+                if j < 20:
+                    print(f"failed to stage on try{j}/{N_try}, may try again")
+                    continue
+                else:
+                    raise
+
+    def unstage(self, *args, **kwargs):
+        import itertools
+        for j in itertools.count():
+            try:   
+                ret = super().unstage()
+            except TimeoutError:
+                N_try = 20
+                if j < N_try:
+                    print(f"failed to unstage on attempt {j}/{N_try}, may try again")
+                    continue    
+                else:
+                    raise
+            else:
+                break
+        return ret
+
+dexela1 = HxnDexelaDetectorSS('XF:03IDC-ES{Dexela:1}', name='dexela1',
+                              image_name='dexela1',
+                              read_attrs=['hdf5', 'cam','stats1'])
 dexela1.hdf5.read_attrs = []
 
 # - Other detectors and triggering devices

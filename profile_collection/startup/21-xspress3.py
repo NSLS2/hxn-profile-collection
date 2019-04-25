@@ -39,7 +39,19 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
 
 
     def stage(self, *args, **kwargs):
-        ret = super().stage(*args, **kwargs)
+        for j in itertools.count():
+            try:
+                ret = super().stage(*args, **kwargs)
+            except TimeoutError:
+                N_try = 20
+                if j < 20:
+                    print(f"failed to stage on try{j}/{N_try}, may try again")
+                    continue
+                else:
+                    raise
+            else:
+                break
+
 
         # clear any existing callback
         if self._dispatch_cid is not None:
@@ -102,7 +114,21 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
                 self.hdf5.num_captured.clear_sub(self._dispatch_cid)
                 self._dispatch_cid = None
         finally:
-            return super().unstage(*args, **kwargs)
+            import itertools
+            for j in itertools.count():
+                try:
+                    ret = super().unstage(*args, **kwargs)
+                except TimeoutError:
+                    N_try = 20
+                    if j < N_try:
+                        print(f"failed to unstage on attempt {j}/{N_try}, may try again")
+                        continue
+                    else:
+                        raise
+                else:
+                    break
+            return ret
+
 
 
 
@@ -127,7 +153,7 @@ energy_M_list = np.array([1646,1712,1775,1840,1907,1976,2048,2118,2191,2267,2342
 
 
 def xspress3_roi_setup():
-    elem_list = np.array(['Co','Si','Mg','Ni','Ir_L','Cl','Pt_L','W_L','Mn','Cr','Se','Ti','Cu','Fe','Ga','Au_L'])
+    elem_list = np.array(['Au_M','Si','Mg','Ni','Sb_L','Cl','Pt_L','W_L','Mn','Cr','Se','Ti','Ca','Fe','Ge','Au_L'])
     num_elem = np.size(elem_list)
     if num_elem > 16:
         num_elem = 16
