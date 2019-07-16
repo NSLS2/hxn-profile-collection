@@ -39,7 +39,7 @@ class HxnMerlinDetector(_HMD):
                write_path_template='/data/%Y/%m/%d/',
                root='/data',
                fs=db.fs)
-    
+
     def stage(self):
         import itertools
         for j in itertools.count():
@@ -56,13 +56,13 @@ class HxnMerlinDetector(_HMD):
     def unstage(self, *args, **kwargs):
         import itertools
         for j in itertools.count():
-            try:   
+            try:
                 ret = super().unstage()
             except TimeoutError:
                 N_try = 20
                 if j < N_try:
                     print(f"failed to unstage on attempt {j}/{N_try}, may try again")
-                    continue    
+                    continue
                 else:
                     raise
             else:
@@ -98,13 +98,13 @@ class HxnDexelaDetectorSS(HxnDexelaDetector):
     def unstage(self, *args, **kwargs):
         import itertools
         for j in itertools.count():
-            try:   
+            try:
                 ret = super().unstage()
             except TimeoutError:
                 N_try = 20
                 if j < N_try:
                     print(f"failed to unstage on attempt {j}/{N_try}, may try again")
-                    continue    
+                    continue
                 else:
                     raise
             else:
