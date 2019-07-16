@@ -1,6 +1,7 @@
 from scipy.optimize import curve_fit
 import scipy
 import pickle
+import numpy as np
 
 def erfunc3(z,a,b,c,d,e):
     return d+e*z+c*(scipy.special.erf((z-a)/(b*np.sqrt(2.0)))+1.0)
@@ -238,7 +239,7 @@ def vmll_z_alignment(z_start, z_end, z_num, start, end, num, acq_time, elem='Pt_
     plt.plot(z_pos,fit_size,'bo')
     plt.xlabel('vz')
 
-def zp_z_alignment(z_start, z_end, z_num, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4'):
+def zp_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem=' ',mon='sclr1_ch4'):
     print('moves the zone plate incrementally and find the focus with a linescan at each position')
     z_pos=np.zeros(z_num+1)
     fit_size=np.zeros(z_num+1)
@@ -248,7 +249,7 @@ def zp_z_alignment(z_start, z_end, z_num, start, end, num, acq_time, elem='Pt_L'
     yield from movr_zpz1(z_start)
     for i in range(z_num + 1):
 
-        yield from fly1d(dets1, zpssy, start, end, num, acq_time)
+        yield from fly1d(dets1, mot, start, end, num, acq_time)
         edge_pos,fwhm=erf_fit(-1,elem,mon,linear_flag=False)
         fit_size[i]= fwhm
         z_pos[i]=zp.zpz1.position
@@ -330,6 +331,40 @@ def return_tip_pos(sid,elem='Cr'):
     #print(x[peak_index[0][0]+1])
     return x[peak_index[0][0]+1]
 
+def zp_rot_alignment_edge(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt_L', move_flag=0):
+    a_step = (a_end - a_start)/a_num
+    x = np.zeros(a_num+1)
+    y = np.zeros(a_num+1)
+    orig_th = zps.zpsth.position
+    for i in range(a_num+1):
+        x[i] = a_start + i*a_step
+        yield from bps.mov(zps.zpsth, x[i])
+        if np.abs(x[i]) > 45:
+            yield from fly1d(dets1,zpssz,start,end,num,acq_time)
+            #tmp = return_line_center(-1, elem=elem,threshold=0.5)
+            edge,fwhm = erf_fit(-1,elem = elem,linear_flag=False)
+            y[i] = edge*np.sin(x[i]*np.pi/180.0)
+        else:
+            yield from fly1d(dets1,zpssx,start,end,num,acq_time)
+            #tmp = return_line_center(-1,elem=elem,threshold=0.5)
+            edge,fwhm = erf_fit(-1,elem = elem,linear_flag=False)
+            y[i] = edge*np.cos(x[i]*np.pi/180.0)
+        print('y=',y[i])
+    y = -1*np.array(y)
+    x = np.array(x)
+    r0, dr, offset = rot_fit_2(x,y)
+    yield from bps.mov(zps.zpsth, orig_th)
+    dx = -dr*np.sin(offset*np.pi/180)/1000.0
+    dz = -dr*np.cos(offset*np.pi/180)/1000.0
+
+    print('dx=',dx,'   ', 'dz=',dz)
+
+    if move_flag:
+        yield from bps.movr(zps.smarx, dx)
+        yield from bps.movr(zps.smarz, dz)
+
+
+    return x,y
 
 def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt_L', move_flag=0):
     a_step = (a_end - a_start)/a_num
@@ -341,12 +376,12 @@ def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt_
         yield from bps.mov(zps.zpsth, x[i])
         if np.abs(x[i]) > 45:
             yield from fly1d(dets1,zpssz,start,end,num,acq_time)
-            tmp = return_line_center(-1, elem=elem)
+            tmp = return_line_center(-1, elem=elem,threshold=0.5)
             #edge,fwhm = erf_fit(-1,elem = elem)
             y[i] = tmp*np.sin(x[i]*np.pi/180.0)
         else:
             yield from fly1d(dets1,zpssx,start,end,num,acq_time)
-            tmp = return_line_center(-1,elem=elem)
+            tmp = return_line_center(-1,elem=elem,threshold=0.5)
             #edge,fwhm = erf_fit(-1,elem = elem)
             y[i] = tmp*np.cos(x[i]*np.pi/180.0)
         print('y=',y[i])

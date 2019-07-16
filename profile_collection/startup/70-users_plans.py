@@ -119,11 +119,11 @@ def zp_z_2dscan(z_start, z_end, z_num, mot1, start1, end1, num1, mot2, start2, e
 
 def go_det(det):
     if det == 'merlin':
-        yield from bps.mov(diff.x, -2.8, diff.y1, 3.3, diff.y2, 3.3)
+        yield from bps.mov(diff.x, 13.2, diff.y1, -9.7, diff.y2, -9.7)
         #yield from bps.mov(diff.y1,-3.2)
         #yield from bps.mov(diff.y2,-3.2)
     elif det == 'cam11':
-        yield from bps.mov(diff.x,218.52, diff.y1, 22.05, diff.y2, 22.05)
+        yield from bps.mov(diff.x,219.08, diff.y1, 22.05, diff.y2, 22.05)
         #yield from bps.mov(diff.y1,22.65)
         #yield from bps.mov(diff.y2,22.65)
     elif det =='telescope':
@@ -954,41 +954,56 @@ def zp_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
         #    sleep(60)
 
         angle = angle_start + i * angle_step
-        yield from bps.mov(zpssx,0)
-        yield from bps.mov(zpssz,0)
+        #yield from bps.mov(zpssx,0)
+        #yield from bps.mov(zpssz,0)
+        #yield from bps.mov(zpssy,0)
         yield from bps.mov(zps.zpsth, angle)
 
         #'''
-        if np.abs(angle) <= 45:
-            yield from bps.mov(zpssx,0)
-            yield from fly1d(dets1, zpssx, -10, 10, 200, 0.05)
+        if angle >= -50:
+            if np.abs(angle) <= 45:
+                #yield from bps.mov(zpssx,0)
+                yield from fly1d(dets1, zpssx, -10, 10, 100, 0.05)
+                yield from bps.sleep(1)
+                xc = return_line_center(-1,elem,0.5)
+                #yield from bps.mov(zps.zpssx,xc)
+                #if abs(xc)<2.5:
+                if not np.isnan(xc):
+                    yield from bps.mov(zps.zpssx,xc)
 
-            xc = return_line_center(-1,elem,0.3)
-            yield from bps.mov(zpssx,xc)
-        else:
-            yield from bps.mov(zpssz,0)
-            yield from fly1d(dets1,zpssz, -10, 10, 200, 0.05)
-            xc = return_line_center(-1,elem,0.3)
-            yield from bps.mov(zpssz,xc)
+            else:
+                #yield from bps.mov(zpssz,0)
+                yield from fly1d(dets1,zpssz, -10, 10, 100, 0.05)
+                yield from bps.sleep(1)
+                xc = return_line_center(-1,elem,0.5)
+                #if abs(xc)<2.5:
+                if not np.isnan(xc):
+                #        yield from bps.movr(zps.smarz,xc/1000)
+                    yield from bps.mov(zpssz,xc)
 
-        merlin1.unstage()
-        xspress3.unstage()
-        yield from fly1d(dets1,zpssy, -10, 10, 100, 0.05)
-        yc = return_line_center(-1,elem,0.3)
-        #yc,yw = erf_fit(-1,elem)
-        #plt.close()
-        yield from bps.mov(zpssy,yc)
-        #yield from bps.mov(dssy,yc)
+            merlin1.unstage()
+            xspress3.unstage()
 
-        merlin1.unstage()
-        xspress3.unstage()
+            yield from fly1d(dets1,zpssy, -8, 8, 80, 0.05)
+            yield from bps.sleep(1)
+            yc = return_line_center(-1,elem,0.5)
+            #yc,yw = erf_fit(-1,elem)
+            #plt.close()
+            #if abs(yc)<1:
+            #    yield from bps.movr(zps.smary,yc/1000)
+            #yield from bps.mov(dssy,yc)
+            if not np.isnan(yc):
+                yield from bps.mov(zpssy,yc)
+
+        #merlin1.unstage()
+        #xspress3.unstage()
         #'''
         #yc,yw = erf_fit(-1,elem)
-        #yield from bps.mov(dssy,yc-4.2)
+        #yield from bps.mov(dssy,yc-4.2)<fly2
 
-        while (sclr2_ch4.get() < 100000):
+        while (sclr2_ch4.get() < 200000):
             yield from bps.sleep(60)
-            print('IC3 is lower than 140000, waiting...')
+            print('IC3 is lower than 200000, waiting...')
 
         if np.abs(angle) <= 45:
 
@@ -1017,14 +1032,14 @@ def zp_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
 
         #mov_to_image_cen_smar(-1)
         #yield from mov_to_image_cen_dsx(-1)
-        plot2dfly(-1,elem)
-        insertFig(note='zpsth = {}'.format(check_baseline(-1,'zpsth')))
-        plt.close()
+        #plot2dfly(-1,elem,'sclr1_ch4')
+        #insertFig(note='zpsth = {}'.format(check_baseline(-1,'zpsth')))
+        #plt.close()
         merlin1.unstage()
         xspress3.unstage()
         print('waiting for 2 sec...')
-        yield from bps.sleep(2)
-    save_page()
+        #yield from bps.sleep(5)
+    #save_page()
 
 
 def tomo_slice_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
@@ -1061,9 +1076,13 @@ def tomo_slice_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
 def movr_zpz1(dz):
     yield from bps.movr(zp.zpz1, dz)
     #movr(zp.zpx, dz * 3.75)
-    yield from bps.movr(zp.zpy, -dz*0.003091258+0.000236*dz-0.0010*dz)
+    yield from bps.movr(zp.zpy, -dz*0.003091258+0.000236*dz-0.0010*dz+0.0016*dz-0.00128*dz)
     yield from bps.movr(zp.zpx, (dz*0.003/40.33)+ dz*0.01/2.0-0.00496*dz)
 
+def mov_zpz1(pos):
+    c_zpz1 = zp.zpz1.position
+    dz = pos - c_zpz1
+    yield from movr_zpz1(dz)
 
 def reset_tpx(num):
     for i in range(1000):
@@ -1170,23 +1189,23 @@ def th_fly2d(th_start, th_end, num, mot1, x_start, x_end, x_num, mot2, y_start, 
     yield from bps.movr(zps.zpsth, th_start)
     yield from bps.sleep(5)
     for i in range(num + 1):
-        yield from shutter('open')
-        yield from bps.mov(zpssy, 5.5)
-        yield from bps.mov(zpssx, 0)
+        #yield from shutter('open')
+        #yield from bps.mov(zpssy, 6.25)
+        #yield from bps.mov(zpssx, 0)
         yield from fly1d(dets1,zpssx,-14,14,140,0.05)
-        corr_x_pos = return_line_center(-1,'Ni',0.5)
-        yield from bps.mov(zpssx, (corr_x_pos-0.5))
-        yield from bps.mov(zpssy, -0.2)
+        corr_x_pos = return_line_center(-1,'Co',0.5)
+        yield from bps.mov(zpssx, (corr_x_pos))
+        #yield from bps.mov(zpssy, -1)
         #move_fly_center('Ge')
         yield from fly2d(dets1,mot1, x_start, x_end, x_num, mot2, y_start, y_end, y_num, sec)
         yield from bps.sleep(2)
         yield from bps.movr(zps.zpsth, th_step)
         yield from bps.sleep(5)
-        yield from shutter('close')
-        insertFig(note=' ', title=' ')
+        #yield from shutter('close')
+        insertFig(note='zpsth = {}'.format(check_baseline(-1,'zpsth')))
         plt.close()
         plot_img_sum(-1, 'merlin1')
-        insertFig(note=' ', title=' ')
+        insertFig(note='zpssth = {}'.format(check_baseline(-1,'zpsth')))
         plt.close()
 
     yield from bps.movr(zps.zpsth, -(th_end + th_step))
@@ -2320,6 +2339,33 @@ def plot_fermat(scan_id,elem='Ga',norm=1):
     plt.show()
 
 
+def return_center_of_mass(scan_id = -1, elem = 'Cr'):
+    df2 = db.get_table(db[scan_id],fill=False)
+    xrf = np.asfarray(eval('df2.Det2_' + elem)) + np.asfarray(eval('df2.Det1_' + elem)) + np.asfarray(eval('df2.Det3_' + elem))
+    x = np.asarray(df2.zpssx)
+    y = np.asarray(df2.zpssy)
+    I0 = np.asfarray(df2.sclr1_ch4)
+
+    scan_info=db[scan_id]
+    tmp = scan_info['start']
+    nx=tmp['plan_args']['num1']
+    ny=tmp['plan_args']['num2']
+
+    xrf = xrf/I0
+    xrf = np.asarray(np.reshape(xrf,(ny,nx)))
+
+    b = ndimage.measurements.center_of_mass(xrf)
+
+    iy = np.int(np.round(b[0]))
+    ix = np.int(np.round(b[1]))
+    i_max = ix + iy * nx
+
+    x_cen = x[i_max]
+    y_cen = y[i_max]
+    return (y_cen, x_cen)
+
+
+
 def mov_to_image_cen_zpsx(scan_id=-1, elem='Ni', bitflag=1):
 
     df2 = db.get_table(db[scan_id],fill=False)
@@ -2636,7 +2682,7 @@ def mov_to_image_cen_smar(scan_id=-1, elem='Er', bitflag=1, movflag=1):
 
     x_cen = x[i_max]
     y_cen = y[i_max]
-
+    return (x_cen,y_cen)
 
 
     #print(b,ix,iy,i_max,x_cen,y_cen)
@@ -2645,21 +2691,21 @@ def mov_to_image_cen_smar(scan_id=-1, elem='Er', bitflag=1, movflag=1):
         print('move smarx,by', x_cen, 'um')
         #print('move zpssx, zpssy to ',0, 0)
         if movflag:
-            movr(zps.smarx, x_cen*0.001)
+           yield from bps.movr(zps.smarx, x_cen*0.001)
         #mov(zps.zpssx,0)
-        sleep(.1)
+        bps.sleep(.1)
 
     elif x_motor == 'zpssz':
         print('move smarz,by', x_cen, 'um')
         if movflag:
-            movr(zps.smarz, x_cen*0.001)
+            yield from bps.movr(zps.smarz, x_cen*0.001)
         #mov(zps.zpssx,0)
-        sleep(.1)
+        bps.sleep(.1)
 #    print('move smary,by', y_cen, 'um')
 #    if movflag:
 #        movr(zps.smary, y_cen*0.001)
     #mov(zps.zpssy,0)
-    sleep(.1)
+    bps.sleep(.1)
 
 
 def mov_to_line_center(scan_id=-1,elem='Ga',threshold=0,moveflag=0,movepiezoflag=0):
@@ -2844,13 +2890,6 @@ def scale_fly2d(x_start,x_end,x_num,y_start,y_end,y_num,exp):
         RE(fly2d(smlld.dssz,x_start_new,x_end_new,x_num, smlld.dssy, y_start, y_end, y_num, exp))
         beep()
 
-
-def over_night_scan_Sima():
-    for i in range(20):
-        print('scan #: ',i)
-        RE(fly2d(zpssx, -2.5, 9.5, 130, zpssy, -8.5, 3, 115, 0.15))
-        print('sleeping 2 sec')
-        sleep(2)
 
 def extract_mll_scan_pos(scan_id):
     data = db.get_table(db[scan_id], stream_name='baseline')
@@ -3046,7 +3085,7 @@ def stitch_mosaic(start_scan_id, end_scan_id, nx_mosaic, ny_mosaic,elem,norm=Non
 def export_merlin(sid,num=1):
     for i in range(num):
         sid, df = _load_scan(sid, fill_events=False)
-        path = os.path.join('/data/users/2019Q1/Singer_2019Q1/diff_data/', 'scan_{}.txt'.format(sid))
+        path = os.path.join('/data/users/2019Q1/Robinson_2019Q1/raw_data/', 'scan_{}.txt'.format(sid))
         print('Scan {}. Saving to {}'.format(sid, path))
         #non_objects = [name for name, col in df.iteritems() if col.dtype.name not in ('object', )]
         #dump all data
@@ -3054,7 +3093,7 @@ def export_merlin(sid,num=1):
         df.to_csv(path, float_format='%1.5e', sep='\t',
                   columns=sorted(non_objects))
 
-        path = os.path.join('/data/users/2019Q1/Singer_2019Q1/diff_data/', 'scan_{}_scaler.txt'.format(sid))
+        path = os.path.join('/data/users/2019Q1/Robinson_2019Q1/raw_data/', 'scan_{}_scaler.txt'.format(sid))
         #np.savetxt(path, (df['sclr1_ch3'], df['p_ssx'], df['p_ssy']), fmt='%1.5e')
         #np.savetxt(path, (df['sclr1_ch4'], df['zpssx'], df['zpssy']), fmt='%1.5e')
         filename = get_all_filenames(sid,'merlin1')
@@ -3062,13 +3101,13 @@ def export_merlin(sid,num=1):
         if num_subscan == 1:
             for fn in filename:
                 break
-            path = os.path.join('/data/users/2019Q1/Singer_2019Q1/diff_data/', 'scan_{}.h5'.format(sid))
+            path = os.path.join('/data/users/2019Q1/Robinson_2019Q1/raw_data/', 'scan_{}.h5'.format(sid))
             mycmd = ''.join(['scp', ' ', fn, ' ', path])
             os.system(mycmd)
         else:
             h = db[sid]
             images = db.get_images(h,name='merlin1')
-            path = os.path.join('/data/users/2019Q1/Singer_2019Q1/diff_data/', 'scan_{}.h5'.format(sid))
+            path = os.path.join('/data/users/2019Q1/Robinson_2019Q1/raw_data/', 'scan_{}.h5'.format(sid))
             f = h5py.File(path, 'w')
             dset = f.create_dataset('/entry/instrument/detector/data', data=images)
             f.close()
@@ -3285,29 +3324,159 @@ def fill_angle_scans():
 
 
 def zp_theta_scan(angle_start,angle_end,angle_step_size):
-    p_v_ry_0 = p_v_ry.position
-    p_vx_0 = p_vx.position
-    p_vy_0 = p_vy.position
-    angle_step_num = (angle_end - angle_start) // angle_step_size + 1
+    #p_v_ry_0 = p_v_ry.position
+    #p_vx_0 = p_vx.position
+    #p_vy_0 = p_vy.position
+    zpsth_0 = zpsth.position
+    y_pos = zpssy.position
+    angle_step_num = np.int((angle_end - angle_start) / angle_step_size) + 1
     print(angle_start,angle_end,angle_step_size,angle_step_num)
+    yield from bps.mov(zpsth,angle_start)
     for i in range(np.int(angle_step_num)):
-        print('running scan at ',p_v_ry.position)
-        yield from fly2d(dets2, ssx,-0.5,0.5,100, ssy, -0.5, 0.5, 100, 0.05, return_speed = 40)
-        yield from bps.movr(p_v_ry, angle_step_size)
-        curr_angle = p_v_ry.position
-        corr_p_vx = (curr_angle)**2*4.126e-10+curr_angle*0.0001108+0.002298
-        print (corr_p_vx,curr_angle)
-        yield from bps.mov(p_vx,corr_p_vx)
-        yield from bps.movr(p_vy,0.0004)
-        merlin2.unstage()
+        print('running scan at ',zpsth.position)
+
+        yield from bps.movr(zpssy,-2.5)
+        yield from fly1d(dets1,zpssx,-7,7,100,0.1)
+        lc = return_line_center(-1,'Au_M')
+        if not np.isnan(lc):
+            yield from bps.mov(zpssx,lc)
+        yield from bps.mov(zpssy,y_pos)
+        #yield from fly2d(dets1, zpssx,-4.805,4.805,15, zpssy, -1.5, 1.5, 30, 10, return_speed = 40)
+        yield from mesh(dets1,zpssy,-2,2,20,zpssx,-3.5,3.5,35,1)
+        yield from bps.movr(zpsth, angle_step_size)
+
+        #curr_angle = p_v_ry.position
+        #corr_p_vx = (curr_angle)**2*4.126e-10+curr_angle*0.0001108+0.002298
+        #print (corr_p_vx,curr_angle)
+        #yield from bps.mov(p_vx,corr_p_vx)
+        #yield from bps.movr(p_vy,0.0004)
+
+        merlin1.unstage()
         xspress3.unstage()
         print('waiting for 2 sec...')
         yield from bps.sleep(2)
 
 
-    yield from bps.mov(p_v_ry,p_v_ry_0)
-    yield from bps.mov(p_vx,p_vx_0)
-    yield from bps.mov(p_vy, p_vy_0)
+    #yield from bps.mov(p_v_ry,p_v_ry_0)
+    #yield from bps.mov(p_vx,p_vx_0)
+    #yield from bps.mov(p_vy, p_vy_0)
+    yield from bps.mov(zpsth,zpsth_0)
+
+
+# ========================================================================================================================
+
+def return_line_center_img_sum(sid,threshold=0.3):
+
+    Result = plot_img_sum_for_centering(sid, det = 'merlin1', roi_flag=False,x_cen=0,y_cen=0,size=0)
+
+    xrf = Result['tot']
+    #threshold = np.max(xrf)/10.0
+    x = Result['x']
+
+    #xrf = xrf * -1
+    #xrf = xrf - np.min(xrf)
+
+    #print(x)
+    #print(xrf)
+    xrf[xrf<(np.max(xrf)*threshold)] = 0.
+    #index = np.where(xrf == 0.)
+    #xrf[:index[0][0]] = 0.
+    #xrf[xrf>=(np.max(xrf)*threshold)] = 1.
+    mc = find_mass_center_1d(xrf,x)
+    return mc
+
+
+def plot_img_sum_for_centering(sid, det = 'merlin1', roi_flag=False,x_cen=0,y_cen=0,size=0):
+    h = db[sid]
+    sid = h.start['scan_id']
+    imgs = list(h.data(det))
+    #imgs = np.array(imgs)
+    imgs = np.array(np.squeeze(imgs))
+    df = h.table()
+    mon = np.array(df['sclr1_ch4'],dtype=float32)
+    #plt.figure()
+    #plt.imshow(imgs[0],clim=[0,50])
+    if roi_flag:
+        imgs = imgs[:,x_cen-size//2:x_cen+size//2,y_cen-size//2:y_cen+size//2]
+    mots = h.start['motors']
+    num_mots = len(mots)
+    #num_mots = 1
+    #df = h.table()
+    x = df[mots[0]]
+    x = np.array(x)
+    tot = np.sum(imgs,2)
+    tot = np.array(np.sum(tot,1), dtype=float32)
+    tot = np.divide(tot,mon)
+
+    return {'x':x,'tot':tot}
+
+
+def zp_theta_scan_center_angle(angle_start,angle_end,angle_step_size,x1,x2,x_num,y1,y2,y_num):
+    #p_v_ry_0 = p_v_ry.position
+    #p_vx_0 = p_vx.position
+    #p_vy_0 = p_vy.position
+    zpsth_0 = zpsth.position
+    angle_step_num = np.int((angle_end - angle_start) / angle_step_size) + 1
+    print(angle_start,angle_end,angle_step_size,angle_step_num)
+    yield from bps.mov(zpsth,angle_start)
+    lc_angle = zpsth_0
+
+    for i in range(np.int(angle_step_num)):
+        while (sclr2_ch4.get() < 50000):
+            yield from bps.sleep(60)
+            print('IC3 is lower than 50000, waiting...')
+
+        #print('running scan at ',zpsth.position)
+        print('Start the scan at %d step ' %(i))
+
+        yield from fly1d(dets1,zpssx,-10,10,100,0.1)
+        lc = return_line_center(-1,'Co')
+        print('zpssx center is %.3f' %(lc))
+        yield from bps.mov(zpssx,lc)
+        xspress3.unstage()
+
+        yield from fly1d(dets1,zpssy,-10,10,100,0.1)
+        lc = return_line_center(-1,'Co')
+        print('zpssy center is %.3f' %(lc))
+        yield from bps.mov(zpssy,lc)
+        xspress3.unstage()
+
+        if np.remainder(i, 50) == 0:
+            yield from bps.mov(zpsth, lc_angle)
+            yield from dscan(dets1,zpsth,-0.5,0.5,20,0.1)
+            lc_angle = return_line_center_img_sum(-1)
+
+        print('zpsth center is %.3f' %(lc_angle))
+        print('current scan is at angle %.3f' %(lc_angle - zpsth_0 + angle_start + i*angle_step_size))
+        yield from bps.mov(zpsth, lc_angle - zpsth_0 + angle_start + i*angle_step_size)
+        xspress3.unstage()
+
+
+        yield from fly2d(dets1, zpssx,x1,x2,x_num, zpssy, y1, y2,y_num, 0.05, return_speed = 40)
+
+        #yield from mesh(dets1,zpssy,-0.3,0.3,20,zpssx,-0.3,0.3,20,10)
+        #yield from bps.movr(zpsth, angle_step_size)
+
+        #curr_angle = p_v_ry.position
+        #corr_p_vx = (curr_angle)**2*4.126e-10+curr_angle*0.0001108+0.002298
+        #print (corr_p_vx,curr_angle)
+        #yield from bps.mov(p_vx,corr_p_vx)
+        #yield from bps.movr(p_vy,0.0004)
+
+        merlin1.unstage()
+        xspress3.unstage()
+        print('waiting for 2 sec...')
+        yield from bps.sleep(2)
+
+
+    #yield from bps.mov(p_v_ry,p_v_ry_0)
+    #yield from bps.mov(p_vx,p_vx_0)
+    #yield from bps.mov(p_vy, p_vy_0)
+    yield from bps.mov(zpsth,zpsth_0)
+
+
+# ========================================================================================================================
+
 
 import epics
 def zp_rock(angle_start,angle_end,x_step, num):

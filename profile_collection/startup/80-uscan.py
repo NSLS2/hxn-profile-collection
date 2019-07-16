@@ -124,24 +124,24 @@ def theta_fly2d_ce(angle_start,angle_end,num_angle,motor1,start1,end1,num1,motor
     ssy_current = zps.zpssy.position
     ssz_current = zps.zpssz.position
 
-    angle_step = (angle_end - angle_start) / num_angle
+    angle_step = np.int((angle_end - angle_start) / num_angle)
     start_angle = angle_current + angle_start
-    mov(zps.zpsth,start_angle)
+    yield from bps.mov(zps.zpsth,start_angle)
    # RE(fly1d(zps.zpssz,-1,1,50,0.1))
    # mov_to_line_center(-1,elem='Ga',moveflag=1,threshold=0.2,movepiezoflag=1)
 
     for i in range(num_angle+1):
-        RE(fly2d(motor1,start1,end1,num1,motor2,start2,end2,num2,exp))
+        yield from fly2d(dets1,motor1,start1,end1,num1,motor2,start2,end2,num2,exp)
     #    mov_to_image_cen_zpss(-1,'Ga',1)
        # export(-1)
-        movr(zps.zpsth,angle_step)
-        movr(zps.zpssz,-2*angle_step)
+        yield from bps.movr(zps.zpsth,angle_step)
+        #yield from bps.movr(zps.zpssz,-2*angle_step)
     #    RE(fly1d(zps.zpssz,-.25,.25,20,0.1))
     #    mov_to_line_center(-1,elem='Ga',moveflag=1,threshold=0.2,movepiezoflag=1)
         print('wait 2 sec ...')
         sleep(2)
 
-   # mov(zps.zpsth,angle_current)
+    yield from bps.mov(zps.zpsth,angle_current)
 
 def search_smarx():
     movr(zps.smarx, -.1)
