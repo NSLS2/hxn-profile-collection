@@ -1,8 +1,5 @@
 import pandas as pd
-
-# Make ophyd listen to pyepics.
-from ophyd import setup_ophyd
-setup_ophyd()
+import ophyd
 
 # Set up a Broker.
 # TODO clean this up
