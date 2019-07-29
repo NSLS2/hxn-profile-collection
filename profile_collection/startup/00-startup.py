@@ -168,9 +168,9 @@ class CompositeRegistry(Registry):
 
         res_uid = resource_uid
         datum_count = datum_counts[res_uid]
-        
+
         datum_uid = res_uid + '/' + str(datum_count)
-        datum_counts[res_uid] = datum_count + 1   
+        datum_counts[res_uid] = datum_count + 1
 
         # db2 database
 
@@ -230,7 +230,7 @@ class CompositeRegistry(Registry):
 
         # ts =  str(datetime.now().timestamp())
         # d_ids = [ts + '-' + str(uuid.uuid4()) for j in range(len(dkwargs_table))]
-        
+
         d_ids = [res_uid + '/' + str(datum_count+j) for j in range(len(dkwargs_table))]
         datum_counts[res_uid] = datum_count + len(dkwargs_table)
 
@@ -277,14 +277,14 @@ class CompositeBroker(Broker):
 
     # databroker.headersource.MDSROTemplate
     def _bulk_insert_events(self, event_col, descriptor, events, validate, ts):
-        
+
         descriptor_uid = doc_or_uid_to_uid(descriptor)
 
         bulk = event_col.initialize_ordered_bulk_op()
-        
+
         for ev in events:
             data = dict(ev['data'])
-            
+
             # Replace any filled data with the datum_id stashed in 'filled'.
             for k, v in six.iteritems(ev.get('filled', {})):
                 if v:
@@ -293,7 +293,7 @@ class CompositeBroker(Broker):
             apply_to_dict_recursively(data, sanitize_np)
             timestamps = dict(ev['timestamps'])
             apply_to_dict_recursively(timestamps, sanitize_np)
-            
+
             # check keys, this could be expensive
             if validate:
                 if data.keys() != timestamps.keys():
@@ -306,11 +306,11 @@ class CompositeBroker(Broker):
                           data=data, timestamps=timestamps,
                           time=ev['time'],
                           seq_num=ev['seq_num'])
-            
+
             bulk.insert(ev_out)
 
         return bulk.execute()
-        
+
     # databroker.headersource.MDSROTemplate
     # databroker.headersource.MDSRO(MDSROTemplate)
     def _insert(self, name, doc, event_col, ts):
@@ -338,8 +338,8 @@ class CompositeBroker(Broker):
         if name in {'bulk_events'}:
             ret1 = self._insert(name, doc, db2.mds._event_col, ts)
         else:
-            ret1 = db2.insert(name, doc) 
- 
+            ret1 = db2.insert(name, doc)
+
         t2 = datetime.now()
 
         _write_to_file(db2_name, name, t1, t2);
@@ -472,7 +472,7 @@ def register_transform(RE, *, prefix='<'):
             else:
                 new_lines.append(line)
         return new_lines
-            
+
     ip = IPython.get_ipython()
     # ip.input_splitter.line_transforms.append(tr_re())
     # ip.input_transformer_manager.logical_line_transforms.append(tr_re())
