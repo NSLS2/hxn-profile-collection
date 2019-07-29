@@ -18,7 +18,7 @@ class HxnTimepixDetector(_HTD):
                configuration_attrs=[],
                write_path_template='/data/%Y/%m/%d/',
                root='/data',
-               fs=db.fs)
+               reg=db.reg)
 
 timepix1 = HxnTimepixDetector('XF:03IDC-ES{Tpx:1}', name='timepix1',
                               image_name='timepix1',
@@ -38,7 +38,7 @@ class HxnMerlinDetector(_HMD):
                configuration_attrs=[],
                write_path_template='/data/%Y/%m/%d/',
                root='/data',
-               fs=db.fs)
+               reg=db.reg)
 
     def stage(self):
         import itertools
