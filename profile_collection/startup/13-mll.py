@@ -12,7 +12,7 @@ def remove_names_maybe(obj, names):
     for n in names:
         try:
             obj.read_attrs.remove(n)
-        except (ValueError, AttributeError):
+        except (ValueError, AttributeError, KeyError):
             pass
     return obj
 
