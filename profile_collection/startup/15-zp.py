@@ -133,10 +133,9 @@ class FineSampleLabX(PseudoPositioner, NamedDevice):
     theta0 = Cpt(Signal, value=0.0, doc='theta offset')
 
     def __init__(self, prefix, **kwargs):
-        super().__init__(prefix, **kwargs)
+        self.zpsth = EpicsMotor(prefix + '{SC210:1-Ax:1}Mtr', name='zpsth')
 
-        self.zpsth = EpicsMotor(self.prefix + '{SC210:1-Ax:1}Mtr',
-                                name='zpsth')
+        super().__init__(prefix, **kwargs)
 
         # if theta changes, update the pseudo position
         self.theta0.subscribe(self.parameter_updated)
