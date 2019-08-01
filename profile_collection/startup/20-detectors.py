@@ -10,6 +10,9 @@ from hxntools.detectors.merlin import HDF5PluginWithFileStore as _mhdf
 from hxntools.detectors.timepix import HDF5PluginWithFileStore as _thdf
 from hxntools.detectors.zebra import HxnZebra
 
+from nslsii.ad33 import (SingleTriggerV33, StatsPluginV33, CamV33Mixin)
+
+
 # - 2D pixel array detectors
 # -- Timepix 1
 class HxnTimepixDetector(_HTD):
@@ -31,8 +34,17 @@ timepix1.hdf5.read_attrs = []
 #                              read_attrs=['hdf5', 'cam'])
 #timepix2.hdf5.read_attrs = []
 
+
+
+
 # -- Merlin 1
 class HxnMerlinDetector(_HMD):
+    stats1 = Cpt(StatsPluginV33, 'Stats1:')
+    stats2 = Cpt(StatsPluginV33, 'Stats2:')
+    stats3 = Cpt(StatsPluginV33, 'Stats3:')
+    stats4 = Cpt(StatsPluginV33, 'Stats4:')
+    stats5 = Cpt(StatsPluginV33, 'Stats5:')
+
     hdf5 = Cpt(_mhdf, 'HDF1:',
                read_attrs=[],
                configuration_attrs=[],
