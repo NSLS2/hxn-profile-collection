@@ -2,10 +2,9 @@ from ophyd import (PVPositioner, Component as Cpt, EpicsSignal, EpicsSignalRO,
                    Signal, EpicsMotor)
 from ophyd.utils import ReadOnlyError
 import time as ttime
-from ophyd.utils import set_and_wait
 
 
-    
+
 class InsertionDevice(Device):
     gap = Cpt(EpicsMotor, '-Ax:Gap}-Mtr',
               kind='hinted', name='', settle_time=.1)
@@ -15,6 +14,7 @@ class InsertionDevice(Device):
 
 
     def set(self, *args, **kwargs):
+        from ophyd.utils import set_and_wait
         set_and_wait(self.brake, 1)
         return self.gap.set(*args, **kwargs)
 
