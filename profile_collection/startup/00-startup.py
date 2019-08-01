@@ -493,7 +493,6 @@ def set_and_wait_again(signal, val, **kwargs):
     attempts = 0
     while True:
         attempts += 1
-        logger.warning('set_and_wait(%s, %s, **%r)', signal, val, kwargs)
         try:
             return _set_and_wait(signal, val, **kwargs)
         except TimeoutError as ex:
