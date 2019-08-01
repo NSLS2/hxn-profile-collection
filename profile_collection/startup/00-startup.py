@@ -480,4 +480,41 @@ def register_transform(RE, *, prefix='<'):
 
 register_transform('RE', prefix='<')
 
+# -HACK- Patching set_and_wait in ophyd.device to make stage and unstage more
+# reliable
 
+_set_and_wait = ophyd.device.set_and_wait
+
+@functools.wraps(_set_and_wait)
+def set_and_wait_again(signal, val, **kwargs):
+    logger = logging.getLogger('ophyd.utils.epics_pvs')
+    start_time = time.monotonic()
+    deadline = start_time + set_and_wait_again.timeout
+    attempts = 0
+    while True:
+        attempts += 1
+        logger.warning('set_and_wait(%s, %s, **%r)', signal, val, kwargs)
+        try:
+            return _set_and_wait(signal, val, **kwargs)
+        except TimeoutError as ex:
+            remaining = max((deadline - time.monotonic(), 0))
+            if remaining <= 0:
+                error_msg = (
+                    f'set_and_wait({signal}, {val}, **{kwargs!r}) timed out '
+                    f'after {time.monotonic() - start_time:.1f} sec and '
+                    f'{attempts} attempts'
+                )
+                logger.error(error_msg)
+                raise TimeoutError(error_msg) from ex
+            else:
+                logger.warning('set_and_wait(%s, %s, **%r) raised %s. '
+                               '%.1f sec remaining until this will be marked as a '
+                               'failure. (attempt #%d): %s',
+                               signal, val, kwargs, type(ex).__name__,
+                               remaining, attempts, ex
+                               )
+
+
+set_and_wait_again.timeout = 300
+ophyd.device.set_and_wait = set_and_wait_again
+# -END HACK-
