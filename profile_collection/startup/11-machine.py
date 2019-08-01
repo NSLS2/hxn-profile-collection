@@ -24,7 +24,7 @@ class InsertionDevice(Device):
     @property
     def position(self):
         return self.gap.position
-    
+
 ugap = InsertionDevice('SR:C3-ID:G1{IVU20:1', name='ugap')
 ugap.gap.user_readback.name = 'ugap_readback'
 ugap.gap.user_setpoint.name = 'ugap_setpoint'
