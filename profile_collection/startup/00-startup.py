@@ -1,3 +1,4 @@
+import warnings
 import pandas as pd
 import ophyd
 
@@ -201,7 +202,9 @@ class CompositeRegistry(Registry):
 
         resource_id = self._doc_or_uid_to_uid(resource)
 
-        bulk = col.initialize_unordered_bulk_op()
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            bulk = col.initialize_unordered_bulk_op()
 
         d_uids = deque()
 
