@@ -1,5 +1,25 @@
 from ophyd import (EpicsMotor, Component as Cpt,
-                   MotorBundle)
+                   MotorBundle, Device)
+from hxntools.detectors.trigger_mixins import HxnModalBase
+
+class HxnFastShutter(HxnModalBase, Device):
+    request_open = Cpt(EpicsSignal, '')
+
+    def __init__(self, prefix, **kwargs):
+        super().__init__(prefix, **kwargs)
+        self.stage_sigs[self.request_open] = 1
+        self.mode_settings.triggers.put([])
+
+    def stage(self):
+        print('** Opening fast shutter **')
+        super().stage()
+
+    def unstage(self):
+        print('** Closing fast shutter **')
+        super().unstage()
+
+
+fs = HxnFastShutter('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0', name='fs')
 
 
 class HxnSSAperture(MotorBundle):
