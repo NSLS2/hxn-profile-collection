@@ -211,13 +211,14 @@ def insertTitle():
         tp = TitlePage(G_INFO,c)
         tp.create()
 
-def insertFig(note='',title =''):
+def insertFig(note='',title ='', *, fig=None):
     global PDF_CTS
     global PDF_C
     if title == '':
         title = scan_command(-1)
     fi = fig_info(title,note)
-    fig = plt.gcf()
+    if fig is None:
+        fig = plt.gcf()
     if PDF_CTS == 6:
         #print(PDF_CTS)
         fp = FigPage(PDF_C,fig,fi,PDF_CTS)
