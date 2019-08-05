@@ -5,7 +5,8 @@ import hxntools.handlers
 from hxntools.detectors import (HxnTimepixDetector as _HTD,
                                 HxnMerlinDetector as _HMD,
                                 BeamStatusDetector, HxnMercuryDetector,
-                                HxnDexelaDetector)
+                                HxnDexelaDetector as _HDD)
+from hxntools.detectors.dexela import HDF5PluginWithFileStore as _dhdf
 from hxntools.detectors.merlin import HDF5PluginWithFileStore as _mhdf
 from hxntools.detectors.timepix import HDF5PluginWithFileStore as _thdf
 from hxntools.detectors.zebra import HxnZebra
@@ -65,6 +66,16 @@ merlin2 = HxnMerlinDetector('XF:03IDC-ES{Merlin:2}', name='merlin2',
 merlin2.hdf5.read_attrs = []
 
 # -- Dexela 1 (Dexela 1512 GigE-V24)
+class HxnDexelaDetector(_HDD):
+    hdf5 = Cpt(_dhdf, 'HDF1:',
+               read_attrs=[],
+               configuration_attrs=[],
+               write_path_template='Z:\\%Y\\%m\\%d',
+               read_path_template='/data/%Y/%m/%d/',
+               root='/data',
+               path_semantics='windows',
+               reg=db.reg)
+
 dexela1 = HxnDexelaDetector('XF:03IDC-ES{Dexela:1}', name='dexela1',
                             image_name='dexela1',
                             read_attrs=['hdf5', 'cam','stats1'])
