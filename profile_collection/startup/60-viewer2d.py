@@ -1,3 +1,4 @@
+import functools
 import os
 import sys
 import numpy as np
@@ -9,6 +10,15 @@ import matplotlib.gridspec as gridspec
 # from xray_vision.qt_widgets import CrossSectionMainWindow
 # from xray_vision.backend.mpl.cross_section_2d import CrossSection
 from scipy.interpolate import interp1d, interp2d
+from hxnfly.callbacks.liveplot import add_toolbar_button
+
+
+@functools.wraps(plt.figure)
+def figure_with_insert_fig_button(*args, **kwargs):
+    fig = plt.figure(*args, **kwargs)
+    add_toolbar_button(fig, 'Call insertFig()',
+                       slot=lambda fig=fig: insertFig(fig=fig))
+    return fig
 
 
 def plot2d(scan_id, elem, norm='sclr1_ch4'):
@@ -33,9 +43,9 @@ def plot2d(scan_id, elem, norm='sclr1_ch4'):
                df['Det2_{}'.format(elem)] +
                df['Det3_{}'.format(elem)])
 
+    figure_with_insert_fig_button()
     if norm is not None:
         mon = np.reshape(df[norm].values, (col, row))
-        plt.figure()
         data = np.reshape(det.values, (col, row))
         plt.title('Scan %d: %s (normalized to %s)' % (scan_id, elem, norm))
         plt.imshow(data/mon, interpolation='None',
@@ -44,7 +54,6 @@ def plot2d(scan_id, elem, norm='sclr1_ch4'):
         plt.ylabel(y_motor)
         plt.colorbar()
     else:
-        plt.figure()
         data = np.reshape(det.values, (col, row))
         plt.title('Scan %d: %s' % (scan_id, elem))
         plt.imshow(data, interpolation='None',
@@ -77,13 +86,13 @@ def dev(scan_id, namex, namey):
             data[i, 1] = (dety[i + 1] - dety[i]) / (detx[i + 1] - detx[i])
             data[i, 0] = (detx[i + 1] + detx[i]) / 2
 
-    plt.figure(20)
+    figure_with_insert_fig_button(20)
     plt.plot(data[:, 0], data[:, 1])
     # return data
 
 
 def scatter_plot(scan_id, namex, namey, elem='Pt', channels=None, norm=None):
-    plt.figure()
+    figure_with_insert_fig_button()
     plt.title(elem)
     if channels is None:
         channels = [1, 2, 3]
@@ -114,7 +123,7 @@ def scatter_plot(scan_id, namex, namey, elem='Pt', channels=None, norm=None):
 # TODO turn into a callback
 def plot(scan_id, elem='Pt', norm=None,
          center_method='com', log=0, e_flag=0):
-    plt.figure()
+    figure_with_insert_fig_button()
     scan_id, df = _load_scan(scan_id, fill_events=False)
     hdr = db[scan_id]['start']
     scan_start_time = datetime.isoformat(datetime.fromtimestamp(hdr['time']))
@@ -177,7 +186,7 @@ def plot(scan_id, elem='Pt', norm=None,
         plt.title('Scan %d' % (scan_id))
         try:
             diff = np.diff(data)
-            plt.figure()
+            figure_with_insert_fig_button()
             plt.plot(x[:-1], diff)
             plt.plot(x[:-1], diff, 'bo')
         except Exception as ex:
@@ -191,7 +200,7 @@ def plot(scan_id, elem='Pt', norm=None,
 
 def plot_all(scan_id, namex=None, diff=False, channels=None,
              same_axis=False):
-    plt.figure()
+    figure_with_insert_fig_button()
 
     if channels is None:
         channels = [1, 2, 3]
@@ -242,7 +251,7 @@ def find_mass_center(array):
 
 
 def plotfly(scan_id, elem='Pt', norm=None, center_method='com'):
-    plt.figure()
+    figure_with_insert_fig_button()
     scan_id, df = _load_scan(scan_id, fill_events=False)
     hdr = db[scan_id]['start']
     scan_start_time = datetime.isoformat(datetime.fromtimestamp(hdr['time']))
@@ -345,7 +354,7 @@ def fly2d_grid(hdr, x_data=None, y_data=None, plot=False):
 
     if plot:
         mesh_x, mesh_y = np.meshgrid(grid_x, grid_y)
-        plt.figure()
+        figure_with_insert_fig_button()
         if x_data is not None and y_data is not None:
             plt.scatter(x_data, y_data, c='blue', label='actual')
         plt.scatter(mesh_x, mesh_y, c='red', label='gridded',
@@ -525,7 +534,7 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
     ax2 = None
 
     if spectrum2 is None:
-        fig = plt.figure()
+        fig = figure_with_insert_fig_button()
         ax2 = plt.subplot(111)
     else:
         # fig, (ax1, ax2) = plt.subplots(ncols=2, figsize=(10, 5))
@@ -650,7 +659,7 @@ def plot_img_sum2(sid, det = 'merlin1', roi_flag=False,x_cen=0,y_cen=0,size=0):
     imgs = np.array(np.squeeze(imgs))
     df = h.table()
     mon = np.array(df['sclr1_ch3'],dtype=float32)
-    #plt.figure()
+    #figure_with_insert_fig_button()
     #plt.imshow(imgs[0],clim=[0,50])
     if roi_flag:
         imgs = imgs[:,x_cen-size//2:x_cen+size//2,y_cen-size//2:y_cen+size//2]
@@ -667,7 +676,7 @@ def plot_img_sum2(sid, det = 'merlin1', roi_flag=False,x_cen=0,y_cen=0,size=0):
         tot = np.array(np.sum(tot,1), dtype=float32)
         #tot = np.divide(tot,mon)
         #tot[tot > 70000] = 0
-        plt.figure()
+        figure_with_insert_fig_button()
         plt.subplot(1,2,1)
         plt.plot(x,tot)
         plt.title('sid={}'.format(sid))
@@ -680,7 +689,7 @@ def plot_img_sum2(sid, det = 'merlin1', roi_flag=False,x_cen=0,y_cen=0,size=0):
         tot = np.sum(imgs,2)
 
         tot = np.array(np.sum(tot,1),dtype=float32)
-        plt.figure()
+        figure_with_insert_fig_button()
         #tot =np.divide(tot, mon)
         idx = np.where(abs(tot - np.mean(tot)) >3*np.std(tot))
         tot[idx[0]] = np.mean(tot)
@@ -698,7 +707,7 @@ def plot_img_sum(sid, det = 'merlin1', roi_flag=False,x_cen=0,y_cen=0,size=0):
     imgs = np.array(np.squeeze(imgs))
     df = h.table()
     mon = np.array(df['sclr1_ch3'],dtype=float32)
-    #plt.figure()
+    #figure_with_insert_fig_button()
     #plt.imshow(imgs[0],clim=[0,50])
     if roi_flag:
         imgs = imgs[:,x_cen-size//2:x_cen+size//2,y_cen-size//2:y_cen+size//2]
@@ -712,7 +721,7 @@ def plot_img_sum(sid, det = 'merlin1', roi_flag=False,x_cen=0,y_cen=0,size=0):
         tot = np.sum(imgs,2)
         tot = np.array(np.sum(tot,1), dtype=float32)
         tot = np.divide(tot,mon)
-        plt.figure()
+        figure_with_insert_fig_button()
         plt.subplot(1,2,1)
         plt.plot(x,tot)
         plt.title('sid={}'.format(sid))
@@ -728,7 +737,7 @@ def plot_img_sum(sid, det = 'merlin1', roi_flag=False,x_cen=0,y_cen=0,size=0):
         x = np.array(df[mots[0]])
         y = np.array(df[mots[1]])
         extent = (np.nanmin(x), np.nanmax(x),np.nanmax(y), np.nanmin(y))
-        plt.figure()
+        figure_with_insert_fig_button()
         tot =np.divide(tot, mon)
         idx = np.where(abs(tot - np.mean(tot)) >3*np.std(tot))
         tot[idx[0]] = np.mean(tot)
@@ -752,7 +761,7 @@ def plot_xanes(sid, ref_sid=0,overlay=0):
         absorb = -np.log(df['sclr1_ch5_calc'])
 
     if overlay==0:
-        plt.figure()
+        figure_with_insert_fig_button()
 
     plt.plot(energy,absorb)
     plt.title('sid={}'.format(sid))
@@ -761,7 +770,7 @@ def plot_xanes(sid, ref_sid=0,overlay=0):
 def show_width():
     yield from fly1d(dets1,dssz,-5,5,200,0.2)
     yield from fly1d(dets1,dssx,-5,5,200,0.2)
-    plt.figure()
+    figure_with_insert_fig_button()
     h = db[-1]
     data = h.table()
     x1 = data['dssx']
