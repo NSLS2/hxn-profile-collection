@@ -141,7 +141,7 @@ class CompositeRegistry(Registry):
 
         t1 = datetime.now();
         ret_db2 = self._register_resource(col_db2, uid, spec, root, rpath,
-                                            rkwargs, path_semantics='posix')
+                                            rkwargs, path_semantics=path_semantics)
         t2 = datetime.now()
 
         _write_to_file(db2_name, method_name, t1, t2);
@@ -152,7 +152,7 @@ class CompositeRegistry(Registry):
 
         t1 = datetime.now();
         ret = self._register_resource(col, uid, spec, root, rpath,
-                                      rkwargs, path_semantics='posix')
+                                      rkwargs, path_semantics=path_semantics)
         t2 = datetime.now()
 
         _write_to_file(db1_name, method_name, t1, t2);
