@@ -35,7 +35,7 @@ def my_export(sid,num=1, interval=1,det = 'merlin1', mon = 'sclr1_ch4'):
         if num_subscan == 1:
             for fn in filename:
                 break
-            path = os.path.join(dir, 'scan_{}.h5'.format(sid))
+            path = os.path.join(dir, 'scan_{}_{}.h5'.format(sid,det))
             mycmd = ''.join(['scp', ' ', fn, ' ', path])
             os.system(mycmd)
             #num_subscan=-1
@@ -55,7 +55,7 @@ def my_export(sid,num=1, interval=1,det = 'merlin1', mon = 'sclr1_ch4'):
                     images = np.zeros((num_frame,nx,ny))
                 images[i,:,:] = image
             '''
-            path = os.path.join(dir, 'scan_{}.h5'.format(sid))
+            path = os.path.join(dir, 'scan_{}_{}.h5'.format(sid,det))
             f = h5py.File(path, 'w')
             dset = f.create_dataset('/entry/instrument/detector/data', data=imgs)
             f.close()
@@ -73,7 +73,7 @@ def my_export(sid,num=1, interval=1,det = 'merlin1', mon = 'sclr1_ch4'):
         '''
         sid = sid + interval
 
-def my_export_1d(sid_start, sid_end, name_list, interval = 1, det = 'merlin1'):
+def my_export_diffraction(sid_start, sid_end, interval, name_list,det = 'merlin1'):
     for i in range (sid_start, sid_end+1,interval):
         hdr = db[i]
         df = hdr.table()
@@ -88,12 +88,12 @@ def my_export_1d(sid_start, sid_end, name_list, interval = 1, det = 'merlin1'):
             else:
                 print('Can''t create {}. Quit exporting '.format(dir))
                 return
-        path = os.path.join(dir, 'scan_{}.txt'.format(sid))
+        path = os.path.join(dir, 'scan_{}_{}.txt'.format(sid,det))
         df.to_csv(path, float_format='%1.5e', sep='\t', columns=name_list)
         print('Scan {}. Saving to {}'.format(sid, path))
         images = list(db[sid].data(det))
         images = np.squeeze(images)
-        path = os.path.join(dir, 'scan_{}.h5'.format(sid))
+        path = os.path.join(dir, 'scan_{}_{}.h5'.format(sid,det))
         f = h5py.File(path, 'w')
         dset = f.create_dataset('/entry/instrument/detector/data', data=images)
         f.close()
@@ -101,6 +101,29 @@ def my_export_1d(sid_start, sid_end, name_list, interval = 1, det = 'merlin1'):
 
 
 
+def my_export_angle(sid_start,sid_end,interval,rot_motor):
+    j = 0
+    num = round((sid_end-sid_start)/interval)
+    angle = zeros((num+1,2))
+    for sid in range (sid_start, sid_end+1, interval):
+        dir = os.path.join('/data/home/hyan/export','scan_{:06d}'.format((sid//10000)*10000))
+        if os.path.exists(dir) == False:
+            print('{} does not exist.'.format(dir))
+            mycmd = ''.join(['mkdir',' ',dir])
+            os.system(mycmd)
+            if os.path.exists(dir):
+                print('{} created successfully'.format(dir))
+            else:
+                print('Can''t create {}. Quit exporting '.format(dir))
+                return
+        angle[j,0] = sid
+        angle[j,1] = check_baseline(sid,rot_motor) 
+        j = j+1 
+    path = os.path.join(dir, 'scan_{}_{}_angle.txt'.format(sid_start,sid_end))
+    np.savetxt(path, angle, fmt ='%d %10.5f')
+    print('Angle list for scan {} to {} saved to {}'.format(sid_start,sid_end, path))    
+
+    
 
 
 '''

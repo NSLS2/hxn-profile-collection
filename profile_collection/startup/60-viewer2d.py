@@ -196,7 +196,15 @@ def plot(scan_id, elem='Pt', norm=None,
 
     plt.title('Scan %d: %s\tStart time: %s' % (scan_id, elem, scan_start_time))
     plt.show()
-
+    return x, data
+    '''
+    nx = np.size(x)
+    data_out = np.zeros((nx,3))
+    data_out[:,0] = x
+    data_out[:,1] = data
+    data_out[:,2] = norm_v
+    np.savetxt('/data/users/2019Q3/Huang_2019Q3/F17_zp_ry_rocking_12keV.txt',data_out)
+    '''
 
 def plot_all(scan_id, namex=None, diff=False, channels=None,
              same_axis=False):
@@ -580,11 +588,11 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
     return fig, ax1, ax2
 
 
-def export(sid, num=1,
-           export_folder='/data/users/2019Q1/Jacobsen2019Q1',
-           fields_excluded=['xspress3_ch1', 'xspress3_ch2',
-                            'xspress3_ch3', 'merlin2']):
-    for i in range(num):
+def export(sid_start, sid_end, interval=1,
+           export_folder='/data/users/2020Q1/Roberto_2020Q1',det='merlin1',
+           fields_excluded=['xspress3_ch1', 'xspress3_ch2','xspress3_ch3', 'merlin1']):
+
+    for sid in range(sid_start,sid_end+1,interval):
         #sid, df = _load_scan(sid, fill_events=False)
         h = db[sid]
         sid = h.start['scan_id']
@@ -601,7 +609,7 @@ def export(sid, num=1,
         df.to_csv(path, float_format='%1.5e', sep='\t',
                   columns=sorted(non_objects))
         path = os.path.join(export_folder, 'scan_{}.h5'.format(sid))
-        filename = get_path(sid, 'merlin2')
+        filename = get_path(sid, det)
         num_subscan = len(filename)
         if num_subscan == 1:
             for fn in filename:
@@ -609,14 +617,14 @@ def export(sid, num=1,
             mycmd = ''.join(['cp', ' ', fn, ' ', path])
             os.system(mycmd)
         else:
-            imgs = list(h.data('merlin2'))
+            imgs = list(h.data(det))
             imgs = np.squeeze(imgs)
             #path = os.path.join(export_folder, 'scan_{}.h5'.format(sid))
             f = h5py.File(path, 'w')
             dset = f.create_dataset('/entry/instrument/detector/data', data=imgs)
             f.close()
         print('Scan {}. Saving to {}'.format(sid, path))
-        sid = sid + 1
+
 
 
 def get_path(scan_id, key_name='merlin1', db=db):
@@ -670,12 +678,10 @@ def plot_img_sum2(sid, det = 'merlin1', roi_flag=False,x_cen=0,y_cen=0,size=0):
     #df = h.table()
     if num_mots == 1:
         x = np.array(df[mots[0]])
-
-        imgs[imgs > 5000] = 0
         tot = np.sum(imgs,2)
         tot = np.array(np.sum(tot,1), dtype=float32)
-        #tot = np.divide(tot,mon)
-        #tot[tot > 70000] = 0
+        tot = np.divide(tot,mon)
+        tot[tot > 10*np.std(tot)] = 0
         figure_with_insert_fig_button()
         plt.subplot(1,2,1)
         plt.plot(x,tot)
@@ -685,28 +691,27 @@ def plot_img_sum2(sid, det = 'merlin1', roi_flag=False,x_cen=0,y_cen=0,size=0):
         plt.title('sid={}'.format(sid))
         #data_erf_fit(x,tot)
     elif num_mots == 2:
-        imgs[imgs > 1000] = 0
         tot = np.sum(imgs,2)
-
         tot = np.array(np.sum(tot,1),dtype=float32)
         figure_with_insert_fig_button()
-        #tot =np.divide(tot, mon)
-        idx = np.where(abs(tot - np.mean(tot)) >3*np.std(tot))
-        tot[idx[0]] = np.mean(tot)
-
-        tot = tot[abs(tot - np.mean(tot)) < 3 * np.std(tot)]
+        tot =np.divide(tot, mon)
+        tot[tot > 10*np.std(tot)] = 0
+        dim1 = h.start['num1']
+        dim2 = h.start['num2']
         image = tot.reshape(dim2,dim1)
+        extent = (np.nanmin(x), np.nanmax(x),np.nanmax(y), np.nanmin(y))
         plt.imshow(image,extent=extent)
         plt.title('sid={} ROI SUM'.format(sid))
 
-def plot_img_sum(sid, det = 'merlin1', roi_flag=False,x_cen=0,y_cen=0,size=0):
+def plot_img_sum(sid, det = 'merlin1',mon ='sclr1_ch4', roi_flag=False,x_cen=0,y_cen=0,size=0):
     h = db[sid]
     sid = h.start['scan_id']
     imgs = list(h.data(det))
     #imgs = np.array(imgs)
     imgs = np.array(np.squeeze(imgs))
+    #imgs[imgs>3*np.std(imgs)] = 0
     df = h.table()
-    mon = np.array(df['sclr1_ch3'],dtype=float32)
+    mon = np.array(df[mon],dtype=float32)
     #figure_with_insert_fig_button()
     #plt.imshow(imgs[0],clim=[0,50])
     if roi_flag:
@@ -721,7 +726,13 @@ def plot_img_sum(sid, det = 'merlin1', roi_flag=False,x_cen=0,y_cen=0,size=0):
         tot = np.sum(imgs,2)
         tot = np.array(np.sum(tot,1), dtype=float32)
         tot = np.divide(tot,mon)
+        #tot[tot > 5*np.std(tot)] = 0
+        #idx = np.where(abs(tot - np.mean(tot)) >3*np.std(tot))
+        #tot[idx[0]] = np.mean(tot)
+        #tot = tot[abs(tot - np.mean(tot)) < 3 * np.std(tot)]
+
         figure_with_insert_fig_button()
+        
         plt.subplot(1,2,1)
         plt.plot(x,tot)
         plt.title('sid={}'.format(sid))
@@ -739,11 +750,13 @@ def plot_img_sum(sid, det = 'merlin1', roi_flag=False,x_cen=0,y_cen=0,size=0):
         extent = (np.nanmin(x), np.nanmax(x),np.nanmax(y), np.nanmin(y))
         figure_with_insert_fig_button()
         tot =np.divide(tot, mon)
-        idx = np.where(abs(tot - np.mean(tot)) >3*np.std(tot))
-        tot[idx[0]] = np.mean(tot)
-        tot = tot[abs(tot - np.mean(tot)) < 3 * np.std(tot)]
-        image = tot.reshape(dim1,dim2)
+        #tot[tot > 3*np.std(tot)] = 0
+        #idx = np.where(abs(tot - np.mean(tot)) >3*np.std(tot))
+        #tot[idx[0]] = np.mean(tot)
+        #tot = tot[abs(tot - np.mean(tot)) < 3 * np.std(tot)]
+        image = tot.reshape(dim2,dim1)
         plt.imshow(image,extent=extent)
+        plt.colorbar()
         plt.title('sid={} ROI SUM'.format(sid))
 
 def plot_xanes(sid, ref_sid=0,overlay=0):

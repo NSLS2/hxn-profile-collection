@@ -1,6 +1,88 @@
 
 from epics import caput,caget
 
+
+def save_scan_info(sid):#,export_folder):
+    # save baseline, detector angle and roi setting for a scan
+    bl = db[sid].table('baseline')
+    sid, df = _load_scan(sid, fill_events=False)
+    hd = db[sid].start
+    exp_s = hd['exposure_time']
+    #path = os.path.join(export_folder, 'scan_{}_info.txt'.format(sid))
+
+    #bl.to_csv(path, float_format='%1.5e', sep='\t')
+
+
+    #header = db[sid].start
+    #header.to_csv(path, float_format='%1.5e', sep='\t')
+
+    roi_x0 = caget('XF:03IDC-ES{Merlin:1}ROI1:MinX')
+    roi_y0 = caget('XF:03IDC-ES{Merlin:1}ROI1:MinY')
+    roi_nx = caget('XF:03IDC-ES{Merlin:1}ROI1:SizeX')
+    roi_ny = caget('XF:03IDC-ES{Merlin:1}ROI1:SizeY')
+
+    diff_z = np.array(bl['diff_z'])[0]
+    diff_yaw = np.array(bl['diff_yaw'])[0] * np.pi / 180.0
+    diff_cz = np.array(bl['diff_cz'])[0]
+    diff_x = np.array(bl['diff_x'])[0]
+    diff_y1 = np.array(bl['diff_y1'])[0]
+    diff_y2 = np.array(bl['diff_y2'])[0]
+
+    gamma = diff_yaw
+    beta = 89.337 * np.pi / 180
+    z_yaw = 574.668 + 581.20 + diff_z
+    z1 = 574.668 + 395.2 + diff_z
+    z2 = z1 + 380
+    d = 395.2
+
+    x_yaw = sin(gamma) * z_yaw / sin(beta + gamma)
+    R_yaw = sin(beta) * z_yaw / sin(beta + gamma)
+    R1 = R_yaw - (z_yaw - z1)
+    R2 = R_yaw - (z_yaw - z2)
+
+    if abs(x_yaw + diff_x) > 3:
+        gamma = 0
+        delta = 0
+        #R_det = 500
+
+        beta = 89.337 * np.pi / 180
+        R_yaw = np.sin(beta) * z_yaw / np.sin(beta + gamma)
+        R1 = R_yaw - (z_yaw - z1)
+        R_det = R1 / np.cos(delta) - d + diff_cz
+
+    elif abs(diff_y1 / R1 - diff_y2 / R2) > 0.01:
+        gamma = 0
+        delta = 0
+        #R_det = 500
+
+        beta = 89.337 * np.pi / 180
+        R_yaw = np.sin(beta) * z_yaw / np.sin(beta + gamma)
+        R1 = R_yaw - (z_yaw - z1)
+        R_det = R1 / np.cos(delta) - d + diff_cz
+
+    else:
+        delta = arctan(diff_y1 / R1)
+        R_det = R1 / cos(delta) - d + diff_cz
+
+    print('gamma, delta, dist:', gamma*180/np.pi, delta*180/np.pi, R_det)
+    print('ROI: ', roi_x0, roi_y0, roi_nx, roi_ny )
+    '''
+    with open(path, 'a') as file:
+        file.write('\n')
+        file.write('det info: \n')
+        file.write('gamma = %f \n' % (gamma * 180 / np.pi))
+        file.write('delta = %f \n' % (delta * 180 / np.pi))
+        file.write('r = %f \n' % R_det)
+        file.write('\n')
+        file.write('ROI x start = %f \n' % roi_x0)
+        file.write('ROI y start = %f \n' % roi_y0)
+        file.write('ROI x size = %f \n' % roi_nx)
+        file.write('ROI y size = %f \n' % roi_ny)
+        file.write('\n')
+        file.write('exposure time = %f \n' % exp_s)
+        file.write('\n')
+    '''
+
 def fly1d_user(motor,start,end,num_pos,exp):
     caput('XF:03IDC-ES{Flt:2}sendCommand.VAL',"R1")
     RE(fly1d(motor,start,end,num_pos,exp))
@@ -25,28 +107,34 @@ def theta_fly2d_mll(angle_start,angle_end,num_angle,start1,end1,num1,start2,end2
     #RE(fly1d(zps.zpssz,-1,1,50,0.1))
     #mov_to_line_center(-1,elem='Ga',moveflag=1,threshold=0.2,movepiezoflag=1)
 
+
+
     for i in range(num_angle+1):
-        while (sclr2_ch4.get() < 70000):
+        while (sclr2_ch4.get() < 400000):
             yield from bps.sleep(60)
-            print('IC3 is lower than 70000, waiting...')
+            print('IC3 is lower than 400000, waiting...')
 
-        yield from fly1d(dets1,smlld.dssx,-1,1,100,0.1)
-        a,b = erf_fit(-1,'Au_L')
-        plt.close()
-        yield from bps.mov(smlld.dssx,a+0.3)
-
-        #yield from fly1d(dets1,smlld.dssy,-1,1,100,0.05)
-        #yc = return_line_center(-1,'Au_L',0.2)
-        #yield from bps.mov(smlld.dssy,yc)
+        yield from fly1d(dets1,smlld.dssy,-2,2,100,0.05)
+        yc = return_line_center(-1,'Ni',0.2)
+        yield from bps.mov(smlld.dssy,yc)
 
 
-        yield from fly2d(dets2,smlld.dssz,start1,end1,num1,smlld.dssy,start2,end2,num2,exp,return_speed=40)
+        #yield from bps.mov(smlld.dssy,0.7)
+        yield from fly1d(dets1,smlld.dssx,-5,5,100,0.05)
+        #a,b = erf_fit(-1,'Au_L')
+        a = return_line_center(-1,'Ni',0.2)
+        #plt.close()
+        yield from bps.mov(smlld.dssx,a)
+
+        #yield from bps.mov(smlld.dssy,0)
+        yield from fly2d(dets1,smlld.dssx,start1,end1,num1,smlld.dssy,start2,end2,num2,exp,dead_time=0.002)
+        #yield from bps.movr(dssx,0.06)
         #mov_to_image_cen_zpss(-1,'Ga',1)
         #export(-1)
         yield from bps.movr(smlld.dsth,angle_step)
         #RE(fly1d(zps.zpssz,-.25,.25,20,0.1))
         #mov_to_line_center(-1,elem='Ga',moveflag=1,threshold=0.2,movepiezoflag=1)
-        xspress3.unstage()
+        #xspress3.unstage()
         print('wait 2 sec ...')
         yield from bps.sleep(2)
 
@@ -69,7 +157,7 @@ def theta_fly2d_mll_blank(angle_start,angle_end,num_angle,start1,end1,num1,start
             yield from bps.sleep(60)
             print('IC3 is lower than 70000, waiting...')
 
-        yield from fly1d(dets1,smlld.dssz,9,11,200,0.1)
+        yield from fly1d(dets1,smlld.dssx,9,11,200,0.1)
         a,b = erf_fit(-1,'Au_L')
         plt.close()
         yield from bps.mov(smlld.dssz,a-10)
@@ -390,4 +478,122 @@ def zp_mesh_scan(xs,xe,xn,ys,ye,yn,exposure):
 
     yield from bps.mov(zpssx,zpssx_0)
     yield from bps.mov(zpssy,zpssy_0)
+
+def makeup_scan(sid_list,x_start, x_end, x_num, y_start, y_end, y_num, exposure, elem):
+    num_scan = np.size(sid_list)
+    x_start = np.float(x_start)
+    x_end = np.float(x_end)
+    x_num = np.int(x_num)
+    y_start = np.float(y_start)
+    y_end = np.float(y_end)
+    y_num = np.int(y_num)
+    exposure = np.float(exposure)
+
+    for i in range(num_scan):
+        sid = np.int(sid_list[i])
+        yield from recover_mll_scan_pos(sid,1,0,0)
+        angle = dsth.position
+
+        if np.abs(angle) <= 45:
+            yield from fly1d(dets1,dssx, -10, 10, 200, 0.03)
+            xc = return_line_center(-1,elem,0.1)
+            yield from bps.mov(dssx,xc)
+        else:
+            yield from fly1d(dets1,dssz, -10, 10, 200, 0.03)
+            xc = return_line_center(-1,elem,0.1)
+            yield from bps.mov(dssz,xc)
+
+        yield from fly1d(dets1,dssy, -8, 8, 160, 0.03)
+        yc = return_line_center(-1,elem,0.1)
+        yield from bps.mov(dssy,yc)
+
+        merlin1.unstage()
+        xspress3.unstage()
+
+        while (sclr2_ch4.get() < 400000):
+            yield from bps.sleep(60)
+            print('IC3 is lower than 400000, waiting...')
+
+        if np.abs(angle) <= 45:
+            x_start_real = x_start / np.cos(angle * np.pi / 180.)
+            x_end_real = x_end / np.cos(angle * np.pi / 180.)
+            yield from fly2d(dets1, smlld.dssx,x_start_real,x_end_real,x_num,smlld.dssy,
+                     y_start, y_end, y_num, exposure, return_speed=40)
+        else:
+            x_start_real = x_start / np.abs(np.sin(angle * np.pi / 180.))
+            x_end_real = x_end / np.abs(np.sin(angle * np.pi / 180.))
+            yield from fly2d(dets1, smlld.dssz,x_start_real,x_end_real,x_num, smlld.dssy,
+                     y_start, y_end, y_num, exposure, return_speed = 40)
+
+        merlin1.unstage()
+        xspress3.unstage()
+        print('waiting for 2 sec...')
+        yield from bps.sleep(2)
+
+def night_mosaic_xh(nx,ny):
+    ic_0 = sclr2_ch4.get()
+
+    yield from fly2d(dets1,zpssx,-15,15,nx,zpssy,-15,15,ny,0.05,return_speed=40)
+    while (sclr2_ch4.get() < (0.9*ic_0)):
+        yield from peak_bpm_y(-5,5,10)
+    yield from bps.sleep(1)
+    yield from bps.movr(smarx,0.02)
+    yield from fly2d(dets1,zpssx,-15,15,nx,zpssy,-15,15,ny,0.05,return_speed=40)
+    while (sclr2_ch4.get() < (0.9*ic_0)):
+        yield from peak_bpm_y(-5,5,10)
+    yield from bps.sleep(1)
+    yield from bps.movr(smary,0.02)
+    yield from fly2d(dets1,zpssx,-15,15,nx,zpssy,-15,15,ny,0.05,return_speed=40)
+    while (sclr2_ch4.get() < (0.9*ic_0)):
+        yield from peak_bpm_y(-5,5,10)
+    yield from bps.sleep(1)
+    yield from bps.movr(smarx,-0.02)
+    yield from fly2d(dets1,zpssx,-15,15,nx,zpssy,-15,15,ny,0.05,return_speed=40)
+    yield from bps.movr(smary,-0.02)
+
+def night_mosaic_mp(nx,ny):
+     yield from bps.mov(smarx,-1.648)
+     yield from bps.mov(smary,1.5175)
+     yield from night_mosaic_xh(200,200)
+
+     yield from bps.mov(smarx,-1.803)
+     yield from bps.mov(smary,1.5875)
+     yield from night_mosaic_xh(200,200)
+
+     #yield from bps.mov(smarx,-1.838)
+     #yield from bps.mov(smary,0.646)
+     #yield from night_mosaic_xh(200,200)
+
+
+
+import epics
+def theta_dexela(angle_start,angle_end,angle_step,exposure_time):
+    theta_zero = dsth.position
+    angle_step_num = np.int((angle_end - angle_start) / angle_step)
+    print('number of steps:', angle_step_num)
+
+    caput('XF:03IDC-ES{Dexela:1}cam1:AcquireTime',exposure_time)
+    caput('XF:03IDC-ES{Dexela:1}cam1:AcquirePeriod',exposure_time+0.2)
+
+    yield from bps.mov(dsth,angle_start)
+    for i in range(angle_step_num+1):
+        print('dsth angle:', dsth.position)
+        caput('XF:03IDC-ES{Dexela:1}TIFF1:Capture',1)
+        yield from bps.movr(dsth,angle_step)
+        yield from bps.sleep(exposure_time+0.2)
+
+    yield from bps.mov(dsth,theta_zero)
+
+
+def repeat_2d(zs,ze,z_num):
+    z_0 = zps.zpsz.position
+    z_step = (ze - zs) / z_num
+    yield from bps.mov(zps.zpsz,(z_0+zs))
+    for i in range(z_num+1):
+        yield from fly2d(dets1,zpssx,2,8,120,zpssy,-7,-4,60,0.05,return_speed=40)
+        yield from bps.sleep(2)
+        plot2dfly(-1,'Ni')
+        yield from bps.movr(zps.zpsz,z_step)
+
+    yield from bps.mov(zps.zpsz,z_0)
 

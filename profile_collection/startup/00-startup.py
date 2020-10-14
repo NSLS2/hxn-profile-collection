@@ -516,8 +516,9 @@ def set_and_wait_again(signal, val, **kwargs):
                                remaining, attempts, ex
                                )
 
-
-set_and_wait_again.timeout = 300
+# Ivan: try a longer timeout for debugging
+#set_and_wait_again.timeout = 300
+set_and_wait_again.timeout = 1200
 ophyd.device.set_and_wait = set_and_wait_again
 # -END HACK-
 
@@ -560,9 +561,14 @@ def _epicssignal_get(self, *, as_string=None, connection_timeout=1.0, **kwargs):
         max_attempts = 4
         while ret is None and attempts < max_attempts:
             attempts += 1
+            #Ivan debug: change get option:
             ret = self._read_pv.get(as_string=as_string, **kwargs)
+            #ret = self._read_pv.get(as_string=as_string, use_monitor=False, timeout=1.2, **kwargs)
             if ret is None:
                 print(f'*** PV GET TIMED OUT {self._read_pv.pvname} *** attempt #{attempts}/{max_attempts}')
+            elif as_string and ret in (b'None', 'None'):
+                print(f'*** PV STRING GET TIMED OUT {self._read_pv.pvname} *** attempt #{attempts}/{max_attempts}')
+                ret = None
         if ret is None:
             print(f'*** PV GET TIMED OUT {self._read_pv.pvname} *** return `None` as value :(')
             # TODO we really want to raise TimeoutError here, but that may cause more

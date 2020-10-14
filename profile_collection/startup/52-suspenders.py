@@ -4,7 +4,7 @@ from bluesky.suspenders import (SuspendFloor, SuspendBoolHigh, SuspendBoolLow)
 # Here are some conditions that will cause scans to pause automatically:
 # - when the beam current goes below a certain threshold
 susp_current = SuspendFloor(beamline_status.beam_current,
-                            suspend_thresh=200.0,
+                            suspend_thresh=150.0,
                             resume_thresh=240.0,
                             tripped_message='beam current too low',
                             )

@@ -48,10 +48,12 @@ d2scan = bpp.subs_decorator(bec)(hxntools.scans.d2scan)
 a2scan = bpp.subs_decorator(bec)(hxntools.scans.a2scan)
 scan_steps = bpp.subs_decorator(bec)(hxntools.scans.scan_steps)
 
-dets1 = [zebra, sclr1, merlin1, xspress3]
-dets2 = [zebra, sclr1,xspress3, merlin2]
+#dets1 = [zebra, sclr1, xspress3]
+dets1 = [fs,zebra, sclr1, merlin1, xspress3]
+dets6 = [fs,zebra, sclr1, xspress3, eiger]
+dets2 = [fs,zebra, sclr1, merlin1, merlin2, xspress3]
 #dets2 = [zebra, sclr1, xspress3, lakeshore2]
-dets3 = [zebra, sclr1, merlin1, xspress3, merlin2]
+dets3 = [zebra, sclr1, merlin2]
 dets4 = [zebra, sclr1, merlin1, lakeshore2]
 dets5 = [zebra, sclr1, xspress3, dexela1]
 # dets5 = [zebra, sclr1, merlin1, xspress3, lakeshore2,dexela1]
@@ -66,7 +68,7 @@ conflict_name = ['pmllf', 'zplab', 'pmllc']
 
 # sd.baseline = [dcm, m1, m2, beamline_status, smll, vmll, hmll, ssa2, zp]
 # sd.baseline = [dcm, m1, m2, beamline_status, smll, vmll, hmll, ssa2, bpm1, bpm2, smlld]
-sd.baseline = [ugap,e,dcm, m1, m2, beamline_status, smll, vmll, hmll, ssa2, mllosa, zp, zps, smlld, fdet1, diff]
+sd.baseline = [ugap,e,dcm, m1, m2, beamline_status, smll, vmll, hmll, ssa2, mllosa, zp, zps, zposa, zpbs, smlld, fdet1, diff, p, ps, pp]
 
 BlueskyMagics.positioners = [d for  d in
                              bu.separate_devices(

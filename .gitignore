@@ -66,3 +66,23 @@ profile_default
 
 *.swo
 *.swp
+profile_collection/startup/20-detectors.py.bak.write-on-gpfs-on-merlin_matt_20200219
+profile_collection/startup/20-detectors.py.write-local-on-merlin-test_matt_20200219
+*~
+profile_collection/startup/#*.py#
+profile_collection/startup/eLog.pdf
+profile_collection/startup/eLog_info.obj
+old/
+# Quick test:
+profile_collection/startup/20-detectors-eiger.py
+
+# PostScript files to ignore (no .ps extension):
+profile_collection/startup/functools
+profile_collection/startup/gridspec
+profile_collection/startup/h5py
+profile_collection/startup/np
+profile_collection/startup/os
+profile_collection/startup/plt
+profile_collection/startup/shutil
+profile_collection/startup/sys
+profile_collection/startup/css-workspace-xf03id-ws1/

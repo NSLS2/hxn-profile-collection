@@ -60,8 +60,8 @@ class HxnDCM(MotorBundle):
     x = Cpt(EpicsMotor, 'XF:03IDA-OP{Mon:1-Ax:X}Mtr')
     p = Cpt(EpicsMotor, 'XF:03IDA-OP{Mon:1-Ax:P}Mtr')
     r = Cpt(EpicsMotor, 'XF:03IDA-OP{Mon:1-Ax:R}Mtr')
-    pf = Cpt(EpicsMotor, 'XF:03IDA-OP{Mon:1-Ax:PF}Mtr')
-    rf = Cpt(EpicsMotor, 'XF:03IDA-OP{Mon:1-Ax:RF}Mtr')
+    # pf = Cpt(EpicsMotor, 'XF:03IDA-OP{Mon:1-Ax:PF}Mtr')
+    # rf = Cpt(EpicsMotor, 'XF:03IDA-OP{Mon:1-Ax:RF}Mtr')
 
 
 dcm = HxnDCM('', name='dcm')
@@ -74,7 +74,7 @@ class HxnMirror1(MotorBundle):
     y = Cpt(EpicsMotor, 'XF:03IDA-OP{Mir:1-Ax:Y}Mtr')
     p = Cpt(EpicsMotor, 'XF:03IDA-OP{Mir:1-Ax:P}Mtr')
     b = Cpt(EpicsMotor, 'XF:03IDA-OP{Mir:1-Ax:Bend}Mtr')
-    pf = Cpt(EpicsMotor, 'XF:03IDA-OP{HCM:1-Ax:PF}Mtr')
+    #pf = Cpt(EpicsMotor, 'XF:03IDA-OP{HCM:1-Ax:PF}Mtr')
 
 
 m1 = HxnMirror1('', name='m1')
@@ -164,3 +164,6 @@ crl = HxnXYPitchPositioner('XF:03IDA-OP{Lens:CRL', name='crl')
 
 qbpm_x = EpicsMotor('XF:03IDB-OP{Slt:SSA1-Ax:8}Mtr', name='qbpm_x')
 qbpm_y = EpicsMotor('XF:03IDB-OP{Slt:SSA1-Ax:7}Mtr', name='qbpm_y')
+
+#bpm_set_y = EpicsSignalRO('XF:03ID-BI{EM:BPM1}fast_pidY')
+

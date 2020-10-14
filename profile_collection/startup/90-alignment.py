@@ -87,7 +87,7 @@ def data_erf_fit(xdata,ydata,linear_flag=True):
     y_min=np.min(ydata)
     y_max=np.max(ydata)
     ydata=(ydata-y_min)/y_max
-    plt.figure()
+    plt.figure(1000)
     plt.plot(xdata,ydata,'bo')
     y_mean = np.mean(ydata)
     half_size = int (len(ydata)/2)
@@ -109,10 +109,35 @@ def data_erf_fit(xdata,ydata,linear_flag=True):
             fit_data=erfunc4(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
 
     #print('a={} b={} c={}'.format(popt[0],popt[1],popt[2]))
+    plt.figure(1000)
     plt.plot(xdata,fit_data)
-    plt.title('sid= %d edge = %.3f, FWHM = %.2f nm' % (sid,popt[0], popt[1]*2.3548*1000.0))
+    plt.title('edge = %.3f, FWHM = %.2f nm' % (popt[0], popt[1]*2.3548*1000.0))
     return (popt[0],popt[1]*2.3548*1000.0)
 
+def find_2D_edge(sid, axis, elem):
+    df2 = db.get_table(db[sid],fill=False)
+    xrf = np.asfarray(eval('df2.Det2_' + elem)) + np.asfarray(eval('df2.Det1_' + elem)) + np.asfarray(eval('df2.Det3_' + elem))
+    motors = db[sid].start['motors']
+    x = np.array(df2[motors[0]])
+    y = np.array(df2[motors[1]])
+    #I0 = np.asfarray(df2.sclr1_ch4)
+    I0 = np.asfarray(df2['sclr1_ch4'])
+    scan_info=db[sid]
+    tmp = scan_info['start']
+    nx=tmp['plan_args']['num1']
+    ny=tmp['plan_args']['num2']
+    xrf = xrf/I0
+    xrf = np.asarray(np.reshape(xrf,(ny,nx)))
+    #l = np.linspace(y[0],y[-1],ny)
+    #s = xrf.sum(1)
+    if axis == 'x':
+        l = np.linspace(x[0],x[-1],nx)
+        s = xrf.sum(0)
+    else:
+        l = np.linspace(y[0],y[-1],ny)
+        s = xrf.sum(1)
+    edge,fwhm = data_erf_fit(l, s)
+    return edge
 
 
 def mll_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4'):
@@ -156,7 +181,7 @@ def mll_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem=
         fit_size[i]=popt[1]*2.3548*1000
         plt.title('sid = %d sbz = %.3f um FWHM = %.2f nm' %(sid,smlld.sbz.position,fit_size[i]))
         '''
-        edge_pos,fwhm=erf_fit(-1,elem,mon)
+        edge_pos,fwhm=erf_fit(-1,elem,mon,linear_flag=False)
         fit_size[i]= fwhm
         z_pos[i]=smlld.sbz.position
         yield from bps.movr(smlld.sbz, z_step)
@@ -211,7 +236,7 @@ def mll_vchi_alignment(vchi_start, vchi_end, vchi_num, mot, start, end, num, acq
     init_vchi = vmll.vchi.position
     yield from bps.movr(vmll.vchi, vchi_start)
     for i in range(vchi_num + 1):
-        yield from fly1d(dets1, mot, start, end, num, acq_time)
+        yield from fly1d(dets1, mot, start, end, num, acq_time,dead_time=0.002)
         edge_pos,fwhm=erf_fit(-1,elem,mon)
         fit_size[i]=fwhm
         vchi_pos[i]=vmll.vchi.position
@@ -291,7 +316,7 @@ def pos2angle(col,row):
     return (gamma,delta,tth)
 
 
-def return_line_center(sid,elem='Cr',threshold=0.2):
+def return_line_center(sid,elem='Cr',threshold=0.2, neg_flag=0):
     h = db[sid]
 
     df2 = h.table()
@@ -299,17 +324,17 @@ def return_line_center(sid,elem='Cr',threshold=0.2):
     #threshold = np.max(xrf)/10.0
     x_motor = h.start['motors']
     x = np.array(df2[x_motor[0]])
-
-    #xrf = xrf * -1
-    #xrf = xrf - np.min(xrf)
+    if neg_flag == 1:
+        xrf = xrf * -1
+        xrf = xrf - np.min(xrf)
 
     #print(x)
     #print(xrf)
     xrf[xrf<(np.max(xrf)*threshold)] = 0.
     #index = np.where(xrf == 0.)
     #xrf[:index[0][0]] = 0.
-    #xrf[xrf>=(np.max(xrf)*threshold)] = 1.
-    mc = find_mass_center_1d(xrf,x)
+    xrf[xrf>=(np.max(xrf)*threshold)] = 1.
+    mc = find_mass_center_1d(xrf[:-2],x[:-2])
     return mc
 
 
@@ -366,7 +391,7 @@ def zp_rot_alignment_edge(a_start, a_end, a_num, start, end, num, acq_time, elem
 
     return x,y
 
-def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt_L', move_flag=0):
+def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt_L', neg_flag = 0, move_flag=0):
     a_step = (a_end - a_start)/a_num
     x = np.zeros(a_num+1)
     y = np.zeros(a_num+1)
@@ -376,13 +401,13 @@ def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt_
         yield from bps.mov(zps.zpsth, x[i])
         if np.abs(x[i]) > 45:
             yield from fly1d(dets1,zpssz,start,end,num,acq_time)
-            tmp = return_line_center(-1, elem=elem,threshold=0.5)
-            #edge,fwhm = erf_fit(-1,elem = elem)
+            tmp = return_line_center(-1, elem=elem,threshold=0.85,neg_flag=neg_flag )
+            #tmp,fwhm = erf_fit(-1,elem = elem,linear_flag=False)
             y[i] = tmp*np.sin(x[i]*np.pi/180.0)
         else:
             yield from fly1d(dets1,zpssx,start,end,num,acq_time)
-            tmp = return_line_center(-1,elem=elem,threshold=0.5)
-            #edge,fwhm = erf_fit(-1,elem = elem)
+            tmp = return_line_center(-1,elem=elem,threshold=0.85,neg_flag=neg_flag )
+            #tmp,fwhm = erf_fit(-1,elem = elem,linear_flag=False)
             y[i] = tmp*np.cos(x[i]*np.pi/180.0)
         print('y=',y[i])
     y = -1*np.array(y)
@@ -411,16 +436,29 @@ def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt
     for i in range(a_num+1):
         x[i] = a_start + i*a_step
         yield from bps.mov(smlld.dsth, x[i])
+        #angle = smlld.dsth.position
+        #dy = -0.1+0.476*np.sin(np.pi*(angle*np.pi/180.0-1.26)/1.47)
+        #ddy = (-0.0024*angle)-0.185
+        #dy = dy+ddy
+        #yield from bps.movr(dssy,dy)
         if np.abs(x[i]) > 45:
+            #yield from fly2d(dets1,dssz,start,end,num, dssy, -1.5,1.5,30,acq_time)
+            #cx,cy = return_center_of_mass(-1,elem)
+            #y[i] = cx*np.sin(x[i]*np.pi/180.0)
             yield from fly1d(dets1,dssz,start,end,num,acq_time)
             tmp = return_line_center(-1, elem=elem)
             y[i] = tmp*np.sin(x[i]*np.pi/180.0)
         else:
+            #yield from fly2d(dets1,dssx,start,end,num, dssy, -1.5,1.5,30,acq_time)
+            #cx,cy = return_center_of_mass(-1,elem)
             yield from fly1d(dets1,dssx,start,end,num,acq_time)
             tmp = return_line_center(-1,elem=elem)
-            y[i] = -tmp*np.cos(x[i]*np.pi/180.0)
-        #yield from fly1d(dets1,dssy,start,end,num,acq_time)
+            y[i] = tmp*np.cos(x[i]*np.pi/180.0)
+            #y[i] = tmp*np.cos(x[i]*np.pi/180.0)
+            #y[i] = -tmp*np.cos(x[i]*np.pi/180.0)
+        #yield from fly1d(dets1,dssy,-2,2,100,acq_time)
         #tmp = return_line_center(-1, elem=elem)
+        #yield from bps.mov(dssy,tmp)
         #v[i] = tmp
         #print('h_cen= ',y[i],'v_cen = ',v[i])
         plot(-1,elem,'sclr1_ch4')

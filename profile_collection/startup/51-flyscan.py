@@ -35,7 +35,7 @@ FlyPlan2D.scans = {frozenset({smll.ssx, smll.ssy}): Fly2D_MLL,
                    }
 
 
-# from hxnfly.callbacks import FlyLivePloti
+# from hxnfly.callbacks import FlyLivePlot
 from hxnfly.callbacks import (FlyRoiPlot, FlyLiveImage)
 from hxnfly.callbacks import FlyLiveCrossSection
 
@@ -52,7 +52,7 @@ from hxnfly.callbacks import FlyLiveCrossSection
 
 #live_im_plot = FlyLiveImage(['Ca','W_L','Fe','Pt_L'], channels=[1, 2, 3])
 
-live_im_plot = FlyLiveImage(['Mn','Cr'], channels=[1, 2, 3])
+live_im_plot = FlyLiveImage(['La_L', 'Ta_L','Zr_L','I_L'], channels=[1, 2, 3])
 
 # fly2dplot1 = FlyLiveCrossSection(['V'], channels=[1, 2, 3)
 
@@ -60,7 +60,7 @@ live_im_plot = FlyLiveImage(['Mn','Cr'], channels=[1, 2, 3])
 #                     channels=[1, 2, 3],
 #                     )
 
-pt_plot = FlyRoiPlot(['Cr'],
+pt_plot = FlyRoiPlot(['La_L'],
                      channels=[1, 2, 3],
                     )
 
