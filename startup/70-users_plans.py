@@ -111,7 +111,12 @@ def mll_z_fly2d(z_start, z_end, z_num, mot1, start1, end1, num1, mot2, start2, e
     yield from bps.mov(smlld.sbz, init_sz)
     save_page()
 
+
 def zp_z_2dscan(z_start, z_end, z_num, mot1, start1, end1, num1, mot2, start2, end2, num2, acq_time, elem='Co'):
+    """This function hasn't been used for a while.
+
+    TODO: convert to use 'yield from ...'.
+    """
     z_step = (z_end - z_start)/z_num
     init_sz = zps.zpsz.position
     movr(zps.zpsz, z_start/1000)
@@ -121,6 +126,7 @@ def zp_z_2dscan(z_start, z_end, z_num, mot1, start1, end1, num1, mot2, start2, e
         plt.title('zpsz = %.3f' % zps.zpsz.position)
         movr(zps.zpsz, z_step/1000)
     mov(zps.zpsz, init_sz)
+
 
 def go_det(det):
 
@@ -242,7 +248,7 @@ def mll_mosaic_scan(x_start, x_end, x_num, x_block, y_start, y_end, y_num, y_blo
     #start mosaic scan
     for i in range(y_block):
         for j in range(x_block):
-            smll_sync_piezos()
+            yield from smll_sync_piezos()
             RE(fly2d(smll.ssx, x_start, x_end, x_num, smll.ssy, y_start, y_end, y_num, acq_time, return_speed=40))
             dx = x_block_size
             movr_sx(dx)
@@ -2154,11 +2160,13 @@ def mono_m1(pf_start, pf_end, pf_num, b_start, b_end, b_num):
 
 
 def smll_kill_piezos():
-    smll.kill.put(1)
+    # smll.kill.put(1)
+    yield from bps.mv(smll.kill, 1)
     yield from bps.sleep(5)
 
 def smll_zero_piezos():
-    smll.zero.put(1)
+    # smll.zero.put(1)
+    yield from bps.mv(smll.zero, 1)
     yield from bps.sleep(3)
 
 def smll_sync_piezos():
@@ -2177,7 +2185,7 @@ def movr_sx(dist):
     print('Current ssy = %.3f' % c_ssy)
     print('Current ssz = %.3f' % c_ssz)
 
-    smll_kill_piezos()
+    yield from smll_kill_piezos()
 
     t_ssx = c_ssx + dist
 
@@ -2186,20 +2194,20 @@ def movr_sx(dist):
 
     dx, dz = sample_to_lab(dxp, dzp, alpha)
 
-    movr(sx, dx)
-    movr(sz, dz)
+    yield from bps.movr(sx, dx)
+    yield from bps.movr(sz, dz)
 
     dy = c_ssy -smll.ssy.position
 
-    movr(sy, dy)
+    yield from bps.movr(sy, dy)
 
-    sleep(5)
+    yield from bps.sleep(5)
 
-    smll_sync_piezos()
+    yield from smll_sync_piezos()
 
-    mov(ssx, t_ssx)
-    mov(ssy, c_ssy)
-    mov(ssz, c_ssz)
+    yield from bps.mov(ssx, t_ssx)
+    yield from bps.mov(ssy, c_ssy)
+    yield from bps.mov(ssz, c_ssz)
 
     print('Post-move x = %.3f' % smll.ssx.position)
     print('Post-move y = %.3f' % smll.ssy.position)
@@ -2215,7 +2223,7 @@ def mov_sx(t_pos):
     print('Current ssy = %.3f' % c_ssy)
     print('Current ssz = %.3f' % c_ssz)
 
-    smll_kill_piezos()
+    yield from smll_kill_piezos()
 
     t_ssx = t_pos
 
@@ -2224,19 +2232,19 @@ def mov_sx(t_pos):
 
     dx, dz = sample_to_lab(dxp, dzp, alpha)
 
-    movr(sx, dx)
-    movr(sz, dz)
+    yield from bps.movr(sx, dx)
+    yield from bps.movr(sz, dz)
 
     dy = c_ssy - smll.ssy.position
 
-    movr(sy, dy)
+    yield from bps.movr(sy, dy)
 
-    sleep(5)
+    yield from bps.sleep(5)
 
-    smll_sync_piezos()
-    mov(ssx, t_ssx)
-    mov(ssy, c_ssy)
-    mov(ssz, c_ssz)
+    yield from smll_sync_piezos()
+    yield from bps.mov(ssx, t_ssx)
+    yield from bps.mov(ssy, c_ssy)
+    yield from bps.mov(ssz, c_ssz)
 
     print('Post-move x = %.3f' % (smll.ssx.position))
     print('Post-move y = %.3f' % (smll.ssy.position))
@@ -2253,26 +2261,26 @@ def movr_sy(dist):
     print('Current ssy = %.3f' % c_ssy)
     print('Current ssz = %.3f' % c_ssz)
 
-    smll_kill_piezos()
+    yield from smll_kill_piezos()
 
     t_ssy = c_ssy + dist
     dy = t_ssy - smll.ssy.position
-    movr(sy, dy)
+    yield from bps.movr(sy, dy)
 
     dxp = c_ssx - smll.ssx.position
     dzp = c_ssz - smll.ssz.position
 
     dx, dz = sample_to_lab(dxp, dzp, alpha)
 
-    movr(sx, dx)
-    movr(sz, dz)
+    yield from bps.movr(sx, dx)
+    yield from bps.movr(sz, dz)
 
-    sleep(5)
+    yield from bps.sleep(5)
 
-    smll_sync_piezos()
-    mov(ssx, c_ssx)
-    mov(ssy, t_ssy)
-    mov(ssz, c_ssz)
+    yield from smll_sync_piezos()
+    yield from bps.mov(ssy, t_ssy)
+    yield from bps.mov(ssz, c_ssz)
+    yield from bps.mov(ssx, c_ssx)
 
     print('Post-move x = %.3f' % smll.ssx.position)
     print('Post-move y = %.3f' % smll.ssy.position)
@@ -2288,26 +2296,26 @@ def mov_sy(t_pos):
     print('Current ssy = %.3f' % c_ssy)
     print('Current ssz = %.3f' % c_ssz)
 
-    smll_kill_piezos()
+    yield from smll_kill_piezos()
 
     t_ssy = t_pos
     dy = t_ssy - smll.ssy.position
-    movr(sy, dy)
+    yield from bps.movr(sy, dy)
 
     dxp = c_ssx - smll.ssx.position
     dzp = c_ssz - smll.ssz.position
 
     dx, dz = sample_to_lab(dxp, dzp, alpha)
 
-    movr(sbx, dx)
-    movr(sbz, dz)
+    yield from bps.movr(sbx, dx)
+    yield from bps.movr(sbz, dz)
 
-    sleep(5)
+    yield from bps.sleep(5)
 
-    smll_sync_piezos()
-    mov(ssx, c_ssx)
-    mov(ssy, t_ssy)
-    mov(ssz, c_ssz)
+    yield from smll_sync_piezos()
+    yield from bps.mov(ssx, c_ssx)
+    yield from bps.mov(ssy, t_ssy)
+    yield from bps.mov(ssz, c_ssz)
 
     print('Post-move x = %.3f' % (smll.ssx.position))
     print('Post-move y = %.3f' % (smll.ssy.position))
@@ -2324,20 +2332,20 @@ def movr_sz(dist):
     print('Current ssy = %.3f' % c_ssy)
     print('Current ssz = %.3f' % c_ssz)
 
-    smll_kill_piezos()
+    yield from smll_kill_piezos()
 
     t_ssz = c_ssz + dist*np.cos(alpha)
     dz = t_ssz - smll.dssz.position
     dy = c_ssy - smll.dssy.position
 
-    movr(sbz, dz)
-    movr(dsy, dy/1000.0)
+    yield from bps.movr(sbz, dz)
+    yield from bps.movr(dsy, dy/1000.0)
 
-    sleep(5)
+    yield from bps.sleep(5)
 
-    smll_sync_piezos()
-    mov(dssy, c_ssy)
-    mov(dssz, t_ssz)
+    yield from smll_sync_piezos()
+    yield from bps.mov(dssy, c_ssy)
+    yield from bps.mov(dssz, t_ssz)
 
     print('post-move x = %.3f' % smll.dssx.position)
     print('Post-move y = %.3f' % smll.dssy.position)
@@ -2354,20 +2362,20 @@ def mov_sz(t_pos):
     print('Current ssy = %.3f' % c_ssy)
     print('Current ssz = %.3f' % c_ssz)
 
-    smll_kill_piezos()
+    yield from smll_kill_piezos()
 
     t_ssz = t_pos
     dz = (t_ssz - smll.ssz.position)/np.cos(alpha)
     dy = c_ssy - smll.ssy.position
 
-    movr(sz, dz)
-    movr(sy, dy)
+    yield from bps.movr(sz, dz)
+    yield from bps.movr(sy, dy)
 
-    sleep(5)
+    yield from bps.sleep(5)
 
-    smll_sync_piezos()
-    mov(ssy, c_ssy)
-    mov(ssz, t_ssz)
+    yield from smll_sync_piezos()
+    yield from bps.mov(ssy, c_ssy)
+    yield from bps.mov(ssz, t_ssz)
 
     print('Post-move x = %.3f' % smll.ssx.position)
     print('Post-move y = %.3f' % smll.ssy.position)

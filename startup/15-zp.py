@@ -58,8 +58,8 @@ class HxnZPSample(NamedDevice):
     smarthy = Cpt(SmarpodRotationAxis, axis=3, doc='smarpod theta around y')
     smarthz = Cpt(SmarpodRotationAxis, axis=1, doc='smarpod theta around z')
 
-    kill = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1-ZP}Kill-Cmd.PROC')
-    zero = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1-ZP}Zero-Cmd.PROC')
+    kill = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1-ZP}Kill-Cmd.PROC', kind='omitted')
+    zero = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1-ZP}Zero-Cmd.PROC', kind='omitted')
     mode = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1-ZP}Mode-I')
 
 

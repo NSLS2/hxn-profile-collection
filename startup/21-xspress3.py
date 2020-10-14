@@ -1,7 +1,7 @@
 from ophyd.device import (Component as Cpt)
 
-from hxntools.detectors.xspress3 import (Xspress3FileStore,
-                                         Xspress3Channel)
+from nslsii.detectors.xspress3 import (Xspress3FileStore,
+                                       Xspress3Channel)
 from hxntools.detectors.hxn_xspress3 import HxnXspress3DetectorBase
 import threading
 from ophyd import DeviceStatus
@@ -139,7 +139,12 @@ xspress3 = HxnXspress3Detector('XF:03IDC-ES{Xsp:1}:', name='xspress3')
 
 
 # Create directories on the xspress3 server, otherwise scans can fail:
-xspress3.make_directories.put(True)
+#====================================================================
+# Note from DAMA: commented it out during the 2020-2 deployment visit.
+# The corresponding code is in
+# https://github.com/NSLS-II/nslsii/blob/master/nslsii/detectors/xspress3.py
+#====================================================================
+# xspress3.make_directories.put(True)
 
 
 elem_K_list = np.array(['Na','Mg','Al','Si','P','S','Cl','Ar','K','Ca','Sc','Ti','V','Cr','Mn','Fe','Co','Ni','Cu','Zn','Ga','Ge','As','Se','Br','Kr','Rb','Sr','Y','Zr','Nb','Mo','Tc','Ru','Rh','Pd','Ag','Cd','In','Sn','Sb','Te','I','Xe','Cs','Ba','La','Hf','Ta','W','Re','Os','Ir','Pt','Au','Hg','Tl','Pb','Bi','Po','At','Rn','Fr','Ra','Ac','Ce','Pr','Nd','Pm','Sm','Eu','Gd','Tb','Dy','Ho','Er','Tm','Yb','Lu','Th','Pa','U','Np','Pu','Am','Cm','Bk','Cf'])

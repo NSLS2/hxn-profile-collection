@@ -32,9 +32,9 @@ class HxnMLLSample(NamedDevice):
     sz = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:2}Mtr', doc='coarse z')
 
     kill = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1}KillAll-Cmd.PROC',
-               doc='kill all piezos')
+               doc='kill all piezos', kind='omitted')
     zero = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1}KillZero-Cmd.PROC',
-               doc='zero all piezos')
+               doc='zero all piezos', kind='omitted')
     # sz1 = Cpt(EpicsMotor, 'XF:03IDC-ES{ANC350:3-Ax:3}Mtr', doc='coarse z1')
     # sz1 was replaced with vz when controller 2 died
 
@@ -74,7 +74,7 @@ class HxnMLLDiffractionSample(NamedDevice):
     dssz = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-dssz}Mtr', doc='fine_z')
 
     kill = Cpt(EpicsSignal, 'XF:03IDC-ES{Ppmac:1-Diff}Kill-Cmd.PROC',
-               doc='kill all piezos')
+               doc='kill all piezos', kind='omitted')
 
 
 smlld = HxnMLLDiffractionSample('', name='smlld')
