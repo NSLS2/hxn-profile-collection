@@ -1,27 +1,37 @@
 
 
+ZnXANESParam = {'high_e':9.7, 'low_e':9.6, 
+                'high_e_ugap':6480, 'low_e_ugap':6430,
+                'high_e_crl':7, 'low_e_crl':2,
+                'high_e_zpz1':50.92, 'zpz1_slope':-5.9
+                'energies = []}
+
+
+
+
+
 def generate_e_list(elem = 'Fe'):
 
     if elem = 'Fe':
 
         pre = np.linspace(7.087,7.102,6)
-	XANES1 = np.linspace(7.103,7.129,27)
-	XANES2 = np.linspace(7.130,7.140,11)
-	XANES3 = np.linspace(7.141,7.160,10)
-	post = np.linspace(7.161,7.173,5)
-	energies = np.concatenate([pre,XANES1,XANES2,XANES3,post])
+	    XANES1 = np.linspace(7.103,7.129,27)
+	    XANES2 = np.linspace(7.130,7.140,11)
+	    XANES3 = np.linspace(7.141,7.160,10)
+	    post = np.linspace(7.161,7.173,5)
+	    energies = np.concatenate([pre,XANES1,XANES2,XANES3,post])
 
-	high_e = 7.2
-	low_e = 7.1
-	high_e_ugap = 7678 # harm = 3, pitch 1.01709
-	low_e_ugap = 7588
+	    high_e = 7.2
+	    low_e = 7.1
+	    high_e_ugap = 7678 # harm = 3, pitch 1.01709
+	    low_e_ugap = 7588
 
 
-	high_e_crl= 5  crl#12
-	low_e_crl = -2
+	    high_e_crl= 5  crl#12
+	    low_e_crl = -2
 
-	zpz1_ref = -9.285 #zpz = 6 mm
-	zpz1_slope = -5.9 #dr = 30nm, D = 240um
+	    zpz1_ref = -9.285 #zpz = 6 mm
+	    zpz1_slope = -5.9 #dr = 30nm, D = 240um
 
 
     if elem = 'Zn':
@@ -42,12 +52,9 @@ def generate_e_list(elem = 'Fe'):
         zpz1_slope = -5.9
 
 
-
-
-
-    if elem = 'Ni':
-    if elem = 'Mn':
-    if elem = 'As':
+    if elem = 'Ni': pass
+    if elem = 'Mn': pass
+    if elem = 'As': pass
 
     ugap_slope = (high_e_ugap - low_e_ugap)/(high_e-low_e)
     ugap_list = high_e_ugap + (energies - high_e)*ugap_slope

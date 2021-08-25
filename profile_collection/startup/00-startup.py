@@ -20,6 +20,9 @@ from jsonschema import validate as js_validate
 import six
 from collections import deque
 
+import os
+os.environ["PPMAC_HOST"] = "xf03idc-ppmac1"
+
 # DB1
 
 db1_name = 'rs'
@@ -371,7 +374,7 @@ from nslsii import configure_base, configure_olog
 
 # configure_base(get_ipython().user_ns, db_new, bec=False)
 configure_base(get_ipython().user_ns, db, bec=False)
-configure_olog(get_ipython().user_ns)
+# configure_olog(get_ipython().user_ns)
 
 from bluesky.callbacks.best_effort import BestEffortCallback
 bec = BestEffortCallback()
@@ -438,6 +441,8 @@ logging.getLogger('hxnfly').setLevel(logging.DEBUG)
 logging.getLogger('hxntools').setLevel(logging.DEBUG)
 logging.getLogger('ppmac').setLevel(logging.INFO)
 
+# logging.getLogger('ophyd').addHandler(handler)
+# logging.getLogger('ophyd').setLevel(logging.DEBUG)
 
 # Flyscan results are shown using pandas. Maximum rows/columns to use when
 # printing the table:
@@ -592,3 +597,4 @@ from ophyd.areadetector import EpicsSignalWithRBV
 EpicsSignal.get = _epicssignal_get
 EpicsSignalRO.get = _epicssignal_get
 EpicsSignalWithRBV.get = _epicssignal_get
+

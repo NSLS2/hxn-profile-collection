@@ -6,9 +6,9 @@ from hxntools.detectors import (HxnTimepixDetector as _HTD,
                                 HxnMerlinDetector as _HMD,
                                 BeamStatusDetector, HxnMercuryDetector,
                                 HxnDexelaDetector as _HDD)
-from hxntools.detectors.dexela import HDF5PluginWithFileStore as _dhdf
+#from hxntools.detectors.dexela import HDF5PluginWithFileStore as _dhdf
 from hxntools.detectors.merlin import HDF5PluginWithFileStore as _mhdf
-from hxntools.detectors.timepix import HDF5PluginWithFileStore as _thdf
+#from hxntools.detectors.timepix import HDF5PluginWithFileStore as _thdf
 from hxntools.detectors.zebra import HxnZebra
 
 from nslsii.ad33 import (SingleTriggerV33, StatsPluginV33, CamV33Mixin)
@@ -16,18 +16,18 @@ from nslsii.ad33 import (SingleTriggerV33, StatsPluginV33, CamV33Mixin)
 
 # - 2D pixel array detectors
 # -- Timepix 1
-class HxnTimepixDetector(_HTD):
-    hdf5 = Cpt(_thdf, 'HDF1:',
-               read_attrs=[],
-               configuration_attrs=[],
-               write_path_template='/data/%Y/%m/%d/',
-               root='/data',
-               reg=db.reg)
+#class HxnTimepixDetector(_HTD):
+#    hdf5 = Cpt(_thdf, 'HDF1:',
+#               read_attrs=[],
+#               configuration_attrs=[],
+#               write_path_template='/data/%Y/%m/%d/',
+#               root='/data',
+#               reg=db.reg)
 
-timepix1 = HxnTimepixDetector('XF:03IDC-ES{Tpx:1}', name='timepix1',
-                              image_name='timepix1',
-                              read_attrs=['hdf5', 'cam','stats1'])
-timepix1.hdf5.read_attrs = []
+#timepix1 = HxnTimepixDetector('XF:03IDC-ES{Tpx:1}', name='timepix1',
+#                              image_name='timepix1',
+#                              read_attrs=['hdf5', 'cam','stats1'])
+#timepix1.hdf5.read_attrs = []
 
 # -- Timepix 2
 #timepix2 = HxnTimepixDetector('XF:03IDC-ES{Tpx:2}', name='timepix2',
@@ -66,6 +66,7 @@ merlin2 = HxnMerlinDetector('XF:03IDC-ES{Merlin:2}', name='merlin2',
 merlin2.hdf5.read_attrs = []
 
 # -- Dexela 1 (Dexela 1512 GigE-V24)
+'''
 class HxnDexelaDetector(_HDD):
     hdf5 = Cpt(_dhdf, 'HDF1:',
                read_attrs=[],
@@ -80,12 +81,12 @@ dexela1 = HxnDexelaDetector('XF:03IDC-ES{Dexela:1}', name='dexela1',
                             image_name='dexela1',
                             read_attrs=['hdf5', 'cam','stats1'])
 dexela1.hdf5.read_attrs = []
-
+'''
 # - Other detectors and triggering devices
 # -- DXP Mercury (1 channel)
-mercury1 = HxnMercuryDetector('XF:03IDC-ES{DXP:1}', name='mercury1')
-mercury1.read_attrs = ['dxp', 'mca']
-mercury1.dxp.read_attrs = []
+#mercury1 = HxnMercuryDetector('XF:03IDC-ES{DXP:1}', name='mercury1')
+#mercury1.read_attrs = ['dxp', 'mca']
+#mercury1.dxp.read_attrs = []
 
 # -- Quantum Detectors Zebra
 zebra = HxnZebra('XF:03IDC-ES{Zeb:1}:', name='zebra')

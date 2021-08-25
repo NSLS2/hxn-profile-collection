@@ -1,37 +1,42 @@
 
 #osaz = 2500, zpz = 8 mm, angle , , crl#9+6, No CRL change (increasing E), Si(111)
 
-user_folder = '/data/users/2020Q1/Sprouster_2020Q1/'
+user_folder = '/data/users/2021Q2/Tyson_2021Q2/'
 
-pre = np.linspace(6.525,6.535,5)
-XANES1 = np.linspace(6.5355,6.560,50)#50 for 0.5eV, 33 for 0.75 
-XANES2 = np.linspace(6.561,6.580,20)#changes to 10 fro calibration, 20 otherwise
-post = np.linspace(6.581,6.591,5)
+pre = np.linspace(6.520,6.534,8)
+XANES1 = np.linspace(6.5345,6.560,72)#50 for 0.5eV, 33 for 0.75 
+#XANES2 = np.linspace(6.561,6.570,10)#changes to 10 fro calibration, 20 otherwise
+post = np.linspace(6.561,6.6,40)
 
-Mn_energies = np.concatenate([pre,XANES1,XANES2,post]) #81 points
+Mn_energies = np.concatenate([pre,XANES1,post]) #81 points
+#Mn_energies = np.concatenate([XANES2])
 #Mn_energies=np.asarray([6.525])
 
-ugap_ref = 7085
-e_ref = 6.5398
-ugap_slope = (7145-7085)/0.066
+ugap_ref = 7095
+e_ref = 6.54
+ugap_slope = (7130-7085)/0.055
 ugap_list = ugap_ref + (Mn_energies - e_ref)*ugap_slope
 
 
-crl_ref = -10
+crl_ref = -12
 crl_slope = (0)/0.066
 crl_list = crl_ref + (Mn_energies - e_ref)*crl_slope
 
-zpz1_ref = -10.9
+zpz1_ref = -6.5628 #zpz = 10
 zpz1_slope = -5.91
 zpz1_list = zpz1_ref + (Mn_energies - e_ref)*zpz1_slope
 
 e_list = np.column_stack((Mn_energies,ugap_list,zpz1_list,crl_list))
 np.savetxt(user_folder+'Mn_e_list.txt', e_list,fmt='%5.5f')
 
-realE_list = []
-scanid_list = []
+#realE_list = []
+#scanid_list = []
 def zp_list_xanes2d(e_list,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t):
     num_pts, num_mot = np.shape(e_list)
+    
+    realE_list = []
+    scanid_list = []
+
     for i in range(num_pts):
         energy = e_list[i][0]
         gap_sz = e_list[i][1]
@@ -43,28 +48,36 @@ def zp_list_xanes2d(e_list,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t):
         yield from bps.sleep(2)
         yield from mov_zpz1(zpz1_pos)
         yield from bps.sleep(2)
-        yield from bps.mov(crl.p,crl_angle)
-        yield from bps.sleep(2)
+        #yield from bps.mov(crl.p,crl_angle)
+        #yield from bps.sleep(2)
 
-        yield from fly2d(dets1, mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t)
+        yield from fly2d(dets_fs, mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,dead_time=0.001,return_speed=100)
+
         #yield from dmesh(dets1, mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t)
-        yield from bps.sleep(2)
-        yield from bps.movr(zpssx, -0.002)
+        #yield from bps.sleep(2)
+        #yield from bps.movr(zpssx, -0.002)
         h = db[-1]
+        if i == 0:
+            first_sid = h.start['scan_id']
         last_sid = h.start['scan_id']
         scanid_list.append(last_sid)
         e_pos = e.position
         realE_list.append(e_pos)
-
-        merlin1.unstage()
+        plot2dfly(-1,'Au_M','sclr1_ch4')
+        insertFig(note = 'energy={}'.format(e_pos), title ='LuMnO3 bottom')
+        plt.close()
+        plot2dfly(-1,'Mn','sclr1_ch4')
+        insertFig(note = 'energy={}'.format(e_pos), title ='LuMnO3 bottom')
+        plt.close()
+        #merlin1.unstage()
         xspress3.unstage()
 
-        while (sclr2_ch4.get() < 250000):
+        while (sclr2_ch2.get() < 100000):
             yield from bps.sleep(60)
-            print('IC3 is lower than 250000, waiting...')
+            print('IC1 is lower than 200000, waiting...')
 
     sid_e_list = np.column_stack([scanid_list,realE_list])
-    np.savetxt(os.path.join(user_folder, 'Xanes_elist_lastsid_{}'.format(last_sid)+'txt'),sid_e_list, fmt = '%5f')
+    np.savetxt(os.path.join(user_folder, 'elist_{}_{}'.format(first_sid,last_sid)+'.txt'),realE_list, fmt = '%5f')
 
 def return_center_of_mass(scan_id = -1, elem = 'Cr'):
     df2 = db.get_table(db[scan_id],fill=False)

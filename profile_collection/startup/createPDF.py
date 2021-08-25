@@ -210,6 +210,7 @@ def insertTitle():
         c = Canvas(G_INFO.fname,pagesize=letter)
         tp = TitlePage(G_INFO,c)
         tp.create()
+    print("PDF Created Successfully")
 
 def insertFig(note='',title ='', *, fig=None):
     global PDF_CTS

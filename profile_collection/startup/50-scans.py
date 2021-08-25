@@ -48,16 +48,20 @@ d2scan = bpp.subs_decorator(bec)(hxntools.scans.d2scan)
 a2scan = bpp.subs_decorator(bec)(hxntools.scans.a2scan)
 scan_steps = bpp.subs_decorator(bec)(hxntools.scans.scan_steps)
 
-#dets1 = [zebra, sclr1, xspress3]
-dets1 = [fs,zebra, sclr1, merlin1, xspress3]
-dets6 = [fs,zebra, sclr1, xspress3, eiger]
-dets2 = [fs,zebra, sclr1, merlin1, merlin2, xspress3]
+#dets1 = [fs, zebra, sclr1, xspress3]
+dets1 = [fs,zebra, sclr1,merlin2, xspress3]
+dets_fs = [fs,zebra, sclr1, xspress3]
+dets6 = [fs,zebra, sclr1, xspress3]
+dets2 = [fs,zebra, sclr1, merlin2, xspress3]
 #dets2 = [zebra, sclr1, xspress3, lakeshore2]
 dets3 = [zebra, sclr1, merlin2]
 dets4 = [zebra, sclr1, merlin1, lakeshore2]
-dets5 = [zebra, sclr1, xspress3, dexela1]
-# dets5 = [zebra, sclr1, merlin1, xspress3, lakeshore2,dexela1]
-
+dets7 = [fs, zebra, sclr1, xspress3]
+#dets5 = [zebra, sclr1, xspress3, dexela1]
+#dets9 = [fs, zebra, sclr1, xspress3, eiger1m_single]
+#dets10 = [zebra, sclr1, xspress3, dexela1]
+dets8= [fs, zebra, sclr1, xspress3]
+#dets11= [fs, zebra, sclr1, xspress3, eiger1m_single]
 
 # define all the position names and save them to baseline
 # need to remove confict names

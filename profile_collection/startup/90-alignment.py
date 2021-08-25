@@ -12,6 +12,10 @@ def erfunc1(z,a,b,c):
     return c*(scipy.special.erf((z-a)/(b*np.sqrt(2.0)))+1.0)
 def erfunc2(z,a,b,c):
     return c*(1.0-scipy.special.erf((z-a)/(b*np.sqrt(2.0))))
+def sicifunc(z,a,b,c):
+    si, ci = scipy.special.sici(2.0*b*(z-a))
+    #return c*((-1.0+np.cos(2.0*b*(a-z))+2.0*b*(a-z)*si)/(2.0*(b*b)*(z-a))+np.pi/(2.0*b))*b
+    return c*(-scipy.sinc(b*(z-a)/np.pi)*scipy.sin(b*(z-a))+si+np.pi/2.0)/np.pi
 def squarefunc(z,c,a1,b1,a2,b2):
     return c*(scipy.special.erf((z-a1)/(b1*np.sqrt(2.0)))-scipy.special.erf((z-a2)/(b2*np.sqrt(2.0))))
 def erf_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
@@ -49,8 +53,51 @@ def erf_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
     plt.plot(xdata,fit_data)
     plt.title('sid= %d edge = %.3f, FWHM = %.2f nm' % (sid,popt[0], popt[1]*2.3548*1000.0))
     return (popt[0],popt[1]*2.3548*1000.0)
+def sici_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
+    h=db[sid]
+    sid=h['start']['scan_id']
+    df=h.table()
+    mots=h.start['motors']
+    xdata=df[mots[0]]
+    xdata=np.array(xdata,dtype=float)
+    ydata=(df['Det1_'+elem]+df['Det2_'+elem]+df['Det3_'+elem])/df[mon]
+    ydata=np.array(ydata,dtype=float)
+    y_min=np.min(ydata)
+    y_max=np.max(ydata)
+    ydata=(ydata-y_min)/y_max
+    plt.figure()
+    plt.plot(xdata,ydata,'bo')
+    y_mean = np.mean(ydata)
+    half_size = int (len(ydata)/2)
+    y_half_mean = np.mean(ydata[0:half_size])
+    edge_pos=find_edge(xdata,ydata,10)
+    if y_half_mean < y_mean:
+        if linear_flag == False:
+            popt,pcov=curve_fit(sicifunc,xdata,ydata, p0=[edge_pos,0.05,1/np.pi])
+            fit_data=sicifunc(xdata,popt[0],popt[1],popt[2]);
+        else:
+            popt,pcov=curve_fit(sicifunc,xdata,ydata, p0=[edge_pos,0.05,1/np.pi,0,0])
+            fit_data=sicifunc(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
+    else:
+        if linear_flag == False:
+            popt,pcov=curve_fit(sicifunc,-xdata,ydata,p0=[-edge_pos,0.05,1/np.pi])
+            fit_data=sicifunc(-xdata,-popt[0],popt[1],popt[2]);
+        else:
+            popt,pcov=curve_fit(sicifunc,-xdata,ydata,p0=[-edge_pos,0.05,1/np.pi,0,0])
+            fit_data=sicifunc(-xdata,-popt[0],popt[1],popt[2],popt[3],popt[4]);
+    plt.plot(xdata,fit_data)
+    plt.title('sid= %d edge = %.3f, FWHM = %.2f nm' % (sid,popt[0], 1.39156*2*1000.0/popt[1]))
+    return (popt[0],1.39156*2*1000.0/popt[1])
 
 
+def find_double_edge2(xdata,ydata):
+    l = np.size(ydata)
+    der = np.zeros(l-1)
+    for i in range(l-1):
+        der[i]=ydata[i+1]-ydata[i]
+    ind1 = scipy.argmax(der)
+    ind2 = scipy.argmin(der)
+    return(xdata[ind1],xdata[ind2])
 
 def square_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
 
@@ -68,6 +115,7 @@ def square_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
     plt.figure()
     plt.plot(xdata,ydata,'bo')
     edge_pos_1, edge_pos_2 = find_double_edge(xdata,ydata,10)
+    #print('sid={}  e1={}  e2={}'.format(sid,edge_pos_1,edge_pos_2))
     popt,pcov=curve_fit(squarefunc,xdata,ydata,p0=[0.5,edge_pos_1,0.1,edge_pos_2,0.1])
     fit_data=squarefunc(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
 
@@ -113,6 +161,36 @@ def data_erf_fit(xdata,ydata,linear_flag=True):
     plt.plot(xdata,fit_data)
     plt.title('edge = %.3f, FWHM = %.2f nm' % (popt[0], popt[1]*2.3548*1000.0))
     return (popt[0],popt[1]*2.3548*1000.0)
+def data_sici_fit(xdata,ydata,linear_flag=True):
+
+    xdata=np.array(xdata,dtype=float)
+    ydata=np.array(ydata,dtype=float)
+    y_min=np.min(ydata)
+    y_max=np.max(ydata)
+    ydata=(ydata-y_min)/y_max
+    plt.figure(1000)
+    plt.plot(xdata,ydata,'bo')
+    y_mean = np.mean(ydata)
+    half_size = int (len(ydata)/2)
+    y_half_mean = np.mean(ydata[0:half_size])
+    edge_pos=find_edge(xdata,ydata,10)
+    if y_half_mean < y_mean:
+        if linear_flag == False:
+            popt,pcov=curve_fit(sicifunc,xdata,ydata, p0=[edge_pos,20,1])
+            fit_data=sicifunc(xdata,popt[0],popt[1],popt[2]);
+        else:
+            popt,pcov=curve_fit(sicifunc,xdata,ydata, p0=[edge_pos,20,1])
+            fit_data=sicifunc(xdata,popt[0],popt[1],popt[2]);
+    else:
+        if linear_flag == False:
+            popt,pcov=curve_fit(sicifunc,-xdata,ydata,p0=[-edge_pos,20,1])
+            fit_data=sicifunc(-xdata,-popt[0],popt[1],popt[2]);
+        else:
+            popt,pcov=curve_fit(sicifunc,-xdata,ydata,p0=[-edge_pos,20,1])
+            fit_data=sicifunc(-xdata,-popt[0],popt[1],popt[2]);
+    plt.plot(xdata,fit_data)
+    plt.title('edge = %.3f, FWHM = %.2f nm' % (popt[0], 1.39156*2*1000.0/popt[1]))
+    return (popt[0],1.39156*2*1000.0/popt[1])
 
 def find_2D_edge(sid, axis, elem):
     df2 = db.get_table(db[sid],fill=False)
@@ -204,13 +282,16 @@ def find_edge(xdata,ydata,size):
 
 def find_double_edge(xdata, ydata, size):
     edge_1 = find_edge(xdata, ydata, size)
+    l = np.size(ydata)
     index = scipy.argmax(ydata)
     cen = xdata[index]
     if cen > edge_1:
-        edge_2 = (cen-edge_1) + cen
+        edge_2 = find_edge(xdata[index:l],ydata[index:l],size)
+        #edge_2 = (cen-edge_1) + cen
         return(edge_1,edge_2)
     else:
-        edge_2 = cen - (edge_1 - cen)
+        #edge_2 = cen - (edge_1 - cen)
+        edge_2 = find_edge(xdata[1:index],ydata[1:index],size)
         return(edge_2,edge_1)
 def hmll_z_alignment(z_start, z_end, z_num, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4'):
     z_pos=np.zeros(z_num+1)
@@ -264,8 +345,8 @@ def vmll_z_alignment(z_start, z_end, z_num, start, end, num, acq_time, elem='Pt_
     plt.plot(z_pos,fit_size,'bo')
     plt.xlabel('vz')
 
-def zp_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem=' ',mon='sclr1_ch4'):
-    print('moves the zone plate incrementally and find the focus with a linescan at each position')
+def zp_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem=' ',linFlag = True,mon='sclr1_ch4'):
+    'moves the zone plate incrementally and find the focus with a linescan at each position'
     z_pos=np.zeros(z_num+1)
     fit_size=np.zeros(z_num+1)
     z_step = (z_end - z_start)/z_num
@@ -275,7 +356,7 @@ def zp_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem='
     for i in range(z_num + 1):
 
         yield from fly1d(dets1, mot, start, end, num, acq_time)
-        edge_pos,fwhm=erf_fit(-1,elem,mon,linear_flag=False)
+        edge_pos,fwhm=erf_fit(-1,elem,mon,linear_flag=linFlag)
         fit_size[i]= fwhm
         z_pos[i]=zp.zpz1.position
         yield from movr_zpz1(z_step)
@@ -352,7 +433,8 @@ def return_tip_pos(sid,elem='Cr'):
     #xrf[xrf>=(np.max(xrf)*0.5)] = 1.
     #mc = find_mass_center_1d(xrf,x)
     xrf_d = np.diff(xrf)
-    peak_index = np.where(xrf_d == np.max(xrf_d))
+    #peak_index = np.where(xrf_d == np.max(xrf_d))
+    peak_index = np.where(xrf == np.max(xrf))
     #print(x[peak_index[0][0]+1])
     return x[peak_index[0][0]+1]
 
@@ -399,14 +481,16 @@ def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt_
     for i in range(a_num+1):
         x[i] = a_start + i*a_step
         yield from bps.mov(zps.zpsth, x[i])
-        if np.abs(x[i]) > 45:
-            yield from fly1d(dets1,zpssz,start,end,num,acq_time)
-            tmp = return_line_center(-1, elem=elem,threshold=0.85,neg_flag=neg_flag )
+        if np.abs(x[i]) > 45.05:
+            yield from fly1d(dets6,zpssz,start,end,num,acq_time)
+            tmp = return_line_center(-1, elem=elem,threshold=0.5,neg_flag=neg_flag )
+            #tmp = return_tip_pos(-1, elem=elem)
             #tmp,fwhm = erf_fit(-1,elem = elem,linear_flag=False)
             y[i] = tmp*np.sin(x[i]*np.pi/180.0)
         else:
-            yield from fly1d(dets1,zpssx,start,end,num,acq_time)
-            tmp = return_line_center(-1,elem=elem,threshold=0.85,neg_flag=neg_flag )
+            yield from fly1d(dets6,zpssx,start,end,num,acq_time)
+            tmp = return_line_center(-1,elem=elem,threshold=0.5,neg_flag=neg_flag )
+            #tmp = return_tip_pos(-1, elem=elem)
             #tmp,fwhm = erf_fit(-1,elem = elem,linear_flag=False)
             y[i] = tmp*np.cos(x[i]*np.pi/180.0)
         print('y=',y[i])
@@ -622,4 +706,6 @@ def scan_info(sid):
     si.det = h.start['detectors']
     return(si)
 
+def StartPumpingProtocol():
 
+    pass

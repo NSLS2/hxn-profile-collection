@@ -52,7 +52,7 @@ from hxnfly.callbacks import FlyLiveCrossSection
 
 #live_im_plot = FlyLiveImage(['Ca','W_L','Fe','Pt_L'], channels=[1, 2, 3])
 
-live_im_plot = FlyLiveImage(['La_L', 'Ta_L','Zr_L','I_L'], channels=[1, 2, 3])
+live_im_plot = FlyLiveImage(['Mn','Cr'], channels=[1, 2, 3])
 
 # fly2dplot1 = FlyLiveCrossSection(['V'], channels=[1, 2, 3)
 
@@ -60,12 +60,13 @@ live_im_plot = FlyLiveImage(['La_L', 'Ta_L','Zr_L','I_L'], channels=[1, 2, 3])
 #                     channels=[1, 2, 3],
 #                     )
 
-pt_plot = FlyRoiPlot(['La_L'],
+pt_plot = FlyRoiPlot(['Cr'],
                      channels=[1, 2, 3],
                     )
 
 # NOTE: indicate which detectors can be used in fly scans.
-fly_scannable_detectors = [xspress3, zebra, sclr1, dexela1]
+# fly_scannable_detectors = [xspress3, zebra, sclr1, dexela1]
+fly_scannable_detectors = [xspress3, zebra, sclr1]
 fly1d = FlyPlan1D(usable_detectors=fly_scannable_detectors,
                   scaler_channels=[1, 2, 3, 4, 5, 6, 7, 8])
 
