@@ -636,13 +636,15 @@ def check_info(sid):
     h = db[sid]
     sid = h.start['scan_id']
     scan_time = datetime.fromtimestamp(h.start['time'])
+    end_time = datetime.fromtimestamp(h.stop['time'])
     scan_uid = h.start['uid']
     scan_type = h.start['plan_name']
     scan_motors = h.start['motors']
     num_motors = len(scan_motors)
     det_list = h.start['detectors']
     exp_time = h.start['exposure_time']
-    print('sid = {}'.format(sid), 'uid = ', scan_uid, scan_time)
+    print('sid = {}'.format(sid), 'uid = ', scan_uid)
+    print('start time = ', scan_time, 'end time = ', end_time) 
     if num_motors == 1:
         mot1 = scan_motors[0]
         s1 = h.start['scan_start1']

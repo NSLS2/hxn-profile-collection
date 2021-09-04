@@ -23,18 +23,20 @@ from collections import deque
 import os
 os.environ["PPMAC_HOST"] = "xf03idc-ppmac1"
 
+
 # DB1
 
+"""
 db1_name = 'rs'
-db1_addr = 'mongodb://xf03id1-mdb01:27027,xf03id1-mdb02:27027,xf03id1-mdb03:27027/?replicaSet=mongors'
+db1_addr = 'mongodb://xf03id1-mdb01:27017,xf03id1-mdb02:27017,xf03id1-mdb03:27017'
 
 _mds_config_db1 = {'host': db1_addr,
-                   'port': 27027,
+                   'port': 27017,
                    'database': 'datastore-2',
                    'timezone': 'US/Eastern'}
 
 _fs_config_db1 = {'host': db1_addr,
-                  'port': 27027,
+                  'port': 27017,
                   'database': 'filestore-2'}
 
 # DB2
@@ -360,8 +362,9 @@ class CompositeBroker(Broker):
         _write_to_file(db1_name, name, t3, t4);
 
         return ret2
-
-db = CompositeBroker(mds_db1, CompositeRegistry(_fs_config_db1))
+"""
+#db = CompositeBroker(mds_db1, CompositeRegistry(_fs_config_db1))
+db = Broker.named('hxn')
 
 from hxntools.handlers import register as _hxn_register_handlers
 # _hxn_register_handlers(db_new)
