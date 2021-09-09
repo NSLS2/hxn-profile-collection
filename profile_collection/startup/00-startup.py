@@ -26,7 +26,7 @@ os.environ["PPMAC_HOST"] = "xf03idc-ppmac1"
 
 # DB1
 
-"""
+
 db1_name = 'rs'
 db1_addr = 'mongodb://xf03id1-mdb01:27017,xf03id1-mdb02:27017,xf03id1-mdb03:27017'
 
@@ -41,22 +41,22 @@ _fs_config_db1 = {'host': db1_addr,
 
 # DB2
 
-db2_addr = 'xf03id1-mdb03'
+#db2_addr = 'xf03id1-mdb03'
 
-db2_name = 'mdb03-1'
-db2_datastore = 'datastore-1'
-db2_filestore = 'filestore-1'
+#db2_name = 'mdb03-1'
+#db2_datastore = 'datastore-1'
+#db2_filestore = 'filestore-1'
 
-_mds_config_db2 = {'host': db2_addr,
-                   'port': 27017,
-                   'database': db2_datastore,
-                   'timezone': 'US/Eastern'}
+#_mds_config_db2 = {'host': db2_addr,
+#                   'port': 27017,
+#                   'database': db2_datastore,
+#                   'timezone': 'US/Eastern'}
 
-_fs_config_db2 = {'host': db2_addr,
-                  'port': 27017,
-                  'database': db2_filestore}
+#_fs_config_db2 = {'host': db2_addr,
+#                  'port': 27017,
+#                 'database': db2_filestore}
 
-mongo_client = MongoClient(db2_addr, 27017)
+#mongo_client = MongoClient(db2_addr, 27017)
 
 # Benchmark file
 
@@ -66,7 +66,7 @@ f_benchmark = open("/home/xf03id/benchmark.out", "a+")
 
 datum_counts = {}
 
-fs_db2 = mongo_client[db2_filestore]
+#fs_db2 = mongo_client[db2_filestore]
 
 def sanitize_np(val):
     "Convert any numpy objects into built-in Python types."
@@ -87,6 +87,7 @@ def _write_to_file(col_name, method_name, t1, t2):
             "{0}: {1}, t1: {2} t2:{3} time:{4} \n".format(
                 col_name, method_name, t1, t2, (t2-t1),))
         f_benchmark.flush()
+
 
 class CompositeRegistry(Registry):
     '''Composite registry.'''
@@ -130,7 +131,6 @@ class CompositeRegistry(Registry):
 
         return ret
 
-
     def register_resource(self, spec, root, rpath, rkwargs,
                               path_semantics='posix'):
 
@@ -142,27 +142,77 @@ class CompositeRegistry(Registry):
 
         # db2 database
 
-        col_db2 = fs_db2['resource']
+        #col_db2 = fs_db2['resource']
 
-        t1 = datetime.now();
-        ret_db2 = self._register_resource(col_db2, uid, spec, root, rpath,
-                                            rkwargs, path_semantics=path_semantics)
-        t2 = datetime.now()
+        #t1 = datetime.now();
+        #ret_db2 = self._register_resource(col_db2, uid, spec, root, rpath,
+        #                                    rkwargs, path_semantics=path_semantics)
+        #t2 = datetime.now()
 
-        _write_to_file(db2_name, method_name, t1, t2);
+        #_write_to_file(db2_name, method_name, t1, t2);
 
         # db1 database
 
         col = self._resource_col
 
-        t1 = datetime.now();
+        #t1 = datetime.now();
         ret = self._register_resource(col, uid, spec, root, rpath,
                                       rkwargs, path_semantics=path_semantics)
-        t2 = datetime.now()
+        #t2 = datetime.now()
 
-        _write_to_file(db1_name, method_name, t1, t2);
+        #_write_to_file(db1_name, method_name, t1, t2);
 
         return ret
+
+    def insert_datum(self, col, resource, datum_id, datum_kwargs, known_spec,
+                     resource_col, ignore_duplicate_error=False,
+                     duplicate_exc=None):
+
+        if ignore_duplicate_error:
+            assert duplicate_exc is not None
+        if duplicate_exc is None:
+            class _PrivateException(Exception):
+                pass
+            duplicate_exc = _PrivateException
+        try:
+            resource['spec']
+            spec = resource['spec']
+
+            if spec in known_spec:
+                js_validate(datum_kwargs, known_spec[spec]['datum'])
+        except (AttributeError, TypeError):
+            pass
+        resource_uid = self._doc_or_uid_to_uid(resource)
+        if type(datum_kwargs) == str and '/' in datum_kwargs:
+            datum_kwargs = {'point_number': datum_kwargs.split('/')[-1]}
+
+        datum = dict(resource=resource_uid,
+                     datum_id=str(datum_id),
+                     datum_kwargs=dict(datum_kwargs))
+        apply_to_dict_recursively(datum, sanitize_np)
+        # We are transitioning from ophyd objects inserting directly into a
+        # Registry to ophyd objects passing documents to the RunEngine which in
+        # turn inserts them into a Registry. During the transition period, we allow
+        # an ophyd object to attempt BOTH so that configuration files are
+        # compatible with both the new model and the old model. Thus, we need to
+        # ignore the second attempt to insert.
+        try:
+            pass
+            #col.insert_one(datum)
+        except duplicate_exc:
+            if ignore_duplicate_error:
+                warnings.warn("Ignoring attempt to insert Resource with duplicate "
+                              "uid, assuming that both ophyd and bluesky "
+                              "attempted to insert this document. Remove the "
+                              "Registry (`reg` parameter) from your ophyd "
+                              "instance to remove this warning.")
+            else:
+                raise
+        # do not leak mongo objectID
+        datum.pop('_id', None)
+
+        return datum
+
 
     def register_datum(self, resource_uid, datum_kwargs, validate=False):
 
@@ -180,12 +230,11 @@ class CompositeRegistry(Registry):
 
         # db2 database
 
-        col_db2 = fs_db2['datum']
-        datum_db2 = self._api.insert_datum(col_db2, resource_uid, datum_uid, datum_kwargs, {}, None)
-        ret_db2 = datum_db2['datum_id']
+        #col_db2 = fs_db2['datum']
+        #datum_db2 = self._api.insert_datum(col_db2, resource_uid, datum_uid, datum_kwargs, {}, None)
+        #ret_db2 = datum_db2['datum_id']
 
         # db1 database
-
         col = self._datum_col
         datum = self._api.insert_datum(col, resource_uid, datum_uid, datum_kwargs, {}, None)
         ret = datum['datum_id']
@@ -249,21 +298,21 @@ class CompositeRegistry(Registry):
 
         # db2 database
 
-        col_db2 = fs_db2['datum']
+        #col_db2 = fs_db2['datum']
 
-        t1 = datetime.now();
-        self._bulk_insert_datum(col_db2, resource_uid, d_ids, datum_kwarg_list)
-        t2 = datetime.now()
+        #t1 = datetime.now();
+        #self._bulk_insert_datum(col_db2, resource_uid, d_ids, datum_kwarg_list)
+        #t2 = datetime.now()
 
-        _write_to_file(db2_name, method_name, t1, t2);
+        #_write_to_file(db2_name, method_name, t1, t2);
 
         # db1 database
 
-        t1 = datetime.now();
+        #t1 = datetime.now()
         self._bulk_insert_datum(self._datum_col, resource_uid, d_ids, datum_kwarg_list)
-        t2 = datetime.now()
+        #t2 = datetime.now()
 
-        _write_to_file(db1_name, method_name, t1, t2);
+        #_write_to_file(db1_name, method_name, t1, t2);
 
         ret = d_ids
         return ret
@@ -275,8 +324,8 @@ db1 = Broker(mds_db1, CompositeRegistry(_fs_config_db1))
 
 # Broker 2
 
-mds_db2 = MDS(_mds_config_db2, auth=False)
-db2 = Broker(mds_db2, CompositeRegistry(_fs_config_db2))
+#mds_db2 = MDS(_mds_config_db2, auth=False)
+#db2 = Broker(mds_db2, CompositeRegistry(_fs_config_db2))
 
 
 # wrapper for two databases
@@ -289,7 +338,6 @@ class CompositeBroker(Broker):
         descriptor_uid = doc_or_uid_to_uid(descriptor)
 
         bulk = event_col.initialize_ordered_bulk_op()
-
         for ev in events:
             data = dict(ev['data'])
 
@@ -322,7 +370,6 @@ class CompositeBroker(Broker):
     # databroker.headersource.MDSROTemplate
     # databroker.headersource.MDSRO(MDSROTemplate)
     def _insert(self, name, doc, event_col, ts):
-
         for desc_uid, events in doc.items():
             # If events is empty, mongo chokes.
             if not events:
@@ -342,29 +389,29 @@ class CompositeBroker(Broker):
 
         ts =  str(datetime.now().timestamp())
 
-        t1 = datetime.now();
-        if name in {'bulk_events'}:
-            ret1 = self._insert(name, doc, db2.mds._event_col, ts)
-        else:
-            ret1 = db2.insert(name, doc)
+        #t1 = datetime.now();
+        #if name in {'bulk_events'}:
+        #    ret1 = self._insert(name, doc, db2.mds._event_col, ts)
+        #else:
+        #    ret1 = db2.insert(name, doc)
 
-        t2 = datetime.now()
+        #t2 = datetime.now()
 
-        _write_to_file(db2_name, name, t1, t2);
+        #_write_to_file(db2_name, name, t1, t2);
 
-        t3 = datetime.now();
+        #t3 = datetime.now();
         if name in {'bulk_events'}:
             ret2 = self._insert(name, doc, db1.mds._event_col, ts)
         else:
             ret2 = db1.insert(name, doc)
-        t4 = datetime.now()
+        #t4 = datetime.now()
 
-        _write_to_file(db1_name, name, t3, t4);
+        #_write_to_file(db1_name, name, t3, t4);
 
         return ret2
-"""
-#db = CompositeBroker(mds_db1, CompositeRegistry(_fs_config_db1))
-db = Broker.named('hxn')
+
+db = CompositeBroker(mds_db1, CompositeRegistry(_fs_config_db1))
+#db = Broker.named('hxn')
 
 from hxntools.handlers import register as _hxn_register_handlers
 # _hxn_register_handlers(db_new)
@@ -376,6 +423,7 @@ from IPython import get_ipython
 from nslsii import configure_base, configure_olog
 
 # configure_base(get_ipython().user_ns, db_new, bec=False)
+#configure_base(get_ipython().user_ns, db, bec=False, ipython_logging=False)
 configure_base(get_ipython().user_ns, db, bec=False)
 # configure_olog(get_ipython().user_ns)
 
