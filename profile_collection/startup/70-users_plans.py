@@ -4164,7 +4164,7 @@ def Mosaic_Grid120(exposure_time):
                         yield from bps.movr(smarx, i*0.001)
                         yield from bps.movr(smary, j*0.001)
                         yield from fly2d(dets1, zpssx,-15,15,30,zpssy, -15,15,30, exposure_time)
-                        insert_xrf_map_to_pdf(-1,'K')
+                        #insert_xrf_map_to_pdf(-1,'K')
 
                         yield from bps.mov(smarx, smarx_i)
                         yield from bps.mov(smary,smary_i)
