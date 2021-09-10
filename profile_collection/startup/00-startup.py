@@ -4,6 +4,7 @@ import ophyd
 
 # Set up a Broker.
 # TODO clean this up
+from bluesky_kafka import Publisher
 from databroker import Broker
 from databroker.headersource.mongo import MDS
 from databroker.assets.mongo import Registry
@@ -24,9 +25,22 @@ import os
 os.environ["PPMAC_HOST"] = "xf03idc-ppmac1"
 
 
+
+kafka_publisher = Publisher(
+        topic="hxn.bluesky.runengine.documents",
+        bootstrap_servers=os.environ['BLUESKY_KAFKA_BOOTSTRAP_SERVERS'],
+        key=str(uuid.uuid4()),
+        producer_config={
+                "acks": 1,
+                "message.timeout.ms": 3000,
+                "queue.buffering.max.kbytes": 10 * 1048576,
+                "compression.codec": "snappy"
+            },
+        flush_on_stop_doc=True,
+    )
+
+
 # DB1
-
-
 db1_name = 'rs'
 db1_addr = 'mongodb://xf03id1-mdb01:27017,xf03id1-mdb02:27017,xf03id1-mdb03:27017'
 
@@ -197,7 +211,7 @@ class CompositeRegistry(Registry):
         # compatible with both the new model and the old model. Thus, we need to
         # ignore the second attempt to insert.
         try:
-            pass
+            kafka_publisher('datum', datum)
             #col.insert_one(datum)
         except duplicate_exc:
             if ignore_duplicate_error:
@@ -236,7 +250,7 @@ class CompositeRegistry(Registry):
 
         # db1 database
         col = self._datum_col
-        datum = self._api.insert_datum(col, resource_uid, datum_uid, datum_kwargs, {}, None)
+        datum = self.insert_datum(col, resource_uid, datum_uid, datum_kwargs, {}, None)
         ret = datum['datum_id']
 
         return ret
