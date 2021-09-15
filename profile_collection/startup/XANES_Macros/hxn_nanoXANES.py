@@ -30,36 +30,35 @@ import numpy as np
 from datetime import datetime
 import pandas as pd
 
+#Paramer list from previous runs in the order of atomic number of the element
 
-ZnXANES= {'high_e':9.7, 'low_e':9.6, 
-          'high_e_ugap':6480, 'low_e_ugap':6430,
-          'high_e_crl':7, 'low_e_crl':2,
-          'high_e_zpz1':50.92, 'zpz1_slope':-5.9,
-          'energy':[]}
-          
 CrXANES= {'high_e':6.03, 'low_e':5.97, 
           'high_e_ugap':6660, 'low_e_ugap':6616,
           'high_e_crl':15, 'low_e_crl':15,'crl_comb':(8),
           'high_e_zpz1':71.395, 'zpz1_slope':-5.9,
           'energy':[(5.97,5.98,0.005),(5.981,6.03,0.001), (6.032,6.046,0.005)], 
-          'mirror': 'Si', 'pitch' :0.4665,'m2p':1.3060}
+          'mirrorCoating': 'Si'}
           
 MnXANES= {'high_e':6.6, 'low_e':6.5, 
           'high_e_ugap':7142, 'low_e_ugap':7057,
           'high_e_crl':-12, 'low_e_crl':-12,'crl_comb':(8,6),
           'high_e_zpz1':68.31, 'zpz1_slope':-5.9,
           'energy':[(6.520,6.530,0.005),(6.531,6.580,0.001),(6.585,6.601,0.005)],
-          'mirror': 'Si'}
-          
-          
+          'mirrorCoating': 'Si'}
+               
 FeXANES= {'high_e':7.2, 'low_e':7.1, 
-          'high_e_ugap':7675, 'low_e_ugap':7585,
+          'high_e_ugap':7665, 'low_e_ugap':7578,
           'high_e_crl':4, 'low_e_crl':-5,'crl_comb':(12),
           'high_e_zpz1':65.51, 'zpz1_slope':-5.9,
-          'energy':[(7.08,7.11,0.005),(7.111,7.150,0.001),(7.155,7.180,0.005)],
-          'mirror': 'Si','pitch' :0.4725, 'm2p':1.301442}
+          'energy':[(7.08,7.11,0.005),(7.111,7.150,0.001),(7.152,7.170,0.002),(7.175,7.20,0.005)],
+          'mirrorCoating': 'Si or Rh'}
 
-
+ZnXANES= {'high_e':9.7, 'low_e':9.6, 
+          'high_e_ugap':6480, 'low_e_ugap':6430,
+          'high_e_crl':7, 'low_e_crl':2,
+          'high_e_zpz1':50.92, 'zpz1_slope':-5.9,
+          'energy':[(9.645,9.66,4),(9.661,9.7,.001),(9.705,9.725,5)]}
+          
 
     
                                 ######################################
@@ -89,7 +88,7 @@ def generateEPoints(ePointsGen = [(9.645,9.665,0.005),(9.666,9.7,0.0006),(9.705,
         e_points.extend(np.arange(values[0],values[1],values[2]))
     
     if reversed:
-        #retrun list in the reversted order
+        #retruns list in the reversted order
         return e_points[::-1]
     else:
         return e_points
@@ -148,6 +147,8 @@ def generateEList(XANESParam = CrXANES, highEStart = True):
 
 def peak_the_flux():
 
+    """ Scan the c-bpm set points to find IC3 maximum """
+
     print("IC3is below threshold; Peaking the beam.")
     yield from bps.sleep(2)
     yield from peak_bpm_y(-5,5,10)
@@ -157,40 +158,82 @@ def peak_the_flux():
     yield from peak_bpm_y(-2,2,4)
     
 def move_energy(e_,ugap_,zpz_,crl_th_, ignoreCRL= False, ignoreZPZ = False):
-    yield from bps.sleep(1)
+    
+    
+    """ Function to change energy knowing ugap, 
+    crl_theta (optional) and zone plate focus (optional)"""
             
     #tuning the scanning pv on to dispable c bpms
     caput('XF:03IDC-ES{Status}ScanRunning-I', 1)  
 
+    #move mono e
     yield from bps.mov(e,e_)
     yield from bps.sleep(1)
+    
+    #move ugap
     yield from bps.mov(ugap, ugap_)
     yield from bps.sleep(2)
+    
+    #move crl_theta, if true
     if not ignoreZPZ: yield from mov_zpz1(zpz_)
     yield from bps.sleep(1)
+    
+    #move zpz1, if true
     if not ignoreCRL: yield from bps.mov(crl.p,crl_th_)
     yield from bps.sleep(1)
+    
+    #scanning pv off to dispable c bpms
+    caput('XF:03IDC-ES{Status}ScanRunning-I', 0) 
     
 
 def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,highEStart = True,
                     xcen = 0, ycen = 0, alignElem = 'Fe', alignX = (-2,2,100,0.05, 0.7),
-                    alignY = (-2,2,100,0.05, 0.7), pdfElem = ['Fe','Zn'],
+                    alignY = (-2,2,100,0.05, 0.7), pdfElem = ('Fe','Cr'),
                     doScan = True, moveOptics = True, doAlignScan = True, 
                     pdfLog = True, foilCalibScan = False, peakBeam = True,
                     saveLogFolder = '/home/xf03id/Downloads'):
+                    
+                    
+    """ 
+    Function to run XANES Scan. 
+    
+    Input: 1. Paramater file containg low and high energy optics positions, 
+           2. scan range, step size and dwell time
+           3. Options for reginstration scans
+           4. Options to save XRFs to pdf after each scan
+           5. Options to do foil calibration scans
+           6. Save important information in CSV format to selected forlder 
+           7. The user can turn on anf off alignemnt scans
+    
+    
+    """                
+                    
+                    
 
     e_list = generateEList(XANESParam = elemParam, highEStart =  highEStart)
 
-    e_list['E Readback'] = np.nan #add real energy to the dataframe
-    e_list['Scan ID'] = np.nan #add scan id to the dataframe
+    #add real energy to the dataframe
+    e_list['E Readback'] = np.nan 
+    
+    #add scan id to the dataframe
+    e_list['Scan ID'] = np.nan 
+    
+    #recoed time
     e_list['TimeStamp'] = pd.Timestamp.now()
-    e_list['IC3'] = sclr2_ch4.get() #Ic values are useful for calibration
-    e_list['IC0'] = sclr2_ch2.get() #Ic values are useful for calibration   
-    e_list['Peak Flux'] = False
+    
+    #Ic values are useful for calibration
+    e_list['IC3'] = sclr2_ch4.get() 
+    e_list['IC0'] = sclr2_ch2.get()
+    e_list['IC3_before_peak'] = sclr2_ch2.get()
+    
+    
+    #record if peak beam happed before the scan   
+    e_list['Peak Flux'] = False 
     
     print(e_list.head())
     yield from bps.sleep(10)#time to quit if anything wrong
     
+    #get intal ic1 value
     ic_0 = sclr2_ch2.get()
     
     #opening fast shutter for initial ic3 reading
@@ -212,6 +255,7 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
 
         yield from check_for_beam_dump(threshold=0.1*ic_0)
         
+        #unwrap df row for energy change
         e_t, ugap_t, crl_t, zpz_t, *others = e_list.iloc[i]
         
         if moveOptics: 
@@ -220,15 +264,23 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
                                    ignoreZPZ = foilCalibScan)
 
         else: pass
-        caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',1) #opening fast shutter
-        yield from bps.sleep(2)
-        if sclr2_ch4.get()<ic_3_init*0.9:
         
+        #open fast shutter to check if ic3 reading is satistactory
+        caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',1) 
+        yield from bps.sleep(2)
+        
+        #get ic3 value before peaking, e change
+        ic3_ = sclr2_ch4.get()
+        
+        # if ic3 value is below the threshold, peak the beam
+        if ic3_ < ic_3_init*0.9:
+            
             if peakBeam: yield from peak_the_flux()
-            fluxPeaked = True
+            fluxPeaked = True # for df record
         else:
             fluxPeaked = False
         
+        #for df
         ic_3 = sclr2_ch4.get()
         ic_0 = sclr2_ch2.get()
 
@@ -268,7 +320,7 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
 
         if dets == dets_fs: #for fast xanes scan, no transmission (merlin) in the list
 
-            if doScan: yield from fly2d(dets, mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t, dead_time=0.001) 
+            if doScan: yield from fly2d(dets, mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t, dead_time=0.002) 
             #dead_time = 0.001 for 0.015 dwell
 
         else:
@@ -298,6 +350,7 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
         e_list['IC3'].at[i] = ic_3 #Ic values are useful for calibration
         e_list['IC0'].at[i] = ic_0 #Ic values are useful for calibration
         e_list['Peak Flux'].at[i] = fluxPeaked # recoed if peakflux was excecuted
+        e_list['IC3_before_peak'].at[i] = ic3_ #ic3 right after e change, no peaking
         fluxPeaked = False #reset
         
         if pdfLog:

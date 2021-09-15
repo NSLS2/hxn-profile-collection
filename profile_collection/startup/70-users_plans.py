@@ -126,11 +126,11 @@ def go_det(det):
 
     if det == 'merlin':
         #while zposa.zposax.position<20:
-        yield from bps.mov(diff.x, -4.62, diff.y1,-11.8, diff.y2, -11.8, diff.z, -50, diff.cz, -24.7)
+        yield from bps.mov(diff.x, -1.12, diff.y1,-10.7, diff.y2, -10.7, diff.z, -50, diff.cz, -24.7)
         #yield from bps.mov(diff.y1,-3.2)
         #yield from bps.mov(diff.y2,-3.2)
     elif det == 'cam11':
-        yield from bps.mov(diff.x,219.077, diff.y1, 22.967, diff.y2, 22.967,diff.z, -50, diff.cz, -24.7)
+        yield from bps.mov(diff.x,222.777, diff.y1, 22.917, diff.y2, 22.917,diff.z, -50, diff.cz, -24.7)
         #yield from bps.mov(diff.y1,22.65)
         #yield from bps.mov(diff.y2,22.65)
     elif det =='telescope':

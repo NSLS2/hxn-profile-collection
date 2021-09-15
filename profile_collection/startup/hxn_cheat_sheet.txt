@@ -1,0 +1,55 @@
+
+****Remote log in steps***
+
+ssh into your account
+$ xauth list
+Copy the last printed line
+$ dzdo -u xf03id -s ; trigger password and DUO
+$ xauth add <copy the last line here>
+For example:$ xauth add xf03idc-ws2/unix:14  MIT-MAGIC-COOKIE-1  1d27fe88cb52bc550d0d336822f851c1
+through NX (No Machine);"
+nxcloud01.nsls2.bnl.gov" --> "ssh -YC account@ssh.nsls2.bnl.gov" and then "ssh -YC account@xf03idc-ws1" , followed by xauth steps above
+
+****Data Collection***
+
+BlueSky terminal; busi (should be as logged in as xf03id for remote)
+HXN BlueSky GUI; run-hxn-gui (should be logged in as xf03id for remote) 
+
+****Data Analysis (use Srv5)***
+
+pyxrf command; run-pyxrf (if not as xf03id "/GPFS/XF03ID1/shared/scripts/run-pyxrf")
+pyxrf batch gui; run-pyxrf-batch (if not as xf03id "/GPFS/XF03ID1/shared/scripts/run-pyxrf-batch")
+pyxrf ipython terminal; run-pyxrftools (if not as xf03id "/GPFS/XF03ID1/shared/scripts/run-pyxrftools" and then import pyxrf functions via 'from pyxrf.api import *)
+DPC; run-dpc (if not as xf03id "/GPFS/XF03ID1/shared/scripts/run-dpc")
+Ptychography; run-ptycho , only on srv5 and srv2
+NSLS-II MIDAS; run-midas (if not as xf03id "/GPFS/XF03ID1/shared/scripts/run-midas")
+
+****Useful Directories***
+
+User data directory @ /GPFS/XF03ID1/users/
+BSUI start up files @ /GPFS/XF03ID1/home/xf03id/startup
+Commands directory @ /GPFS/XF03ID1/shared/scripts
+User Macros @ /GPFS/XF03ID1/home/xf03id/user_macros
+
+***Useful GitHub Links***
+
+Startup Files @ https://github.com/NSLS-II-HXN/ipython_ophyd/tree/master/profile_collection/startup
+PyXRF @ https://github.com/NSLS-II/PyXRF
+DPC @ https://github.com/NSLS-II-HXN/dpc
+Ptycho @ https://github.com/NSLS-II/ptycho_gui
+
+pyxrf_batch _location: /GPFS/XF03ID1/home/xf03id/user_macros/HXN_GUI/Analysis/
+hxn_gui_location: /GPFS/XF03ID1/home/xf03id/user_macros/HXN_GUI/Scan/
+midas_location: /GPFS/XF03ID1/home/xf03id/user_macros/NSLS-II-MIDAS
+
+
+
+
+
+
+
+
+
+
+
+
