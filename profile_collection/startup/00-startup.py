@@ -27,7 +27,7 @@ os.environ["PPMAC_HOST"] = "xf03idc-ppmac1"
 
 
 kafka_publisher = Publisher(
-        topic="hxn.bluesky.runengine.documents",
+        topic="hxn.bluesky.datum.documents",
         bootstrap_servers=os.environ['BLUESKY_KAFKA_BOOTSTRAP_SERVERS'],
         key=str(uuid.uuid4()),
         producer_config={
