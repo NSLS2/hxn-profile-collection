@@ -53,34 +53,9 @@ _fs_config_db1 = {'host': db1_addr,
                   'port': 27017,
                   'database': 'filestore-2'}
 
-# DB2
-
-#db2_addr = 'xf03id1-mdb03'
-
-#db2_name = 'mdb03-1'
-#db2_datastore = 'datastore-1'
-#db2_filestore = 'filestore-1'
-
-#_mds_config_db2 = {'host': db2_addr,
-#                   'port': 27017,
-#                   'database': db2_datastore,
-#                   'timezone': 'US/Eastern'}
-
-#_fs_config_db2 = {'host': db2_addr,
-#                  'port': 27017,
-#                 'database': db2_filestore}
-
-#mongo_client = MongoClient(db2_addr, 27017)
-
 # Benchmark file
-
 f_benchmark = open("/home/xf03id/benchmark.out", "a+")
-
-# Composite Repository
-
 datum_counts = {}
-
-#fs_db2 = mongo_client[db2_filestore]
 
 def sanitize_np(val):
     "Convert any numpy objects into built-in Python types."
@@ -149,32 +124,11 @@ class CompositeRegistry(Registry):
                               path_semantics='posix'):
 
         uid = str(uuid.uuid4())
-
         datum_counts[uid] = 0
-
         method_name = "register_resource"
-
-        # db2 database
-
-        #col_db2 = fs_db2['resource']
-
-        #t1 = datetime.now();
-        #ret_db2 = self._register_resource(col_db2, uid, spec, root, rpath,
-        #                                    rkwargs, path_semantics=path_semantics)
-        #t2 = datetime.now()
-
-        #_write_to_file(db2_name, method_name, t1, t2);
-
-        # db1 database
-
         col = self._resource_col
-
-        #t1 = datetime.now();
         ret = self._register_resource(col, uid, spec, root, rpath,
                                       rkwargs, path_semantics=path_semantics)
-        #t2 = datetime.now()
-
-        #_write_to_file(db1_name, method_name, t1, t2);
 
         return ret
 
@@ -233,22 +187,12 @@ class CompositeRegistry(Registry):
         if validate:
             raise RuntimeError('validate not implemented yet')
 
-        # ts =  str(datetime.now().timestamp())
-        # datum_uid = ts + '-' + str(uuid.uuid4())
-
         res_uid = resource_uid
         datum_count = datum_counts[res_uid]
 
         datum_uid = res_uid + '/' + str(datum_count)
         datum_counts[res_uid] = datum_count + 1
 
-        # db2 database
-
-        #col_db2 = fs_db2['datum']
-        #datum_db2 = self._api.insert_datum(col_db2, resource_uid, datum_uid, datum_kwargs, {}, None)
-        #ret_db2 = datum_db2['datum_id']
-
-        # db1 database
         col = self._datum_col
         datum = self.insert_datum(col, resource_uid, datum_uid, datum_kwargs, {}, None)
         ret = datum['datum_id']
@@ -286,9 +230,6 @@ class CompositeRegistry(Registry):
 
         bulk_res = bulk.execute()
 
-        # f_benchmark.write(" _bulk_insert_datum: bulk_res: {0}  \n".format(bulk_res))
-        # f_benchmark.flush()
-
         return d_uids
 
     def bulk_register_datum_table(self, resource_uid, dkwargs_table, validate=False):
@@ -299,9 +240,6 @@ class CompositeRegistry(Registry):
         if validate:
             raise RuntimeError('validate not implemented yet')
 
-        # ts =  str(datetime.now().timestamp())
-        # d_ids = [ts + '-' + str(uuid.uuid4()) for j in range(len(dkwargs_table))]
-
         d_ids = [res_uid + '/' + str(datum_count+j) for j in range(len(dkwargs_table))]
         datum_counts[res_uid] = datum_count + len(dkwargs_table)
 
@@ -310,41 +248,15 @@ class CompositeRegistry(Registry):
 
         method_name = "bulk_register_datum_table"
 
-        # db2 database
-
-        #col_db2 = fs_db2['datum']
-
-        #t1 = datetime.now();
-        #self._bulk_insert_datum(col_db2, resource_uid, d_ids, datum_kwarg_list)
-        #t2 = datetime.now()
-
-        #_write_to_file(db2_name, method_name, t1, t2);
-
-        # db1 database
-
-        #t1 = datetime.now()
         self._bulk_insert_datum(self._datum_col, resource_uid, d_ids, datum_kwarg_list)
-        #t2 = datetime.now()
-
-        #_write_to_file(db1_name, method_name, t1, t2);
-
-        ret = d_ids
         return ret
 
-# Broker 1
 
 mds_db1 = MDS(_mds_config_db1, auth=False)
 db1 = Broker(mds_db1, CompositeRegistry(_fs_config_db1))
 
-# Broker 2
-
-#mds_db2 = MDS(_mds_config_db2, auth=False)
-#db2 = Broker(mds_db2, CompositeRegistry(_fs_config_db2))
-
-
-# wrapper for two databases
-
 class CompositeBroker(Broker):
+    """wrapper for two databases"""
 
     # databroker.headersource.MDSROTemplate
     def _bulk_insert_events(self, event_col, descriptor, events, validate, ts):
@@ -403,41 +315,21 @@ class CompositeBroker(Broker):
 
         ts =  str(datetime.now().timestamp())
 
-        #t1 = datetime.now();
-        #if name in {'bulk_events'}:
-        #    ret1 = self._insert(name, doc, db2.mds._event_col, ts)
-        #else:
-        #    ret1 = db2.insert(name, doc)
-
-        #t2 = datetime.now()
-
-        #_write_to_file(db2_name, name, t1, t2);
-
-        #t3 = datetime.now();
         if name in {'bulk_events'}:
             ret2 = self._insert(name, doc, db1.mds._event_col, ts)
         else:
             ret2 = db1.insert(name, doc)
-        #t4 = datetime.now()
-
-        #_write_to_file(db1_name, name, t3, t4);
-
         return ret2
 
 db = CompositeBroker(mds_db1, CompositeRegistry(_fs_config_db1))
-#db = Broker.named('hxn')
 
 from hxntools.handlers import register as _hxn_register_handlers
-# _hxn_register_handlers(db_new)
-# _hxn_register_handlers(db_old)
 _hxn_register_handlers(db)
 del _hxn_register_handlers
 # do the rest of the standard configuration
 from IPython import get_ipython
 from nslsii import configure_base, configure_olog
 
-# configure_base(get_ipython().user_ns, db_new, bec=False)
-#configure_base(get_ipython().user_ns, db, bec=False, ipython_logging=False)
 configure_base(get_ipython().user_ns, db, bec=False)
 # configure_olog(get_ipython().user_ns)
 
