@@ -249,7 +249,7 @@ class CompositeRegistry(Registry):
         method_name = "bulk_register_datum_table"
 
         self._bulk_insert_datum(self._datum_col, resource_uid, d_ids, datum_kwarg_list)
-        return ret
+        return d_ids
 
 
 mds_db1 = MDS(_mds_config_db1, auth=False)
@@ -363,6 +363,14 @@ uid_signal = EpicsSignal('XF:03IDC-ES{BS-Scan}UID-I', name='uid_signal')
 uid_broadcaster = UidPublish(uid_signal)
 scan_number_printer = HxnScanNumberPrinter()
 hxn_scan_status = HxnScanStatus('XF:03IDC-ES{Status}ScanRunning-I')
+
+
+def flush_on_stop_doc(name, doc):
+    if name=='stop':
+        kafka_publisher.flush()
+
+# This is needed to prevent the local buffer from filling.
+RE.subscribe('stop', flush_on_stop_doc)
 
 # Pass on only start/stop documents to a few subscriptions
 for _event in ('start', 'stop'):

@@ -369,6 +369,9 @@ def zp_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem='
 
 
 def pos2angle(col,row):
+
+    # old Dexelar calibration
+    '''
     pix = 74.8
     R = 2.315e5
     th1 = 0.7617
@@ -376,6 +379,16 @@ def pos2angle(col,row):
     th2 = 0.1796
     phi2 = 2.5335
     phi3 = -0.1246
+    alpha = 8.5*np.pi/180
+    '''
+    # new Dexelar calibration at position 0
+    pix = 74.8
+    R = 2.6244e5
+    th1 = 0.7685
+    phi1 = 3.0238
+    th2 = 0.1398
+    phi2 = 2.9292
+    phi3 = -0.1486
     alpha = 8.5*np.pi/180
 
     det_orig = R*np.array([np.sin(th1)*np.cos(phi1),np.sin(th1)*np.sin(phi1),np.cos(th1)])
@@ -644,7 +657,7 @@ def check_info(sid):
     det_list = h.start['detectors']
     exp_time = h.start['exposure_time']
     print('sid = {}'.format(sid), 'uid = ', scan_uid)
-    print('start time = ', scan_time, 'end time = ', end_time) 
+    print('start time = ', scan_time, 'end time = ', end_time)
     if num_motors == 1:
         mot1 = scan_motors[0]
         s1 = h.start['scan_start1']
