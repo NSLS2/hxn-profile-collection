@@ -42,15 +42,15 @@ CrXANES= {'high_e':6.03, 'low_e':5.97,
 MnXANES= {'high_e':6.6, 'low_e':6.5, 
           'high_e_ugap':7142, 'low_e_ugap':7057,
           'high_e_crl':-12, 'low_e_crl':-12,'crl_comb':(8,6),
-          'high_e_zpz1':68.31, 'zpz1_slope':-5.9,
+          'high_e_zpz1':68.3165, 'zpz1_slope':-5.9,
           'energy':[(6.520,6.530,0.005),(6.531,6.580,0.001),(6.585,6.601,0.005)],
           'mirrorCoating': 'Si'}
                
 FeXANES= {'high_e':7.2, 'low_e':7.1, 
-          'high_e_ugap':7665, 'low_e_ugap':7578,
-          'high_e_crl':4, 'low_e_crl':-5,'crl_comb':(12),
-          'high_e_zpz1':65.51, 'zpz1_slope':-5.9,
-          'energy':[(7.08,7.11,0.005),(7.111,7.150,0.001),(7.152,7.170,0.002),(7.175,7.20,0.005)],
+          'high_e_ugap':7670, 'low_e_ugap':7583,
+          'high_e_crl':4, 'low_e_crl':-6,'crl_comb':(12),
+          'high_e_zpz1':65.49, 'zpz1_slope':-5.9,
+          'energy':[(7.085,7.11,0.005),(7.111,7.150,0.001),(7.152,7.170,0.0025),(7.175,7.19,0.005)],
           'mirrorCoating': 'Si or Rh'}
 
 ZnXANES= {'high_e':9.7, 'low_e':9.6, 

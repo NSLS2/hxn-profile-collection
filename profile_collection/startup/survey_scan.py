@@ -173,7 +173,7 @@ def onclick_fermat(event):
     display_frame(index)
 
 
-def show_diff_data(sid,element,det_name='merlin2',fermat_flag=False, save_flag=False,zp_flag=False):
+def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=False,zp_flag=False):
 
     #scan_num = sys.argv[1]
     #sid = np.int(scan_num)
@@ -181,8 +181,8 @@ def show_diff_data(sid,element,det_name='merlin2',fermat_flag=False, save_flag=F
     elem = element
     global scan_num
     #scan_num = np.str(sid)
-    scan_id, df = _load_scan(sid, fill_events=False)
-    scan_num = np.str(scan_id)
+    #scan_id, df = _load_scan(sid, fill_events=False)
+    scan_num = np.str(sid)
     df = db.get_table(db[sid],fill=False)
     num_frame, count = np.shape(df)
     hdr = db[sid]
@@ -192,11 +192,12 @@ def show_diff_data(sid,element,det_name='merlin2',fermat_flag=False, save_flag=F
     ic = np.asfarray(df['sclr1_ch4'])
     #ic_0 = 153000
 
-    images = db.get_images(db[sid],name=det_name)
-
+    #images = db.get_images(db[sid],name=det_name)
+    images = np.array(np.squeeze(list(hdr.data(det_name))))
+    print(np.shape(images))
     #mask = 1-io.imread('/data/users/2020Q3/Huang_2020Q3/NPO_mask.tif')
-    mm = np.load('/data/users/2021Q2/Huang_2021Q2/TMA_LCO_60C/mask.npy')
-    mm2 = np.load('/data/users/2021Q2/Huang_2021Q2/TMA_LCO_pristine/mask2.npy')
+    #mm = np.load('/data/users/2021Q2/Huang_2021Q2/TMA_LCO_60C/mask.npy')
+    #mm2 = np.load('/data/users/2021Q2/Huang_2021Q2/TMA_LCO_pristine/mask2.npy')
     #index = np.where(mask == 1)
     #mx = index[0]
     #my = index[1]
@@ -210,13 +211,14 @@ def show_diff_data(sid,element,det_name='merlin2',fermat_flag=False, save_flag=F
     for i in range(num_frame):
         if np.mod(i,500) ==0:
             print('load frame ',i, '/', num_frame)
-        t = np.flipud(images.get_frame(i)[0]).T
+        #t = np.flipud(images.get_frame(i)[0]).T
+        t = np.flipud(images[i,:,:]).T
         #t = t * mask
         t = t / ic[i]
-        t *= (1-mm)
+        #t *= (1-mm)
         #t *= (1-mm2)
-        #t = np.flipud(t)
-        t[20,187] = 0
+        t = np.flipud(t)
+        #t[20,187] = 0
         #t *= (1-mm3)
         #t *= (1-mm3)
         #t *= (1-mm4)
@@ -378,8 +380,8 @@ def show_diff_data(sid,element,det_name='merlin2',fermat_flag=False, save_flag=F
     plt.show()
 
     if save_flag:
-        io.imsave('/data/users/2021Q2/Huang_2021Q2/TMA_LCO_60C/rock_'+scan_num+'_roi.tif',roi.astype(np.float32))
-        io.imsave('/data/users/2021Q2/Huang_2021Q2/TMA_LCO_60C/rock_'+scan_num+'_xrf.tif',xrf.astype(np.float32))
-        io.imsave('/data/users/2021Q2/Huang_2021Q2/TMA_LCO_60C/rock_'+scan_num+'_diff_data.tif',diff_array.astype(np.float32))
+        io.imsave('/data/users/2021Q3/Spence_2021Q3/MJ_t_P26_bot_111/rock_'+scan_num+'_roi.tif',roi.astype(np.float32))
+        io.imsave('/data/users/2021Q3/Spence_2021Q3/MJ_t_P26_bot_111/rock_'+scan_num+'_xrf.tif',xrf.astype(np.float32))
+        io.imsave('/data/users/2021Q3/Spence_2021Q3/MJ_t_P26_bot_111/rock_'+scan_num+'_diff_data.tif',diff_array.astype(np.float32))
 
 

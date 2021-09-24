@@ -1046,7 +1046,7 @@ def zp_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
         #'''
         if np.abs(angle) <= 45.:
             #yield from bps.mov(zpssx,0)
-            yield from fly1d([fs, zebra, sclr1, xspress3], zpssx, -5, 5, 100, 0.02)
+            yield from fly1d([fs, zebra, sclr1, xspress3], zpssx, -8, 8, 100, 0.02)
             yield from bps.sleep(1)
             xc = return_line_center(-1,elem,0.2)
             #yield from bps.mov(zps.zpssx,xc)
@@ -1338,15 +1338,20 @@ def zp_th_fly2d(det,th_start, th_end, num, mot1, x_start, x_end, x_num,mot2, y_s
 
         #yield from bps.mov(zpssx,0)
         #yield from bps.mov(zpssy,0)
-
-        yield from fly1d(dets_fs,zpssx,-5,5,100,0.02)
+        #'''
+        yield from fly1d(dets_fs,zpssx,-8,8,100,0.02)
         xc = return_line_center(-1,elem,threshold=0.1)
         yield from bps.mov(zpssx,xc)
         #yield from bps.movr(smarx,xc/1000)
         
-        yield from fly1d(dets_fs,zpssy,-5,5,100,0.02)
+        yield from fly1d(dets_fs,zpssy,-6,6,100,0.02)
         yc = return_line_center(-1,elem,threshold=0.1)
         yield from bps.mov(zpssy,yc)
+        #'''
+        #yield from fly2d(dets_fs,zpssx,-3,3,30,zpssy,-3,3,30,0.03)
+        #cmx,cmy = return_center_of_mass(-1,elem)
+        #yield from bps.mov(zpssx,cmx)
+        #yield from bps.mov(zpssy,cmy)
         #edge,fwhm = erf_fit(-1,elem)
         #yield from bps.movr(smary,edge/1000)
         #yield from bps.movr(smary,0.0035)
@@ -1394,7 +1399,7 @@ def zp_th_fly2d(det,th_start, th_end, num, mot1, x_start, x_end, x_num,mot2, y_s
         yield from bps.movr(smary,yc*0.001)
         yield from bps.movr(smary,y_offset)
         '''
-        yield from fly2d(det, mot1, x_start, x_end, x_num, mot2, y_start, y_end, y_num, sec, dead_time=0.004, return_speed=100)
+        yield from fly2d(dets1, zpssx, x_start, x_end, x_num, zpssy, y_start, y_end, y_num, sec, dead_time=0.004, return_speed=100)
 
 
         yield from bps.sleep(1)
