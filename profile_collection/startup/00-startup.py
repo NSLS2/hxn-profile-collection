@@ -1,3 +1,4 @@
+import certifi
 import warnings
 import pandas as pd
 import ophyd
@@ -34,7 +35,9 @@ kafka_publisher = Publisher(
                 "acks": 1,
                 "message.timeout.ms": 3000,
                 "queue.buffering.max.kbytes": 10 * 1048576,
-                "compression.codec": "snappy"
+                "compression.codec": "snappy",
+                "security.protocol": "SSL",
+                "ssl.ca.location": certifi.where()
             },
         flush_on_stop_doc=True,
     )
@@ -132,10 +135,9 @@ class CompositeRegistry(Registry):
 
         return ret
 
-    def insert_datum(self, col, resource, datum_id, datum_kwargs, known_spec,
+    def _insert_datum(self, col, resource, datum_id, datum_kwargs, known_spec,
                      resource_col, ignore_duplicate_error=False,
                      duplicate_exc=None):
-
         if ignore_duplicate_error:
             assert duplicate_exc is not None
         if duplicate_exc is None:
@@ -194,7 +196,7 @@ class CompositeRegistry(Registry):
         datum_counts[res_uid] = datum_count + 1
 
         col = self._datum_col
-        datum = self.insert_datum(col, resource_uid, datum_uid, datum_kwargs, {}, None)
+        datum = self._insert_datum(col, resource_uid, datum_uid, datum_kwargs, {}, None)
         ret = datum['datum_id']
 
         return ret
