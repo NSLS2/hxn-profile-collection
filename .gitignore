@@ -53,6 +53,7 @@ docs/_build/
 # PyBuilder
 target/
 
+.git_bad_inner
 
 # ipython profile stuff
 
@@ -64,8 +65,7 @@ security
 *.sqlite*
 profile_default
 
-*.swo
-*.swp
+*.sw*
 profile_collection/startup/20-detectors.py.bak.write-on-gpfs-on-merlin_matt_20200219
 profile_collection/startup/20-detectors.py.write-local-on-merlin-test_matt_20200219
 *~
