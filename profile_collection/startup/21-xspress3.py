@@ -56,7 +56,7 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
 
         # clear any existing callback
         if self._dispatch_cid is not None:
-            self.hdf5.num_captured.clear_sub(self._dispatch_cid)
+            self.hdf5.num_captured.unsubscribe(self._dispatch_cid)
             self._dispatch_cid = None
 
 
@@ -67,7 +67,7 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
             # mode until after we are staged
             if self.mode_settings.scan_type.get() != 'step':
                 if self._dispatch_cid is not None:
-                    self.hdf5.num_captured.clear_sub(self._dispatch_cid)
+                    self.hdf5.num_captured.unsubscribe(self._dispatch_cid)
                     self._dispatch_cid = None
                 return
             # grab the time and the previous value from the callback payload
@@ -78,7 +78,6 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
                 if sn.startswith('channel') and '.' not in sn:
                     ch = getattr(self, sn)
                     self.dispatch(ch.name, trigger_time)
-                    #print(ch.name, trigger_time, self._abs_trigger_count)
 
             self._abs_trigger_count = value
             self._spec_saved.set()
@@ -96,6 +95,9 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
         if self.mode_settings.scan_type.get() != 'step':
             sts._finished()
             return sts
+
+        s = self.trigger_internal()  # IS IT CORRECT WAY TO TRIGGER ACQUISITION?
+
         self._spec_saved.clear()
 
         def monitor():
@@ -105,14 +107,14 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
         # hold a ref for gc reasons
         self._th = threading.Thread(target=monitor)
         self._th.start()
-        return sts
 
+        return sts
 
     def unstage(self, *args, **kwargs):
 
         try:
             if self._dispatch_cid is not None:
-                self.hdf5.num_captured.clear_sub(self._dispatch_cid)
+                self.hdf5.num_captured.unsubscribe(self._dispatch_cid)
                 self._dispatch_cid = None
         finally:
             import itertools
