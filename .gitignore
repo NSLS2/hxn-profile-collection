@@ -53,8 +53,6 @@ docs/_build/
 # PyBuilder
 target/
 
-.git_bad_inner
-
 # ipython profile stuff
 
 db
