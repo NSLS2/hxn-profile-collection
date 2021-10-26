@@ -126,11 +126,11 @@ def go_det(det):
 
     if det == 'merlin':
         #while zposa.zposax.position<20:
-        yield from bps.mov(diff.x, -1.12, diff.y1,-10.7, diff.y2, -10.7, diff.z, -50, diff.cz, -24.7)
+        yield from bps.mov(diff.x, -1.12, diff.y1,-10.2, diff.y2, -10.2, diff.z, -50, diff.cz, -24.7)
         #yield from bps.mov(diff.y1,-3.2)
         #yield from bps.mov(diff.y2,-3.2)
     elif det == 'cam11':
-        yield from bps.mov(diff.x,222.777, diff.y1, 22.917, diff.y2, 22.917,diff.z, -50, diff.cz, -24.7)
+        yield from bps.mov(diff.x,222.817, diff.y1, 22.917, diff.y2, 22.917,diff.z, -50, diff.cz, -24.7)
         #yield from bps.mov(diff.y1,22.65)
         #yield from bps.mov(diff.y2,22.65)
     elif det =='telescope':
@@ -1344,9 +1344,9 @@ def zp_th_fly2d(det,th_start, th_end, num, mot1, x_start, x_end, x_num,mot2, y_s
         yield from bps.mov(zpssx,xc)
         #yield from bps.movr(smarx,xc/1000)
         
-        yield from fly1d(dets_fs,zpssy,-6,6,100,0.02)
-        yc = return_line_center(-1,elem,threshold=0.1)
-        yield from bps.mov(zpssy,yc)
+        #yield from fly1d(dets_fs,zpssy,-8,8,100,0.02)
+        #yc = return_line_center(-1,elem,threshold=0.1)
+        #yield from bps.mov(zpssy,yc)
         #'''
         #yield from fly2d(dets_fs,zpssx,-3,3,30,zpssy,-3,3,30,0.03)
         #cmx,cmy = return_center_of_mass(-1,elem)

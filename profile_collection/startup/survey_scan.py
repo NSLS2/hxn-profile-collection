@@ -250,8 +250,8 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
         diff_array[:,:,i] = t #* mask
 
 
-    #diff_array[193,107,:] = 0
-    #diff_array[25,186,:] = 0
+    diff_array[31,182,:] = 0
+    diff_array[296,281,:] = 0
     #diff_array[91,221,:] = 0
     #diff_array[440,381,:] = 0
 
@@ -380,8 +380,8 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     plt.show()
 
     if save_flag:
-        io.imsave('/data/users/2021Q3/Spence_2021Q3/MJ_t_P26_bot_111/rock_'+scan_num+'_roi.tif',roi.astype(np.float32))
-        io.imsave('/data/users/2021Q3/Spence_2021Q3/MJ_t_P26_bot_111/rock_'+scan_num+'_xrf.tif',xrf.astype(np.float32))
-        io.imsave('/data/users/2021Q3/Spence_2021Q3/MJ_t_P26_bot_111/rock_'+scan_num+'_diff_data.tif',diff_array.astype(np.float32))
+        io.imsave('/data/users/2021Q3/Huang_2021Q3/2.8V_diff_new/rock_'+scan_num+'_roi.tif',roi.astype(np.float32))
+        io.imsave('/data/users/2021Q3/Huang_2021Q3/2.8V_diff_new/rock_'+scan_num+'_xrf.tif',xrf.astype(np.float32))
+        io.imsave('/data/users/2021Q3/Huang_2021Q3/2.8V_diff_new/rock_'+scan_num+'_diff_data.tif',diff_array.astype(np.float32))
 
 
