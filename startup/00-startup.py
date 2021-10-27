@@ -6,7 +6,7 @@ import ophyd
 # Set up a Broker.
 # TODO clean this up
 from bluesky_kafka import Publisher
-from databroker import Broker
+from databroker.v0 import Broker
 from databroker.headersource.mongo import MDS
 from databroker.assets.mongo import Registry
 
