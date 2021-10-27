@@ -261,12 +261,14 @@ class CompositeRegistry(Registry):
 
 
 mds_db1 = MDS(_mds_config_db1, auth=False)
-cr1 = CompositeRegistry(_fs_config_db1)
-db1 = Broker(mds_db1, cr1)
+db1 = Broker(mds_db1, CompositeRegistry(_fs_config_db1))
 
 
+<<<<<<< HEAD
 # wrapper for two databases
 >>>>>>> 8502195... WIP: Fixes to work with collection-2020-2.0rc8 conda env
+=======
+>>>>>>> 34819c8... Sync changes with master (manually)
 class CompositeBroker(Broker):
     """wrapper for two databases"""
 
