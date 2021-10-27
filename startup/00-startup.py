@@ -3,6 +3,9 @@ import warnings
 import pandas as pd
 import ophyd
 
+from ophyd.signal import EpicsSignalBase
+EpicsSignalBase.set_defaults(timeout=10, connection_timeout=10)
+
 # Set up a Broker.
 # TODO clean this up
 from bluesky_kafka import Publisher
