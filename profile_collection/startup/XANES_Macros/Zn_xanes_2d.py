@@ -1,35 +1,38 @@
 
-'''
-pre = np.linspace(9.634,9.655,8)
-XANES = np.linspace(9.656,9.700,45)
-post = np.linspace(9.705,9.735,6)
-
-'''
-#pre = np.linspace(9.645,9.655,11)
-XANES = np.arange(9.645,9.7,.0005)
-#XANES2 = np.linspace(9.685,9.700,16)
-#post = np.linspace(9.705,9.755,11)
+import numpy as np
+from datetime import datetime
 
 
-energies = XANES
-#energies = np.concatenate([pre,XANES])
-#energies = np.concatenate([pre,XANES1,XANES2])
 
-#energies = np.asarray([7.093,7.13,7.173]) #for test only
+pre = np.linspace(9.645,9.66,4)
+XANES1 = np.arange(9.661,9.7,.001)
+post = np.linspace(9.705,9.725,5)
+
+calib = np.arange(9.660,9.700,0.0005)
+
+energies = np.concatenate([pre,XANES1,post])
+
+#energies = np.array([7.08,7.113,7.121,7.132,7.136,7.18])
+
+#energies = calib
+
+user_folder = '/data/users/2021Q1/Satish_2021Q1/' #This is to add scan details in .txt format to your folder
+
+
 high_e = 9.7
-low_e = 9.645
-high_e_ugap = 6475
-low_e_ugap = 6448
+low_e = 9.6
+high_e_ugap = 6485
+low_e_ugap = 6435
 ugap_slope = (high_e_ugap - low_e_ugap)/(high_e-low_e)
 ugap_list = high_e_ugap + (energies - high_e)*ugap_slope
 
 
-high_e_crl= 8  #22+5
+high_e_crl= 5
 low_e_crl = 2
 crl_slope = (high_e_crl - low_e_crl)/(high_e-low_e)
 crl_list = high_e_crl + (energies - high_e)*crl_slope
 
-zpz1_ref = -18.23
+zpz1_ref = -24.54
 zpz1_slope = -5.9
 zpz1_list = zpz1_ref + (energies - high_e)*zpz1_slope
 
@@ -37,78 +40,97 @@ e_list = np.column_stack((energies,ugap_list,zpz1_list,crl_list))
 #e_list = e_list[::-1]
 
 
-def zp_list_xanes2d(e_list,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t):
-    
+def zp_list_xanes2d(e_list,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t):
+
     realE_list = []
     scanid_list = []
 
-    ic_0 = sclr2_ch4.get()
+    ic_0 = sclr2_ch2.get()
+
+    caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',1)
+    yield from bps.sleep(5)
+
+    ic_3 =  sclr2_ch4.get()
+    caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0)
+    zpssx_i = zpssx.position
+    zpssy_i = zpssy.position
+
+    xcen = 0
+    ycen = 0
+
 
     for i in range (len(e_list)):
-        '''
-        if (sclr2_ch4.get() < (0.1*ic_0)):
-            i = i-1
 
-        while (sclr2_ch4.get() < (0.1*ic_0)):
-            yield from bps.sleep(60)
-            print('IC3 is lower than 10000, waiting...')
-        '''
+        yield from bps.sleep(3)
+
+        caput('XF:03IDC-ES{Status}ScanRunning-I', 1)  #tuning the scanning pv on to dispable c bpms
 
         yield from bps.mov(e,e_list[i][0])
         yield from bps.sleep(1)
         yield from bps.mov(ugap, e_list[i][1])
-        yield from bps.sleep(1)
-        #yield from mov_zpz1(e_list[i][2])
-        yield from bps.sleep(1)
+        yield from bps.sleep(5)
+        yield from mov_zpz1(e_list[i][2])
+        yield from bps.sleep(3)
         yield from bps.mov(crl.p,e_list[i][3])
-        yield from bps.sleep(1)
+        yield from bps.sleep(3)
 
-        '''
+        caput('XF:03IDC-ES{Status}ScanRunning-I', 0)
 
-        if (sclr2_ch4.get() < (0.9*ic_0)) or i % 10 == 0:
-       
+        yield from bps.sleep(3)
 
-            yield from peak_bpm_y(-10,10,10)
-            yield from peak_bpm_x(-30,30,10)
-            yield from peak_bpm_y(-10,10,10)
+        while (sclr2_ch2.get() < (0.1*ic_0)):
+            yield from bps.sleep(60)
+            print('IC3 is lower than 10000, waiting...')
 
-        '''
-        print(e.position)
-        yield from fly2d(dets1, mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t)
-        yield from bps.sleep(1)
+        #caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',1) #opening fast shutter
 
-        '''
-        xcen, ycen  = return_center_of_mass_blurr(-1,'S',5,1)
-        if abs(xcen) < abs(x_s) and abs(ycen) < abs(y_s):
+        yield from bps.sleep(5)
 
-            yield from bps.mov(zpssx,xcen)
-            yield from bps.mov(zpssy,ycen)  
+        if  sclr2_ch2.get() < (0.9*ic_0):
+            yield from peak_bpm_y(-2,2,4)
+            yield from peak_bpm_x(-5,5,5)
+            yield from peak_bpm_y(-2,2,4)
+
+        #caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0) #closing fast shutter
+
+        yield from bps.sleep(2)
+
+        if i>100:
+            yield from fly1d(dets,zpssx,-2,2,40,0.05)
+            xcen = return_line_center(-1,'Cr',0.5)
+            yield from bps.mov(zpssx, xcen)
+            yield from fly1d(dets,zpssy,-3,3 ,60,0.05)
+            ycen = return_line_center(-1,'Cr',0.5)
+            yield from bps.mov(zpssy, ycen)
+
+
+        print(f'Current scan: {i+1}/{len(e_list)}')
+
+        if dets == dets_fs:
+
+            yield from fly2d(dets, mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t, dead_time=0.001) #dead_time = 0.001 for 0.015 dwell
 
         else:
 
-            yield from bps.mov(zpssx,0)
-            yield from bps.mov(zpssy,0)
+            yield from fly2d(dets, mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t)
+            yield from bps.sleep(1)
 
-            yield from bps.movr(smarx, (xcen*0.001))
-            yield from bps.movr(smary,(ycen*0.001))   
-        
-        '''
+        #ycen, xcen = return_center_of_mass_blurr(-1,'S')
+
+        #print(ycen,xcen)
+
         h = db[-1]
         last_sid = h.start['scan_id']
         scanid_list.append(last_sid)
         e_pos = e.position
         realE_list.append(e_pos)
 
-
+        insert_xrf_map_to_pdf(-1,'Zn')
         sid_e_list = np.column_stack([scanid_list,realE_list])
-        user_folder = '/data/users/2019Q3/Ajith_2109Q3/Myneni2019Q3/'
-        np.savetxt(os.path.join(user_folder, 'Calib_Xanes_elist_startsid_{}'.format(scanid_list[0])+'.txt'),sid_e_list,fmt = '%5f')
-        print('sid_list saved')
-        yield from bps.sleep(10)
 
-#zp_list_xanes2d(e_list,zpssx,-3,3,50,zpssy,-3,3,50,0.03)  
-#d2scan(dets2,100,e,0,0.055,ugap,0,27,0.5) 
+        np.savetxt(os.path.join(user_folder, 'Xanes_elist_startsid_{}'.format(scanid_list[0])+'.txt'),sid_e_list,fmt = '%5f')
+    np.savetxt(os.path.join(user_folder, 'elist_{}'.format(scanid_list[0])+'_to'+'_{}'.format(scanid_list[-1])+'.txt'),sid_e_list[:,1],fmt = '%5f')
+    save_page()
 
-#
-
+#zp_list_xanes2d(e_list,zpssx,-3,3,50,zpssy,-3,3,50,0.03)
 

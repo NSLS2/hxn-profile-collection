@@ -17,20 +17,20 @@ energies = np.linspace(5.98,6.03,51)
 
 #energies = np.asarray([7.093,7.13,7.173]) #for test only
 high_e = 6.03
-low_e = 5.98
-high_e_ugap = 6660
+low_e = 5.97
+high_e_ugap = 6665
 low_e_ugap = 6616
 ugap_slope = (high_e_ugap - low_e_ugap)/(high_e-low_e)
 ugap_list = high_e_ugap + (energies - high_e)*ugap_slope
 
 
-high_e_crl= 13.0 #22+5
-low_e_crl = 13.0
+high_e_crl= 12.0 #8 best theta ia 18 but motor won't stay 
+low_e_crl = 12.0
 crl_slope = (high_e_crl - low_e_crl)/(high_e-low_e)
 crl_list = high_e_crl + (energies - high_e)*crl_slope
 
-zpz1_ref = -10.2567
-zpz1_slope = -5.88
+zpz1_ref = -6.7657
+zpz1_slope = -5.9
 zpz1_list = zpz1_ref + (energies - high_e)*zpz1_slope
 
 e_list = np.column_stack((energies,ugap_list,zpz1_list,crl_list))

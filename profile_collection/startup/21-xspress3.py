@@ -6,6 +6,7 @@ from hxntools.detectors.hxn_xspress3 import HxnXspress3DetectorBase
 import threading
 from ophyd import DeviceStatus
 
+
 class HxnXspress3Detector(HxnXspress3DetectorBase):
     channel1 = Cpt(Xspress3Channel, 'C1_', channel_num=1)
     channel2 = Cpt(Xspress3Channel, 'C2_', channel_num=2)
@@ -55,7 +56,7 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
 
         # clear any existing callback
         if self._dispatch_cid is not None:
-            self.hdf5.num_captured.clear_sub(self._dispatch_cid)
+            self.hdf5.num_captured.unsubscribe(self._dispatch_cid)
             self._dispatch_cid = None
 
 
@@ -66,7 +67,7 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
             # mode until after we are staged
             if self.mode_settings.scan_type.get() != 'step':
                 if self._dispatch_cid is not None:
-                    self.hdf5.num_captured.clear_sub(self._dispatch_cid)
+                    self.hdf5.num_captured.unsubscribe(self._dispatch_cid)
                     self._dispatch_cid = None
                 return
             # grab the time and the previous value from the callback payload
@@ -77,7 +78,6 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
                 if sn.startswith('channel') and '.' not in sn:
                     ch = getattr(self, sn)
                     self.dispatch(ch.name, trigger_time)
-                    #print(ch.name, trigger_time, self._abs_trigger_count)
 
             self._abs_trigger_count = value
             self._spec_saved.set()
@@ -95,6 +95,9 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
         if self.mode_settings.scan_type.get() != 'step':
             sts._finished()
             return sts
+
+        s = self.trigger_internal()  # IS IT CORRECT WAY TO TRIGGER ACQUISITION?
+
         self._spec_saved.clear()
 
         def monitor():
@@ -104,14 +107,14 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
         # hold a ref for gc reasons
         self._th = threading.Thread(target=monitor)
         self._th.start()
-        return sts
 
+        return sts
 
     def unstage(self, *args, **kwargs):
 
         try:
             if self._dispatch_cid is not None:
-                self.hdf5.num_captured.clear_sub(self._dispatch_cid)
+                self.hdf5.num_captured.unsubscribe(self._dispatch_cid)
                 self._dispatch_cid = None
         finally:
             import itertools
@@ -153,7 +156,7 @@ energy_M_list = np.array([1646,1712,1775,1840,1907,1976,2048,2118,2191,2267,2342
 
 
 def xspress3_roi_setup():
-    elem_list = np.array(['Si','I_L','W_L','Fe','Ni','Cr','Pt_L','Pb','Mn','Co','Cu','Ti','Au_L','Zr_L', 'La_L', 'Ta_L'])
+    elem_list = np.array(['P','Si','S','Cl','Ca','K','Fe','Zn','Mn','Cu','Ni','Cr','Co','Pt_L','Pt_M','Er_L'])
     num_elem = np.size(elem_list)
     if num_elem > 16:
         num_elem = 16
@@ -264,3 +267,4 @@ def configure_xspress3(sclr):
                 attr.kind = 'config'
 
 configure_xspress3(xspress3)
+

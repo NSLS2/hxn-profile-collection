@@ -1,6 +1,5 @@
 from ophyd import (EpicsMotor, Device, Component as Cpt)
 
-
 class HxnPrototypeMicroscope(Device):
     vx = Cpt(EpicsMotor, 'XF:03IDC-ES{Proto:1-Ax:1}Mtr')
     vy = Cpt(EpicsMotor, 'XF:03IDC-ES{Proto:1-Ax:2}Mtr')
@@ -84,5 +83,4 @@ class HxnPrototypePhasePlate(Device):
 pp = HxnPrototypePhasePlate('',name='pp')
 p_pp_x = pp.pp_x
 p_pp_y = pp.pp_y
-
 
