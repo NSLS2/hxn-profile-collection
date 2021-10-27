@@ -28,9 +28,18 @@ from pymongo import MongoClient
 os.environ["PPMAC_HOST"] = "xf03idc-ppmac1"
 
 
+bootstrap_servers = os.getenv("BLUESKY_KAFKA_BOOTSTRAP_SERVERS", None)
+if bootstrap_servers is None:
+    # https://github.com/NSLS-II/nslsii/blob/b332c34813adf798c38184292d21537ef4f653bb/nslsii/__init__.py#L710-L712
+    msg = ("The 'BLUESKY_KAFKA_BOOTSTRAP_SERVERS' environment variable must "
+           "be defined as a comma-delimited list of Kafka server addresses "
+           "or hostnames and ports as a string such as "
+           "``'kafka1:9092,kafka2:9092``")
+    raise RuntimeError(msg)
+
 kafka_publisher = Publisher(
         topic="hxn.bluesky.datum.documents",
-        bootstrap_servers=os.getenv("BLUESKY_KAFKA_BOOTSTRAP_SERVERS", ""),
+        bootstrap_servers=bootstrap_servers,
         key=str(uuid.uuid4()),
         producer_config={
                 "acks": 1,
