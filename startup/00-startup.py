@@ -18,15 +18,7 @@ EpicsSignalBase.set_defaults(timeout=10, connection_timeout=10)
 # Set up a Broker.
 # TODO clean this up
 from bluesky_kafka import Publisher
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
 from databroker.v0 import Broker
-=======
-from databroker import Broker
->>>>>>> 4344afa... Sync more changes with master (manually)
-from databroker.headersource.mongo import MDS
->>>>>>> 8502195... WIP: Fixes to work with collection-2020-2.0rc8 conda env
 from databroker.assets.mongo import Registry
 from databroker.headersource.core import doc_or_uid_to_uid
 from databroker.headersource.mongo import MDS
