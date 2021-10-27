@@ -15,13 +15,22 @@ from ophyd.signal import EpicsSignalBase
 
 EpicsSignalBase.set_defaults(timeout=10, connection_timeout=10)
 
+import certifi
+import ophyd
+import pandas as pd
+import pymongo
+import six
 from ophyd.signal import EpicsSignalBase
+
 EpicsSignalBase.set_defaults(timeout=10, connection_timeout=10)
 
 # Set up a Broker.
 # TODO clean this up
 from bluesky_kafka import Publisher
+<<<<<<< HEAD
 from databroker.v0 import Broker
+=======
+>>>>>>> 023150d... Add missing imports; sort imports with VScode feature
 from databroker.assets.mongo import Registry
 from databroker.headersource.core import doc_or_uid_to_uid
 from databroker.headersource.mongo import MDS
@@ -537,6 +546,7 @@ def _epicssignal_get(self, *, as_string=None, connection_timeout=1.0, **kwargs):
     ###########################################
     # Usedf only for old ophyd 1.3.3 and older.
     from distutils.version import LooseVersion
+
     import ophyd
 
     if ophyd.__version__ < LooseVersion('1.4'):
@@ -580,7 +590,6 @@ def _epicssignal_get(self, *, as_string=None, connection_timeout=1.0, **kwargs):
 
 from ophyd import EpicsSignal, EpicsSignalRO
 from ophyd.areadetector import EpicsSignalWithRBV
-
 
 EpicsSignal.get = _epicssignal_get
 EpicsSignalRO.get = _epicssignal_get
