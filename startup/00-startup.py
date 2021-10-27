@@ -15,6 +15,9 @@ from ophyd.signal import EpicsSignalBase
 
 EpicsSignalBase.set_defaults(timeout=10, connection_timeout=10)
 
+from ophyd.signal import EpicsSignalBase
+EpicsSignalBase.set_defaults(timeout=10, connection_timeout=10)
+
 # Set up a Broker.
 # TODO clean this up
 from bluesky_kafka import Publisher
