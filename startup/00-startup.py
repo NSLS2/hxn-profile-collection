@@ -1,31 +1,30 @@
-import certifi
+import functools
+import os
+import time
+import uuid
 import warnings
-import pandas as pd
-import ophyd
+from collections import deque
+from datetime import datetime, timedelta, tzinfo
 
+import certifi
+import ophyd
+import pandas as pd
+import pymongo
+import six
 from ophyd.signal import EpicsSignalBase
+
 EpicsSignalBase.set_defaults(timeout=10, connection_timeout=10)
 
 # Set up a Broker.
 # TODO clean this up
 from bluesky_kafka import Publisher
-from databroker.v0 import Broker
-from databroker.headersource.mongo import MDS
 from databroker.assets.mongo import Registry
-
 from databroker.headersource.core import doc_or_uid_to_uid
-
-from datetime import timedelta, datetime, tzinfo
-
-import pymongo
+from databroker.headersource.mongo import MDS
+from databroker.v0 import Broker
+from jsonschema import validate as js_validate
 from pymongo import MongoClient
 
-import uuid
-from jsonschema import validate as js_validate
-import six
-from collections import deque
-
-import os
 os.environ["PPMAC_HOST"] = "xf03idc-ppmac1"
 
 
@@ -329,6 +328,7 @@ class CompositeBroker(Broker):
 db = CompositeBroker(mds_db1, CompositeRegistry(_fs_config_db1))
 
 from hxntools.handlers import register as _hxn_register_handlers
+
 _hxn_register_handlers(db)
 del _hxn_register_handlers
 # do the rest of the standard configuration
@@ -339,6 +339,7 @@ configure_base(get_ipython().user_ns, db, bec=False)
 # configure_olog(get_ipython().user_ns)
 
 from bluesky.callbacks.best_effort import BestEffortCallback
+
 bec = BestEffortCallback()
 
 # un import *
@@ -358,11 +359,11 @@ RE.md['config'] = {}
 RE.md['beamline_id'] = 'HXN'
 RE.verbose = True
 
-# set up some HXN specific callbacks
-from ophyd.callbacks import UidPublish
 from hxntools.scan_number import HxnScanNumberPrinter
 from hxntools.scan_status import HxnScanStatus
 from ophyd import EpicsSignal
+# set up some HXN specific callbacks
+from ophyd.callbacks import UidPublish
 
 uid_signal = EpicsSignal('XF:03IDC-ES{BS-Scan}UID-I', name='uid_signal')
 uid_broadcaster = UidPublish(uid_signal)
@@ -392,6 +393,7 @@ def ensure_proposal_id(md):
 
 # be nice on segfaults
 import faulthandler
+
 faulthandler.enable()
 
 # set up logging framework
@@ -421,7 +423,8 @@ pd.options.display.max_rows = None
 pd.options.display.max_columns = 10
 
 
-from bluesky.plan_stubs import  mov
+from bluesky.plan_stubs import mov
+
 # from bluesky.utils import register_transform
 
 def register_transform(RE, *, prefix='<'):
@@ -438,6 +441,7 @@ def register_transform(RE, *, prefix='<'):
         valid python syntax or an existing transform you are on your own.
     '''
     import IPython
+
     # from IPython.core.inputtransformer2 import StatelessInputTransformer
 
  #   @StatelessInputTransformer.wrap
@@ -528,6 +532,7 @@ def _epicssignal_get(self, *, as_string=None, connection_timeout=1.0, **kwargs):
     ###########################################
     # Usedf only for old ophyd 1.3.3 and older.
     from distutils.version import LooseVersion
+
     import ophyd
     if ophyd.__version__ < LooseVersion('1.4'):
         self._metadata_lock = self._lock
@@ -568,10 +573,8 @@ def _epicssignal_get(self, *, as_string=None, connection_timeout=1.0, **kwargs):
     return ret
 
 
-from ophyd import EpicsSignal
-from ophyd import EpicsSignalRO
+from ophyd import EpicsSignal, EpicsSignalRO
 from ophyd.areadetector import EpicsSignalWithRBV
-
 
 EpicsSignal.get = _epicssignal_get
 EpicsSignalRO.get = _epicssignal_get
