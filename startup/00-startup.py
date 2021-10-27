@@ -257,12 +257,6 @@ mds_db1 = MDS(_mds_config_db1, auth=False)
 cr1 = CompositeRegistry(_fs_config_db1)
 db1 = Broker(mds_db1, cr1)
 
-# Broker 2
-
-mds_db2 = MDS(_mds_config_db2, auth=False)
-cr2 = CompositeRegistry(_fs_config_db2)
-db2 = Broker(mds_db2, cr2)
-
 
 # wrapper for two databases
 class CompositeBroker(Broker):
