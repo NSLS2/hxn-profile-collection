@@ -19,8 +19,12 @@ EpicsSignalBase.set_defaults(timeout=10, connection_timeout=10)
 # TODO clean this up
 from bluesky_kafka import Publisher
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 from databroker.v0 import Broker
+=======
+from databroker import Broker
+>>>>>>> 4344afa... Sync more changes with master (manually)
 from databroker.headersource.mongo import MDS
 >>>>>>> 8502195... WIP: Fixes to work with collection-2020-2.0rc8 conda env
 from databroker.assets.mongo import Registry
@@ -264,11 +268,7 @@ mds_db1 = MDS(_mds_config_db1, auth=False)
 db1 = Broker(mds_db1, CompositeRegistry(_fs_config_db1))
 
 
-<<<<<<< HEAD
 # wrapper for two databases
->>>>>>> 8502195... WIP: Fixes to work with collection-2020-2.0rc8 conda env
-=======
->>>>>>> 34819c8... Sync changes with master (manually)
 class CompositeBroker(Broker):
     """wrapper for two databases"""
 
@@ -542,11 +542,8 @@ def _epicssignal_get(self, *, as_string=None, connection_timeout=1.0, **kwargs):
     ###########################################
     # Usedf only for old ophyd 1.3.3 and older.
     from distutils.version import LooseVersion
-<<<<<<< HEAD
-
-=======
->>>>>>> 8502195... WIP: Fixes to work with collection-2020-2.0rc8 conda env
     import ophyd
+
     if ophyd.__version__ < LooseVersion('1.4'):
         self._metadata_lock = self._lock
     ###########################################
