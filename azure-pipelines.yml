@@ -3,8 +3,7 @@ resources:
     - repository: templates
       type: github
       name: NSLS-II/profile-collection-ci
-      # ref: refs/heads/main
-      ref: refs/heads/add-kafka-vars
+      ref: refs/heads/main
       endpoint: github
 
 jobs:
