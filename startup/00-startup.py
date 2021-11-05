@@ -346,7 +346,7 @@ del _hxn_register_handlers
 from IPython import get_ipython
 from nslsii import configure_base, configure_olog
 
-configure_base(get_ipython().user_ns, db, bec=False)
+configure_base(get_ipython().user_ns, db, bec=False, ipython_logging=False)
 # configure_olog(get_ipython().user_ns)
 
 from bluesky.callbacks.best_effort import BestEffortCallback
