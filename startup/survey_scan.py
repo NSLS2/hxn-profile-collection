@@ -47,8 +47,8 @@ def display_frame(index):
     fig3 = plt.figure(3)
     plt.clf()
     #im2 = plt.imshow(np.flipud(np.log10(t+.001)), cmap = 'spectral', interpolation = 'none')
-    im2 = plt.imshow(np.flipud(t.T), cmap = 'hot', interpolation = 'none')#,clim=[cl,ch])
-    #im2 = plt.imshow(np.flipud(np.log10(t+0.001).T), cmap = 'hot', interpolation = 'none')
+    #im2 = plt.imshow(np.flipud(t.T), cmap = 'hot', interpolation = 'none')#,clim=[cl,ch])
+    im2 = plt.imshow(np.flipud(np.log10(t+0.001).T), cmap = 'hot', interpolation = 'none')
     iy = np.floor(index/num_x)
     ix = np.mod(index, num_x)
     index_new = (num_y-iy) * num_x + (num_x - ix)
@@ -217,7 +217,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
         t = t / ic[i]
         #t *= (1-mm)
         #t *= (1-mm2)
-        t = np.flipud(t)
+        ##t = np.flipud(t)
         #t[20,187] = 0
         #t *= (1-mm3)
         #t *= (1-mm3)
@@ -250,8 +250,8 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
         diff_array[:,:,i] = t #* mask
 
 
-    diff_array[31,182,:] = 0
-    diff_array[296,281,:] = 0
+    diff_array[22,255,:] = 0
+    #diff_array[296,281,:] = 0
     #diff_array[91,221,:] = 0
     #diff_array[440,381,:] = 0
 
@@ -380,8 +380,8 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     plt.show()
 
     if save_flag:
-        io.imsave('/data/users/2021Q3/Huang_2021Q3/2.8V_diff_new/rock_'+scan_num+'_roi.tif',roi.astype(np.float32))
-        io.imsave('/data/users/2021Q3/Huang_2021Q3/2.8V_diff_new/rock_'+scan_num+'_xrf.tif',xrf.astype(np.float32))
-        io.imsave('/data/users/2021Q3/Huang_2021Q3/2.8V_diff_new/rock_'+scan_num+'_diff_data.tif',diff_array.astype(np.float32))
+        io.imsave('/data/users/2021Q3/Singer_2021Q3/rock_'+scan_num+'_roi.tif',roi.astype(np.float32))
+        io.imsave('/data/users/2021Q3/Singer_2021Q3/rock_'+scan_num+'_xrf.tif',xrf.astype(np.float32))
+        io.imsave('/data/users/2021Q3/Singer_2021Q3/rock_'+scan_num+'_diff_data.tif',diff_array.astype(np.float32))
 
 
