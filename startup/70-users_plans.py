@@ -4166,11 +4166,11 @@ def plot_data(sid = -1,  elem = 'Pt_L', mon = 'sclr1_ch4'):
     h = db[sid]
     mots = h.start['motors']
 
-    if len(mots) is 1:
+    if len(mots) == 1:
 
         plot(sid,elem, mon)
 
-    if len(mots) is 2:
+    if len(mots) == 2:
 
         plot2dfly(sid, elem,  mon)
 
@@ -4199,4 +4199,3 @@ def Mosaic_Grid120(exposure_time):
                                 yield from bps.sleep(60)
                                 print('IC3 is lower than 5000, waiting...')
         save_page()
-

@@ -387,7 +387,7 @@ def flush_on_stop_doc(name, doc):
         kafka_publisher.flush()
 
 # This is needed to prevent the local buffer from filling.
-RE.subscribe('stop', flush_on_stop_doc)
+RE.subscribe(flush_on_stop_doc, 'stop')
 
 # Pass on only start/stop documents to a few subscriptions
 for _event in ('start', 'stop'):
