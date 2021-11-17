@@ -1,4 +1,10 @@
 from ophyd import (EpicsMotor, Device, Component as Cpt)
+class SigrayMll(Device):
+    mll_x = Cpt(EpicsMotor, 'XF:03IDC-CT{SmarAct:Sigray1}:m10')
+    mll_y = Cpt(EpicsMotor, 'XF:03IDC-CT{SmarAct:Sigray1}:m11')
+    mll_z = Cpt(EpicsMotor, 'XF:03IDC-CT{SmarAct:Sigray1}:m12')
+    mll_ry = Cpt(EpicsMotor,'XF:03IDC-CT{SmarAct:Sigray1}:m13')
+    mll_rx = Cpt(EpicsMotor, 'XF:03IDC-CT{SmarAct:Sigray1}:m14')
 
 class HxnPrototypeMicroscope(Device):
     vx = Cpt(EpicsMotor, 'XF:03IDC-ES{Proto:1-Ax:1}Mtr')
@@ -34,6 +40,7 @@ class HxnPrototypeMicroscope(Device):
 
 
 p = HxnPrototypeMicroscope('', name='p')
+sigray = SigrayMll('', name='sigray')
 
 p_vx = p.vx
 p_vy = p.vy

@@ -29,7 +29,7 @@ def erf_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
     ydata=np.array(ydata,dtype=float)
     y_min=np.min(ydata)
     y_max=np.max(ydata)
-    ydata=(ydata-y_min)/y_max
+    ydata=(ydata-y_min)/(y_max-y_min)
     plt.figure()
     plt.plot(xdata,ydata,'bo')
     y_mean = np.mean(ydata)
@@ -64,7 +64,7 @@ def sici_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
     ydata=np.array(ydata,dtype=float)
     y_min=np.min(ydata)
     y_max=np.max(ydata)
-    ydata=(ydata-y_min)/y_max
+    ydata=(ydata-y_min)/(y_max-y_min)
     plt.figure()
     plt.plot(xdata,ydata,'bo')
     y_mean = np.mean(ydata)
@@ -111,7 +111,7 @@ def square_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
     ydata=np.array(ydata,dtype=float)
     y_min=np.min(ydata)
     y_max=np.max(ydata)
-    ydata=(ydata-y_min)/y_max
+    ydata=(ydata-y_min)/(y_max-y_min)
     plt.figure()
     plt.plot(xdata,ydata,'bo')
     edge_pos_1, edge_pos_2 = find_double_edge(xdata,ydata,10)
@@ -128,14 +128,14 @@ def square_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
 
 
 
-def data_erf_fit(xdata,ydata,linear_flag=True):
+def data_erf_fit(sid,xdata,ydata,linear_flag=True):
 
     xdata=np.array(xdata,dtype=float)
     ydata=np.array(ydata,dtype=float)
     y_min=np.min(ydata)
     y_max=np.max(ydata)
-    ydata=(ydata-y_min)/y_max
-    plt.figure(1000)
+    ydata=(ydata-y_min)/(y_max-y_min)
+    plt.figure()
     plt.plot(xdata,ydata,'bo')
     y_mean = np.mean(ydata)
     half_size = int (len(ydata)/2)
@@ -143,23 +143,23 @@ def data_erf_fit(xdata,ydata,linear_flag=True):
     edge_pos=find_edge(xdata,ydata,10)
     if y_half_mean < y_mean:
         if linear_flag == False:
-            popt,pcov=curve_fit(erfunc1,xdata,ydata, p0=[edge_pos,0.05,0.5])
+            popt,pcov=curve_fit(erfunc1,xdata,ydata, p0=[edge_pos,0.5,0.5])
             fit_data=erfunc1(xdata,popt[0],popt[1],popt[2]);
         else:
-            popt,pcov=curve_fit(erfunc3,xdata,ydata, p0=[edge_pos,0.05,0.5,0,0])
+            popt,pcov=curve_fit(erfunc3,xdata,ydata, p0=[edge_pos,0.5,0.5,0,0])
             fit_data=erfunc3(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
     else:
         if linear_flag == False:
-            popt,pcov=curve_fit(erfunc2,xdata,ydata,p0=[edge_pos,0.05,0.5])
+            popt,pcov=curve_fit(erfunc2,xdata,ydata,p0=[edge_pos,0.5,0.5])
             fit_data=erfunc2(xdata,popt[0],popt[1],popt[2]);
         else:
-            popt,pcov=curve_fit(erfunc4,xdata,ydata,p0=[edge_pos,0.05,0.5,0,0])
+            popt,pcov=curve_fit(erfunc4,xdata,ydata,p0=[edge_pos,0.5,0.5,0,0])
             fit_data=erfunc4(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
 
     #print('a={} b={} c={}'.format(popt[0],popt[1],popt[2]))
-    plt.figure(1000)
+    #plt.figure(1000)
     plt.plot(xdata,fit_data)
-    plt.title('edge = %.3f, FWHM = %.2f nm' % (popt[0], popt[1]*2.3548*1000.0))
+    plt.title('sid = %d, edge = %.3f, FWHM = %.2f nm' % (sid, popt[0], popt[1]*2.3548*1000.0))
     return (popt[0],popt[1]*2.3548*1000.0)
 def data_sici_fit(xdata,ydata,linear_flag=True):
 
@@ -167,7 +167,7 @@ def data_sici_fit(xdata,ydata,linear_flag=True):
     ydata=np.array(ydata,dtype=float)
     y_min=np.min(ydata)
     y_max=np.max(ydata)
-    ydata=(ydata-y_min)/y_max
+    ydata=(ydata-y_min)/(y_max-y_min)
     plt.figure(1000)
     plt.plot(xdata,ydata,'bo')
     y_mean = np.mean(ydata)

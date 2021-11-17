@@ -48,8 +48,8 @@ d2scan = bpp.subs_decorator(bec)(hxntools.scans.d2scan)
 a2scan = bpp.subs_decorator(bec)(hxntools.scans.a2scan)
 scan_steps = bpp.subs_decorator(bec)(hxntools.scans.scan_steps)
 
-#dets1 = [fs, zebra, sclr1, xspress3]
-dets1 = [fs,zebra, sclr1,merlin1, xspress3]
+dets1 = [zebra, sclr1, merlin2, xspress3]
+#dets1 = [fs,zebra, sclr1,merlin1, xspress3]
 dets_fs = [fs,zebra, sclr1, xspress3]
 dets6 = [zebra, sclr1, xspress3]
 dets2 = [fs,zebra, sclr1, merlin2, xspress3]

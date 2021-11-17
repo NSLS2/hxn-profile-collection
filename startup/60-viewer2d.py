@@ -739,7 +739,8 @@ def plot_img_sum(sid, det = 'merlin1',mon ='sclr1_ch4', roi_flag=False,x_cen=0,y
         plt.subplot(1,2,2)
         plt.semilogy(x,tot)
         plt.title('sid={}'.format(sid))
-        #data_erf_fit(x,tot)
+        data_erf_fit(sid, x,tot,linear_flag=True)
+                
     elif num_mots == 2:
         tot = np.sum(imgs,2)
         tot = np.array(np.sum(tot,1),dtype=float32)
