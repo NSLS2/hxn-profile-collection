@@ -41,9 +41,9 @@ class SmarpodRotationAxis(SmarpodBase):
 class HxnZPSample(NamedDevice):
     # Zoneplate module fine sample stage axes (closed on cap
     # sensors/interferometer)
-    zpssx = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-zpssx}Mtr', doc='fine x')
-    zpssy = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-zpssy}Mtr', doc='fine y')
-    zpssz = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-zpssz}Mtr', doc='fine z')
+    zpssx = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-zpssx}Mtr', doc='fine x', timeout = 120)
+    zpssy = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-zpssy}Mtr', doc='fine y', timeout = 120)
+    zpssz = Cpt(EpicsMotor, 'XF:03IDC-ES{Ppmac:1-zpssz}Mtr', doc='fine z', timeout = 120)
 
     # rotary underneath sample
     zpsth = Cpt(EpicsMotor, 'XF:03IDC-ES{SC210:1-Ax:1}Mtr', doc='theta')
