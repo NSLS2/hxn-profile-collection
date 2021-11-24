@@ -642,7 +642,7 @@ def check_baseline(sid,name):
         return(mot_pos)
     else:
         #print(name,bl[name])
-        return(bl[name].data[0])
+        return(bl[name].values[0])
 
 
 def check_info(sid):

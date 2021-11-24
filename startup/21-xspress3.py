@@ -272,4 +272,3 @@ def configure_xspress3(sclr):
                 attr.kind = 'config'
 
 configure_xspress3(xspress3)
-

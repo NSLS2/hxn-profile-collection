@@ -866,7 +866,10 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
 
     angle_step = (angle_end - angle_start) / angle_num
 
-    ic_0 = sclr2_ch2.get()
+    fs.stage()
+    yield from bps.sleep(2)
+    ic_0 = sclr2_ch4.get()
+    fs.unstage()
 
     real_th_list = []
     scanid_list = []
@@ -884,44 +887,47 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
 
         while (sclr2_ch2.get() < 1000):
             yield from bps.sleep(60)
-            print('IC3 is lower than 1000, waiting...')
-        while (sclr2_ch2.get() < (0.9*ic_0)):
-            yield from peak_bpm_y(-5,5,10)
-            yield from peak_bpm_x(-25,25,10)
+            print('IC1 is lower than 1000, waiting...')
+        fs.stage()
+        yield from bps.sleep(2)
+        while (sclr2_ch4.get() < (0.9*ic_0)):
+            yield from peak_bpm_y(-5,5,1)
+            yield from peak_bpm_x(-25,25,5)
+            ic_0 = sclr2_ch4.get()
         yield from bps.sleep(1)
-
+        fs.unstage()
 
 
         #'''
         #yield from bps.mov(dssy,-2)
         if np.abs(angle) <= 45:
 
-            #yield from fly2d(dets1,dssx,-8,8,60, dssy, -2,2,20,0.03)
-            #cx,cy = return_center_of_mass(-1,elem)
-            #yield from bps.mov(dssx,cx)
-            #yield from bps.mov(dssy,cy)
+            yield from fly2d(dets1,dssx,-8,8,80, dssy,-1,1,20,0.02,dead_time=0.003)
+            cx,cy = return_center_of_mass(-1,elem)
+            yield from bps.mov(dssx,cx)
+            yield from bps.mov(dssy,cy)
 
 
-            yield from bps.mov(dssx,0)
-            yield from fly1d(dets1,dssx, -10, 10, 200, 0.04)
-            xc = return_line_center(-1,elem,0.1)
-            yield from bps.movr(dsx,xc)
+            #yield from bps.mov(dssx,0)
+            #yield from fly1d(dets1,dssx, -10, 10, 200, 0.04)
+            #xc = return_line_center(-1,elem,0.1)
+            #yield from bps.movr(dsx,xc)
             plt.close()
             #yield from bps.movr(dssy,-0.3)
 
 
         else:
 
-            #yield from fly2d(dets1,dssz,-8,8,60, dssy, -2,2,20,0.03)
-            #cx,cy = return_center_of_mass(-1,elem)
-            #yield from bps.mov(dssz,cx)
-            #yield from bps.mov(dssy,cy)
+            yield from fly2d(dets1,dssz,-8,8,80, dssy, -1,1,20,0.02,dead_time=0.003)
+            cx,cy = return_center_of_mass(-1,elem)
+            yield from bps.mov(dssz,cx)
+            yield from bps.mov(dssy,cy)
 
             #yield from bps.movr(dssy,0.3)
-            yield from bps.mov(dssz,0)
-            yield from fly1d(dets1,dssz, -10, 10, 200, 0.04)
-            xc = return_line_center(-1,elem,0.1)
-            yield from bps.movr(dsz,xc)
+            #yield from bps.mov(dssz,0)
+            #yield from fly1d(dets1,dssz, -10, 10, 200, 0.04)
+            #xc = return_line_center(-1,elem,0.1)
+            #yield from bps.movr(dsz,xc)
             plt.close()
 
         #yield from bps.mov(dssy,0)
@@ -935,11 +941,11 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
         #dy = dy+ddy
         #yield from bps.mov(dssy,y0+dy)
 
-        yield from fly1d(dets1,dssy, -8, 8, 160, 0.04)
-        yc = return_line_center(-1,elem,0.1)
+        #yield from fly1d(dets1,dssy, -8, 8, 160, 0.04)
+        #yc = return_line_center(-1,elem,0.1)
         #yc,yw = erf_fit(-1,elem,linear_flag=False)
-        plt.close()
-        yield from bps.movr(dsy, yc)
+        #plt.close()
+        #yield from bps.movr(dsy, yc)
         #yield from bps.movr(dssx,-0.5)
         #plt.close()
 
@@ -961,8 +967,8 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
             x_end_real = x_end / np.cos(angle * np.pi / 180.)
             #RE(fly2d(zpssx, x_start_real, x_end_real, x_num, zpssy,
             #         y_start, y_end, y_num, exposure, return_speed=40))
-            yield from fly2d(dets6, smlld.dssx,x_start_real,x_end_real,x_num,smlld.dssy,
-                     y_start, y_end, y_num, exposure, return_speed=40)
+            yield from fly2d(dets1, smlld.dssx,x_start_real,x_end_real,x_num,smlld.dssy,
+                     y_start, y_end, y_num, exposure, return_speed=40,dead_time=0.003)
 
         else:
             #yield from fly2d(dets1, smlld.dssx,-5,5,50,smlld.dssy,
@@ -973,8 +979,8 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
             x_end_real = x_end / np.abs(np.sin(angle * np.pi / 180.))
             #RE(fly2d(zpssz, x_start_real, x_end_real, x_num, zpssy,
             #         y_start, y_end, y_num, exposure, return_speed=40))
-            yield from fly2d(dets6, smlld.dssz,x_start_real,x_end_real,x_num, smlld.dssy,
-                     y_start, y_end, y_num, exposure, return_speed = 40)
+            yield from fly2d(dets1, smlld.dssz,x_start_real,x_end_real,x_num, smlld.dssy,
+                     y_start, y_end, y_num, exposure, return_speed = 40,dead_time=0.003)
 
         merlin1.unstage()
         xspress3.unstage()
@@ -982,12 +988,12 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
         #yield from mov_to_image_cen_dsx(-1)
 
         plot2dfly(-1,elem)
-        insertFig(note='dsth = {}'.format(check_baseline(-1,'dsth')))
+        insertFig(note='dsth = {}'.format(dsth.position))
         plt.close()
         #merlin1.unstage()
         #xspress3.unstage()
         print('waiting for 2 sec...')
-        yield from bps.sleep(5)
+        yield from bps.sleep(2)
         '''
         h = db[-1]
         last_sid = h.start['scan_id']
