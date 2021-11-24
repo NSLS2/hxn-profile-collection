@@ -178,6 +178,10 @@ def xspress3_roi_setup():
                 break
             channel.set_roi(i+1, energy-150, energy+150, name=elem_list[i])
 
+            # Uncomment the following lines for debugging liveplots without beam.
+            # if elem_list[i] == "W_L":
+            #     channel.set_roi(i+1, 0, 40000, name=elem_list[i])
+
 
 '''
 def xspress3_roi_setup():
