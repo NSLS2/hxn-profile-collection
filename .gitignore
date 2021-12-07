@@ -77,6 +77,7 @@ startup/20-detectors-eiger.py
 # Ignore temporary files
 startup/tmp_fig.pdf
 startup/tmp_img.png
+startup/eLog_info.obj
 
 # PostScript files to ignore (no .ps extension):
 startup/functools
