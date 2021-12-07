@@ -44,6 +44,11 @@ if bootstrap_servers is None:
            "``'kafka1:9092,kafka2:9092``")
     raise RuntimeError(msg)
 
+kafka_password = os.getenv("BLUESKY_KAFKA_PASSWORD", None)
+if kafka_password is None:
+    msg = "The 'BLUESKY_KAFKA_PASSWORD' environment variable must be set."
+    raise RuntimeError(msg)
+
 kafka_publisher = Publisher(
         topic="hxn.bluesky.datum.documents",
         bootstrap_servers=bootstrap_servers,
@@ -54,11 +59,14 @@ kafka_publisher = Publisher(
                 "queue.buffering.max.kbytes": 10 * 1048576,
                 "compression.codec": "snappy",
                 "security.protocol": "SSL",
-                "ssl.ca.location": certifi.where()
-            },
+                "ssl.ca.location": certifi.where(),
+                "security.protocol": "SASL_SSL",
+                "sasl.mechanisms": "PLAIN",
+                "sasl.username": "beamline",
+                "sasl.password": kafka_password,
+                },
         flush_on_stop_doc=True,
     )
-
 
 # DB1
 db1_name = 'rs'
