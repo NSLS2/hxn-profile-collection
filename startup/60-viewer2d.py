@@ -25,8 +25,8 @@ def plot2d(scan_id, elem, norm='sclr1_ch4'):
     scan_id, df = _load_scan(scan_id, fill_events=False)
     scan_info = db[scan_id]
     tmp = scan_info['start']
-    x_motor = tmp['motors'][0]
-    y_motor = tmp['motors'][1]
+    y_motor = tmp['motors'][0]
+    x_motor = tmp['motors'][1]
 
     x_start = tmp['plan_args']['args'][5]
     x_end = tmp['plan_args']['args'][6]
@@ -50,6 +50,7 @@ def plot2d(scan_id, elem, norm='sclr1_ch4'):
         plt.title('Scan %d: %s (normalized to %s)' % (scan_id, elem, norm))
         plt.imshow(data/mon, interpolation='None',
                    extent=[x_start, x_end, y_end, y_start])
+        #plt.imshow(data/mon)
         plt.xlabel(x_motor)
         plt.ylabel(y_motor)
         plt.colorbar()
@@ -58,6 +59,7 @@ def plot2d(scan_id, elem, norm='sclr1_ch4'):
         plt.title('Scan %d: %s' % (scan_id, elem))
         plt.imshow(data, interpolation='None',
                    extent=[x_start, x_end, y_end, y_start])
+        #plt.imshow(data)
         plt.xlabel(x_motor)
         plt.ylabel(y_motor)
         plt.colorbar()
@@ -703,13 +705,15 @@ def plot_img_sum2(sid, det = 'merlin1', roi_flag=False,x_cen=0,y_cen=0,size=0):
         plt.imshow(image,extent=extent)
         plt.title('sid={} ROI SUM'.format(sid))
 
-def plot_img_sum(sid, det = 'merlin1',mon ='sclr1_ch4', roi_flag=False,x_cen=0,y_cen=0,size=0):
+def plot_img_sum(sid, det = 'merlin1',mon ='sclr1_ch4', roi_flag=False,x_cen=0,y_cen=0,size=0,threshold=[0,1e6]):
     h = db[sid]
     sid = h.start['scan_id']
     imgs = list(h.data(det))
     #imgs = np.array(imgs)
     imgs = np.array(np.squeeze(imgs))
     #imgs[imgs>3*np.std(imgs)] = 0
+    imgs[imgs>threshold[1]]=0
+    imgs[imgs<threshold[0]]=0
     df = h.table()
     mon = np.array(df[mon],dtype=float32)
     #figure_with_insert_fig_button()
@@ -726,13 +730,14 @@ def plot_img_sum(sid, det = 'merlin1',mon ='sclr1_ch4', roi_flag=False,x_cen=0,y
         tot = np.sum(imgs,2)
         tot = np.array(np.sum(tot,1), dtype=float32)
         tot = np.divide(tot,mon)
-        #tot[tot > 5*np.std(tot)] = 0
+        hlim = np.percentile(tot,99.99)
+        tot[tot > hlim] = 0
         #idx = np.where(abs(tot - np.mean(tot)) >3*np.std(tot))
         #tot[idx[0]] = np.mean(tot)
         #tot = tot[abs(tot - np.mean(tot)) < 3 * np.std(tot)]
 
         figure_with_insert_fig_button()
-        
+
         plt.subplot(1,2,1)
         plt.plot(x,tot)
         plt.title('sid={}'.format(sid))
@@ -740,7 +745,7 @@ def plot_img_sum(sid, det = 'merlin1',mon ='sclr1_ch4', roi_flag=False,x_cen=0,y
         plt.semilogy(x,tot)
         plt.title('sid={}'.format(sid))
         data_erf_fit(sid, x,tot,linear_flag=True)
-                
+
     elif num_mots == 2:
         tot = np.sum(imgs,2)
         tot = np.array(np.sum(tot,1),dtype=float32)
@@ -751,7 +756,8 @@ def plot_img_sum(sid, det = 'merlin1',mon ='sclr1_ch4', roi_flag=False,x_cen=0,y
         extent = (np.nanmin(x), np.nanmax(x),np.nanmax(y), np.nanmin(y))
         figure_with_insert_fig_button()
         tot =np.divide(tot, mon)
-        #tot[tot > 3*np.std(tot)] = 0
+        hlim = np.percentile(tot,99.99)
+        tot[tot > hlim] = 0
         #idx = np.where(abs(tot - np.mean(tot)) >3*np.std(tot))
         #tot[idx[0]] = np.mean(tot)
         #tot = tot[abs(tot - np.mean(tot)) < 3 * np.std(tot)]

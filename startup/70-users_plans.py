@@ -126,11 +126,11 @@ def go_det(det):
 
     if det == 'merlin':
         #while zposa.zposax.position<20:
-        yield from bps.mov(diff.x, -1.12, diff.y1,-10.2, diff.y2, -10.2, diff.z, -50, diff.cz, -24.7)
+        yield from bps.mov(diff.x, 3.13, diff.y1,0.8, diff.y2,0.8, diff.z, -50, diff.cz, -24.7)
         #yield from bps.mov(diff.y1,-3.2)
         #yield from bps.mov(diff.y2,-3.2)
     elif det == 'cam11':
-        yield from bps.mov(diff.x,222.917, diff.y1, 22.917, diff.y2, 22.917,diff.z, -50, diff.cz, -24.7)
+        yield from bps.mov(diff.x,222.89, diff.y1, 22.917, diff.y2, 22.917,diff.z, -50, diff.cz, -24.7)
         #yield from bps.mov(diff.y1,22.65)
         #yield from bps.mov(diff.y2,22.65)
     elif det =='telescope':
@@ -1267,23 +1267,25 @@ def move_fly_center(elem):
     #i_max = np.where(roi_data == np.max(roi_data))
     #mov(eval(scanned_axis),x[i_max[0]][0])
 
-def mll_th_fly2d(th_start, th_end, num, mot1, x_start, x_end, x_num, mot2,y_start, y_end, y_num, sec, align_z_start, align_z_end,align_y_start,align_y_end):
+def mll_th_fly2d(th_start, th_end, num, mot1, x_start, x_end, x_num, mot2,y_start, y_end, y_num, sec):
     #yield from shutter('open')
     init_th = dsth.position
     th_step = (th_end - th_start) / num
+    #init_x = dssx.position
     yield from bps.movr(dsth, th_start)
+    #yield from bps.movr(dssx, th_start)
     ic_0 = sclr2_ch2.get()
 
 
     for i in range(num + 1):
 
-        while (sclr2_ch2.get() < (0.1*ic_0)):
+        while (sclr2_ch2.get() < 10000):
             yield from bps.sleep(60)
             print('IC3 is lower than 10000, waiting...')
-        while (sclr2_ch2.get() < (0.9*ic_0)):
-            yield from peak_bpm_y(-5,5,10)
+        #while (sclr2_ch2.get() < (0.9*ic_0)):
+        #    yield from peak_bpm_y(-5,5,10)
 
-        #'''
+        '''
         yield from bps.sleep(1)
         yield from (fly1d(dets1,mot1,align_z_start,align_z_end,100,0.05))
         xc = return_line_center(-1, 'Ni', 0.2)
@@ -1293,12 +1295,12 @@ def mll_th_fly2d(th_start, th_end, num, mot1, x_start, x_end, x_num, mot2,y_star
         yield from (fly1d(dets1,mot2,align_y_start,align_y_end,100,0.05))
         yc = return_line_center(-1, 'Ni', 0.2)
         yield from bps.mov(mot2,yc)
-        #'''
+        '''
         yield from fly2d(dets1, mot1, x_start, x_end, x_num, mot2, y_start, y_end, y_num, sec, return_speed=40)
         merlin1.unstage()
         xspress3.unstage()
-        plot2dfly(-1,'Ni','sclr1_ch4')
-        # insertFig(note = 'dsth = {}'.format(check_baseline(-1,'dsth')))
+        plot2dfly(-1,'Ge','sclr1_ch4')
+        insertFig(note = 'dsth = {}'.format(check_baseline(-1,'dsth')))
         plt.close()
         #plot_img_sum(-1)
         #insertFig(note = 'dsth = {}'.format(check_baseline(-1,'dsth')))
@@ -1306,10 +1308,10 @@ def mll_th_fly2d(th_start, th_end, num, mot1, x_start, x_end, x_num, mot2,y_star
         #plot2dfly(-1,'Au_L')
 
         yield from bps.movr(dsth, th_step)
-
+        #yield from bps.movr(dssx,th_step)
     yield from bps.mov(dsth, init_th)
-    #save_page()
-
+    #yield from bps.mov(dssx,init_x)
+    save_page()
     #yield from shutter('close')
 
 
@@ -1343,7 +1345,7 @@ def zp_th_fly2d(det,th_start, th_end, num, mot1, x_start, x_end, x_num,mot2, y_s
         xc = return_line_center(-1,elem,threshold=0.2)
         yield from bps.mov(zpssz,xc)
         #yield from bps.movr(smarz,xc/1000)
-        
+
         yield from fly1d(dets_fs,zpssy,-8,8,100,0.02)
         yc = return_line_center(-1,elem,threshold=0.2)
         yield from bps.mov(zpssy,yc)
@@ -1434,19 +1436,28 @@ def th_fly2d(mot_th, th_start, th_end, num, mot1, x_start, x_end, x_num, mot2, y
     th_init = mot_th.position
     th_step = (th_end - th_start) / num
     yield from bps.movr(mot_th, th_start)
-    yield from bps.sleep(1)
-    ic_0 = sclr2_ch2.get()
+    #fs.stage()
+    #yield from bps.sleep(2)
+    #ic_0 = sclr2_ch4.get()
+    #yield from bps.sleep(2)
+    #fs.unstage()
+    #yield from bps.sleep(2)
     for i in range(num + 1):
 
-        check_for_beam_dump(10000)
-        while (sclr2_ch2.get() < (0.1*ic_0)):
+        #check_for_beam_dump(10000)
+        while (sclr2_ch2.get() < 10000):
             yield from bps.sleep(60)
             print('IC3 is lower than 10000, waiting...')
-        if (sclr2_ch2.get() < (0.9*ic_0)):
-            yield from peak_bpm_y(-5,5,10)
-            yield from peak_bpm_x(-25,25,10)
-            ic_0 = sclr2_ch2.get()
-        ''' 
+        #fs.stage()
+        #yield from bps.sleep(2)
+        #if (sclr2_ch4.get() < (0.9*ic_0)):
+        #    yield from peak_bpm_y(-5,5,10)
+        #    yield from peak_bpm_x(-25,25,10)
+        #    ic_0 = sclr2_ch4.get()
+
+        #fs.unstage()
+
+        '''
         yield from bps.mov(zpssx,0)
         yield from fly1d(dets1,zpssx,-15, 15, 200,0.03)
         corr_x_pos = return_line_center(-1,'Ge',0.2)
@@ -1461,19 +1472,21 @@ def th_fly2d(mot_th, th_start, th_end, num, mot1, x_start, x_end, x_num, mot2, y
         '''
 
         #yield from bps.movr(dssx,0.125)
+        yield from bps.sleep(2)
         yield from fly2d(dets1,mot1, x_start, x_end, x_num, mot2, y_start, y_end, y_num, sec)
+        th_pos_1 = mot_th.position
         yield from bps.sleep(1)
         yield from bps.movr(mot_th, th_step)
         yield from bps.sleep(1)
 
-        '''
+
         plot2dfly(-1, 'Ge', 'sclr1_ch4')
-        insertFig(note = 'zpsth = {:.3f}'.format(check_baseline(-1,'zpsth')), title = ' ')
-        plt.close('all')
-        #plot_img_sum(-1,'merlin2')
-        #insertFig(note = 'zpsth = {:.3f}'.format(check_baseline(-1,'zpsth')), title = ' ')
-        #plt.close()
-        '''
+        insertFig(note = 'th = {:.3f}'.format(th_pos_1), title = ' ')
+        plt.close(' ')
+        plot_img_sum(-1,'merlin1')
+        insertFig(note = 'th = {:.3f}'.format(th_pos_1), title = ' ')
+        plt.close()
+
     yield from bps.mov(mot_th, th_init)
     save_page()
 

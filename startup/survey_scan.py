@@ -46,9 +46,11 @@ def display_frame(index):
     t = diff_array[:,:,index]
     fig3 = plt.figure(3)
     plt.clf()
+    cl = np.percentile(diff_array,15)
+    ch = np.percentile(diff_array,99.95)
     #im2 = plt.imshow(np.flipud(np.log10(t+.001)), cmap = 'spectral', interpolation = 'none')
-    #im2 = plt.imshow(np.flipud(t.T), cmap = 'hot', interpolation = 'none')#,clim=[cl,ch])
-    im2 = plt.imshow(np.flipud(np.log10(t+0.001).T), cmap = 'hot', interpolation = 'none')
+    im2 = plt.imshow(np.flipud(t.T), cmap = 'hot', interpolation = 'none',clim=[cl,ch])
+    #im2 = plt.imshow(np.flipud(np.log10(t+0.001).T), cmap = 'hot', interpolation = 'none')
     iy = np.floor(index/num_x)
     ix = np.mod(index, num_x)
     index_new = (num_y-iy) * num_x + (num_x - ix)
