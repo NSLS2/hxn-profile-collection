@@ -161,7 +161,7 @@ energy_M_list = np.array([1646,1712,1775,1840,1907,1976,2048,2118,2191,2267,2342
 
 
 def xspress3_roi_setup():
-    elem_list = np.array(['Mg','Si','Ge','Cl','Ga','Ti','Fe','Zn','Mn','Cu','Ni','Cr','Co','Pt_L','Hf_L','W_L'])
+    elem_list = np.array(['Te_L','Si','Ge','Ta_L','Ga','Ti','Fe','Zn','Al','Cu','Ni','Cr','Co','Pt_L','Au_L','W_L'])
     num_elem = np.size(elem_list)
     if num_elem > 16:
         num_elem = 16
@@ -179,7 +179,7 @@ def xspress3_roi_setup():
             channel.set_roi(i+1, energy-150, energy+150, name=elem_list[i])
 
             # Uncomment the following lines for debugging liveplots without beam.
-            # if elem_list[i] == "W_L":
+            # if elem_list[i] == "Au_L":
             #     channel.set_roi(i+1, 0, 40000, name=elem_list[i])
 
 

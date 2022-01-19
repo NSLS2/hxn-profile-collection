@@ -136,7 +136,7 @@ def go_det(det):
         #yield from bps.mov(diff.y1,-3.2)
         #yield from bps.mov(diff.y2,-3.2)
     elif det == 'cam11':
-        yield from bps.mov(diff.x,222.89, diff.y1, 22.917, diff.y2, 22.917,diff.z, -50, diff.cz, -24.7)
+        yield from bps.mov(diff.x,222.49, diff.y1, 22.917, diff.y2, 22.917,diff.z, -50, diff.cz, -24.7)
         #yield from bps.mov(diff.y1,22.65)
         #yield from bps.mov(diff.y2,22.65)
     elif det =='telescope':
@@ -866,10 +866,10 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
 
     angle_step = (angle_end - angle_start) / angle_num
 
-    fs.stage()
-    yield from bps.sleep(2)
+    #fs.stage()
+    #yield from bps.sleep(2)
     ic_0 = sclr2_ch4.get()
-    fs.unstage()
+    #fs.unstage()
 
     real_th_list = []
     scanid_list = []
@@ -885,50 +885,57 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
         angle = angle_start + i * angle_step
         yield from bps.mov(smlld.dsth, angle)
 
-        while (sclr2_ch2.get() < 1000):
+        while (sclr2_ch2.get() < 10000):
             yield from bps.sleep(60)
-            print('IC1 is lower than 1000, waiting...')
-        fs.stage()
-        yield from bps.sleep(2)
+            print('IC1 is lower than 10000, waiting...')
+        #fs.stage()
+        #yield from bps.sleep(2)
         while (sclr2_ch4.get() < (0.9*ic_0)):
             yield from peak_bpm_y(-5,5,1)
             yield from peak_bpm_x(-25,25,5)
             ic_0 = sclr2_ch4.get()
         yield from bps.sleep(1)
-        fs.unstage()
+        #fs.unstage()
 
 
         #'''
         #yield from bps.mov(dssy,-2)
         if np.abs(angle) <= 45:
 
-            yield from fly2d(dets1,dssx,-8,8,80, dssy,-1,1,20,0.02,dead_time=0.003)
-            cx,cy = return_center_of_mass(-1,elem)
+            yield from fly2d(dets1,dssx,-8,8,80, dssy,-2,1.5,20,0.03,dead_time=0.003)
+            cx,cy = return_center_of_mass(-1,elem,0.1)
             yield from bps.mov(dssx,cx)
             yield from bps.mov(dssy,cy)
 
 
             #yield from bps.mov(dssx,0)
-            #yield from fly1d(dets1,dssx, -10, 10, 200, 0.04)
+            #yield from bps.mov(dssz,0)
+            #yield from fly1d(dets1,dssx, -10, 10, 200, 0.03)
             #xc = return_line_center(-1,elem,0.1)
-            #yield from bps.movr(dsx,xc)
-            plt.close()
-            #yield from bps.movr(dssy,-0.3)
+            #yield from bps.mov(dssx,xc)
+            #yield from fly1d(dets1,dssy,-3,0.5,100,0.03)
+            #edge, fwhm = erf_fit(-1,elem,'sclr1_ch4',linear_flag=False)
+            #plt.close()
+            #yield from bps.mov(dssy,edge + 1)
 
 
         else:
 
-            yield from fly2d(dets1,dssz,-8,8,80, dssy, -1,1,20,0.02,dead_time=0.003)
-            cx,cy = return_center_of_mass(-1,elem)
+            yield from fly2d(dets1,dssz,-8,8,80, dssy, -2,1.5,20,0.03,dead_time=0.003)
+            cx,cy = return_center_of_mass(-1,elem,0.1)
             yield from bps.mov(dssz,cx)
             yield from bps.mov(dssy,cy)
 
             #yield from bps.movr(dssy,0.3)
             #yield from bps.mov(dssz,0)
-            #yield from fly1d(dets1,dssz, -10, 10, 200, 0.04)
+            #yield from bps.mov(dssx,0)
+            #yield from fly1d(dets1,dssz, -10, 10, 200, 0.03)
             #xc = return_line_center(-1,elem,0.1)
-            #yield from bps.movr(dsz,xc)
-            plt.close()
+            #yield from bps.mov(dssz,xc)
+            #yield from fly1d(dets1, dssy, -3,0.5,100,0.03)
+            #edge, fwhm = erf_fit(-1, elem,'sclr1_ch4',linear_flag=False)
+            #plt.close()
+            #yield from bps.mov(dssy,edge+1)
 
         #yield from bps.mov(dssy,0)
 
