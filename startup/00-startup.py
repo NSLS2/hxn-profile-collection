@@ -6,6 +6,18 @@ import warnings
 from collections import deque
 from datetime import datetime, timedelta, tzinfo
 
+# The following code allows to call Matplotlib API from threads (experimental)
+# Requires https://github.com/tacaswell/mpl-qtthread (not packaged yet)
+import matplotlib
+import matplotlib.backends.backend_qt5
+import mpl_qtthread
+# set up the teleporter
+mpl_qtthread.backend.initialize_qt_teleporter()
+# tell Matplotlib to use this backend
+matplotlib.use("module://mpl_qtthread.backend_agg")
+# suppress (now) spurious warnings for mpl3.3+
+mpl_qtthread.monkeypatch_pyplot()
+
 import certifi
 import ophyd
 import pandas as pd

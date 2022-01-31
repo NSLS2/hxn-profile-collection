@@ -853,23 +853,23 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
     #if os.path.isfile('rotCali'):
     #    caliFile = open('rotCali','rb')
     #    y = pickle.load(caliFile)
-    angle_start = np.float(angle_start)
-    angle_end = np.float(angle_end)
-    angle_num = np.int(angle_num)
-    x_start = np.float(x_start)
-    x_end = np.float(x_end)
-    x_num = np.int(x_num)
-    y_start = np.float(y_start)
-    y_end = np.float(y_end)
-    y_num = np.int(y_num)
-    exposure = np.float(exposure)
+    angle_start = float(angle_start)
+    angle_end = float(angle_end)
+    angle_num = int(angle_num)
+    x_start = float(x_start)
+    x_end = float(x_end)
+    x_num = int(x_num)
+    y_start = float(y_start)
+    y_end = float(y_end)
+    y_num = int(y_num)
+    exposure = float(exposure)
 
     angle_step = (angle_end - angle_start) / angle_num
 
-    #fs.stage()
-    #yield from bps.sleep(2)
+    fs.stage()
+    yield from bps.sleep(2)
     ic_0 = sclr2_ch4.get()
-    #fs.unstage()
+    fs.unstage()
 
     real_th_list = []
     scanid_list = []
@@ -888,25 +888,23 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
         while (sclr2_ch2.get() < 10000):
             yield from bps.sleep(60)
             print('IC1 is lower than 10000, waiting...')
-        #fs.stage()
-        #yield from bps.sleep(2)
+        fs.stage()
+        yield from bps.sleep(2)
         while (sclr2_ch4.get() < (0.9*ic_0)):
             yield from peak_bpm_y(-5,5,1)
             yield from peak_bpm_x(-25,25,5)
             ic_0 = sclr2_ch4.get()
         yield from bps.sleep(1)
-        #fs.unstage()
-
+        fs.unstage()
 
         #'''
         #yield from bps.mov(dssy,-2)
-        if np.abs(angle) <= 45:
+        if np.abs(angle) <= 45.01:
 
-            yield from fly2d(dets1,dssx,-8,8,80, dssy,-2,1.5,20,0.03,dead_time=0.003)
-            cx,cy = return_center_of_mass(-1,elem,0.1)
+            yield from fly2d(dets1,dssx,-10,10,80, dssy,-1,1,20,0.03,dead_time=0.003)
+            cx,cy = return_center_of_mass(-1,elem,0.2)
             yield from bps.mov(dssx,cx)
             yield from bps.mov(dssy,cy)
-
 
             #yield from bps.mov(dssx,0)
             #yield from bps.mov(dssz,0)
@@ -921,8 +919,8 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
 
         else:
 
-            yield from fly2d(dets1,dssz,-8,8,80, dssy, -2,1.5,20,0.03,dead_time=0.003)
-            cx,cy = return_center_of_mass(-1,elem,0.1)
+            yield from fly2d(dets1,dssz,-10,10,80, dssy, -1,1,20,0.03,dead_time=0.003)
+            cx,cy = return_center_of_mass(-1,elem,0.2)
             yield from bps.mov(dssz,cx)
             yield from bps.mov(dssy,cy)
 
@@ -963,8 +961,9 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
         #yc,yw = erf_fit(-1,elem)
         #yield from bps.mov(dssy,yc-4.2)
 
+        yield from bps.sleep(1)  # This pauses seems to resolve 2D plotting issues for the scans with multiple subscans.
 
-        if np.abs(angle) <= 45:
+        if np.abs(angle) <= 45.01:
 
             #yield from fly2d(dets1, smlld.dssz,-5,5,50,smlld.dssy,
             #         -5, 5, 50, 0.05, return_speed=40)
@@ -994,9 +993,17 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
         #mov_to_image_cen_smar(-1)
         #yield from mov_to_image_cen_dsx(-1)
 
+        print(f"Preparing the plot of the result ...")
         plot2dfly(-1,elem)
+        print(f"Inserting the plot into the PDF file ...")
         insertFig(note='dsth = {}'.format(dsth.position))
         plt.close()
+        print(f"Plotting of the result is completed.")
+
+        # h = db[-1]
+        # sid = h.start['scan_id']
+        # insertFig(note='dsth = {}'.format(dsth.position),title='sid={}'.format(sid))
+
         #merlin1.unstage()
         #xspress3.unstage()
         print('waiting for 2 sec...')
@@ -1014,6 +1021,8 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
 
     save_page()
     yield from bps.mov(dsth, 0)
+
+
 
 def zp_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
               y_start, y_end, y_num, exposure, elem):

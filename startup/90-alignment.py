@@ -276,14 +276,14 @@ def find_edge(xdata,ydata,size):
     for i in range(l-size):
         local_mean[i]=np.mean(ydata[i:i+size])
     zdata=abs(local_mean-np.array(set_point))
-    index=scipy.argmin(zdata)
+    index=np.argmin(zdata)
     index=index+j
     return xdata[index]
 
 def find_double_edge(xdata, ydata, size):
     edge_1 = find_edge(xdata, ydata, size)
     l = np.size(ydata)
-    index = scipy.argmax(ydata)
+    index = np.argmax(ydata)
     cen = xdata[index]
     if cen > edge_1:
         edge_2 = find_edge(xdata[index:l],ydata[index:l],size)
@@ -538,23 +538,23 @@ def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt
         #ddy = (-0.0024*angle)-0.185
         #dy = dy+ddy
         #yield from bps.movr(dssy,dy)
-        if np.abs(x[i]) > 45:
-            #yield from fly2d(dets1,dssz,start,end,num, dssy, -0.75,0.75,20,acq_time)
-            #cx,cy = return_center_of_mass(-1,elem)
-            #y[i] = cx*np.sin(x[i]*np.pi/180.0)
-            yield from fly1d(dets1,dssz,start,end,num,acq_time)
-            tmp = return_line_center(-1, elem=elem)
-            y[i] = tmp*np.sin(x[i]*np.pi/180.0)
+        if np.abs(x[i]) > 45.01:
+            yield from fly2d(dets1,dssz,start,end,num, dssy, -1,1,20,acq_time)
+            cx,cy = return_center_of_mass(-1,elem)
+            y[i] = cx*np.sin(x[i]*np.pi/180.0)
+            #yield from fly1d(dets1,dssz,start,end,num,acq_time)
+            #tmp = return_line_center(-1, elem=elem)
+            #y[i] = tmp*np.sin(x[i]*np.pi/180.0)
         else:
-            #yield from fly2d(dets1,dssx,start,end,num, dssy, -0.75,0.75,20,acq_time)
-            #cx,cy = return_center_of_mass(-1,elem)
-            #y[i] = cx*np.cos(x[i]*np.pi/180.0)
-            yield from fly1d(dets1,dssx,start,end,num,acq_time)
-            tmp = return_line_center(-1,elem=elem)
-            y[i] = tmp*np.cos(x[i]*np.pi/180.0)
+            yield from fly2d(dets1,dssx,start,end,num, dssy, -1,1,20,acq_time)
+            cx,cy = return_center_of_mass(-1,elem)
+            y[i] = cx*np.cos(x[i]*np.pi/180.0)
+            #yield from fly1d(dets1,dssx,start,end,num,acq_time)
+            #tmp = return_line_center(-1,elem=elem)
+            #y[i] = tmp*np.cos(x[i]*np.pi/180.0)
             #y[i] = tmp*np.cos(x[i]*np.pi/180.0)
             #y[i] = -tmp*np.cos(x[i]*np.pi/180.0)
-        #yield from bps.mov(dssy,cy)
+        yield from bps.mov(dssy,cy)
         #yield from fly1d(dets1,dssy,-2,2,100,acq_time)
         #tmp = return_line_center(-1, elem=elem)
         #yield from bps.mov(dssy,tmp)
