@@ -276,14 +276,14 @@ def find_edge(xdata,ydata,size):
     for i in range(l-size):
         local_mean[i]=np.mean(ydata[i:i+size])
     zdata=abs(local_mean-np.array(set_point))
-    index=scipy.argmin(zdata)
+    index=np.argmin(zdata)
     index=index+j
     return xdata[index]
 
 def find_double_edge(xdata, ydata, size):
     edge_1 = find_edge(xdata, ydata, size)
     l = np.size(ydata)
-    index = scipy.argmax(ydata)
+    index = np.argmax(ydata)
     cen = xdata[index]
     if cen > edge_1:
         edge_2 = find_edge(xdata[index:l],ydata[index:l],size)
@@ -346,7 +346,9 @@ def vmll_z_alignment(z_start, z_end, z_num, start, end, num, acq_time, elem='Pt_
     plt.xlabel('vz')
 
 def zp_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem=' ',linFlag = True,mon='sclr1_ch4'):
-    'moves the zone plate incrementally and find the focus with a linescan at each position'
+    
+    print("moves the zone plate relatively and find the focus with a linescan at each position")
+    
     z_pos=np.zeros(z_num+1)
     fit_size=np.zeros(z_num+1)
     z_step = (z_end - z_start)/z_num
@@ -531,6 +533,8 @@ def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt
     v = np.zeros(a_num+1)
     orig_th = smlld.dsth.position
     for i in range(a_num+1):
+        yield from bps.mov(dssx,0)
+        yield from bps.mov(dssz,0)
         x[i] = a_start + i*a_step
         yield from bps.mov(smlld.dsth, x[i])
         #angle = smlld.dsth.position
@@ -538,27 +542,29 @@ def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt
         #ddy = (-0.0024*angle)-0.185
         #dy = dy+ddy
         #yield from bps.movr(dssy,dy)
-        if np.abs(x[i]) > 45:
-            #yield from fly2d(dets1,dssz,start,end,num, dssy, -1.5,1.5,30,acq_time)
-            #cx,cy = return_center_of_mass(-1,elem)
-            #y[i] = cx*np.sin(x[i]*np.pi/180.0)
-            yield from fly1d(dets1,dssz,start,end,num,acq_time)
-            tmp = return_line_center(-1, elem=elem)
-            y[i] = tmp*np.sin(x[i]*np.pi/180.0)
+        if np.abs(x[i]) > 45.01:
+            yield from fly2d(dets1,dssz,start,end,num, dssy, -1,1,20,acq_time)
+            cx,cy = return_center_of_mass(-1,elem)
+            y[i] = cx*np.sin(x[i]*np.pi/180.0)
+            #yield from fly1d(dets1,dssz,start,end,num,acq_time)
+            #tmp = return_line_center(-1, elem=elem)
+            #y[i] = tmp*np.sin(x[i]*np.pi/180.0)
         else:
-            #yield from fly2d(dets1,dssx,start,end,num, dssy, -1.5,1.5,30,acq_time)
-            #cx,cy = return_center_of_mass(-1,elem)
-            yield from fly1d(dets1,dssx,start,end,num,acq_time)
-            tmp = return_line_center(-1,elem=elem)
-            y[i] = tmp*np.cos(x[i]*np.pi/180.0)
+            yield from fly2d(dets1,dssx,start,end,num, dssy, -1,1,20,acq_time)
+            cx,cy = return_center_of_mass(-1,elem)
+            y[i] = cx*np.cos(x[i]*np.pi/180.0)
+            #yield from fly1d(dets1,dssx,start,end,num,acq_time)
+            #tmp = return_line_center(-1,elem=elem)
+            #y[i] = tmp*np.cos(x[i]*np.pi/180.0)
             #y[i] = tmp*np.cos(x[i]*np.pi/180.0)
             #y[i] = -tmp*np.cos(x[i]*np.pi/180.0)
+        yield from bps.mov(dssy,cy)
         #yield from fly1d(dets1,dssy,-2,2,100,acq_time)
         #tmp = return_line_center(-1, elem=elem)
         #yield from bps.mov(dssy,tmp)
         #v[i] = tmp
         #print('h_cen= ',y[i],'v_cen = ',v[i])
-        plot(-1,elem,'sclr1_ch4')
+        #plot_data(-1,elem,'sclr1_ch4')
         #insertFig(note='dsth = {}'.format(check_baseline(-1,'dsth')))
         plt.close()
 
@@ -572,9 +578,9 @@ def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt
 
     print('dx=',dx,'   ', 'dz=',dz)
 
-    if move_flag:
-        yield from bps.movr(smlld.dsx, dx)
-        yield from bps.movr(smlld.dsz, dz)
+    #if move_flag:
+        #yield from bps.movr(smlld.dsx, dx)
+        #yield from bps.movr(smlld.dsz, dz)
 
     #plt.figure()
     #plt.plot(x,v)
@@ -642,7 +648,7 @@ def check_baseline(sid,name):
         return(mot_pos)
     else:
         #print(name,bl[name])
-        return(bl[name].data[0])
+        return(bl[name].values[0])
 
 
 def check_info(sid):

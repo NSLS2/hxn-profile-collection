@@ -1,35 +1,69 @@
-import certifi
+import functools
+import os
+import time
+import uuid
 import warnings
-import pandas as pd
+from collections import deque
+from datetime import datetime, timedelta, tzinfo
+
+# The following code allows to call Matplotlib API from threads (experimental)
+# Requires https://github.com/tacaswell/mpl-qtthread (not packaged yet)
+import matplotlib
+import matplotlib.backends.backend_qt5
+import mpl_qtthread
+# set up the teleporter
+mpl_qtthread.backend.initialize_qt_teleporter()
+# tell Matplotlib to use this backend
+matplotlib.use("module://mpl_qtthread.backend_agg")
+# suppress (now) spurious warnings for mpl3.3+
+mpl_qtthread.monkeypatch_pyplot()
+
+import certifi
 import ophyd
+import pandas as pd
+import pymongo
+import six
+from ophyd.signal import EpicsSignalBase
+
+import certifi
+import ophyd
+import pandas as pd
+import pymongo
+import six
+from ophyd.signal import EpicsSignalBase
+
+EpicsSignalBase.set_defaults(timeout=10, connection_timeout=10)
 
 # Set up a Broker.
 # TODO clean this up
 from bluesky_kafka import Publisher
-from databroker import Broker
-from databroker.headersource.mongo import MDS
+from databroker.v0 import Broker
 from databroker.assets.mongo import Registry
-
 from databroker.headersource.core import doc_or_uid_to_uid
-
-from datetime import timedelta, datetime, tzinfo
-
-import pymongo
+from databroker.headersource.mongo import MDS
+from databroker.v0 import Broker
+from jsonschema import validate as js_validate
 from pymongo import MongoClient
 
-import uuid
-from jsonschema import validate as js_validate
-import six
-from collections import deque
-
-import os
 os.environ["PPMAC_HOST"] = "xf03idc-ppmac1"
 
+bootstrap_servers = os.getenv("BLUESKY_KAFKA_BOOTSTRAP_SERVERS", None)
+if bootstrap_servers is None:
+    # https://github.com/NSLS-II/nslsii/blob/b332c34813adf798c38184292d21537ef4f653bb/nslsii/__init__.py#L710-L712
+    msg = ("The 'BLUESKY_KAFKA_BOOTSTRAP_SERVERS' environment variable must "
+           "be defined as a comma-delimited list of Kafka server addresses "
+           "or hostnames and ports as a string such as "
+           "``'kafka1:9092,kafka2:9092``")
+    raise RuntimeError(msg)
 
+kafka_password = os.getenv("BLUESKY_KAFKA_PASSWORD", None)
+if kafka_password is None:
+    msg = "The 'BLUESKY_KAFKA_PASSWORD' environment variable must be set."
+    raise RuntimeError(msg)
 
 kafka_publisher = Publisher(
         topic="hxn.bluesky.datum.documents",
-        bootstrap_servers=os.environ['BLUESKY_KAFKA_BOOTSTRAP_SERVERS'],
+        bootstrap_servers=bootstrap_servers,
         key=str(uuid.uuid4()),
         producer_config={
                 "acks": 1,
@@ -37,11 +71,14 @@ kafka_publisher = Publisher(
                 "queue.buffering.max.kbytes": 10 * 1048576,
                 "compression.codec": "snappy",
                 "security.protocol": "SSL",
-                "ssl.ca.location": certifi.where()
-            },
+                "ssl.ca.location": certifi.where(),
+                "security.protocol": "SASL_SSL",
+                "sasl.mechanisms": "PLAIN",
+                "sasl.username": "beamline",
+                "sasl.password": kafka_password,
+                },
         flush_on_stop_doc=True,
     )
-
 
 # DB1
 db1_name = 'rs'
@@ -257,6 +294,8 @@ class CompositeRegistry(Registry):
 mds_db1 = MDS(_mds_config_db1, auth=False)
 db1 = Broker(mds_db1, CompositeRegistry(_fs_config_db1))
 
+
+# wrapper for two databases
 class CompositeBroker(Broker):
     """wrapper for two databases"""
 
@@ -326,16 +365,18 @@ class CompositeBroker(Broker):
 db = CompositeBroker(mds_db1, CompositeRegistry(_fs_config_db1))
 
 from hxntools.handlers import register as _hxn_register_handlers
+
 _hxn_register_handlers(db)
 del _hxn_register_handlers
 # do the rest of the standard configuration
 from IPython import get_ipython
 from nslsii import configure_base, configure_olog
 
-configure_base(get_ipython().user_ns, db, bec=False)
+configure_base(get_ipython().user_ns, db, bec=False, ipython_logging=False)
 # configure_olog(get_ipython().user_ns)
 
 from bluesky.callbacks.best_effort import BestEffortCallback
+
 bec = BestEffortCallback()
 
 # un import *
@@ -355,11 +396,11 @@ RE.md['config'] = {}
 RE.md['beamline_id'] = 'HXN'
 RE.verbose = True
 
-# set up some HXN specific callbacks
-from ophyd.callbacks import UidPublish
 from hxntools.scan_number import HxnScanNumberPrinter
 from hxntools.scan_status import HxnScanStatus
 from ophyd import EpicsSignal
+# set up some HXN specific callbacks
+from ophyd.callbacks import UidPublish
 
 uid_signal = EpicsSignal('XF:03IDC-ES{BS-Scan}UID-I', name='uid_signal')
 uid_broadcaster = UidPublish(uid_signal)
@@ -372,7 +413,7 @@ def flush_on_stop_doc(name, doc):
         kafka_publisher.flush()
 
 # This is needed to prevent the local buffer from filling.
-RE.subscribe('stop', flush_on_stop_doc)
+RE.subscribe(flush_on_stop_doc, 'stop')
 
 # Pass on only start/stop documents to a few subscriptions
 for _event in ('start', 'stop'):
@@ -389,6 +430,7 @@ def ensure_proposal_id(md):
 
 # be nice on segfaults
 import faulthandler
+
 faulthandler.enable()
 
 # set up logging framework
@@ -417,8 +459,8 @@ pd.options.display.width = 180
 pd.options.display.max_rows = None
 pd.options.display.max_columns = 10
 
+from bluesky.plan_stubs import mov
 
-from bluesky.plan_stubs import  mov
 # from bluesky.utils import register_transform
 
 def register_transform(RE, *, prefix='<'):
@@ -435,6 +477,7 @@ def register_transform(RE, *, prefix='<'):
         valid python syntax or an existing transform you are on your own.
     '''
     import IPython
+
     # from IPython.core.inputtransformer2 import StatelessInputTransformer
 
  #   @StatelessInputTransformer.wrap
@@ -522,7 +565,17 @@ def _epicssignal_get(self, *, as_string=None, connection_timeout=1.0, **kwargs):
     if as_string is None:
         as_string = self._string
 
-    with self._lock:
+    ###########################################
+    # Usedf only for old ophyd 1.3.3 and older.
+    from distutils.version import LooseVersion
+
+    import ophyd
+
+    if ophyd.__version__ < LooseVersion('1.4'):
+        self._metadata_lock = self._lock
+    ###########################################
+
+    with self._metadata_lock:
         if not self._read_pv.connected:
             if not self._read_pv.wait_for_connection(connection_timeout):
                 raise TimeoutError('Failed to connect to %s' %
@@ -557,11 +610,9 @@ def _epicssignal_get(self, *, as_string=None, connection_timeout=1.0, **kwargs):
     return ret
 
 
-from ophyd import EpicsSignal
-from ophyd import EpicsSignalRO
+from ophyd import EpicsSignal, EpicsSignalRO
 from ophyd.areadetector import EpicsSignalWithRBV
 
 EpicsSignal.get = _epicssignal_get
 EpicsSignalRO.get = _epicssignal_get
 EpicsSignalWithRBV.get = _epicssignal_get
-

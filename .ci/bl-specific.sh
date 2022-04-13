@@ -1,5 +1,9 @@
 #!/bin/bash
 
-# cp -v <...> ~/.ipython/profile_${TEST_PROFILE}/...
+# TODO: watch for https://github.com/NSLS-II-HXN/hxnfly/pull/8 to be
+# merged/released, then this install can be removed from here.
+python3 -m pip install --no-deps -vv git+https://github.com/NSLS-II-HXN/hxnfly@master
 
-conda install -y -c ${CONDA_CHANNEL_NAME} 03-id-hxn-collection
+sudo mkdir -v -p /home/xf03id/
+sudo chown -Rv $USER: /home/xf03id/
+touch /home/xf03id/benchmark.out

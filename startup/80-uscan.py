@@ -578,8 +578,8 @@ def theta_dexela(motorName,angle_start,angle_end,angle_step,exposure_time):
     yield from bps.mov(motorName,angle_start)
     for i in range(angle_step_num+1):
         print('dsth angle:', motorName.position)
-        caput('XF:03IDC-ES{Dexela:1}TIFF1:Capture',1)
         yield from bps.movr(motorName,angle_step)
+        caput('XF:03IDC-ES{Dexela:1}TIFF1:Capture',1)
         yield from bps.sleep(exposure_time+0.2)
         yield from bps.sleep(1)
     

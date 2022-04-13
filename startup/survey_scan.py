@@ -182,6 +182,8 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     global elem
     elem = element
     global scan_num
+
+    '''
     #scan_num = np.str(sid)
     #scan_id, df = _load_scan(sid, fill_events=False)
     scan_num = np.str(sid)
@@ -191,14 +193,28 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     #fermat_flag = np.int(sys.argv[3])
     #elem = sys.argv[2]
     #det_name = sys.argv[4]
+    '''
+    scan_num = np.str(sid)
+    hdr = db[sid]
+    bl = db.get_table(db[sid],stream_name='baseline')
+    df = db.get_table(db[sid],fill=False)
+    #images = db.get_images(db[sid],name=det_name)
+    h = db[sid]
+    images = list(h.data(det_name))
+    #print('image size:',np.shape(images))
+    images = np.array(np.squeeze(images))
+    plan_args = db[sid].start['plan_args']
+
+    
     ic = np.asfarray(df['sclr1_ch4'])
     #ic_0 = 153000
 
     #images = db.get_images(db[sid],name=det_name)
     images = np.array(np.squeeze(list(hdr.data(det_name))))
     print(np.shape(images))
+    num_frame,nnx,nny = np.shape(images)
     #mask = 1-io.imread('/data/users/2020Q3/Huang_2020Q3/NPO_mask.tif')
-    #mm = np.load('/data/users/2021Q2/Huang_2021Q2/TMA_LCO_60C/mask.npy')
+    mm = np.load('/data/users/2022Q1/May_2022Q1/small_particle/mask.npy')
     #mm2 = np.load('/data/users/2021Q2/Huang_2021Q2/TMA_LCO_pristine/mask2.npy')
     #index = np.where(mask == 1)
     #mx = index[0]
@@ -207,7 +223,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     #print(my)
     #m_num = np.shape(mx)
     #print('load mask 2')
-    #mm = np.load('/data/users/2021Q2/Liu_2021Q2/NZ150_2/mask.npy')
+    #mm = np.load('/data/users/2022Q1/Singer_2022Q1/S1/mask.npy')
     #mm2 = np.load('/data/users/2021Q2/Liu_2021Q2/NZ150_2/mask2.npy')
     #mm3 = np.load('/data/users/2021Q2/Liu_2021Q2/Z150_1/mask.npy')
     for i in range(num_frame):
@@ -216,11 +232,13 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
         #t = np.flipud(images.get_frame(i)[0]).T
         t = np.flipud(images[i,:,:]).T
         #t = t * mask
-        t = t / ic[i]
+        t = t*ic[0] / ic[i]
+        t = t * mm
         #t *= (1-mm)
         #t *= (1-mm2)
         ##t = np.flipud(t)
-        #t[20,187] = 0
+        #t[126,124] = 0
+        #t[126,124] = 0
         #t *= (1-mm3)
         #t *= (1-mm3)
         #t *= (1-mm4)
@@ -252,7 +270,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
         diff_array[:,:,i] = t #* mask
 
 
-    diff_array[22,255,:] = 0
+    #diff_array[22,255,:] = 0
     #diff_array[296,281,:] = 0
     #diff_array[91,221,:] = 0
     #diff_array[440,381,:] = 0
@@ -382,8 +400,8 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     plt.show()
 
     if save_flag:
-        io.imsave('/data/users/2021Q3/Singer_2021Q3/rock_'+scan_num+'_roi.tif',roi.astype(np.float32))
-        io.imsave('/data/users/2021Q3/Singer_2021Q3/rock_'+scan_num+'_xrf.tif',xrf.astype(np.float32))
-        io.imsave('/data/users/2021Q3/Singer_2021Q3/rock_'+scan_num+'_diff_data.tif',diff_array.astype(np.float32))
+        io.imsave('/data/users/2022Q1/May_2022Q1/small_particle/rock_'+scan_num+'_roi.tif',roi.astype(np.float32))
+        io.imsave('/data/users/2022Q1/May_2022Q1/small_particle/rock_'+scan_num+'_xrf.tif',xrf.astype(np.float32))
+        io.imsave('/data/users/2022Q1/May_2022Q1/small_particle/rock_'+scan_num+'_diff_data.tif',diff_array.astype(np.float32))
 
 

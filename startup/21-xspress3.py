@@ -1,7 +1,7 @@
 from ophyd.device import (Component as Cpt)
 
-from hxntools.detectors.xspress3 import (Xspress3FileStore,
-                                         Xspress3Channel)
+from nslsii.detectors.xspress3 import (Xspress3FileStore,
+                                       Xspress3Channel)
 from hxntools.detectors.hxn_xspress3 import HxnXspress3DetectorBase
 import threading
 from ophyd import DeviceStatus
@@ -139,7 +139,12 @@ xspress3 = HxnXspress3Detector('XF:03IDC-ES{Xsp:1}:', name='xspress3')
 
 
 # Create directories on the xspress3 server, otherwise scans can fail:
-xspress3.make_directories.put(True)
+#====================================================================
+# Note from DAMA: commented it out during the 2020-2 deployment visit.
+# The corresponding code is in
+# https://github.com/NSLS-II/nslsii/blob/master/nslsii/detectors/xspress3.py
+#====================================================================
+# xspress3.make_directories.put(True)
 
 
 elem_K_list = np.array(['Na','Mg','Al','Si','P','S','Cl','Ar','K','Ca','Sc','Ti','V','Cr','Mn','Fe','Co','Ni','Cu','Zn','Ga','Ge','As','Se','Br','Kr','Rb','Sr','Y','Zr','Nb','Mo','Tc','Ru','Rh','Pd','Ag','Cd','In','Sn','Sb','Te','I','Xe','Cs','Ba','La','Hf','Ta','W','Re','Os','Ir','Pt','Au','Hg','Tl','Pb','Bi','Po','At','Rn','Fr','Ra','Ac','Ce','Pr','Nd','Pm','Sm','Eu','Gd','Tb','Dy','Ho','Er','Tm','Yb','Lu','Th','Pa','U','Np','Pu','Am','Cm','Bk','Cf'])
@@ -156,7 +161,7 @@ energy_M_list = np.array([1646,1712,1775,1840,1907,1976,2048,2118,2191,2267,2342
 
 
 def xspress3_roi_setup():
-    elem_list = np.array(['Mg','Si','Ge','Cl','Ga','Ti','Fe','Zn','Mn','Cu','Ni','Cr','Co','Pt_L','Hf_L','W_L'])
+    elem_list = np.array(['V','Si','S','P','Ca','K','Fe','Zn','Al','Ti','Ni','Cr','Co','Pt_M','Au_L','Mn'])
     num_elem = np.size(elem_list)
     if num_elem > 16:
         num_elem = 16
@@ -172,6 +177,10 @@ def xspress3_roi_setup():
                 print(elem_list[i], 'is not defined.')
                 break
             channel.set_roi(i+1, energy-150, energy+150, name=elem_list[i])
+
+            # Uncomment the following lines for debugging liveplots without beam.
+            # if elem_list[i] == "Au_L":
+            #     channel.set_roi(i+1, 0, 40000, name=elem_list[i])
 
 
 '''
@@ -267,4 +276,3 @@ def configure_xspress3(sclr):
                 attr.kind = 'config'
 
 configure_xspress3(xspress3)
-
