@@ -253,9 +253,7 @@ class CompositeRegistry(Registry):
 
         resource_id = self._doc_or_uid_to_uid(resource)
 
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            bulk = col.initialize_unordered_bulk_op()
+        to_write = []
 
         d_uids = deque()
 
@@ -264,10 +262,10 @@ class CompositeRegistry(Registry):
                       datum_id=str(d_id),
                       datum_kwargs=dict(d_kwargs))
             apply_to_dict_recursively(dm, sanitize_np)
-            bulk.insert(dm)
+            to_write.append(pymongo.InsertOne(dm))
             d_uids.append(dm['datum_id'])
 
-        bulk_res = bulk.execute()
+        col.bulk_write(to_write, ordered=False)
 
         return d_uids
 
@@ -304,7 +302,7 @@ class CompositeBroker(Broker):
 
         descriptor_uid = doc_or_uid_to_uid(descriptor)
 
-        bulk = event_col.initialize_ordered_bulk_op()
+        to_write = []
         for ev in events:
             data = dict(ev['data'])
 
@@ -330,9 +328,9 @@ class CompositeBroker(Broker):
                           time=ev['time'],
                           seq_num=ev['seq_num'])
 
-            bulk.insert(ev_out)
+            to_write.append(pymongo.InsertOne(ev_out))
 
-        return bulk.execute()
+        col.bulk_write(to_write, ordered=True)
 
     # databroker.headersource.MDSROTemplate
     # databroker.headersource.MDSRO(MDSROTemplate)
