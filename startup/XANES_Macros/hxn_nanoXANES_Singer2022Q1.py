@@ -60,7 +60,7 @@ FeXANES = {'high_e':7.2, 'low_e':7.1,
           'high_e_ugap':7695, 'low_e_ugap':7605,
           'high_e_crl':4, 'low_e_crl':-6,'crl_comb':(12),
           'high_e_zpz1':4.3826, 'zpz1_slope':-5.04,
-          'energy':[(7.08,7.10,0.002),(7.101,7.144,0.001),(7.146, 7.2, 0.002)],
+          'energy':[(7.095,7.10,0.005),(7.101,7.144,0.001),(7.146, 7.2, 0.002)],
           'mirrorCoating': 'Si or Rh', 'zposaz':5000}
 
 FeCalib = {'high_e':7.2, 'low_e':7.1, 
@@ -191,7 +191,7 @@ def generateEList(XANESParam = CrXANES, highEStart = True):
     e_list['ZP focus'] = zpz1_list
     
     #return the dataframe
-    return e_list 
+    return e_list    
 
 def peak_the_flux():
 
@@ -243,8 +243,8 @@ def move_energy(e_,ugap_,zpz_,crl_th_, ignoreCRL= False, ignoreZPZ = False):
     
 
 def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,highEStart = True,
-                    doAlignScan = True, alignX = (-2,2,100,0.1,'Fe',0.7, True),
-                    alignY = (-2,2,100,0.1,'Fe',0.7, True), 
+                    doAlignScan = True, xcen = 0, ycen = 0,
+                    alignX = (-2,2,100,0.1,'Fe',0.7, True),alignY = (-2,2,100,0.1,'Fe',0.7, True), 
                     pdfElem = ('Fe','Cr'),doScan = True, moveOptics = True, ignoreCRL = False, 
                     pdfLog = True, foilCalibScan = False, peakBeam = True,
                     saveLogFolder = '/home/xf03id/Downloads'):
@@ -383,7 +383,7 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
             ycen = return_line_center(-1,'Cl',0.7)
             yield from bps.mov(zpssy, ycen)
             '''
-            pass
+            
 
         elif doAlignScan:
             if alignX[-1]:
@@ -398,8 +398,53 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
                 yield from bps.movr(smary, ycen*0.001)
                 print(f"zpssy centered to {ycen}")
 
+        
+        yield from fly1d(dets_fs,zpssy,-2,2,100,0.03)
+        #yc = return_line_center(-1,elem,threshold=0.5)
+        edge,fwhm=erf_fit(-1,'Ti')
+        plt.close()
+        yield from bps.mov(zpssy,edge-2)
+        
+        yield from fly1d(dets_fs,zpssz,-0.5,3,100,0.03)
+        edge,fwhm=erf_fit(-1,'Ti')
+        plt.close()
+        #xc = return_line_center(-1,elem,threshold=0.5)
+        yield from bps.mov(zpssz,edge-0.5)
+        #yield from bps.movr(smarz,xc/1000)
+        xspress3.unstage()
 
-        print(f'Current scan: {i+1}/{len(e_list)}')
+        yield from fly1d(dets_fs,zpssy,0,3.5,100,0.03)
+        #yc = return_line_center(-1,elem,threshold=0.5)
+        edge,fwhm=erf_fit(-1,'Ti')
+        plt.close()
+        yield from bps.mov(zpssy,edge)
+        xspress3.unstage()
+        
+        ''''
+        yield from fly1d(dets_fs,zpssy,-2,2,100,0.03)
+        #yc = return_line_center(-1,'Ti',threshold=0.5)
+        edge,fwhm=erf_fit(-1,'Ti')
+        plt.close()
+        yield from bps.mov(zpssy,edge-2)
+        #yield from bps.mov(zpssy,yc)
+        
+        yield from fly1d(dets_fs,zpssz,-1,2,100,0.03)
+        edge,fwhm=erf_fit(-1,'Ti')
+        plt.close()
+        #xc = return_line_center(-1,elem,threshold=0.5)
+        yield from bps.mov(zpssz,edge-0.5)
+        #yield from bps.movr(smarz,xc/1000)
+        xspress3.unstage()
+
+        yield from fly1d(dets_fs,zpssy,0,3.5,100,0.03)
+        #yc = return_line_center(-1,elem,threshold=0.5)
+        edge,fwhm=erf_fit(-1,'Ti')
+        plt.close()
+        yield from bps.mov(zpssy,edge)
+        xspress3.unstage()
+        '''
+
+        print(f'Current scan: {i+1}/{len(e_list)} \n')
 
         # do the fly2d scan
 

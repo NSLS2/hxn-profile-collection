@@ -346,7 +346,9 @@ def vmll_z_alignment(z_start, z_end, z_num, start, end, num, acq_time, elem='Pt_
     plt.xlabel('vz')
 
 def zp_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem=' ',linFlag = True,mon='sclr1_ch4'):
-    'moves the zone plate incrementally and find the focus with a linescan at each position'
+    
+    print("moves the zone plate relatively and find the focus with a linescan at each position")
+    
     z_pos=np.zeros(z_num+1)
     fit_size=np.zeros(z_num+1)
     z_step = (z_end - z_start)/z_num
@@ -531,6 +533,8 @@ def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt
     v = np.zeros(a_num+1)
     orig_th = smlld.dsth.position
     for i in range(a_num+1):
+        yield from bps.mov(dssx,0)
+        yield from bps.mov(dssz,0)
         x[i] = a_start + i*a_step
         yield from bps.mov(smlld.dsth, x[i])
         #angle = smlld.dsth.position
@@ -560,7 +564,7 @@ def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt
         #yield from bps.mov(dssy,tmp)
         #v[i] = tmp
         #print('h_cen= ',y[i],'v_cen = ',v[i])
-        plot(-1,elem,'sclr1_ch4')
+        #plot_data(-1,elem,'sclr1_ch4')
         #insertFig(note='dsth = {}'.format(check_baseline(-1,'dsth')))
         plt.close()
 
@@ -574,9 +578,9 @@ def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt
 
     print('dx=',dx,'   ', 'dz=',dz)
 
-    if move_flag:
-        yield from bps.movr(smlld.dsx, dx)
-        yield from bps.movr(smlld.dsz, dz)
+    #if move_flag:
+        #yield from bps.movr(smlld.dsx, dx)
+        #yield from bps.movr(smlld.dsz, dz)
 
     #plt.figure()
     #plt.plot(x,v)

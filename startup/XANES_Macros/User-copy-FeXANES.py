@@ -14,12 +14,12 @@ run -i XANES_Macros/hxn_nanoXANES.py
 
 
 For XANES Scan: <zp_list_xanes2d(FeXANES,dets1,zpssz,-0.15,2.25,80,zpssy,-0.15,2.25,80,0.05,doAlignScan = False,
-,pdfElem = ['Fe','Ti'],saveLogFolder = '/data/users/2022Q1/Singer_2022Q1')
+moveCRL = True,pdfElem = ['Fe','Ti'],saveLogFolder = '/data/users/2022Q1/Singer_2022Q1')
 
 
-For Foil Calibration: <zp_list_xanes2d(FeCalib,dets6,zpssx,-1,1,10,zpssy,-1,1,10,0.05,
-highEStart = False, doAlignScan = False, pdfLog = False, foilCalibScan = True, ignoreCRL = True,peakBeam = False,
-saveLogFolder ='/data/users/2022Q1/Singer_2022Q1') 
+For Foil Calibration: <zp_list_xanes2d(CuCalib,dets6,zpssx,-1,1,10,zpssy,-1,1,10,0.03,
+highEStart = False, doAlignScan = False, pdfLog = False, foilCalibScan = True, peakBeam = False,
+saveLogFolder ='/data/users/2022Q1/Ajith_2022Q1/UCM/CuXANES') 
 """
 
 
@@ -60,14 +60,7 @@ FeXANES = {'high_e':7.2, 'low_e':7.1,
           'high_e_ugap':7695, 'low_e_ugap':7605,
           'high_e_crl':4, 'low_e_crl':-6,'crl_comb':(12),
           'high_e_zpz1':4.3826, 'zpz1_slope':-5.04,
-          'energy':[(7.08,7.10,0.002),(7.101,7.144,0.001),(7.146, 7.2, 0.002)],
-          'mirrorCoating': 'Si or Rh', 'zposaz':5000}
-
-FeCalib = {'high_e':7.2, 'low_e':7.1, 
-          'high_e_ugap':7695, 'low_e_ugap':7605,
-          'high_e_crl':4, 'low_e_crl':-6,'crl_comb':(12),
-          'high_e_zpz1':4.3826, 'zpz1_slope':-5.04,
-          'energy':[(7.08, 7.15, 0.001)],
+          'energy':[(7.08,7.10,0.005),(7.101,7.144,0.001),(7.146, 7.2, 0.002)],
           'mirrorCoating': 'Si or Rh', 'zposaz':5000}
 
 ZnXANES =  {'high_e':9.7, 'low_e':9.6, 
@@ -243,9 +236,9 @@ def move_energy(e_,ugap_,zpz_,crl_th_, ignoreCRL= False, ignoreZPZ = False):
     
 
 def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,highEStart = True,
-                    doAlignScan = True, alignX = (-2,2,100,0.1,'Fe',0.7, True),
-                    alignY = (-2,2,100,0.1,'Fe',0.7, True), 
-                    pdfElem = ('Fe','Cr'),doScan = True, moveOptics = True, ignoreCRL = False, 
+                    doAlignScan = True, xcen = 0, ycen = 0,
+                    alignX = (-2,2,100,0.1,'Fe',0.7, True),alignY = (-2,2,100,0.1,'Fe',0.7, True), 
+                    pdfElem = ('Fe','Cr'),doScan = True, moveOptics = True, moveCRL = True, 
                     pdfLog = True, foilCalibScan = False, peakBeam = True,
                     saveLogFolder = '/home/xf03id/Downloads'):
                     
@@ -311,7 +304,7 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
     #caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0) 
     
     #remeber the start positions
-    zpssz_i = zpssz.position
+    zpssx_i = zpssx.position
     zpssy_i = zpssy.position
 
 
@@ -340,7 +333,7 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
         
         if moveOptics: 
             yield from move_energy(e_t,ugap_t,zpz_t,crl_t,
-                                   ignoreCRL= ignoreCRL, 
+                                   ignoreCRL= moveCRL, 
                                    ignoreZPZ = foilCalibScan)
 
         else: pass
@@ -353,7 +346,7 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
         ic3_ = sclr2_ch4.get()
         
         # if ic3 value is below the threshold, peak the beam
-        if ic3_ < ic_3_init*0.8:
+        if ic3_ < ic_3_init*0.9:
             
             if peakBeam: yield from peak_the_flux()
             fluxPeaked = True # for df record
