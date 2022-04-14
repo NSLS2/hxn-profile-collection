@@ -330,7 +330,7 @@ class CompositeBroker(Broker):
 
             to_write.append(pymongo.InsertOne(ev_out))
 
-        col.bulk_write(to_write, ordered=True)
+        event_col.bulk_write(to_write, ordered=True)
 
     # databroker.headersource.MDSROTemplate
     # databroker.headersource.MDSRO(MDSROTemplate)
