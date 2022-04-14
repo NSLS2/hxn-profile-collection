@@ -372,7 +372,13 @@ del _hxn_register_handlers
 from IPython import get_ipython
 from nslsii import configure_base, configure_olog
 
-configure_base(get_ipython().user_ns, db, bec=False, ipython_logging=False)
+configure_base(
+    get_ipython().user_ns,
+    db,
+    bec=False,
+    ipython_logging=False,
+    publish_documents_with_kafka=True
+)
 # configure_olog(get_ipython().user_ns)
 
 from bluesky.callbacks.best_effort import BestEffortCallback
@@ -395,6 +401,7 @@ RE.md['group'] = ''
 RE.md['config'] = {}
 RE.md['beamline_id'] = 'HXN'
 RE.verbose = True
+
 
 from hxntools.scan_number import HxnScanNumberPrinter
 from hxntools.scan_status import HxnScanStatus
