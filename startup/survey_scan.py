@@ -76,18 +76,18 @@ def display_frame(index):
 
 def onclick(event):
     #print(w,l,event.xdata,event.ydata)
-    index = w*(np.int(np.round(event.ydata)))  + np.int(np.round(event.xdata))
+    index = w*(int(np.round(event.ydata)))  + int(np.round(event.xdata))
     fig = plt.figure(0)
     plt.clf()
     plt.imshow(xrf,interpolation = 'none',aspect='auto')
-    plt.scatter(np.int(np.round(event.xdata)),np.int(np.round(event.ydata)),zorder=1)
+    plt.scatter(int(np.round(event.xdata)),int(np.round(event.ydata)),zorder=1)
     plt.title('#'+scan_num +' '+elem)
     plt.draw()
 
     fig1 = plt.figure(1)
     plt.clf()
     plt.imshow(roi,interpolation = 'none',aspect='auto')
-    plt.scatter(np.int(np.round(event.xdata)),np.int(np.round(event.ydata)),zorder=1)
+    plt.scatter(int(np.round(event.xdata)),int(np.round(event.ydata)),zorder=1)
     plt.title('#'+scan_num +' Diff ROI')
     plt.draw()
 
@@ -95,7 +95,7 @@ def onclick(event):
     fig2 = plt.figure(2)
     plt.clf()
     im1 = plt.imshow(roi2,interpolation = 'none')
-    plt.scatter(np.int(np.round(event.xdata)),np.int(np.round(event.ydata)),zorder=1)
+    plt.scatter(int(np.round(event.xdata)), int(np.round(event.ydata)),zorder=1)
     plt.title('#'+scan_num +' Trans ROI')
     plt.draw()
     '''
@@ -105,11 +105,11 @@ def onclick(event):
 
 def onclick_roi(event):
     #print(w,l,event.xdata,event.ydata)
-    index = w*(np.int(np.round(event.ydata)))  + np.int(np.round(event.xdata))
+    index = w*(int(np.round(event.ydata)))  + int(np.round(event.xdata))
     fig1 = plt.figure(1)
     plt.clf()
     plt.imshow(roi,interpolation = 'none',aspect='auto')
-    plt.scatter(np.int(np.round(event.xdata)),np.int(np.round(event.ydata)),zorder=1)
+    plt.scatter(int(np.round(event.xdata)),int(np.round(event.ydata)),zorder=1)
     plt.title('#'+scan_num +' Diff ROI')
     plt.draw()
 
@@ -117,7 +117,7 @@ def onclick_roi(event):
     fig1 = plt.figure(0)
     plt.clf()
     plt.imshow(xrf,interpolation = 'none',aspect='auto')
-    plt.scatter(np.int(np.round(event.xdata)),np.int(np.round(event.ydata)),zorder=1)
+    plt.scatter(int(np.round(event.xdata)),int(np.round(event.ydata)),zorder=1)
     plt.title('#'+scan_num +' '+elem)
     plt.draw()
 
@@ -125,7 +125,7 @@ def onclick_roi(event):
     fig1 = plt.figure(2)
     plt.clf()
     im1 = plt.imshow(roi2,interpolation = 'none')
-    plt.scatter(np.int(np.round(event.xdata)),np.int(np.round(event.ydata)),zorder=1)
+    plt.scatter(int(np.round(event.xdata)),int(np.round(event.ydata)),zorder=1)
     plt.title('#'+scan_num +' Trans ROI')
     plt.draw()
     '''
@@ -134,11 +134,11 @@ def onclick_roi(event):
 
 def onclick_roi2(event):
     #print(w,l,event.xdata,event.ydata)
-    index = w*(np.int(np.round(event.ydata)))  + np.int(np.round(event.xdata))
+    index = w*(int(np.round(event.ydata)))  + int(np.round(event.xdata))
     fig1 = plt.figure(2)
     plt.clf()
     im1 = plt.imshow(roi2,interpolation = 'none')
-    plt.scatter(np.int(np.round(event.xdata)),np.int(np.round(event.ydata)),zorder=1)
+    plt.scatter(int(np.round(event.xdata)),int(np.round(event.ydata)),zorder=1)
     plt.title('#'+scan_num +' tran ROI')
     plt.draw()
 
@@ -146,7 +146,7 @@ def onclick_roi2(event):
     fig1 = plt.figure(0)
     plt.clf()
     im1 = plt.imshow(xrf,interpolation = 'none')
-    plt.scatter(np.int(np.round(event.xdata)),np.int(np.round(event.ydata)),zorder=1)
+    plt.scatter(int(np.round(event.xdata)),int(np.round(event.ydata)),zorder=1)
     plt.title('#'+scan_num +' '+elem)
     plt.draw()
 
@@ -154,7 +154,7 @@ def onclick_roi2(event):
     fig1 = plt.figure(1)
     plt.clf()
     im1 = plt.imshow(roi,interpolation = 'none')
-    plt.scatter(np.int(np.round(event.xdata)),np.int(np.round(event.ydata)),zorder=1)
+    plt.scatter(int(np.round(event.xdata)),int(np.round(event.ydata)),zorder=1)
     plt.title('#'+scan_num +' Diff ROI')
     plt.draw()
 
@@ -178,7 +178,7 @@ def onclick_fermat(event):
 def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=False,zp_flag=False):
 
     #scan_num = sys.argv[1]
-    #sid = np.int(scan_num)
+    #sid = int(scan_num)
     global elem
     elem = element
     global scan_num
@@ -190,7 +190,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     df = db.get_table(db[sid],fill=False)
     num_frame, count = np.shape(df)
     hdr = db[sid]
-    #fermat_flag = np.int(sys.argv[3])
+    #fermat_flag = int(sys.argv[3])
     #elem = sys.argv[2]
     #det_name = sys.argv[4]
     '''

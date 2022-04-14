@@ -212,7 +212,7 @@ def theta_fly2d_ce(angle_start,angle_end,num_angle,motor1,start1,end1,num1,motor
     ssy_current = zps.zpssy.position
     ssz_current = zps.zpssz.position
 
-    angle_step = np.int((angle_end - angle_start) / num_angle)
+    angle_step = int((angle_end - angle_start) / num_angle)
     start_angle = angle_current + angle_start
     yield from bps.mov(zps.zpsth,start_angle)
    # RE(fly1d(zps.zpssz,-1,1,50,0.1))
@@ -344,7 +344,7 @@ def vlm_orth_coarse(start,end,step,angle):
 
 def peak_up_xbpm(start_relative,end_relative,step_size,direction='y'):
     print('peaking up xbmp set point in ', direction, 'direction')
-    num_points = np.int((end_relative - start_relative) // step_size + 1)
+    num_points = int((end_relative - start_relative) // step_size + 1)
     ic = np.zeros(num_points)
 
     if direction == 'x':
@@ -481,16 +481,16 @@ def zp_mesh_scan(xs,xe,xn,ys,ye,yn,exposure):
 
 def makeup_scan(sid_list,x_start, x_end, x_num, y_start, y_end, y_num, exposure, elem):
     num_scan = np.size(sid_list)
-    x_start = np.float(x_start)
-    x_end = np.float(x_end)
-    x_num = np.int(x_num)
-    y_start = np.float(y_start)
-    y_end = np.float(y_end)
-    y_num = np.int(y_num)
-    exposure = np.float(exposure)
+    x_start = float(x_start)
+    x_end = float(x_end)
+    x_num = int(x_num)
+    y_start = float(y_start)
+    y_end = float(y_end)
+    y_num = int(y_num)
+    exposure = float(exposure)
 
     for i in range(num_scan):
-        sid = np.int(sid_list[i])
+        sid = int(sid_list[i])
         yield from recover_mll_scan_pos(sid,1,0,0)
         angle = dsth.position
 
@@ -569,7 +569,7 @@ def night_mosaic_mp(nx,ny):
 import epics
 def theta_dexela(motorName,angle_start,angle_end,angle_step,exposure_time):
     theta_zero = motorName.position
-    angle_step_num = np.int((angle_end - angle_start) / angle_step)
+    angle_step_num = int((angle_end - angle_start) / angle_step)
     print('number of steps:', angle_step_num)
 
     caput('XF:03IDC-ES{Dexela:1}cam1:AcquireTime',exposure_time)

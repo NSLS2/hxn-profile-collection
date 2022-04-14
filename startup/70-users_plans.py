@@ -151,7 +151,7 @@ def go_det(det):
 
 
 def go_energy(energy):
-    energy = np.float(energy)
+    energy = float(energy)
     if energy == 11950:
         mov(dcm_th, 9.52237)
         mov(dcm_p, 0.75671)
@@ -216,14 +216,14 @@ def mll_mosaic_scan(x_start, x_end, x_num, x_block, y_start, y_end, y_num, y_blo
     angle = 15.0*np.pi/180.0
 
     #initialize parameters
-    x_start = np.float(x_start)
-    x_end = np.float(x_end)
-    x_num = np.int(x_num)
-    y_num = np.int(y_num)
-    y_start = np.float(y_start)
-    y_end = np.float(y_end)
-    x_block = np.int(x_block)
-    y_block = np.int(y_block)
+    x_start = float(x_start)
+    x_end = float(x_end)
+    x_num = int(x_num)
+    y_num = int(y_num)
+    y_start = float(y_start)
+    y_end = float(y_end)
+    x_block = int(x_block)
+    y_block = int(y_block)
 
     #read initial position
     pre_ssx = smll.ssx.position
@@ -271,12 +271,12 @@ def mll_mosaic_scan(x_start, x_end, x_num, x_block, y_start, y_end, y_num, y_blo
 
 
 def mosaic_scan(x_start, x_end, x_num, y_start, y_end, y_num):
-    x_start = np.float(x_start)
-    x_end = np.float(x_end)
-    x_num = np.int(x_num)
-    y_num = np.int(y_num)
-    y_start = np.float(y_start)
-    y_end = np.float(y_end)
+    x_start = float(x_start)
+    x_end = float(x_end)
+    x_num = int(x_num)
+    y_num = int(y_num)
+    y_start = float(y_start)
+    y_end = float(y_end)
 
     # kill close-loop
     #zps.zp_kill_piezos.put(1)
@@ -509,8 +509,8 @@ def mov_to_image_center_tmp(scan_id=-1, elem='Au_L', bitflag=1, moveflag=1,piezo
 
     b = ndimage.measurements.center_of_mass(xrf)
 
-    iy = np.int(np.round(b[0]))
-    ix = np.int(np.round(b[1]))
+    iy = int(np.round(b[0]))
+    ix = int(np.round(b[1]))
     i_max = ix + iy * nx
 
     x_cen = x[i_max]
@@ -569,13 +569,13 @@ def tomo_scan_list(angle_list, x_start, x_end, x_num,
 
     angle_list = np.array(angle_list)
     angle_num = np.size(angle_list)
-    x_start = np.float(x_start)
-    x_end = np.float(x_end)
-    x_num = np.int(x_num)
-    y_start = np.float(y_start)
-    y_end = np.float(y_end)
-    y_num = np.int(y_num)
-    exposure = np.float(exposure)
+    x_start = float(x_start)
+    x_end = float(x_end)
+    x_num = int(x_num)
+    y_start = float(y_start)
+    y_end = float(y_end)
+    y_num = int(y_num)
+    exposure = float(exposure)
     offset_y = 0.32
     offset_x = 0
     #RE(fly2d(dssz, -8, 8, 80, dssy, -2, 2, 20, 0.05, return_speed=40))
@@ -649,15 +649,15 @@ def scan_translate(step_size,step_num, x_start, x_end, x_num,
     y_0 = zps.smary.position
     theta_0 = zps.zpsth.position
 
-    step_size = np.float(step_size)
-    step_num = np.int(step_num)
-    x_start = np.float(x_start)
-    x_end = np.float(x_end)
-    x_num = np.int(x_num)
-    y_start = np.float(y_start)
-    y_end = np.float(y_end)
-    y_num = np.int(y_num)
-    exposure = np.float(exposure)
+    step_size = float(step_size)
+    step_num = int(step_num)
+    x_start = float(x_start)
+    x_end = float(x_end)
+    x_num = int(x_num)
+    y_start = float(y_start)
+    y_end = float(y_end)
+    y_num = int(y_num)
+    exposure = float(exposure)
 
 
     for i in range(step_num):
@@ -693,13 +693,13 @@ def tomo_scan_list_zp(angle_list, x_start, x_end, x_num,
 
     angle_list = np.array(angle_list)
     angle_num = np.size(angle_list)
-    x_start = np.float(x_start)
-    x_end = np.float(x_end)
-    x_num = np.int(x_num)
-    y_start = np.float(y_start)
-    y_end = np.float(y_end)
-    y_num = np.int(y_num)
-    exposure = np.float(exposure)
+    x_start = float(x_start)
+    x_end = float(x_end)
+    x_num = int(x_num)
+    y_start = float(y_start)
+    y_end = float(y_end)
+    y_num = int(y_num)
+    exposure = float(exposure)
 
     for i in range(angle_num):
         yield from bps.mov(zps.zpsth, angle_list[i])
@@ -783,13 +783,13 @@ def tomo_scan_list_zp_no_move(angle_list, x_start, x_end, x_num,
 
     angle_list = np.array(angle_list)
     angle_num = np.size(angle_list)
-    x_start = np.float(x_start)
-    x_end = np.float(x_end)
-    x_num = np.int(x_num)
-    y_start = np.float(y_start)
-    y_end = np.float(y_end)
-    y_num = np.int(y_num)
-    exposure = np.float(exposure)
+    x_start = float(x_start)
+    x_end = float(x_end)
+    x_num = int(x_num)
+    y_start = float(y_start)
+    y_end = float(y_end)
+    y_num = int(y_num)
+    exposure = float(exposure)
 
 
     for i in range(angle_num):
@@ -1032,16 +1032,16 @@ def zp_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
     #if os.path.isfile('rotCali'):
     #    caliFile = open('rotCali','rb')
     #    y = pickle.load(caliFile)
-    angle_start = np.float(angle_start)
-    angle_end = np.float(angle_end)
-    angle_num = np.int(angle_num)
-    x_start = np.float(x_start)
-    x_end = np.float(x_end)
-    x_num = np.int(x_num)
-    y_start = np.float(y_start)
-    y_end = np.float(y_end)
-    y_num = np.int(y_num)
-    exposure = np.float(exposure)
+    angle_start = float(angle_start)
+    angle_end = float(angle_end)
+    angle_num = int(angle_num)
+    x_start = float(x_start)
+    x_end = float(x_end)
+    x_num = int(x_num)
+    y_start = float(y_start)
+    y_end = float(y_end)
+    y_num = int(y_num)
+    exposure = float(exposure)
     #caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',1)
     #yield from bps.sleep(3)
     ic_0 = sclr2_ch4.get()
@@ -1176,16 +1176,16 @@ def zp_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
 
 def tomo_slice_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
                     y_start, y_end, y_num, exposure):
-    angle_start = np.float(angle_start)
-    angle_end = np.float(angle_end)
-    angle_num = np.int(angle_num)
-    x_start = np.float(x_start)
-    x_end = np.float(x_end)
-    x_num = np.int(x_num)
-    y_start = np.float(y_start)
-    y_end = np.float(y_end)
-    y_num = np.int(y_num)
-    exposure = np.float(exposure)
+    angle_start = float(angle_start)
+    angle_end = float(angle_end)
+    angle_num = int(angle_num)
+    x_start = float(x_start)
+    x_end = float(x_end)
+    x_num = int(x_num)
+    y_start = float(y_start)
+    y_end = float(y_end)
+    y_num = int(y_num)
+    exposure = float(exposure)
     angle_step = (angle_end - angle_start) / angle_num
 
     y_step = (y_end - y_start) / y_num
@@ -1288,10 +1288,10 @@ def move_fly_center(elem):
     roi_data = roi_data.reshape(ny,nx)
     x = x.reshape(ny,nx)
     ix,iy = ndimage.measurements.center_of_mass(roi_data)
-    ix = np.int(ix)
-    iy = np.int(iy)
+    ix = int(ix)
+    iy = int(iy)
     #i_max = find_mass_center(roi_data)
-    #i_max = np.int(i_max)
+    #i_max = int(i_max)
     #print(ix,iy,x[ix,iy])
     #print(x)
     print('mass center:', x[ix,iy])
@@ -2042,7 +2042,7 @@ def xanes_scan(energy_list,gap_list,x_start,x_end,x_num,y_start,y_end,y_num,expo
     #current_det = gs.PLOT_Y
     #gs.PLOT_Y= elem
 
-    exposure = np.float(exposure)
+    exposure = float(exposure)
 
     start_bragg = dcm.th.position
     start_zpz1 = zp.zpz1.position
@@ -2059,7 +2059,7 @@ def xanes_scan(energy_list,gap_list,x_start,x_end,x_num,y_start,y_end,y_num,expo
         print('current energy:', current_energy,current_bragg)
         yield from bps.mov(dcm.th,bragg_list[i])
         yield from bps.sleep(5)
-        energy_diff = np.float(energy_list[i]) - ref_energy
+        energy_diff = float(energy_list[i]) - ref_energy
         #gap = 8.18+energy_diff
         gap = gap_list[i]
         print('new gap:', gap)
@@ -2751,8 +2751,8 @@ def return_center_of_mass(scan_id = -1, elem = 'Cr',th=0.5):
 
     b = ndimage.measurements.center_of_mass(xrf)
 
-    iy = np.int(np.round(b[0]))
-    ix = np.int(np.round(b[1]))
+    iy = int(np.round(b[0]))
+    ix = int(np.round(b[1]))
     i_max = ix + iy * nx
 
     x_cen = x[i_max]
@@ -2782,8 +2782,8 @@ def return_center_of_mass_blurr(scan_id = -1, elem = 'Cr',blurr_level = 10,bitfl
 
     b = ndimage.measurements.center_of_mass(xrf)
 
-    iy = np.int(np.round(b[0]))
-    ix = np.int(np.round(b[1]))
+    iy = int(np.round(b[0]))
+    ix = int(np.round(b[1]))
     i_max = ix + iy * nx
 
     x_cen = x[i_max]
@@ -2813,8 +2813,8 @@ def mov_to_image_cen_zpsx(scan_id=-1, elem='Ni', bitflag=1):
 
     b = ndimage.measurements.center_of_mass(xrf)
 
-    iy = np.int(np.round(b[0]))
-    ix = np.int(np.round(b[1]))
+    iy = int(np.round(b[0]))
+    ix = int(np.round(b[1]))
     i_max = ix + iy * nx
 
     x_cen = x[i_max]
@@ -2971,8 +2971,8 @@ def mov_to_image_cen_dsx(scan_id=-1, elem='Ni', bitflag=1, moveflag=1,piezomovef
 
     b = ndimage.measurements.center_of_mass(xrf)
 
-    iy = np.int(np.round(b[0]))
-    ix = np.int(np.round(b[1]))
+    iy = int(np.round(b[0]))
+    ix = int(np.round(b[1]))
     i_max = ix + iy * nx
 
     x_cen = x[i_max]
@@ -3054,8 +3054,8 @@ def calc_image_cen_smar(scan_id=-1, elem='Er', bitflag=1, movflag=1):
 
     b = ndimage.measurements.center_of_mass(xrf)
 
-    iy = np.int(np.round(b[0]))
-    ix = np.int(np.round(b[1]))
+    iy = int(np.round(b[0]))
+    ix = int(np.round(b[1]))
     i_max = ix + iy * nx
 
     x_cen = x[i_max]
@@ -3101,8 +3101,8 @@ def mov_to_image_cen_smar(scan_id=-1, elem='Er', bitflag=1, movflag=1):
 
     b = ndimage.measurements.center_of_mass(xrf)
 
-    iy = np.int(np.round(b[0]))
-    ix = np.int(np.round(b[1]))
+    iy = int(np.round(b[0]))
+    ix = int(np.round(b[1]))
     i_max = ix + iy * nx
 
     x_cen = x[i_max]
@@ -3228,8 +3228,8 @@ def mov_to_image_cen_zpss(scan_id=-1, elem='Ni', bitflag=1):
 
     b = ndimage.measurements.center_of_mass(xrf)
 
-    iy = np.int(np.round(b[0]))
-    ix = np.int(np.round(b[1]))
+    iy = int(np.round(b[0]))
+    ix = int(np.round(b[1]))
     i_max = ix + iy * nx
 
     x_cen = x[i_max]
@@ -3492,7 +3492,7 @@ def stitch_mosaic(start_scan_id, end_scan_id, nx_mosaic, ny_mosaic,elem,norm=Non
         spectrum2 = fly2d_reshape(hdr, spectrum)
 
         ix = np.mod(i,nx_mosaic)
-        iy = np.int(np.floor(i/nx_mosaic))
+        iy = int(np.floor(i/nx_mosaic))
         array[nx_flyscan*ix:nx_flyscan*(ix+1),ny_flyscan*iy:ny_flyscan*(iy+1)] = spectrum2.T
 
     if clim is None:
@@ -3757,10 +3757,10 @@ def zp_theta_scan(angle_start,angle_end,angle_step_size):
     #p_vy_0 = p_vy.position
     zpsth_0 = zpsth.position
     y_pos = zpssy.position
-    angle_step_num = np.int((angle_end - angle_start) / angle_step_size) + 1
+    angle_step_num = int((angle_end - angle_start) / angle_step_size) + 1
     print(angle_start,angle_end,angle_step_size,angle_step_num)
     yield from bps.mov(zpsth,angle_start)
-    for i in range(np.int(angle_step_num)):
+    for i in range(int(angle_step_num)):
         print('running scan at ',zpsth.position)
     df = h.table()
     mon = np.array(df['sclr1_ch4'],dtype=float32)
@@ -3786,12 +3786,12 @@ def zp_theta_scan_center_angle(angle_start,angle_end,angle_step_size,x1,x2,x_num
     #p_vx_0 = p_vx.position
     #p_vy_0 = p_vy.position
     zpsth_0 = zpsth.position
-    angle_step_num = np.int((angle_end - angle_start) / angle_step_size) + 1
+    angle_step_num = int((angle_end - angle_start) / angle_step_size) + 1
     print(angle_start,angle_end,angle_step_size,angle_step_num)
     yield from bps.mov(zpsth,angle_start)
     lc_angle = zpsth_0
 
-    for i in range(np.int(angle_step_num)):
+    for i in range(int(angle_step_num)):
 
         while (sclr2_ch2.get() < 50000):
             yield from bps.sleep(60)
@@ -3878,12 +3878,12 @@ def zp_theta_scan_center_angle(angle_start,angle_end,angle_step_size,x1,x2,x_num
     #p_vx_0 = p_vx.position
     #p_vy_0 = p_vy.position
     zpsth_0 = zpsth.position
-    angle_step_num = np.int((angle_end - angle_start) / angle_step_size) + 1
+    angle_step_num = int((angle_end - angle_start) / angle_step_size) + 1
     print(angle_start,angle_end,angle_step_size,angle_step_num)
     yield from bps.mov(zpsth,angle_start)
     lc_angle = zpsth_0
 
-    for i in range(np.int(angle_step_num)):
+    for i in range(int(angle_step_num)):
         while (sclr2_ch4.get() < 50000):
             yield from bps.sleep(60)
             print('IC3 is lower than 50000, waiting...')
@@ -3951,7 +3951,7 @@ def zp_rock(angle_start,angle_end,x_step, num):
     yield from bps.movr(p_v_ry, angle_start)
     yield from bps.movr(p_vx,-x_step*num/2)
     print(angle_start,angle_end,angle_step,num)
-    for i in range(np.int(num+1)):
+    for i in range(int(num+1)):
         caput('XF:03IDC-ES{Merlin:2}TIFF1:Capture',1)
         #print('running scan at ',p_v_ry.position)
         #yield from fly2d(dets2, ssx,-1,1,200, ssy, -1, 1, 200, 0.05, return_speed = 40)

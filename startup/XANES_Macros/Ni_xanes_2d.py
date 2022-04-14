@@ -73,8 +73,8 @@ def return_center_of_mass(scan_id = -1, elem = 'Cr'):
 
     b = ndimage.measurements.center_of_mass(xrf)
 
-    iy = np.int(np.round(b[0]))
-    ix = np.int(np.round(b[1]))
+    iy = int(np.round(b[0]))
+    ix = int(np.round(b[1]))
     i_max = ix + iy * nx
 
     x_cen = x[i_max]
