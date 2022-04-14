@@ -572,11 +572,10 @@ def _epicssignal_get(self, *, as_string=None, connection_timeout=1.0, **kwargs):
 
     ###########################################
     # Usedf only for old ophyd 1.3.3 and older.
-    from distutils.version import LooseVersion
-
+    import packaging
     import ophyd
 
-    if ophyd.__version__ < LooseVersion('1.4'):
+    if packaging.version.parse(ophyd.__version__) < packaging.version.parse("1.4"):
         self._metadata_lock = self._lock
     ###########################################
 
