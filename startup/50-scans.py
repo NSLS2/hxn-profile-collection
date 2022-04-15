@@ -75,7 +75,19 @@ conflict_name = ['pmllf', 'zplab', 'pmllc']
 # sd.baseline = [dcm, m1, m2, beamline_status, smll, vmll, hmll, ssa2, bpm1, bpm2, smlld]
 sd.baseline = [ugap,e,dcm, m1, m2, beamline_status, smll, vmll, hmll, ssa2, mllosa, zp, zps, zposa, zpbs, smlld, fdet1, diff, p, ps, pp]
 
-BlueskyMagics.positioners = [d for  d in
-                             bu.separate_devices(
-                                 ophyd.utils.instances_from_namespace(
-                                     (ophyd.EpicsMotor, ophyd.PseudoSingle)))]
+
+# The following is a temporary solution, which replaces fixed list of devices passed to 'BlueskyMagics.positioners' (deprecated).
+#   TODO: The proper way to label devices is to pass 'labels' to the device (Ophyd object) constructor. Use meaningful labels.
+dev_list_motor = [d for  d in bu.separate_devices(ophyd.utils.instances_from_namespace((ophyd.EpicsMotor,)))]
+dev_list_pseudo = [d for  d in bu.separate_devices(ophyd.utils.instances_from_namespace((ophyd.PseudoSingle,)))]
+for d in dev_list_motor:
+    d._ophyd_labels_ = set(["Epics Motor"])
+for d in dev_list_pseudo:
+    d._ophyd_labels_ = set(["Pseudo Single"])
+
+
+# BlueskyMagics.positioners = [d for  d in
+#                              bu.separate_devices(
+#                                  ophyd.utils.instances_from_namespace(
+#                                      (ophyd.EpicsMotor, ophyd.PseudoSingle)))]
+
