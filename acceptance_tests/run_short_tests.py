@@ -1,5 +1,5 @@
 # Running the test from IPython:
-# %run -i ~/.ipython/profile_collection/acceptance_tests/run_all_tests.py
+# %run -i ~/.ipython/profile_collection/acceptance_tests/run_short_tests.py
 
 def test_fly1d():
     """
@@ -75,25 +75,29 @@ def test_mesh():
     _ = db[uid].table(fill=True)
     print("Table is filled")
 
+print("=================================================================================")
+print(f"  The following test functions were loaded in the environment:")
+print(f"      test_fly1d(), test_fly2d(), test_dscan(), test_d2scan(), test_mesh()")
+print(f"  Run those functions manually to complete the test.")
+print("=================================================================================")
 
+# print("=====================================================================================")
+# print("                              Testing 'test_fly1d' ...                               ")
+# test_fly1d()
 
-print("=====================================================================================")
-print("                              Testing 'test_fly1d' ...                               ")
-test_fly1d()
+# print("=====================================================================================")
+# print("                              Testing 'test_fly2d' ...                               ")
+# test_fly2d()
 
-print("=====================================================================================")
-print("                              Testing 'test_fly2d' ...                               ")
-test_fly2d()
+# print("=====================================================================================")
+# print("                              Testing 'test_dscan' ...                               ")
+# test_dscan()
 
-print("=====================================================================================")
-print("                              Testing 'test_dscan' ...                               ")
-test_dscan()
+# print("=====================================================================================")
+# print("                              Testing 'test_d2scan' ...                              ")
+# test_d2scan()
 
-print("=====================================================================================")
-print("                              Testing 'test_d2scan' ...                              ")
-test_d2scan()
-
-print("=====================================================================================")
-print("                              Testing 'test_mesh' ...                                ")
-test_mesh()
+# print("=====================================================================================")
+# print("                              Testing 'test_mesh' ...                                ")
+# test_mesh()
 
