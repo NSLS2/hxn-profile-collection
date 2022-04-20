@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, tzinfo
 # The following code allows to call Matplotlib API from threads (experimental)
 # Requires https://github.com/tacaswell/mpl-qtthread (not packaged yet)
 import matplotlib
-import matplotlib.backends.backend_qt5
+import matplotlib.backends.backend_qt
 import mpl_qtthread
 # set up the teleporter
 mpl_qtthread.backend.initialize_qt_teleporter()
@@ -17,6 +17,12 @@ mpl_qtthread.backend.initialize_qt_teleporter()
 matplotlib.use("module://mpl_qtthread.backend_agg")
 # suppress (now) spurious warnings for mpl3.3+
 mpl_qtthread.monkeypatch_pyplot()
+
+# The following code is expected to fix the issue with MPL windows 'freezing'
+#   after completion of a plan.
+from IPython import get_ipython
+ipython = get_ipython()
+ipython.run_line_magic("matplotlib", "")
 
 import certifi
 import ophyd
