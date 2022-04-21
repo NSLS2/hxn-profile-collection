@@ -15,7 +15,7 @@ from scipy import signal
 from scipy.ndimage.filters import gaussian_filter
 
 #Add ctrl+c option to matplotlib
-mpl.rcParams['toolbar'] = 'toolmanager'
+matplotlib.rcParams['toolbar'] = 'toolmanager'
 
 
 def focusmerlin(cnttime):
@@ -1406,7 +1406,7 @@ def zp_th_fly2d(th_start, th_end, num, x_start, x_end, x_num, y_start, y_end, y_
         yield from bps.mov(zpssx,xc)
         #yield from bps.movr(smarz,xc/1000)
         xspress3.unstage()
-        
+
 
         '''
         yield from fly1d(dets_fs,zpssy,0,3.5,100,0.03)
@@ -1421,7 +1421,7 @@ def zp_th_fly2d(th_start, th_end, num, x_start, x_end, x_num, y_start, y_end, y_
         #cx,cy = return_center_of_mass(-1,'Mn')
         #yield from bps.movr(smarx,cx/1000)
         #yield from bps.movr(smary,cy/1000)
-        
+
         yield from fly2d(dets1, zpssx, x_start, x_end, x_num, zpssy, y_start, y_end, y_num, sec, dead_time=0.004, return_speed=40)
 
 
@@ -1673,13 +1673,13 @@ def mov_diff(gamma, delta, r=500, calc=0):
     z2 = z1 + 380
     d = 395.2
 
-    x_yaw = sin(gamma) * z_yaw / sin(beta + gamma)
-    R_yaw = sin(beta) * z_yaw / sin(beta + gamma)
+    x_yaw = np.sin(gamma) * z_yaw / np.sin(beta + gamma)
+    R_yaw = np.sin(beta) * z_yaw / np.sin(beta + gamma)
     R1 = R_yaw - (z_yaw - z1)
     R2 = R_yaw - (z_yaw - z2)
-    y1 = tan(delta) * R1
-    y2 = tan(delta) * R2
-    R_det = R1 / cos(delta) - d
+    y1 = np.tan(delta) * R1
+    y2 = np.tan(delta) * R2
+    R_det = R1 / np.cos(delta) - d
     dz = r - R_det
 
     print('Make sure all motors are zeroed properly, '
@@ -1740,8 +1740,8 @@ def wh_diff():
     z2 = z1 + 380
     d = 395.2
 
-    x_yaw = sin(gamma) * z_yaw / sin(beta + gamma)
-    R_yaw = sin(beta) * z_yaw / sin(beta + gamma)
+    x_yaw = np.sin(gamma) * z_yaw / np.sin(beta + gamma)
+    R_yaw = np.sin(beta) * z_yaw / np.sin(beta + gamma)
     R1 = R_yaw - (z_yaw - z1)
     R2 = R_yaw - (z_yaw - z2)
 
@@ -1751,8 +1751,8 @@ def wh_diff():
     elif abs(diff_y1 / R1 - diff_y2 / R2) > 0.01:
         print('Not a pure delta rotation')
     else:
-        delta = arctan(diff_y1 / R1)
-        R_det = R1 / cos(delta) - d + diff_cz
+        delta = np.arctan(diff_y1 / R1)
+        R_det = R1 / np.cos(delta) - d + diff_cz
         print('gamma = ', gamma * 180 / np.pi, ' delta = ',
               delta * 180 / np.pi, ' r = ', R_det)
 
@@ -4027,12 +4027,12 @@ def peak_bpm_x(start,end,n_steps):
             else:
                 y[i] = sclr2_ch4.get()
         peak = x[y == np.max(y)]
-        
+
         plt.figure()
         plt.plot(x,y)
         #plt.hold(2)
         plt.close()
-        
+
         #print(peak)
         caput('XF:03ID-BI{EM:BPM1}fast_pidX.VAL',peak[0])
         yield from bps.sleep(5)
@@ -4185,7 +4185,7 @@ def insert_xrf_map_to_pdf(scan = -1, element = 'Cr',title_ = 'energy', mon = 'sc
     plt.close()
 
 def insert_diffSum_to_pdf(scan = -1,det = "merlin1", thMotor = "zpsth"):
-    
+
     plot_img_sum(scan, det)
 
     time_str = str((db[int(scan)].table("baseline")['time'].values)[-1])
@@ -4198,26 +4198,26 @@ def insert_diffSum_to_pdf(scan = -1,det = "merlin1", thMotor = "zpsth"):
 
 
 def insert_multiple_xrf_map_to_pdf(scan = -1, elements = ['Pt_L', 'Fe'],title_ = 'energy', mon = 'sclr2_ch4'):
-    
-    """ 
+
+    """
         insert 2D-XRF maps to the pdf log from a single scan
         - elements has to be in the list. eg:["Cr", "Ti"]
         - a title can be added to the figure. Commonly: "energy", "zpsth", "dsth"
         - a time stamp will be added to the bottom of the figure
-    
+
     """
-    
+
     for elem in elements:
         insert_xrf_map_to_pdf(scan = scan, element = elem,title_ = title_, mon = mon)
 
-def insert_xrf_series_to_pdf(startSid,endSid, elements = ["Cr", "Ti"], figTitle = "energy", 
+def insert_xrf_series_to_pdf(startSid,endSid, elements = ["Cr", "Ti"], figTitle = "energy",
                              mon = 'sclr2_ch4', diffSum = False):
-    
-    """ insert 2D-XRF maps to the pdf log from a series of scan. 
+
+    """ insert 2D-XRF maps to the pdf log from a series of scan.
         - elements has to be in the list. eg:["Cr", "Ti"]
         - a title can be added to the figure. Commonly: "enegry", "zpsth", "dsth"
         - a time stamp will be added to the bottom of the figure
-        
+
         """
 
     scan_nums = np.arange(startSid,endSid+1)

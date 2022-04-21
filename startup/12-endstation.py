@@ -144,13 +144,13 @@ class DetectorStation(PseudoPositioner):
         z2 = z1 + 380
         d = 395.2
 
-        x_yaw = sin(gamma) * z_yaw / sin(beta + gamma)
-        R_yaw = sin(beta) * z_yaw / sin(beta + gamma)
+        x_yaw = np.sin(gamma) * z_yaw / np.sin(beta + gamma)
+        R_yaw = np.sin(beta) * z_yaw / np.sin(beta + gamma)
         R1 = R_yaw - (z_yaw - z1)
         R2 = R_yaw - (z_yaw - z2)
-        y1 = tan(delta) * R1
-        y2 = tan(delta) * R2
-        R_det = R1 / cos(delta) - d
+        y1 = np.tan(delta) * R1
+        y2 = np.tan(delta) * R2
+        R_det = R1 / np.cos(delta) - d
         dz = r - R_det
         if x_yaw > 787 or x_yaw < -200:
             raise ValueError(f'diff_x = {-x_yaw}'
@@ -191,8 +191,8 @@ class DetectorStation(PseudoPositioner):
         z2 = z1 + 380
         d = 395.2
 
-        x_yaw = sin(gamma) * z_yaw / sin(beta + gamma)
-        R_yaw = sin(beta) * z_yaw / sin(beta + gamma)
+        x_yaw = np.sin(gamma) * z_yaw / np.sin(beta + gamma)
+        R_yaw = np.sin(beta) * z_yaw / np.sin(beta + gamma)
         R1 = R_yaw - (z_yaw - z1)
         R2 = R_yaw - (z_yaw - z2)
 
@@ -202,8 +202,8 @@ class DetectorStation(PseudoPositioner):
         elif abs(diff_y1 / R1 - diff_y2 / R2) > 0.01:
             gamma = delta = r = np.nan
         else:
-            delta = arctan(diff_y1 / R1)
-            r = R1 / cos(delta) - d + diff_cz
+            delta = np.arctan(diff_y1 / R1)
+            r = R1 / np.cos(delta) - d + diff_cz
 
         return self.PseudoPosition(gamma=np.rad2deg(gamma),
                                    delta=np.rad2deg(delta),
