@@ -84,7 +84,7 @@ kafka_publisher = Publisher(
                 "sasl.password": kafka_password,
                 },
         flush_on_stop_doc=True,
-    )
+    ) if not os.environ.get('AZURE_TESTING') or None   # Disable on CI
 
 # DB1
 db1_name = 'rs'
