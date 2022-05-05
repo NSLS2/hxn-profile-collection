@@ -7,15 +7,15 @@ resources:
       endpoint: github
 
 jobs:
-  - template: nsls2-collection-2021-2.2.yml@templates
+  - template: 2022-2.2-py39-tiled.yml@templates
     parameters:
       beamline_acronym: HXN
-  - template: nsls2-collection-2021-2.2-py39.yml@templates
+  - template: 2022-2.2-py38-tiled.yml@templates
     parameters:
       beamline_acronym: HXN
-  - template: nsls2-collection-2021-3.0-py37.yml@templates
+  - template: 2022-2.3-py39-tiled.yml@templates
     parameters:
       beamline_acronym: HXN
-  - template: nsls2-collection-2021-3.0-py39.yml@templates
+  - template: 2022-2.3-py38-tiled.yml@templates
     parameters:
       beamline_acronym: HXN
