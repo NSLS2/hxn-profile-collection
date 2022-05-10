@@ -43,7 +43,7 @@ EpicsSignalBase.set_defaults(timeout=10, connection_timeout=10)
 # Set up a Broker.
 # TODO clean this up
 from bluesky_kafka import Publisher
-from databroker import Broker
+from databroker.v0 import Broker
 from databroker.assets.mongo import Registry
 from databroker.headersource.core import doc_or_uid_to_uid
 from databroker.headersource.mongo import MDS
