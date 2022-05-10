@@ -399,6 +399,10 @@ for m in [bp, bps, bpp]:
 del ns
 from bluesky.magics import BlueskyMagics
 
+from bluesky.utils import PersistentDict
+runengine_metadata_dir = "/nsls2/data/hxn/shared/config/runengine-metadata"
+RE.md = PersistentDict(runengine_metadata_dir)
+
 # set some default meta-data
 RE.md['group'] = ''
 RE.md['config'] = {}
