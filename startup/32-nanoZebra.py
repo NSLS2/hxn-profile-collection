@@ -205,10 +205,14 @@ class SRXZebra(Zebra):
 # zebra.read_attrs = ["pc.data.enc1", "pc.data.enc2", "pc.data.time"]
 
 # LARGE_FILE_DIRECTORY_PATH = "/nsls2/data/srx/assets/zebra/2021/2021-3/"
-LARGE_FILE_DIRECTORY_PATH = "/tmp/collected_data"
+# LARGE_FILE_DIRECTORY_PATH = "/tmp/collected_data"
 
-import os
-os.makedirs(LARGE_FILE_DIRECTORY_PATH, exist_ok=True)  # This should not be done in production
+from datetime import datetime
+LARGE_FILE_DIRECTORY_PATH = "/data" + datetime.now().strftime("/%Y/%m/%d")
+
+
+# import os
+# os.makedirs(LARGE_FILE_DIRECTORY_PATH, exist_ok=True)  # This should not be done in production
 
 
 class SRXFlyer1Axis(Device):
