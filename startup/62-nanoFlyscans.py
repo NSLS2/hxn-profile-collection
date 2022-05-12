@@ -267,13 +267,15 @@ def scan_and_fly_base(detectors, xstart, xstop, xnum, ystart, ystop, ynum, dwell
         # arm the Zebra (start caching x positions)
         # @timer_wrapper
         def zebra_kickoff():
+            # start_zebra, stop_zebra = xstart * 1000000, xstop * 1000000
+            start_zebra, stop_zebra = xstart, xstop
             if row_start < row_stop:
                 yield from kickoff(flying_zebra,
-                                   xstart=xstart, xstop=xstop, xnum=xnum, dwell=dwell,
+                                   xstart=start_zebra, xstop=stop_zebra, xnum=xnum, dwell=dwell,
                                    wait=True)
             else:
                 yield from kickoff(flying_zebra,
-                                   xstart=xstop, xstop=xstart, xnum=xnum, dwell=dwell,
+                                   xstart=stop_zebra, xstop=start_zebra, xnum=xnum, dwell=dwell,
                                    wait=True)
         if verbose:
             t_zebkickoff = tic()
