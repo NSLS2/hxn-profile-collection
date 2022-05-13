@@ -166,6 +166,8 @@ class ZebraPositionCapture(Device):
     block_state_reset = Cpt(EpicsSignal, "SYS_RESET.PROC")
     data = Cpt(ZebraPositionCaptureData, "")
 
+    pos1_set = Cpt(EpicsSignal, "POS1_SET")
+
     def stage(self):
         self.arm.put(1)
 
@@ -327,31 +329,31 @@ class SRXFlyer1Axis(Device):
         if dir == "HOR":
             self.stage_sigs[self._encoder.pc.enc] = "Enc2"
             self.stage_sigs[self._encoder.pc.dir] = "Positive"
-            self.stage_sigs[self._encoder.pc.enc_res2] = 5e-6
+            # self.stage_sigs[self._encoder.pc.enc_res2] = 5e-6
         elif dir == "VER":
             self.stage_sigs[self._encoder.pc.enc] = "Enc1"
             self.stage_sigs[self._encoder.pc.dir] = "Positive"
-            self.stage_sigs[self._encoder.pc.enc_res1] = 5e-6
+            # self.stage_sigs[self._encoder.pc.enc_res1] = 5e-6
         elif dir == "DET2HOR":
             self.stage_sigs[self._encoder.pc.enc] = "Enc3"
             self.stage_sigs[self._encoder.pc.dir] = "Positive"
-            self.stage_sigs[self._encoder.pc.enc_res1] = 5e-5
+            # self.stage_sigs[self._encoder.pc.enc_res1] = 5e-5
         elif dir == "DET2VER":
             self.stage_sigs[self._encoder.pc.enc] = "Enc4"
             self.stage_sigs[self._encoder.pc.dir] = "Positive"
-            self.stage_sigs[self._encoder.pc.enc_res1] = 5e-5
+            # self.stage_sigs[self._encoder.pc.enc_res1] = 5e-5
         elif dir == "NANOHOR":
             self.stage_sigs[self._encoder.pc.enc] = "Enc1"
             self.stage_sigs[self._encoder.pc.dir] = "Positive"
-            self.stage_sigs[self._encoder.pc.enc_res2] = 9.5368e-05
+            # self.stage_sigs[self._encoder.pc.enc_res2] = 9.5368e-05
         elif dir == "NANOVER":
             self.stage_sigs[self._encoder.pc.enc] = "Enc2"
             self.stage_sigs[self._encoder.pc.dir] = "Positive"
-            self.stage_sigs[self._encoder.pc.enc_res2] = 9.5368e-05
+            # self.stage_sigs[self._encoder.pc.enc_res2] = 9.5368e-05
         elif dir == "NANOZ":
             self.stage_sigs[self._encoder.pc.enc] = "Enc3"
             self.stage_sigs[self._encoder.pc.dir] = "Positive"
-            self.stage_sigs[self._encoder.pc.enc_res2] = 9.5368e-05
+            # self.stage_sigs[self._encoder.pc.enc_res2] = 9.5368e-05
 
         super().stage()
 
@@ -395,6 +397,9 @@ class SRXFlyer1Axis(Device):
         ## pulses2/3/4
         ## OR logic
         ## PC on position (NOT TIME!)
+
+        self.pos1_set = xstart
+
         self._encoder.pc.arm.put(0)
         self._mode = "kicked off"
         self._npts = int(xnum)
@@ -811,15 +816,20 @@ def export_zebra_data(zebra, filepath, fast_axis):
 def export_sis_data(ion, filepath, zebra):
     print(f"EXPORTING SCALER DATA .................................")
     N = ion.nuse_all.get()
+    print("Step1")
     mca1 = ion.mca_by_index[1].get(timeout=5.0)
     mca2 = ion.mca_by_index[2].get(timeout=5.0)
     mca3 = ion.mca_by_index[3].get(timeout=5.0)
     mca4 = ion.mca_by_index[4].get(timeout=5.0)
+    print("Step2")
     while len(mca1) == 0 and len(mca1) != len(mca2):  # ?????????????????????
+        print("Step3")
         mca1 = ion.mca_by_index[1].get(timeout=5.0)
         mca2 = ion.mca_by_index[2].get(timeout=5.0)
         mca3 = ion.mca_by_index[3].get(timeout=5.0)
         mca4 = ion.mca_by_index[4].get(timeout=5.0)
+
+    print("Step4")
 
     if len(mca2) != N:
         print(f'Scaler did not receive collect enough points.')
@@ -831,15 +841,21 @@ def export_sis_data(ion, filepath, zebra):
         if len(mca2) != N:
             print(f'Nope. Only received {len(mca2)}/{N} points.')
 
+    print("Step5")
+
     correct_length = zebra.pc.data.num_down.get()
     # Only consider even points
     mca1 = mca1[1::2]
     mca2 = mca2[1::2]
     mca3 = mca3[1::2]
     mca4 = mca4[1::2]
+
+    print("Step6")
+    print(f"File name: {filepath!r}")
+
     with h5py.File(filepath, "w") as f:
-        if len(t) != correct_length:
-            correction_factor = correct_length - len(t)
+        if len(mca1) != correct_length:
+            correction_factor = correct_length - len(mca1)
             correction_list = [1e10 for _ in range(0, int(correction_factor))]
             new_mca1 = [k for k in mca1] + correction_list
             new_mca2 = [k for k in mca2] + correction_list
@@ -852,6 +868,8 @@ def export_sis_data(ion, filepath, zebra):
             new_mca3 = mca3
             new_mca4 = mca4
 
+        print("Step7")
+
         dset0 = f.create_dataset("mca1", (correct_length,), dtype="f")
         dset0[...] = np.array(new_mca1)
         dset1 = f.create_dataset("mca2", (correct_length,), dtype="f")
@@ -861,6 +879,8 @@ def export_sis_data(ion, filepath, zebra):
         dset3 = f.create_dataset("mca4", (correct_length,), dtype="f")
         dset3[...] = np.array(new_mca4)
         f.close()
+
+    print("Step8")
 
     print(f"FINISHED EXPORTING SCALER DATA")
 

@@ -43,7 +43,7 @@ def test_dscan():
     Test ``dscan`` scan (1D step scan) with ZP motor.
     """
     print("Running scan ..")
-    uid, = RE(dscan([sclr1,zebra,merlin1,xspress3],zpssx,-1,1,10,0.03))
+    uid, = RE(dscan([sclr1,zebra,merlin1,xspress3],zpssx,-1,1,10,0.1))
     print("Scan is completed")
     print("Filling the table ...")
     _ = db[uid].table(fill=True)
@@ -56,7 +56,7 @@ def test_d2scan():
     Test ``d2scan`` scan (1D step scan) along two axes with ZP motors.
     """
     print("Running scan ..")
-    uid, = RE(d2scan([sclr1,zebra,merlin1,xspress3],10,zpssx,-1,1,zpssy,-1,1,0.03))
+    uid, = RE(d2scan([sclr1,zebra,merlin1,xspress3],10,zpssx,-1,1,zpssy,-1,1,0.1))
     print("Scan is completed")
     print("Filling the table ...")
     _ = db[uid].table(fill=True)
@@ -69,7 +69,7 @@ def test_mesh():
     Test ``mesh`` scan (2D step scan) with ZP motors.
     """
     print("Running scan ..")
-    uid, = RE(mesh([sclr1,zebra,merlin1,xspress3],zpssx,-1,1,10,zpssy,-1,1,10,0.03))
+    uid, = RE(mesh([sclr1,zebra,merlin1,xspress3],zpssx,-1,1,10,zpssy,-1,1,10,0.1))
     print("Scan is completed")
     print("Filling the table ...")
     _ = db[uid].table(fill=True)
@@ -100,4 +100,3 @@ print("=========================================================================
 # print("=====================================================================================")
 # print("                              Testing 'test_mesh' ...                                ")
 # test_mesh()
-
