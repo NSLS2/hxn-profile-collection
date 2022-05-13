@@ -313,7 +313,7 @@ def scan_and_fly_base(detectors, xstart, xstop, xnum, ystart, ystop, ynum, dwell
 
         # start the 'fly'
         def print_watch(*args, **kwargs):
-            with open('/home/xf05id1/bluesky_output.txt', 'a') as f:
+            with open('~/bluesky_output.txt', 'a') as f:
                 f.write(datetime.datetime.strftime(datetime.datetime.now(), '%Y-%m-%d %H:%M:%S.%f\n'))
                 # print(args)
                 f.write(json.dumps(kwargs))
