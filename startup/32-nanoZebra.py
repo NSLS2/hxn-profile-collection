@@ -13,7 +13,8 @@ from hxntools.detectors.zebra import Zebra, EpicsSignalWithRBV
 from databroker.assets.handlers import HandlerBase
 
 xs = None  # No Xspress3
-use_sclr1 = False  # Set this False to run ano zebra without 'sclr1'
+# use_sclr1 = False  # Set this False to run ano zebra without 'sclr1'
+use_sclr1 = True
 
 # class CurrentPreampZebra(Device):
 #     ch0 = Cpt(EpicsSignalRO, "Cur:I0-I")
