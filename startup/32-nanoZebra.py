@@ -815,21 +815,21 @@ def export_sis_data(ion, filepath, zebra):
     mca2 = ion.mca_by_index[2].get(timeout=5.0)
     mca3 = ion.mca_by_index[3].get(timeout=5.0)
     mca4 = ion.mca_by_index[4].get(timeout=5.0)
-    while len(t) == 0 and len(t) != len(i):
+    while len(mca1) == 0 and len(mca1) != len(mca2):  # ?????????????????????
         mca1 = ion.mca_by_index[1].get(timeout=5.0)
         mca2 = ion.mca_by_index[2].get(timeout=5.0)
         mca3 = ion.mca_by_index[3].get(timeout=5.0)
         mca4 = ion.mca_by_index[4].get(timeout=5.0)
 
-    if len(i) != N:
+    if len(mca2) != N:
         print(f'Scaler did not receive collect enough points.')
         ## Try one more time
         mca1 = ion.mca_by_index[1].get(timeout=5.0)
         mca2 = ion.mca_by_index[2].get(timeout=5.0)
         mca3 = ion.mca_by_index[3].get(timeout=5.0)
         mca4 = ion.mca_by_index[4].get(timeout=5.0)
-        if len(i) != N:
-            print(f'Nope. Only received {len(i)}/{N} points.')
+        if len(mca2) != N:
+            print(f'Nope. Only received {len(mca2)}/{N} points.')
 
     correct_length = zebra.pc.data.num_down.get()
     # Only consider even points
@@ -861,6 +861,8 @@ def export_sis_data(ion, filepath, zebra):
         dset3 = f.create_dataset("mca4", (correct_length,), dtype="f")
         dset3[...] = np.array(new_mca4)
         f.close()
+
+    print(f"FINISHED EXPORTING SCALER DATA")
 
 
 class ZebraHDF5Handler(HandlerBase):
