@@ -377,14 +377,14 @@ class SRXFlyer1Axis(Device):
 
         # Handle the ion chamber that the zebra is collecting
         if self._sis is not None:
-            desc["i0"] = spec
-            desc["i0"]["source"] = self._sis.mca2.pvname
-            desc["i0_time"] = spec
-            desc["i0_time"]["source"] = self._sis.mca1.pvname
-            desc["im"] = spec
-            desc["im"]["source"] = self._sis.mca3.pvname
-            desc["it"] = spec
-            desc["it"]["source"] = self._sis.mca4.pvname
+            desc["mca1"] = self._sis.mca_by_index[1]
+            desc["mca1"]["source"] = self._sis.mca_by_index[1].name
+            desc["mca2"] = self._sis.mca_by_index[2]
+            desc["mca2"]["source"] = self._sis.mca_by_index[2].name
+            desc["mca3"] = self._sis.mca_by_index[3]
+            desc["mca3"]["source"] = self._sis.mca_by_index[3].name
+            desc["mca4"] = self._sis.mca_by_index[4]
+            desc["mca4"]["source"] = self._sis.mca_by_index[4].name
 
         return {"primary": desc}
 
@@ -811,58 +811,55 @@ def export_zebra_data(zebra, filepath, fast_axis):
 def export_sis_data(ion, filepath, zebra):
     print(f"EXPORTING SCALER DATA .................................")
     N = ion.nuse_all.get()
-    t = ion.mca1.get(timeout=5.0)
-    i = ion.mca2.get(timeout=5.0)
-    im = ion.mca3.get(timeout=5.0)
-    it = ion.mca4.get(timeout=5.0)
+    mca1 = ion.mca_by_index[1].get(timeout=5.0)
+    mca2 = ion.mca_by_index[2].get(timeout=5.0)
+    mca3 = ion.mca_by_index[3].get(timeout=5.0)
+    mca4 = ion.mca_by_index[4].get(timeout=5.0)
     while len(t) == 0 and len(t) != len(i):
-        t = ion.mca1.get(timeout=5.0)
-        i = ion.mca2.get(timeout=5.0)
-        im = ion.mca3.get(timeout=5.0)
-        it = ion.mca4.get(timeout=5.0)
+        mca1 = ion.mca_by_index[1].get(timeout=5.0)
+        mca2 = ion.mca_by_index[2].get(timeout=5.0)
+        mca3 = ion.mca_by_index[3].get(timeout=5.0)
+        mca4 = ion.mca_by_index[4].get(timeout=5.0)
 
     if len(i) != N:
         print(f'Scaler did not receive collect enough points.')
         ## Try one more time
-        t = ion.mca1.get(timeout=5.0)
-        i = ion.mca2.get(timeout=5.0)
-        im = ion.mca3.get(timeout=5.0)
-        it = ion.mca4.get(timeout=5.0)
+        mca1 = ion.mca_by_index[1].get(timeout=5.0)
+        mca2 = ion.mca_by_index[2].get(timeout=5.0)
+        mca3 = ion.mca_by_index[3].get(timeout=5.0)
+        mca4 = ion.mca_by_index[4].get(timeout=5.0)
         if len(i) != N:
             print(f'Nope. Only received {len(i)}/{N} points.')
 
     correct_length = zebra.pc.data.num_down.get()
     # Only consider even points
-    t = t[1::2]
-    i = i[1::2]
-    im = im[1::2]
-    it = it[1::2]
-    # size = (len(t),)
-    # size2 = (len(i),)
-    # size3 = (len(im),)
-    # size4 = (len(it),)
+    mca1 = mca1[1::2]
+    mca2 = mca2[1::2]
+    mca3 = mca3[1::2]
+    mca4 = mca4[1::2]
     with h5py.File(filepath, "w") as f:
         if len(t) != correct_length:
             correction_factor = correct_length - len(t)
             correction_list = [1e10 for _ in range(0, int(correction_factor))]
-            new_t = [k for k in t] + correction_list
-            new_i = [k for k in i] + correction_list
-            new_im = [k for k in im] + correction_list
-            new_it = [k for k in it] + correction_list
+            new_mca1 = [k for k in mca1] + correction_list
+            new_mca2 = [k for k in mca2] + correction_list
+            new_mca3 = [k for k in mca3] + correction_list
+            new_mca4 = [k for k in mca4] + correction_list
         else:
             correction_factor = 0
-            new_t = t
-            new_i = i
-            new_im = im
-            new_it = it
-        dset0 = f.create_dataset("time", (correct_length,), dtype="f")
-        dset0[...] = np.array(new_t)
-        dset1 = f.create_dataset("i0", (correct_length,), dtype="f")
-        dset1[...] = np.array(new_i)
-        dset2 = f.create_dataset("im", (correct_length,), dtype="f")
-        dset2[...] = np.array(new_im)
-        dset3 = f.create_dataset("it", (correct_length,), dtype="f")
-        dset3[...] = np.array(new_it)
+            new_mca1 = mca1
+            new_mca2 = mca2
+            new_mca3 = mca3
+            new_mca4 = mca4
+
+        dset0 = f.create_dataset("mca1", (correct_length,), dtype="f")
+        dset0[...] = np.array(new_mca1)
+        dset1 = f.create_dataset("mca2", (correct_length,), dtype="f")
+        dset1[...] = np.array(new_mca2)
+        dset2 = f.create_dataset("mca3", (correct_length,), dtype="f")
+        dset2[...] = np.array(new_mca3)
+        dset3 = f.create_dataset("mca4", (correct_length,), dtype="f")
+        dset3[...] = np.array(new_mca4)
         f.close()
 
 
