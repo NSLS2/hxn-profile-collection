@@ -503,26 +503,26 @@ class SRXFlyer1Axis(Device):
             resource_kwargs={},
             path_semantics="posix",
         )
-        # self.__filestore_resource_sis, datum_factory_sis = resource_factory(
-        #     "SIS_HDF51",
-        #     root="/",
-        #     resource_path=self.__read_filepath_sis,
-        #     resource_kwargs={},
-        #     path_semantics="posix",
-        # )
+        self.__filestore_resource_sis, datum_factory_sis = resource_factory(
+            "SIS_HDF51",
+            root="/",
+            resource_path=self.__read_filepath_sis,
+            resource_kwargs={},
+            path_semantics="posix",
+        )
 
         time_datum = datum_factory_z({"column": "time"})
         enc1_datum = datum_factory_z({"column": "enc1"})
         enc2_datum = datum_factory_z({"column": "enc2"})
         enc3_datum = datum_factory_z({"column": "enc3"})
-        #sis_datum = datum_factory_sis({"column": "i0"})
-        #sis_datum_im = datum_factory_sis({"column": "im"})
-        #sis_datum_it = datum_factory_sis({"column": "it"})
-        #sis_time = datum_factory_sis({"column": "time"})
+        sis_datum = datum_factory_sis({"column": "i0"})
+        sis_datum_im = datum_factory_sis({"column": "im"})
+        sis_datum_it = datum_factory_sis({"column": "it"})
+        sis_time = datum_factory_sis({"column": "time"})
 
         self._document_cache.extend(
             ("resource", d)
-            # for d in (self.__filestore_resource, self.__filestore_resource_sis)
+            for d in (self.__filestore_resource, self.__filestore_resource_sis)
             for d in (self.__filestore_resource,)
         )
         self._document_cache.extend(
@@ -532,10 +532,10 @@ class SRXFlyer1Axis(Device):
                 enc1_datum,
                 enc2_datum,
                 enc3_datum,
-                #sis_datum,
-                #sis_time,
-                #sis_datum_im,
-                #sis_datum_it,
+                sis_datum,
+                sis_time,
+                sis_datum_im,
+                sis_datum_it,
             )
         )
 
@@ -581,20 +581,20 @@ class SRXFlyer1Axis(Device):
                 "enc1": enc1_datum["datum_id"],
                 "enc2": enc2_datum["datum_id"],
                 "enc3": enc3_datum["datum_id"],
-                #"i0": sis_datum["datum_id"],
-                #"i0_time": sis_time["datum_id"],
-                #"im": sis_datum_im["datum_id"],
-                #"it": sis_datum_it["datum_id"],
+                "i0": sis_datum["datum_id"],
+                "i0_time": sis_time["datum_id"],
+                "im": sis_datum_im["datum_id"],
+                "it": sis_datum_it["datum_id"],
             },
             "timestamps": {
                 "time": time_datum["datum_id"],  # not a typo#
                 "enc1": time_datum["datum_id"],
                 "enc2": time_datum["datum_id"],
                 "enc3": time_datum["datum_id"],
-                #"i0": sis_time["datum_id"],
-                #"i0_time": sis_time["datum_id"],
-                #"im": sis_datum_im["datum_id"],
-                #"it": sis_datum_it["datum_id"],
+                "i0": sis_time["datum_id"],
+                "i0_time": sis_time["datum_id"],
+                "im": sis_datum_im["datum_id"],
+                "it": sis_datum_it["datum_id"],
             },
         }
         for d in self._dets:
