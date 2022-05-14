@@ -284,36 +284,36 @@ class SRXFlyer1Axis(Device):
         # )
         # print(zebra_pvname)
 
-        # Gating info for encoder capture
-        self.stage_sigs[self._encoder.pc.gate_num] = 1
-        self.stage_sigs[self._encoder.pc.pulse_start] = 0
+        # # Gating info for encoder capture
+        # self.stage_sigs[self._encoder.pc.gate_num] = 1
+        # self.stage_sigs[self._encoder.pc.pulse_start] = 0
 
-        self.stage_sigs[self._encoder.pulse3.width] = 0.1
-        self.stage_sigs[self._encoder.pulse4.width] = 0.1
+        # self.stage_sigs[self._encoder.pulse3.width] = 0.1
+        # self.stage_sigs[self._encoder.pulse4.width] = 0.1
 
-        # PC gate output is 31 for zebra. Use it to trigger xspress3 and I0
-        self.stage_sigs[self._encoder.output1.ttl.addr] = 31
-        self.stage_sigs[self._encoder.output3.ttl.addr] = 31
-        # This is for the merlin
-        self.stage_sigs[self._encoder.output2.ttl.addr] = 31
-        # self.stage_sigs[self._encoder.output2.ttl.addr] = 53
-        # This is for the dexela
-        self.stage_sigs[self._encoder.output4.ttl.addr] = 31
-        # This is for the xs2
+        # # PC gate output is 31 for zebra. Use it to trigger xspress3 and I0
+        # self.stage_sigs[self._encoder.output1.ttl.addr] = 31
+        # self.stage_sigs[self._encoder.output3.ttl.addr] = 31
+        # # This is for the merlin
+        # self.stage_sigs[self._encoder.output2.ttl.addr] = 31
+        # # self.stage_sigs[self._encoder.output2.ttl.addr] = 53
+        # # This is for the dexela
         # self.stage_sigs[self._encoder.output4.ttl.addr] = 31
+        # # This is for the xs2
+        # # self.stage_sigs[self._encoder.output4.ttl.addr] = 31
 
-        self.stage_sigs[self._encoder.pc.enc_pos1_sync] = 1
-        self.stage_sigs[self._encoder.pc.enc_pos2_sync] = 1
-        self.stage_sigs[self._encoder.pc.enc_pos3_sync] = 1
-        self.stage_sigs[self._encoder.pc.enc_pos4_sync] = 1
+        # self.stage_sigs[self._encoder.pc.enc_pos1_sync] = 1
+        # self.stage_sigs[self._encoder.pc.enc_pos2_sync] = 1
+        # self.stage_sigs[self._encoder.pc.enc_pos3_sync] = 1
+        # self.stage_sigs[self._encoder.pc.enc_pos4_sync] = 1
 
         if self._sis is not None:
             # Put SIS3820 into single count (not autocount) mode
-            self.stage_sigs[self._sis.count_mode] = 0
+            # self.stage_sigs[self._sis.count_mode] = 0
             # Stop the SIS3820
             self._sis.stop_all.put(1)
 
-        self._encoder.pc.block_state_reset.put(1)
+        # self._encoder.pc.block_state_reset.put(1)
         self.reg = reg
         self._document_cache = []
         self._last_bulk = None
@@ -326,34 +326,36 @@ class SRXFlyer1Axis(Device):
     #     yield from _read_fly_scan()
     def stage(self):
         dir = self.fast_axis.get()
-        if dir == "HOR":
-            self.stage_sigs[self._encoder.pc.enc] = "Enc2"
-            self.stage_sigs[self._encoder.pc.dir] = "Positive"
-            # self.stage_sigs[self._encoder.pc.enc_res2] = 5e-6
-        elif dir == "VER":
+        # if dir == "HOR":
+        #     self.stage_sigs[self._encoder.pc.enc] = "Enc2"
+        #     self.stage_sigs[self._encoder.pc.dir] = "Positive"
+        #     # self.stage_sigs[self._encoder.pc.enc_res2] = 5e-6
+        # elif dir == "VER":
+        #     self.stage_sigs[self._encoder.pc.enc] = "Enc1"
+        #     self.stage_sigs[self._encoder.pc.dir] = "Positive"
+        #     # self.stage_sigs[self._encoder.pc.enc_res1] = 5e-6
+        # elif dir == "DET2HOR":
+        #     self.stage_sigs[self._encoder.pc.enc] = "Enc3"
+        #     self.stage_sigs[self._encoder.pc.dir] = "Positive"
+        #     # self.stage_sigs[self._encoder.pc.enc_res1] = 5e-5
+        # elif dir == "DET2VER":
+        #     self.stage_sigs[self._encoder.pc.enc] = "Enc4"
+        #     self.stage_sigs[self._encoder.pc.dir] = "Positive"
+        #     # self.stage_sigs[self._encoder.pc.enc_res1] = 5e-5
+        if dir == "NANOHOR":
             self.stage_sigs[self._encoder.pc.enc] = "Enc1"
-            self.stage_sigs[self._encoder.pc.dir] = "Positive"
-            # self.stage_sigs[self._encoder.pc.enc_res1] = 5e-6
-        elif dir == "DET2HOR":
-            self.stage_sigs[self._encoder.pc.enc] = "Enc3"
-            self.stage_sigs[self._encoder.pc.dir] = "Positive"
-            # self.stage_sigs[self._encoder.pc.enc_res1] = 5e-5
-        elif dir == "DET2VER":
-            self.stage_sigs[self._encoder.pc.enc] = "Enc4"
-            self.stage_sigs[self._encoder.pc.dir] = "Positive"
-            # self.stage_sigs[self._encoder.pc.enc_res1] = 5e-5
-        elif dir == "NANOHOR":
-            self.stage_sigs[self._encoder.pc.enc] = "Enc1"
-            self.stage_sigs[self._encoder.pc.dir] = "Positive"
+            # self.stage_sigs[self._encoder.pc.dir] = "Positive"
             # self.stage_sigs[self._encoder.pc.enc_res2] = 9.5368e-05
         elif dir == "NANOVER":
             self.stage_sigs[self._encoder.pc.enc] = "Enc2"
-            self.stage_sigs[self._encoder.pc.dir] = "Positive"
+            # self.stage_sigs[self._encoder.pc.dir] = "Positive"
             # self.stage_sigs[self._encoder.pc.enc_res2] = 9.5368e-05
         elif dir == "NANOZ":
             self.stage_sigs[self._encoder.pc.enc] = "Enc3"
-            self.stage_sigs[self._encoder.pc.dir] = "Positive"
+            # self.stage_sigs[self._encoder.pc.dir] = "Positive"
             # self.stage_sigs[self._encoder.pc.enc_res2] = 9.5368e-05
+        else:
+            raise ValueError(f"Unknown value: dir={dir!r}")
 
         super().stage()
 
@@ -398,7 +400,7 @@ class SRXFlyer1Axis(Device):
         ## OR logic
         ## PC on position (NOT TIME!)
 
-        self.pos1_set = xstart
+        self.pos1_set = xstart  # IS IT CORRECT OR SETTING self._encoder.pc.enc_pos1_sync.put(1) is sufficient???
 
         self._encoder.pc.arm.put(0)
         self._mode = "kicked off"
@@ -438,10 +440,10 @@ class SRXFlyer1Axis(Device):
         #     self._encoder.pulse3.input_addr.put(31)
         #     self._encoder.pulse4.input_addr.put(31)
 
-        self._encoder.output1.ttl.addr.put(31)
-        self._encoder.output3.ttl.addr.put(36)
-        self._encoder.pulse3.input_addr.put(31)
-        self._encoder.pulse4.input_addr.put(31)
+        # self._encoder.output1.ttl.addr.put(31)
+        # self._encoder.output3.ttl.addr.put(36)
+        # self._encoder.pulse3.input_addr.put(31)
+        # self._encoder.pulse4.input_addr.put(31)
 
         self._encoder.pc.enc_pos1_sync.put(1)  # Scanner X
         self._encoder.pc.enc_pos2_sync.put(1)  # Scanner Y
