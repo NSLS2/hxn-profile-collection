@@ -5,6 +5,7 @@ import uuid
 import warnings
 from collections import deque
 from datetime import datetime, timedelta, tzinfo
+from pathlib import Path
 
 # The following code allows to call Matplotlib API from threads (experimental)
 # Requires https://github.com/tacaswell/mpl-qtthread (not packaged yet)
@@ -400,7 +401,7 @@ del ns
 from bluesky.magics import BlueskyMagics
 
 from bluesky.utils import PersistentDict
-runengine_metadata_dir = "/nsls2/data/hxn/shared/config/runengine-metadata"
+runengine_metadata_dir = Path("/nsls2/data/hxn/shared/config/runengine-metadata")
 RE.md = PersistentDict(runengine_metadata_dir)
 
 # set some default meta-data
