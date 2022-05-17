@@ -460,10 +460,10 @@ def scan_and_fly_base(detectors, xstart, xstop, xnum, ystart, ystop, ynum, dwell
             ystep = ystep + 1
 
         # TODO this should be taken care of by stage sigs
-        ion = flying_zebra.sclr
-        if ion:
-            yield from bps.mov(xs.external_trig, False,
-                               ion.count_mode, 1)
+        # ion = flying_zebra.sclr
+        # if ion:
+        #     yield from bps.mov(xs.external_trig, False,
+        #                        ion.count_mode, 1)
         yield from mv(nano_stage.sx, 0, nano_stage.sy, 0, nano_stage.sz, 0)
         yield from bps.sleep(2)
 

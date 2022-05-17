@@ -381,14 +381,10 @@ class SRXFlyer1Axis(Device):
 
         # Handle the ion chamber that the zebra is collecting
         if self._sis is not None:
-            desc["mca1"] = self._sis.mca_by_index[1]
-            desc["mca1"]["source"] = self._sis.mca_by_index[1].name
-            desc["mca2"] = self._sis.mca_by_index[2]
-            desc["mca2"]["source"] = self._sis.mca_by_index[2].name
-            desc["mca3"] = self._sis.mca_by_index[3]
-            desc["mca3"]["source"] = self._sis.mca_by_index[3].name
-            desc["mca4"] = self._sis.mca_by_index[4]
-            desc["mca4"]["source"] = self._sis.mca_by_index[4].name
+            sis_mca_names = self._sis_mca_names()
+            for n, name in enumerate(sis_mca_names):
+                desc[name] = spec
+                desc[name]["source"] = self._sis.mca_by_index[n + 1].spectrum.pvname
 
         return {"primary": desc}
 
@@ -400,7 +396,7 @@ class SRXFlyer1Axis(Device):
         ## OR logic
         ## PC on position (NOT TIME!)
 
-        self.pos1_set = xstart  # IS IT CORRECT OR SETTING self._encoder.pc.enc_pos1_sync.put(1) is sufficient???
+        # self.pos1_set = xstart  # IS IT CORRECT OR SETTING self._encoder.pc.enc_pos1_sync.put(1) is sufficient???
 
         self._encoder.pc.arm.put(0)
         self._mode = "kicked off"
@@ -460,6 +456,10 @@ class SRXFlyer1Axis(Device):
         # TODO Return a status object *first*
         # and do the above asynchronously.
         return st
+
+    def _sis_mca_names(self):
+        n_mcas = n_scaler_mca
+        return [getattr(self._sis.channels, f"chan{_}").name for _ in range(1, n_mcas + 1)]
 
     def complete(self):
         """
@@ -522,16 +522,17 @@ class SRXFlyer1Axis(Device):
         enc1_datum = datum_factory_z({"column": "enc1"})
         enc2_datum = datum_factory_z({"column": "enc2"})
         enc3_datum = datum_factory_z({"column": "enc3"})
-        sis_datum = datum_factory_sis({"column": "i0"})
-        sis_datum_im = datum_factory_sis({"column": "im"})
-        sis_datum_it = datum_factory_sis({"column": "it"})
-        sis_time = datum_factory_sis({"column": "time"})
+        if self._sis:
+            sis_mca_names = self._sis_mca_names()
+            sis_datum = []
+            for name in sis_mca_names:
+                sis_datum.append(datum_factory_sis({"column": name}))
 
-        self._document_cache.extend(
-            ("resource", d)
-            for d in (self.__filestore_resource, self.__filestore_resource_sis)
-            for d in (self.__filestore_resource,)
-        )
+        resources = [self.__filestore_resource]
+        if self._sis:
+            resources.append(self.__filestore_resource_sis)
+        self._document_cache.extend(("resource", _) for _ in resources)
+        
         self._document_cache.extend(
             ("datum", d)
             for d in (
@@ -539,12 +540,11 @@ class SRXFlyer1Axis(Device):
                 enc1_datum,
                 enc2_datum,
                 enc3_datum,
-                sis_datum,
-                sis_time,
-                sis_datum_im,
-                sis_datum_it,
             )
         )
+        
+        if self._sis:
+            self._document_cache.extend(("datum", d) for d in sis_datum)
 
         # grab the asset documents from all of the child detectors
         for d in self._dets:
@@ -569,7 +569,7 @@ class SRXFlyer1Axis(Device):
             if self._sis is None:
                 return
             export_sis_data(
-                self._sis, self.__write_filepath_sis, self._encoder
+                self._sis, sis_mca_names, self.__write_filepath_sis, self._encoder
             )
 
         if amk_debug_flag:
@@ -588,22 +588,17 @@ class SRXFlyer1Axis(Device):
                 "enc1": enc1_datum["datum_id"],
                 "enc2": enc2_datum["datum_id"],
                 "enc3": enc3_datum["datum_id"],
-                "i0": sis_datum["datum_id"],
-                "i0_time": sis_time["datum_id"],
-                "im": sis_datum_im["datum_id"],
-                "it": sis_datum_it["datum_id"],
             },
             "timestamps": {
                 "time": time_datum["datum_id"],  # not a typo#
                 "enc1": time_datum["datum_id"],
                 "enc2": time_datum["datum_id"],
                 "enc3": time_datum["datum_id"],
-                "i0": sis_time["datum_id"],
-                "i0_time": sis_time["datum_id"],
-                "im": sis_datum_im["datum_id"],
-                "it": sis_datum_it["datum_id"],
             },
         }
+        if self._sis:
+            self._last_bulk["data"].update({k: v["datum_id"] for k, v in zip(sis_mca_names, sis_datum)})
+            self._last_bulk["timestamps"].update({k: v["datum_id"] for k, v in zip(sis_mca_names, sis_datum)})
         for d in self._dets:
             reading = d.read()
             self._last_bulk["data"].update(
@@ -735,10 +730,24 @@ def export_nano_zebra_data(zebra, filepath, fastaxis):
             print("THE ZEBRA IS BEHAVING BADLY CARRYING ON")
             break
 
+
+    pxsize = zebra.pc.pulse_step.get()  # Pixel size
+    encoder = zebra.pc.enc.get(as_string=True)  # Encoder ('Enc1', 'Enc2' or 'Enc3')
+
     time_d = zebra.pc.data.time.get()
     enc1_d = zebra.pc.data.enc1.get()
     enc2_d = zebra.pc.data.enc2.get()
     enc3_d = zebra.pc.data.enc3.get()
+
+    # Correction for the encoder values so that they represent the centers of the bins
+    if encoder.lower() == "enc1":
+        enc1_d += pxsize / 2
+    elif encoder.lower() == "enc2":
+        enc2_d += pxsize / 2
+    elif encoder.lower() == "enc3":
+        enc3_d += pxsize / 2
+    else:
+        print(f"Unrecognized encoder name: {encoder}")
 
     print(f"===================================================")
     print(f"COLLECTED DATA:")
@@ -815,75 +824,38 @@ def export_zebra_data(zebra, filepath, fast_axis):
         dset3[...] = np.array(enc3_d)
 
 
-def export_sis_data(ion, filepath, zebra):
+def export_sis_data(ion, mca_names, filepath, zebra):
     print(f"EXPORTING SCALER DATA .................................")
     N = ion.nuse_all.get()
+    
+    n_mcas = len(mca_names)
+
     print("Step1")
-    mca1 = ion.mca_by_index[1].get(timeout=5.0)
-    mca2 = ion.mca_by_index[2].get(timeout=5.0)
-    mca3 = ion.mca_by_index[3].get(timeout=5.0)
-    mca4 = ion.mca_by_index[4].get(timeout=5.0)
+    mca_data = []
+    for n in range(1, n_mcas + 1):
+        mca = ion.mca_by_index[n].spectrum.get(timeout=5.0)
+        mca_data.append(mca)
+
     print("Step2")
-    while len(mca1) == 0 and len(mca1) != len(mca2):  # ?????????????????????
-        print("Step3")
-        mca1 = ion.mca_by_index[1].get(timeout=5.0)
-        mca2 = ion.mca_by_index[2].get(timeout=5.0)
-        mca3 = ion.mca_by_index[3].get(timeout=5.0)
-        mca4 = ion.mca_by_index[4].get(timeout=5.0)
+    correct_length = int(zebra.pc.data.num_down.get())
 
-    print("Step4")
-
-    if len(mca2) != N:
-        print(f'Scaler did not receive collect enough points.')
-        ## Try one more time
-        mca1 = ion.mca_by_index[1].get(timeout=5.0)
-        mca2 = ion.mca_by_index[2].get(timeout=5.0)
-        mca3 = ion.mca_by_index[3].get(timeout=5.0)
-        mca4 = ion.mca_by_index[4].get(timeout=5.0)
-        if len(mca2) != N:
-            print(f'Nope. Only received {len(mca2)}/{N} points.')
-
-    print("Step5")
-
-    correct_length = zebra.pc.data.num_down.get()
-    # Only consider even points
-    mca1 = mca1[1::2]
-    mca2 = mca2[1::2]
-    mca3 = mca3[1::2]
-    mca4 = mca4[1::2]
-
-    print("Step6")
     print(f"File name: {filepath!r}")
 
     with h5py.File(filepath, "w") as f:
-        if len(mca1) != correct_length:
-            correction_factor = correct_length - len(mca1)
-            correction_list = [1e10 for _ in range(0, int(correction_factor))]
-            new_mca1 = [k for k in mca1] + correction_list
-            new_mca2 = [k for k in mca2] + correction_list
-            new_mca3 = [k for k in mca3] + correction_list
-            new_mca4 = [k for k in mca4] + correction_list
-        else:
-            correction_factor = 0
-            new_mca1 = mca1
-            new_mca2 = mca2
-            new_mca3 = mca3
-            new_mca4 = mca4
+        print("Step3")
+        for n, mca in enumerate(mca_data):
+            if len(mca) != correct_length:
+                print(f"Incorrect number of points ({len(mca)}) loaded from MCA{n + 1}: {correct_length} points are expected")
+                if len(mca > correct_length):
+                    mca_data[n] = mca[:correct_length]
+                else:
+                    mca_data[n] = np.append(mca, [1e10] * (correct_length - len(mca)))
 
-        print("Step7")
-
-        dset0 = f.create_dataset("mca1", (correct_length,), dtype="f")
-        dset0[...] = np.array(new_mca1)
-        dset1 = f.create_dataset("mca2", (correct_length,), dtype="f")
-        dset1[...] = np.array(new_mca2)
-        dset2 = f.create_dataset("mca3", (correct_length,), dtype="f")
-        dset2[...] = np.array(new_mca3)
-        dset3 = f.create_dataset("mca4", (correct_length,), dtype="f")
-        dset3[...] = np.array(new_mca4)
-        f.close()
-
-    print("Step8")
-
+        print("Step4")
+        for n, name in enumerate(mca_names):
+            dset = f.create_dataset(name, (correct_length,), dtype="f")
+            dset[...] = np.asarray(mca_data[n])
+            
     print(f"FINISHED EXPORTING SCALER DATA")
 
 
@@ -898,3 +870,21 @@ class ZebraHDF5Handler(HandlerBase):
 
 
 db.reg.register_handler("ZEBRA_HDF51", ZebraHDF5Handler, overwrite=True)
+
+
+class SISHDF5Handler(HandlerBase):
+    HANDLER_NAME = "SIS_HDF51"
+
+    def __init__(self, resource_fn):
+        self._handle = h5py.File(resource_fn, "r")
+
+    def __call__(self, *, column):
+        return self._handle[column][:]
+
+    def close(self):
+        self._handle.close()
+        self._handle = None
+        super().close()
+
+
+db.reg.register_handler("SIS_HDF51", SISHDF5Handler, overwrite=True)
