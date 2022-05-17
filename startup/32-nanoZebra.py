@@ -2,6 +2,7 @@ print(f"Loading {__file__}...")
 
 from collections import OrderedDict
 
+from epics import caput, caget
 import os
 import threading
 import h5py
@@ -684,10 +685,12 @@ except Exception as ex:
 
 
 # Enable capture for 'enc1', 'enc2' and 'enc3'. At SRX capture is enabled via CSS.
-from epics import caput
 caput("XF:03IDC-ES{Zeb:3}:PC_BIT_CAP:B0", 1)
 caput("XF:03IDC-ES{Zeb:3}:PC_BIT_CAP:B1", 1)
 caput("XF:03IDC-ES{Zeb:3}:PC_BIT_CAP:B2", 1)
+# print(f'PC_BIT_CAP:B0 {caget("XF:03IDC-ES{Zeb:3}:PC_BIT_CAP:B0")}')
+# print(f'PC_BIT_CAP:B1 {caget("XF:03IDC-ES{Zeb:3}:PC_BIT_CAP:B1")}')
+# print(f'PC_BIT_CAP:B2 {caget("XF:03IDC-ES{Zeb:3}:PC_BIT_CAP:B2")}')
 
 # For confocal
 # For plans that call xs2,
@@ -843,13 +846,16 @@ def export_sis_data(ion, mca_names, filepath, zebra):
 
     with h5py.File(filepath, "w") as f:
         print("Step3")
-        for n, mca in enumerate(mca_data):
+        for n in range(len(mca_data)):
+            mca = mca_data[n]
+            mca = mca[1::2]
             if len(mca) != correct_length:
                 print(f"Incorrect number of points ({len(mca)}) loaded from MCA{n + 1}: {correct_length} points are expected")
                 if len(mca > correct_length):
-                    mca_data[n] = mca[:correct_length]
+                    mca = mca[:correct_length]
                 else:
-                    mca_data[n] = np.append(mca, [1e10] * (correct_length - len(mca)))
+                    mca = np.append(mca, [1e10] * (correct_length - len(mca)))
+            mca_data[n] = mca
 
         print("Step4")
         for n, name in enumerate(mca_names):
@@ -857,6 +863,7 @@ def export_sis_data(ion, mca_names, filepath, zebra):
             dset[...] = np.asarray(mca_data[n])
             
     print(f"FINISHED EXPORTING SCALER DATA")
+
 
 
 class ZebraHDF5Handler(HandlerBase):
@@ -888,3 +895,4 @@ class SISHDF5Handler(HandlerBase):
 
 
 db.reg.register_handler("SIS_HDF51", SISHDF5Handler, overwrite=True)
+
