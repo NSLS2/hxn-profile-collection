@@ -20,6 +20,8 @@ from bluesky.plan_stubs import (one_1d_step, kickoff, collect,
 from bluesky.plans import (scan, )
 from bluesky.callbacks import CallbackBase, LiveGrid
 
+from bluesky import Msg
+
 from hxntools.handlers import register
 
 from bluesky.utils import short_uid
@@ -152,6 +154,10 @@ def scan_and_fly_base(detectors, xstart, xstop, xnum, ystart, ystop, ynum, dwell
     # Run a peakup before the map?
     if (align):
         yield from peakup_fine(shutter=shutter)
+
+    # This is added for consistency with existing HXN plans. Requires custom
+    #   setup of RE:   hxntools.scans.setup(RE=RE)
+    yield Msg('hxn_next_scan_id')
 
     if "scan" not in md:
         md["scan"] = {}

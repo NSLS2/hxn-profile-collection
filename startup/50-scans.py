@@ -7,7 +7,7 @@ import bluesky.utils as bu
 import ophyd
 
 import functools
-from bluesky import (plans, Msg)
+from bluesky import plans, Msg
 from bluesky import plan_patterns
 
 def _pre_scan(dets, total_points, count_time):
@@ -90,4 +90,3 @@ for d in dev_list_pseudo:
 #                              bu.separate_devices(
 #                                  ophyd.utils.instances_from_namespace(
 #                                      (ophyd.EpicsMotor, ophyd.PseudoSingle)))]
-
