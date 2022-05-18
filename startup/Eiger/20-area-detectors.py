@@ -169,9 +169,9 @@ class EigerBase(AreaDetector, HxnModalTrigger):
     file = Cpt(EigerSimulatedFilePlugin, suffix='cam1:',
                # write_path_template='/XF11ID/data/%Y/%m/%d/',
                # write_path_template='/data/eiger_tests/',
-               write_path_template='/GPFS/XF03ID1/data/eiger1m/%Y/%m/%d/',
+               write_path_template='/data/eiger1m/%Y/%m/%d/',
                #root='/XF11ID/',
-               root='/GPFS/XF03ID1/')
+               root='/data')
     beam_center_x = ADComponent(EpicsSignalWithRBV, 'cam1:BeamX')
     beam_center_y = ADComponent(EpicsSignalWithRBV, 'cam1:BeamY')
     wavelength = ADComponent(EpicsSignalWithRBV, 'cam1:Wavelength')
@@ -211,7 +211,7 @@ class EigerBase(AreaDetector, HxnModalTrigger):
     @property
     def hints(self):
         return {'fields': [self.stats1.total.name]}
-    
+
     def mode_internal(self):
         # super().mode_internal()
 
