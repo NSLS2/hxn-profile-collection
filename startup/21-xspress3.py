@@ -160,8 +160,11 @@ elem_M_list = np.array(['Hf_M','Ta_M','W_M','Re_M','Os_M','Ir_M','Pt_M','Au_M','
 energy_M_list = np.array([1646,1712,1775,1840,1907,1976,2048,2118,2191,2267,2342,2418,2499,2577,2654,2732,2806,2900,884,927,979,1023,1078,1122,1181,1233,1284,1342,1404,1463,1526,1580,2990,3071,3164,3250,3339,3429,3525,3616,3709])
 
 
+elem_list_xspress3_roi = np.array(['V','Si','S','P','Ca','K','Fe','Zn','Al','Ti','Ni','Cr','Co','Pt_M','Au_L','Mn'])
+
+
 def xspress3_roi_setup():
-    elem_list = np.array(['V','Si','S','P','Ca','K','Fe','Zn','Al','Ti','Ni','Cr','Co','Pt_M','Au_L','Mn'])
+    elem_list = elem_list_xspress3_roi
     num_elem = np.size(elem_list)
     if num_elem > 16:
         num_elem = 16
@@ -179,8 +182,40 @@ def xspress3_roi_setup():
             channel.set_roi(i+1, energy-150, energy+150, name=elem_list[i])
 
             # Uncomment the following lines for debugging liveplots without beam.
-            # if elem_list[i] == "Au_L":
+            # if elem_list[i] == "Ti":
             #     channel.set_roi(i+1, 0, 40000, name=elem_list[i])
+
+
+
+def expand_roi(element, energy_low=0, energy_high=40000):
+    """
+    Run this function to expand ROI for a given element or emission line.
+    This may be useful for testing the data visualization without beam.
+
+    Element name must be one of the names used during instantiation of
+    ``live_im_plot`` (to test 2D visualization) and/or ``pt_plot``
+    (to test 1D visualization during flyscans).
+
+    Parameters
+    ----------
+    element: str
+        Name of the element or an emission line.
+    energy_low: float (optional)
+        Lower boundary of ROI, eV
+    energy_high: float (optional)
+        Upper boundary of the ROI, eV
+    """
+    elem_list = elem_list_xspress3_roi
+
+    try:
+        i = list(elem_list).index(element)
+    except ValueError:
+        raise ValueError(f"Element {element!r} is not in the list of supported elements {elem_list}")
+
+    for channel in [xspress3.channel1, xspress3.channel2, xspress3.channel3]:
+        channel.set_roi(i+1, energy_low, energy_high, name=element)
+
+
 
 
 '''

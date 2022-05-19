@@ -5,11 +5,12 @@ import uuid
 import warnings
 from collections import deque
 from datetime import datetime, timedelta, tzinfo
+from pathlib import Path
 
 # The following code allows to call Matplotlib API from threads (experimental)
 # Requires https://github.com/tacaswell/mpl-qtthread (not packaged yet)
 import matplotlib
-import matplotlib.backends.backend_qt5
+import matplotlib.backends.backend_qt
 import mpl_qtthread
 # set up the teleporter
 mpl_qtthread.backend.initialize_qt_teleporter()
@@ -17,6 +18,12 @@ mpl_qtthread.backend.initialize_qt_teleporter()
 matplotlib.use("module://mpl_qtthread.backend_agg")
 # suppress (now) spurious warnings for mpl3.3+
 mpl_qtthread.monkeypatch_pyplot()
+
+# The following code is expected to fix the issue with MPL windows 'freezing'
+#   after completion of a plan.
+from IPython import get_ipython
+ipython = get_ipython()
+ipython.run_line_magic("matplotlib", "")
 
 import certifi
 import ophyd
@@ -41,7 +48,6 @@ from databroker.v0 import Broker
 from databroker.assets.mongo import Registry
 from databroker.headersource.core import doc_or_uid_to_uid
 from databroker.headersource.mongo import MDS
-from databroker.v0 import Broker
 from jsonschema import validate as js_validate
 from pymongo import MongoClient
 
@@ -78,7 +84,7 @@ kafka_publisher = Publisher(
                 "sasl.password": kafka_password,
                 },
         flush_on_stop_doc=True,
-    )
+    ) if not os.environ.get('AZURE_TESTING') else None   # Disable on CI
 
 # DB1
 db1_name = 'rs'
@@ -253,9 +259,7 @@ class CompositeRegistry(Registry):
 
         resource_id = self._doc_or_uid_to_uid(resource)
 
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            bulk = col.initialize_unordered_bulk_op()
+        to_write = []
 
         d_uids = deque()
 
@@ -264,10 +268,10 @@ class CompositeRegistry(Registry):
                       datum_id=str(d_id),
                       datum_kwargs=dict(d_kwargs))
             apply_to_dict_recursively(dm, sanitize_np)
-            bulk.insert(dm)
+            to_write.append(pymongo.InsertOne(dm))
             d_uids.append(dm['datum_id'])
 
-        bulk_res = bulk.execute()
+        col.bulk_write(to_write, ordered=False)
 
         return d_uids
 
@@ -304,7 +308,7 @@ class CompositeBroker(Broker):
 
         descriptor_uid = doc_or_uid_to_uid(descriptor)
 
-        bulk = event_col.initialize_ordered_bulk_op()
+        to_write = []
         for ev in events:
             data = dict(ev['data'])
 
@@ -330,9 +334,9 @@ class CompositeBroker(Broker):
                           time=ev['time'],
                           seq_num=ev['seq_num'])
 
-            bulk.insert(ev_out)
+            to_write.append(pymongo.InsertOne(ev_out))
 
-        return bulk.execute()
+        event_col.bulk_write(to_write, ordered=True)
 
     # databroker.headersource.MDSROTemplate
     # databroker.headersource.MDSRO(MDSROTemplate)
@@ -372,7 +376,13 @@ del _hxn_register_handlers
 from IPython import get_ipython
 from nslsii import configure_base, configure_olog
 
-configure_base(get_ipython().user_ns, db, bec=False, ipython_logging=False)
+configure_base(
+    get_ipython().user_ns,
+    db,
+    bec=False,
+    ipython_logging=False,
+    publish_documents_with_kafka=True
+)
 # configure_olog(get_ipython().user_ns)
 
 from bluesky.callbacks.best_effort import BestEffortCallback
@@ -390,11 +400,16 @@ for m in [bp, bps, bpp]:
 del ns
 from bluesky.magics import BlueskyMagics
 
+from bluesky.utils import PersistentDict
+runengine_metadata_dir = Path("/nsls2/data/hxn/shared/config/runengine-metadata")
+RE.md = PersistentDict(runengine_metadata_dir)
+
 # set some default meta-data
 RE.md['group'] = ''
 RE.md['config'] = {}
 RE.md['beamline_id'] = 'HXN'
 RE.verbose = True
+
 
 from hxntools.scan_number import HxnScanNumberPrinter
 from hxntools.scan_status import HxnScanStatus
@@ -567,11 +582,10 @@ def _epicssignal_get(self, *, as_string=None, connection_timeout=1.0, **kwargs):
 
     ###########################################
     # Usedf only for old ophyd 1.3.3 and older.
-    from distutils.version import LooseVersion
-
+    import packaging
     import ophyd
 
-    if ophyd.__version__ < LooseVersion('1.4'):
+    if packaging.version.parse(ophyd.__version__) < packaging.version.parse("1.4"):
         self._metadata_lock = self._lock
     ###########################################
 

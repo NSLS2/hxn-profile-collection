@@ -35,8 +35,8 @@ def save_scan_info(sid):#,export_folder):
     z2 = z1 + 380
     d = 395.2
 
-    x_yaw = sin(gamma) * z_yaw / sin(beta + gamma)
-    R_yaw = sin(beta) * z_yaw / sin(beta + gamma)
+    x_yaw = np.sin(gamma) * z_yaw / np.sin(beta + gamma)
+    R_yaw = np.sin(beta) * z_yaw / np.sin(beta + gamma)
     R1 = R_yaw - (z_yaw - z1)
     R2 = R_yaw - (z_yaw - z2)
 
@@ -61,8 +61,8 @@ def save_scan_info(sid):#,export_folder):
         R_det = R1 / np.cos(delta) - d + diff_cz
 
     else:
-        delta = arctan(diff_y1 / R1)
-        R_det = R1 / cos(delta) - d + diff_cz
+        delta = np.arctan(diff_y1 / R1)
+        R_det = R1 / np.cos(delta) - d + diff_cz
 
     print('gamma, delta, dist:', gamma*180/np.pi, delta*180/np.pi, R_det)
     print('ROI: ', roi_x0, roi_y0, roi_nx, roi_ny )
@@ -212,7 +212,7 @@ def theta_fly2d_ce(angle_start,angle_end,num_angle,motor1,start1,end1,num1,motor
     ssy_current = zps.zpssy.position
     ssz_current = zps.zpssz.position
 
-    angle_step = np.int((angle_end - angle_start) / num_angle)
+    angle_step = int((angle_end - angle_start) / num_angle)
     start_angle = angle_current + angle_start
     yield from bps.mov(zps.zpsth,start_angle)
    # RE(fly1d(zps.zpssz,-1,1,50,0.1))
@@ -344,7 +344,7 @@ def vlm_orth_coarse(start,end,step,angle):
 
 def peak_up_xbpm(start_relative,end_relative,step_size,direction='y'):
     print('peaking up xbmp set point in ', direction, 'direction')
-    num_points = np.int((end_relative - start_relative) // step_size + 1)
+    num_points = int((end_relative - start_relative) // step_size + 1)
     ic = np.zeros(num_points)
 
     if direction == 'x':
@@ -481,16 +481,16 @@ def zp_mesh_scan(xs,xe,xn,ys,ye,yn,exposure):
 
 def makeup_scan(sid_list,x_start, x_end, x_num, y_start, y_end, y_num, exposure, elem):
     num_scan = np.size(sid_list)
-    x_start = np.float(x_start)
-    x_end = np.float(x_end)
-    x_num = np.int(x_num)
-    y_start = np.float(y_start)
-    y_end = np.float(y_end)
-    y_num = np.int(y_num)
-    exposure = np.float(exposure)
+    x_start = float(x_start)
+    x_end = float(x_end)
+    x_num = int(x_num)
+    y_start = float(y_start)
+    y_end = float(y_end)
+    y_num = int(y_num)
+    exposure = float(exposure)
 
     for i in range(num_scan):
-        sid = np.int(sid_list[i])
+        sid = int(sid_list[i])
         yield from recover_mll_scan_pos(sid,1,0,0)
         angle = dsth.position
 
@@ -569,7 +569,7 @@ def night_mosaic_mp(nx,ny):
 import epics
 def theta_dexela(motorName,angle_start,angle_end,angle_step,exposure_time):
     theta_zero = motorName.position
-    angle_step_num = np.int((angle_end - angle_start) / angle_step)
+    angle_step_num = int((angle_end - angle_start) / angle_step)
     print('number of steps:', angle_step_num)
 
     caput('XF:03IDC-ES{Dexela:1}cam1:AcquireTime',exposure_time)
@@ -582,7 +582,7 @@ def theta_dexela(motorName,angle_start,angle_end,angle_step,exposure_time):
         caput('XF:03IDC-ES{Dexela:1}TIFF1:Capture',1)
         yield from bps.sleep(exposure_time+0.2)
         yield from bps.sleep(1)
-    
+
     yield from bps.mov(motorName,theta_zero)
 
 
@@ -597,4 +597,3 @@ def repeat_2d(zs,ze,z_num):
         yield from bps.movr(zps.zpsz,z_step)
 
     yield from bps.mov(zps.zpsz,z_0)
-
