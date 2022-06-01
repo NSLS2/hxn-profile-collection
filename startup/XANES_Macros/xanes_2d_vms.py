@@ -57,6 +57,14 @@ FeXANES= {'high_e':7.5, 'low_e':7.1,
           'mirror': 'Si','pitch' :0.4725, 'm2p':1.301442}
 
 
+"""
+Cu E
+pre = np.linspace(8.96,8.975,4)
+XANES1 = np.arange(8.976,9.025,0.001)
+post = np.linspace(9.030,9.05,5)
+"""
+
+
 
 
                                 ######################################
