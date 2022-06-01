@@ -160,7 +160,7 @@ elem_M_list = np.array(['Hf_M','Ta_M','W_M','Re_M','Os_M','Ir_M','Pt_M','Au_M','
 energy_M_list = np.array([1646,1712,1775,1840,1907,1976,2048,2118,2191,2267,2342,2418,2499,2577,2654,2732,2806,2900,884,927,979,1023,1078,1122,1181,1233,1284,1342,1404,1463,1526,1580,2990,3071,3164,3250,3339,3429,3525,3616,3709])
 
 
-elem_list_xspress3_roi = np.array(['V','Si','S','P','Ca','K','Fe','Zn','Al','Ti','Ni','Cr','Co','Pt_M','Au_L','Mn'])
+elem_list_xspress3_roi = np.array(['V','Si','S','P','Ca','K','Fe','Zn','Al','Ti','Ni','Cr','Co','Pt_L','Au_L','Mn'])
 
 
 def xspress3_roi_setup():

@@ -14,8 +14,8 @@ from hxntools.detectors.zebra import Zebra, EpicsSignalWithRBV
 from databroker.assets.handlers import HandlerBase
 
 xs = None  # No Xspress3
-# use_sclr1 = False  # Set this False to run ano zebra without 'sclr1'
-use_sclr1 = True
+use_sclr1 = False  # Set this False to run ano zebra without 'sclr1'
+# use_sclr1 = True
 
 # class CurrentPreampZebra(Device):
 #     ch0 = Cpt(EpicsSignalRO, "Cur:I0-I")
@@ -533,7 +533,7 @@ class SRXFlyer1Axis(Device):
         if self._sis:
             resources.append(self.__filestore_resource_sis)
         self._document_cache.extend(("resource", _) for _ in resources)
-        
+
         self._document_cache.extend(
             ("datum", d)
             for d in (
@@ -543,7 +543,7 @@ class SRXFlyer1Axis(Device):
                 enc3_datum,
             )
         )
-        
+
         if self._sis:
             self._document_cache.extend(("datum", d) for d in sis_datum)
 
@@ -830,7 +830,7 @@ def export_zebra_data(zebra, filepath, fast_axis):
 def export_sis_data(ion, mca_names, filepath, zebra):
     print(f"EXPORTING SCALER DATA .................................")
     N = ion.nuse_all.get()
-    
+
     n_mcas = len(mca_names)
 
     print("Step1")
@@ -861,7 +861,7 @@ def export_sis_data(ion, mca_names, filepath, zebra):
         for n, name in enumerate(mca_names):
             dset = f.create_dataset(name, (correct_length,), dtype="f")
             dset[...] = np.asarray(mca_data[n])
-            
+
     print(f"FINISHED EXPORTING SCALER DATA")
 
 

@@ -1,7 +1,14 @@
-from scipy.optimize import curve_fit
+import logging
 import scipy
 import pickle
 import numpy as np
+import pandas as pd
+
+from scipy.optimize import curve_fit
+from epics import caget, caput
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger()
 
 def erfunc3(z,a,b,c,d,e):
     return d+e*z+c*(scipy.special.erf((z-a)/(b*np.sqrt(2.0)))+1.0)
@@ -27,6 +34,8 @@ def erf_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
     xdata=np.array(xdata,dtype=float)
     ydata=(df['Det1_'+elem]+df['Det2_'+elem]+df['Det3_'+elem])/df[mon]
     ydata=np.array(ydata,dtype=float)
+    ydata[ydata==np.nan] = 0
+    ydata[ydata==np.inf] = 0
     y_min=np.min(ydata)
     y_max=np.max(ydata)
     ydata=(ydata-y_min)/(y_max-y_min)
@@ -107,7 +116,10 @@ def square_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
     mots=h.start['motors']
     xdata=df[mots[0]]
     xdata=np.array(xdata,dtype=float)
-    ydata=(df['Det1_'+elem]+df['Det2_'+elem]+df['Det3_'+elem])/df[mon]
+    #df[mon][df[mon]==np.inf] = np.mean(df[mon])
+    #ydata=(df['Det1_'+elem]+df['Det2_'+elem]+df['Det3_'+elem])/(df[mon]+1e-8)
+    ydata=(df['Det1_'+elem]+df['Det2_'+elem]+df['Det3_'+elem])
+
     ydata=np.array(ydata,dtype=float)
     y_min=np.min(ydata)
     y_max=np.max(ydata)
@@ -727,6 +739,4 @@ def scan_info(sid):
     si.det = h.start['detectors']
     return(si)
 
-def StartPumpingProtocol():
 
-    pass

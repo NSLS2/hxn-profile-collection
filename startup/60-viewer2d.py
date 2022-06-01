@@ -161,6 +161,7 @@ def plot(scan_id, elem='Pt', norm=None,
 
     if norm is not None:
         norm_v = df[norm]
+        norm_v[norm_v ==0] = norm_v.mean() #patch for first frame drop issue
         if log:
             plt.plot(x, np.log10(data / (norm_v+1.e-8)))
             plt.plot(x, np.log10(data / (norm_v + 1.e-8)), 'bo')
@@ -280,7 +281,10 @@ def plotfly(scan_id, elem='Pt', norm=None, center_method='com'):
 
     if norm is not None:
         norm_tot = df[norm]
+        norm_tot[norm_tot == 0] = norm_tot.mean() #patch for dropping first frame
         roi_data = roi_data/(norm_tot + 1e-8)
+        roi_data[roi_data == np.inf] = 0
+        roi_data[roi_data == np.nan] = 0
 
     try:
         diff = np.diff(roi_data)
@@ -492,6 +496,7 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
 
     if norm is not None:
         monitor = np.asarray(df[norm], dtype=np.float32)
+        monitor[monitor==0] = monitor.mean() #patch for dropping first data point
         spectrum = spectrum/(monitor + 1e-8)
 
     nx, ny = get_flyscan_dimensions(hdr)
