@@ -62,6 +62,11 @@ Cu E
 pre = np.linspace(8.96,8.975,4)
 XANES1 = np.arange(8.976,9.025,0.001)
 post = np.linspace(9.030,9.05,5)
+
+PreAs = np.linspace(11845,11860,6)
+As_XANES = np.linspace(11861,11885,49)
+PostAs = np.linspace(11886,11901,6)
+
 """
 
 
