@@ -1,31 +1,37 @@
 #Last Update 09/11/2021 by AP
 
 """
+
 ReadMe:
 
-The workflow for xanes experiment is define below. This macro aims to use one flow for XANES of any given element. 
+The workflow for xanes experiment is define below. This macro aims to use one flow for XANES of any given element.
 This macro is designed to work with the GUI inputs as well.
 To add a new element add the paramer file in the format given below
 
 
 EXAMPLE OF USAGE:
 
-run -i XANES_Macros/hxn_nanoXANES.py 
+
+For XANES Scan: <zp_list_xanes2d(FeXANES,dets1,zpssx,-13,11,150,zpssy,-13,11,150,0.05,
+                    xcen = 0, ycen = 0,doAlignScan = False, alignElem = 'Fe',
+                    alignX = (-1,1,100,0.1),
+                    alignY = (-1,1,100,0.1), pdfElem = ['Fe','Cr'],
+                    saveLogFolder = '/data/users/2021Q3/Ajith_2021Q3')
 
 
-For XANES Scan: <zp_list_xanes2d(FeXANES,dets1,zpssz,-0.15,2.25,80,zpssy,-0.15,2.25,80,0.05,doAlignScan = False,
-,pdfElem = ['Fe','Ti'],saveLogFolder = '/data/users/2022Q1/Singer_2022Q1')
+For Foil Calibration: <zp_list_xanes2d(e_list,dets6,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
+                    xcen = 0, ycen = 0, doAlignScan = False, pdfLog = False,
+                    foilCalibScan = True, peakBeam = False)
 
-
-For Foil Calibration: <zp_list_xanes2d(FeCalib,dets6,zpssx,-1,1,10,zpssy,-1,1,10,0.05,
-highEStart = False, doAlignScan = False, pdfLog = False, foilCalibScan = True, ignoreCRL = True,peakBeam = False,
-saveLogFolder ='/data/users/2022Q1/Singer_2022Q1') 
 """
 
 
 import numpy as np
 from datetime import datetime
 import pandas as pd
+
+import scipy.constants as consts
+
 
 #Paramer list from previous runs in the order of atomic number of the element
 
@@ -99,59 +105,100 @@ CuCalib = {'high_e':9.05, 'low_e':8.96,
           'mirrorCoating': 'Cr','zposaz':3500}
           
 
-    
+FeXANES= {'high_e':7.5, 'low_e':7.1,
+          'high_e_zpz1':2.73, 'zpz1_slope':-5.04,
+          'energy':[(6.97,7.11,0.005),(7.111,7.150,0.001),(7.155,7.6,0.005)],
+          'mirror': 'Si','pitch' :0.4725, 'm2p':1.301442}
+
+
+"""
+#Hafnium L_III edge
+#ZP #1, 244 um dia, 30 nm outmost, crl# 22, 3
+
+pre = np.linspace(9.540,9.550,6)
+XANES1 = np.linspace(9.552,9.580,29)
+post = np.linspace(9.582,9.640,30)
+
+#Hafnium L_III edge
+#ZP #1, 244 um dia, 30 nm outmost, crl# 22, 3
+
+pre = np.linspace(9.400,9.540,15)
+XANES1 = np.linspace(9.542,9.560,10)
+XANES2 = np.linspace(9.561,9.571,21)
+XANES3 = np.linspace(9.572,9.642,36)
+post = np.linspace(9.644,9.84,50)
+
+
+
+PreAs = np.linspace(11845,11860,6)
+As_XANES = np.linspace(11861,11885,49)
+PostAs = np.linspace(11886,11901,6)
+
+"""
+
+
+
+
                                 ######################################
                                 ######### FUNCTIONS BELOW ############
                                 ######################################
+#copied from larch --modified
+
+KTOE = 1.e20*consts.hbar**2 / (2*consts.m_e * consts.e) # 3.8099819442818976
+ETOK = 1.0/KTOE
+
+def etok(energy):
+    """convert photo-electron energy to wavenumber"""
+    if isinstance(energy, list):
+        energy = np.array(energy)
+
+    if energy < 0: return 0
+
+    return np.around(np.sqrt(energy*ETOK),2)
+
+def ktoe(k):
+    """convert photo-electron wavenumber to energy"""
+    if isinstance(k, list):
+        k = np.array(k)
+    return np.around(k*k*KTOE, 1)
 
 
 def generateEPoints(ePointsGen = [(9.645,9.665,0.005),(9.666,9.7,0.0006),(9.705,9.725,0.005)],reversed = True):
 
-    """ 
-    
-    Generates a list of energy values from the given list
-    
-    input1: Tuples in the format (start energy, end energy, energy resolution)
-    input2: a list of enrgy points 
-
-    
-    if reversed is true the list will be transposed 
-    
-    return : list of energy points 
-    
     """
-                
+
+    Generates a list of energy values from the given list
+
+    input: Tuples in the format (start energy, end energy, energy resolution),
+    if reversed is true the list will be transposed
+
+    return : list of energy points
+
+    """
+
     e_points = []
 
-    if isinstance(ePointsGen[0], tuple):
-    
-        for values in ePointsGen:
-            #use np.arange to generate values and extend it to the e_points list
-            e_points.extend(np.arange(values[0],values[1],values[2]))
+    for values in ePointsGen:
+        #use np.arange to generate values and extend it to the e_points list
+        e_points.extend(np.arange(values[0],values[1],values[2]))
 
-    elif isinstance(ePointsGen, list):
-        e_points = ePointsGen
-
-    else:
-        print (" Unknown energy list format")
-    
     if reversed:
-        #retruns list in the reversted order
+        #retrun list in the reversted order
         return e_points[::-1]
     else:
         return e_points
-    
+
 def generateEList(XANESParam = CrXANES, highEStart = True):
 
-    """ 
-    
-    Generates a pandas dataframe of optics motor positions. Function uses high E and low E values in the dictionary 
+    """
+
+    Generates a pandas dataframe of optics motor positions. Function uses high E and low E values in the dictionary
     to generate motor positions for all the energy points, assuming linear relationship.
-    
+
     input: Dictionary conating optics values at 2 positions (high E and low E), option to start from high E or low E
-    
+
     return : Dataframe looks like below;
-    
+
        energy    ugap  crl_theta  ZP focus
     0   7.175  7652.5       1.75   65.6575
     1   7.170  7648.0       1.30   65.6870
@@ -162,36 +209,20 @@ def generateEList(XANESParam = CrXANES, highEStart = True):
     """
     # empty dataframe
     e_list = pd.DataFrame()
-    
+
     #add list of energy as first column to DF
     e_list['energy'] = generateEPoints (ePointsGen = XANESParam ['energy'], reversed = highEStart)
-    
+
     #read the paramer dictionary and calculate ugap list
     high_e, low_e = XANESParam['high_e'],XANESParam['low_e']
-    high_e_ugap, low_e_ugap = XANESParam['high_e_ugap'],XANESParam['low_e_ugap']
-    
-    #slope = dUgap/dE
-    ugap_slope = (high_e_ugap - low_e_ugap)/(high_e-low_e)
-    
-    #y = highvalues+dE*increment per eV
-    ugap_list = high_e_ugap + (e_list['energy'] - high_e)*ugap_slope
-    
-    # add the list to DF
-    e_list['ugap'] = ugap_list
 
-    #same steps as ugap for CRL theta
-    high_e_crl, low_e_crl =XANESParam['high_e_crl'],XANESParam['low_e_crl']
-    crl_slope = (high_e_crl - low_e_crl)/(high_e-low_e)
-    crl_list = high_e_crl + (e_list['energy'] - high_e)*crl_slope
-    e_list['crl_theta'] = crl_list
-    
     #zone plate increament is very close to the theorticla value , same step as above for zp focus
     zpz1_ref, zpz1_slope = XANESParam['high_e_zpz1'],XANESParam['zpz1_slope']
     zpz1_list = zpz1_ref + (e_list['energy'] - high_e)*zpz1_slope
     e_list['ZP focus'] = zpz1_list
-    
+
     #return the dataframe
-    return e_list 
+    return e_list
 
 def peak_the_flux():
 
@@ -205,48 +236,23 @@ def peak_the_flux():
     yield from bps.sleep(1)
     yield from peak_bpm_y(-2,2,4)
     
-def move_energy(e_,ugap_,zpz_,crl_th_, ignoreCRL= False, ignoreZPZ = False):
-    
-    
-    """ Function to change energy knowing ugap, 
-    crl_theta (optional) and zone plate focus (optional)"""
 
-    print(f'{15*"*"} \n, Target Energy = {e_:.4f} \n,UGap = {ugap_:.4f} \n,CRL Theta = {crl_th_:.4f} \n,ZPZ = {zpz_:4f}, \n {15*"*"} ')
-            
+def move_energy(e,zpz_ ):
+    yield from bps.sleep(1)
+
     #tuning the scanning pv on to dispable c bpms
-    #caput('XF:03IDC-ES{Status}ScanRunning-I', 1)  
+    caput('XF:03IDC-ES{Status}ScanRunning-I', 1)
 
-    if abs(e.position-e_)<0.2:
+    yield from Energy.move(e, 3)
+    yield from mov_zpz1(zpz_)
+    yield from bps.sleep(1)
 
-        #move mono e
-        yield from bps.mov(e,e_)
-        yield from bps.sleep(1)
-        
-        #move ugap
-        yield from bps.mov(ugap, ugap_)
-        yield from bps.sleep(2)
-        
-        #move crl_theta, if true
-        if not ignoreZPZ: yield from mov_zpz1(zpz_)
-        yield from bps.sleep(1)
-        
-        #move zpz1, if true
-        if not ignoreCRL: yield from bps.mov(crl.p,crl_th_)
-        yield from bps.sleep(1)
-        
-        #scanning pv off to dispable c bpms
-        #caput('XF:03IDC-ES{Status}ScanRunning-I', 0)
-        yield from bps.sleep(5)
-
-    else: 
-        raise ValueError("The requested energy change is more than 200 eV. This must be a mistake")
-    
 
 def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,highEStart = True,
                     doAlignScan = True, alignX = (-2,2,100,0.1,'Fe',0.7, True),
                     alignY = (-2,2,100,0.1,'Fe',0.7, True), 
-                    pdfElem = ('Fe','Cr'),doScan = True, moveOptics = True, ignoreCRL = False, 
-                    pdfLog = True, foilCalibScan = False, peakBeam = True,
+                    pdfElem = ('Fe','Cr'),doScan = True, moveOptics = True,pdfLog = True, 
+                    foilCalibScan = False, peakBeam = True,
                     saveLogFolder = '/home/xf03id/Downloads'):
                     
                     
@@ -274,7 +280,7 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
     # marker to track beam dump             
     beamDumpOccured = False
                     
-    e_list = generateEList(XANESParam = elemParam, highEStart =  highEStart)
+    e_list = generateEList(elemParam, highEStart =  highEStart)
 
     #add real energy to the dataframe
     e_list['E Readback'] = np.nan 
@@ -339,9 +345,7 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
             e_t, ugap_t, crl_t, zpz_t, *others = e_list.iloc[i]
         
         if moveOptics: 
-            yield from move_energy(e_t,ugap_t,zpz_t,crl_t,
-                                   ignoreCRL= ignoreCRL, 
-                                   ignoreZPZ = foilCalibScan)
+            yield from move_energy(e_t,zpz_t)
 
         else: pass
         
@@ -454,9 +458,7 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
     
     if not np.isclose(e_list['energy'].max(), e.position):
     
-        yield from move_energy(e_max,ugap_max,zpz_max,crl_max,
-                               ignoreCRL= foilCalibScan,
-                               ignoreZPZ = foilCalibScan)
+        yield from move_energy(e_max,zpz_max)
         
         yield from peak_the_flux()
 
@@ -466,5 +468,51 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
     caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0) 
     if pdfLog: save_page() #save the pdf
 
+'''
 
+bbpm_x = "XF:03ID-BI{EM:BPM1}fast_pidX.VAL"
+bbpm_y = "XF:03ID-BI{EM:BPM1}fast_pidY.VAL"
+
+
+def peak_b_bpm(bpm_name, start, end, n_steps):
+    shutter_b_cls_status = caget('XF:03IDB-PPS{PSh}Sts:Cls-Sts')
+    shutter_c_status = caget('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0')
+
+
+    if shutter_b_cls_status == 0:
+
+        caput('XF:03IDC-ES{Status}ScanRunning-I', 1)
+        bpm_0 = caget(bpm_name)
+        x = np.linspace(bpm_0+start,bpm_0+end,n_steps+1)
+        y = np.arange(n_steps+1)
+        #print(x)
+        for i in range(n_steps+1):
+            caput(bpm_name,x[i])
+            if i == 0:
+                yield from bps.sleep(5)
+            else:
+                yield from bps.sleep(2)
+
+            if shutter_c_status == 0:
+                y[i] = sclr2_ch2.get()
+
+            else:
+                y[i] = sclr2_ch4.get()
+
+
+        peak = x[y == np.max(y)]
+        caput(bpm_name,peak[0])
+        yield from bps.sleep(2)
+
+    else:
+        print('Shutter B is Closed')
+
+'''
+
+    #plt.pause(5)
+    #plt.close()
+
+
+    #zp_list_xanes2d(FeXANES, dets1, zpssx,-4,4,80,zpssy, -4,4,80,0.05, highEStart=False, alignElem='S', alignX = (-5,5,100,0.05,0.5), alignY = (-5,5,100,0
+   #...: .05,05), pdfElem=["Fe", "S"], saveLogFolder="\data\Staff\Ajith\2022Q2")"
 
