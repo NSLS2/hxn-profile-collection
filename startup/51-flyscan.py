@@ -60,7 +60,7 @@ live_im_plot = FlyLiveImage(['Cr', 'Fe','S','P'], channels=[1, 2, 3])
 #                     channels=[1, 2, 3],
 #                     )
 
-pt_plot = FlyRoiPlot(['Cr'],
+pt_plot = FlyRoiPlot(['S'],
                      channels=[1, 2, 3],
                     )
 

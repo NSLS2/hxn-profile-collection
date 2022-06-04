@@ -144,23 +144,7 @@ PostAs = np.linspace(11886,11901,6)
                                 ######################################
 #copied from larch --modified
 
-KTOE = 1.e20*consts.hbar**2 / (2*consts.m_e * consts.e) # 3.8099819442818976
-ETOK = 1.0/KTOE
 
-def etok(energy):
-    """convert photo-electron energy to wavenumber"""
-    if isinstance(energy, list):
-        energy = np.array(energy)
-
-    if energy < 0: return 0
-
-    return np.around(np.sqrt(energy*ETOK),2)
-
-def ktoe(k):
-    """convert photo-electron wavenumber to energy"""
-    if isinstance(k, list):
-        k = np.array(k)
-    return np.around(k*k*KTOE, 1)
 
 
 def generateEPoints(ePointsGen = [(9.645,9.665,0.005),(9.666,9.7,0.0006),(9.705,9.725,0.005)],reversed = True):
@@ -324,11 +308,11 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
     for i in range (len(e_list)):
 
         #if beam dump occur turn the marker on
-        if sclr2_ch2.get()<0.1*ic_0:
+        if sclr2_ch2.get()<10000:
             beamDumpOccured = True
 
         #wait if beam dump occured beamdump
-        yield from check_for_beam_dump(threshold=0.1*ic_0)
+        yield from check_for_beam_dump(threshold=10000)
         
         if beamDumpOccured:
             #wait for about 3 minutes for all the feedbacks to kick in

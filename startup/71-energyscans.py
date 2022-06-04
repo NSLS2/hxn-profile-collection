@@ -60,7 +60,38 @@ class HXNEnergy():
             gap = self.calcGap(targetE, harmonics = int(harmonicsChoice))
 
             return gap, int(harmonicsChoice)
+    
+    
+    def findAMirror(self,e):
+    
+        EnergyToMirror = {(5,9):'Si',(9,15):'Cr',(15,20):'Rh',(20,25):'Pt'}
+    
+        if not 5.5 <= e <= 25:
+            raise ValueError (" Energy value out of range")
+        
+        else:
+            for erange in EnergyToMirror.keys():
+                if erange[0] <= e <= erange[1]:
+                    return EnergyToMirror[erange]
+                else:
+                    pass
+    
 
+    def moveMirror(self,targetE, mirror = "auto"):
+        
+         MirrorPos = {'Si':(21,-4),'Cr':(5,15),'Rh':(30,-12),'Pt':(13.5,4)}         
+         
+         if mirror == "auto":
+             foundMirror = self.findAMirror(targetE)
+             positions = MirrorPos[foundMirror]
+             logger.info(f"Moving to {foundMirror}")    
+         else:
+             positions = MirrorPos[mirror]
+             logger.info(f"Moving to {mirror}")
+
+         caput("XF:03IDA-OP{Mir:1-Ax:Y}Mtr",positions[0])
+         #caput("XF:03IDA-OP{Mir:2-Ax:Y}Mtr",positions[1])
+         yield from bps.mov(m2.y, positions[1])
 
     def calculatePitch(self,targetE, offset = 0):
         

@@ -29,34 +29,29 @@ For Foil Calibration: <zp_list_xanes2d(e_list,dets6,mot1,x_s,x_e,x_num,mot2,y_s,
 import numpy as np
 from datetime import datetime
 import pandas as pd
+import xraylib
 
 import scipy.constants as consts
 
 
-ZnXANES= {'high_e':9.7, 'low_e':9.6,
-          'high_e_ugap':6480, 'low_e_ugap':6430,
-          'high_e_crl':7, 'low_e_crl':2,
+ZnEXAFS= {'high_e':9.7, 'low_e':9.6,
           'high_e_zpz1':50.92, 'zpz1_slope':-5.9,
           'energy':[]}
 
-CrXANES= {'high_e':6.03, 'low_e':5.97,
-          'high_e_ugap':6660, 'low_e_ugap':6616,
-          'high_e_crl':15, 'low_e_crl':15,'crl_comb':(8),
+CrEXAFS= {'high_e':6.03, 'low_e':5.97,
           'high_e_zpz1':71.395, 'zpz1_slope':-5.9,
           'energy':[(5.97,5.98,0.005),(5.981,6.03,0.001), (6.032,6.046,0.005)],
-          'mirror': 'Si', 'pitch' :0.4665,'m2p':1.3060}
+          }
 
-MnXANES= {'high_e':6.6, 'low_e':6.5,
-          'high_e_ugap':7142, 'low_e_ugap':7057,
-          'high_e_crl':-12, 'low_e_crl':-12,'crl_comb':(8,6),
+MnEXAFS= {'high_e':6.6, 'low_e':6.5,
           'high_e_zpz1':68.31, 'zpz1_slope':-5.9,
           'energy':[(6.520,6.530,0.005),(6.531,6.580,0.001),(6.585,6.601,0.005)],
           'mirror': 'Si'}
 
 FeEXAFS= {'high_e':7.5, 'low_e':7.1,
           'high_e_zpz1':2.73, 'zpz1_slope':-5.04,
-          'energy':[(6.97,7.11,0.005),(7.111,7.129,0.001)],
-          'E0':7130, 'kmax':12, 'kstep':0.2}
+          'pre_edge':[(6.97,7.11,0.005)],
+          'elem':"Fe", 'kmin':2, 'kmax':12, 'kstep':0.2}
 
 
 """
@@ -98,7 +93,7 @@ def ktoe(k):
     return np.around(k*k*KTOE, 1)
 
 
-def generateEPoints(ePointsGen,E0, kmax,kstep, reversed = True):
+def generateEPoints(ePointsGen,elem,kmin, kmax,kstep, reversed = True):
 
     """
 
@@ -112,7 +107,10 @@ def generateEPoints(ePointsGen,E0, kmax,kstep, reversed = True):
     return : list of energy points
 
     """
-    krangeE = E0+ ktoe(np.arange(0,kmax,kstep))
+    E0 = xraylib.EdgeEnergy(xraylib.SymbolToAtomicNumber(elem), xraylib.K_SHELL) + ktoe(kmin)*0.001 # kstart=2
+    #print(E0)
+
+    krangeE = E0 + 0.001*ktoe(np.arange(0.4,kmax,kstep))
 
     e_points = []
 
@@ -122,14 +120,17 @@ def generateEPoints(ePointsGen,E0, kmax,kstep, reversed = True):
         for values in ePointsGen:
             #use np.arange to generate values and extend it to the e_points list
             e_points.extend(np.arange(values[0],values[1],values[2]))
+            edgeStart = values[1]+0.001
+
+        e_points.extend(np.arange(edgeStart,E0,0.001))
+        e_points.extend(krangeE)
+
 
     elif isinstance(ePointsGen, list):
         e_points = ePointsGen
 
     else:
         print (" Unknown energy list format")
-
-    e_points.extend(krangeE*0.001)
 
     if reversed:
         #retrun list in the reversted order
@@ -161,11 +162,12 @@ def generateEList(EXAFSParam = FeEXAFS, highEStart = True):
     e_list = pd.DataFrame()
 
     #add list of energy as first column to DF
-    E0 = EXAFSParam['E0']
+    elem = EXAFSParam['elem']
+    kmin = EXAFSParam['kmin']
     kmax = EXAFSParam['kmax']
     kstep = EXAFSParam['kstep']
 
-    e_list['energy'] = generateEPoints (EXAFSParam['energy'], E0, kmax,kstep, reversed = highEStart)
+    e_list['energy'] = generateEPoints(EXAFSParam['pre_edge'],elem,kmin, kmax,kstep, reversed = highEStart)
 
     #read the paramer dictionary and calculate ugap list
     high_e, low_e = EXAFSParam['high_e'],EXAFSParam['low_e']
@@ -190,7 +192,7 @@ def peak_the_flux():
     yield from bps.sleep(1)
     yield from peak_bpm_y(-2,2,4)
 
-def move_energy(e,zpz_ ):
+def move_energy(e,zpz_):
     yield from bps.sleep(1)
 
     #tuning the scanning pv on to dispable c bpms
@@ -199,9 +201,18 @@ def move_energy(e,zpz_ ):
     yield from Energy.move(e, 3)
     yield from mov_zpz1(zpz_)
     yield from bps.sleep(1)
+    
+    if caget("SR:APHLA:LBAgent{BUMP:C03-R7X1}X-FdbkEnabled") == 0:
+
+        caput("SR:APHLA:LBAgent{BUMP:C03-R7X1}X-FdbkEnabled",1)
+        caput("SR:APHLA:LBAgent{BUMP:C03-R7X1}Y-FdbkEnabled",1)
+
+        yield from bps.sleep(5)
 
 
-def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,highEStart = True,
+
+
+def zp_list_exafs2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,highEStart = True,
                     doAlignScan = True, alignX = (-2,2,100,0.1,'Fe',0.7, True),
                     alignY = (-2,2,100,0.1,'Fe',0.7, True), 
                     pdfElem = ('Fe','Cr'),doScan = True, moveOptics = True,pdfLog = True, 
@@ -277,25 +288,25 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
     for i in range (len(e_list)):
 
         #if beam dump occur turn the marker on
-        if sclr2_ch2.get()<0.1*ic_0:
+        if sclr2_ch2.get()<10000:
             beamDumpOccured = True
 
         #wait if beam dump occured beamdump
-        yield from check_for_beam_dump(threshold=0.1*ic_0)
+        yield from check_for_beam_dump(threshold=10000)
         
         if beamDumpOccured:
             #wait for about 3 minutes for all the feedbacks to kick in
             yield from bps.sleep(200)
 
             #redo the previous energy
-            e_t, ugap_t, crl_t, zpz_t, *others = e_list.iloc[i-1]
+            e_t, zpz_t, *others = e_list.iloc[i-1]
 
             #turn off the beamdump marker
             beamDumpOccured = False
             
         else:
             #unwrap df row for energy change
-            e_t, ugap_t, crl_t, zpz_t, *others = e_list.iloc[i]
+            e_t, zpz_t, *others = e_list.iloc[i]
         
         if moveOptics: 
             yield from move_energy(e_t,zpz_t)
