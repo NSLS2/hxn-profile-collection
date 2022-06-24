@@ -6,35 +6,9 @@ from scipy import ndimage
 #from skimage.filters.rank import median
 from skimage.morphology import disk
 from skimage import io
-
-'''
-from hxntools.handlers import register
-import filestore
-register()
-
-import yaml
-with open("./hxn.yml","r") as read_file:
-    data=yaml.load(read_file)
-
-from metadatastore.mds import MDS
 from databroker import Broker
-from databroker.core import register_builtin_handlers
-from filestore.fs import FileStore
+db = Broker.named('hxn')
 
-_mds_config = {'host': data['metadatastore']['config']['host'],
-               'port': 27017,
-               'database': data['metadatastore']['config']['database'],
-               'timezone': 'US/Eastern'}
-mds = MDS(_mds_config)
-_fs_config = {'host': data['assets']['config']['host'],
-              'port': 27017,
-              'database': data['assets']['config']['database']}
-db = Broker(mds, FileStore(_fs_config))
-
-from hxntools.handlers.timepix import TimepixHDF5Handler
-from hxntools.handlers.xspress3 import Xspress3HDF5Handler
-db.fs.register_handler(TimepixHDF5Handler._handler_name, TimepixHDF5Handler, overwrite=True)
-'''
 
 def rm_pixel(data,ix,iy):
     data[ix,iy] = np.median(data[ix-1:ix+1,iy-1:iy+1])
@@ -182,7 +156,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     global elem
     elem = element
     global scan_num
-
+    #print('start')
     '''
     #scan_num = np.str(sid)
     #scan_id, df = _load_scan(sid, fill_events=False)
@@ -194,12 +168,17 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     #elem = sys.argv[2]
     #det_name = sys.argv[4]
     '''
-    scan_num = np.str(sid)
+    scan_num = str(sid)
+    #print(scan_num)
     hdr = db[sid]
-    bl = db.get_table(db[sid],stream_name='baseline')
+    #print(hdr)
+    bl = db[sid].table('baseline')
+    #print('done baseline')
     df = db.get_table(db[sid],fill=False)
+    #print('get df')
     #images = db.get_images(db[sid],name=det_name)
     h = db[sid]
+    #print('get h')
     images = list(h.data(det_name))
     #print('image size:',np.shape(images))
     images = np.array(np.squeeze(images))
@@ -207,14 +186,20 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
 
     
     ic = np.asfarray(df['sclr1_ch4'])
+    index = np.where(ic == 0)
+    nn = np.size(index[0])
+    for i in range(nn):
+        ii = index[0][i]
+        ic[ii] = ic[ii+1]
+    #print('done ic')
     #ic_0 = 153000
 
     #images = db.get_images(db[sid],name=det_name)
-    images = np.array(np.squeeze(list(hdr.data(det_name))))
+    #images = np.array(np.squeeze(list(hdr.data(det_name))))
     print(np.shape(images))
     num_frame,nnx,nny = np.shape(images)
     #mask = 1-io.imread('/data/users/2020Q3/Huang_2020Q3/NPO_mask.tif')
-    mm = np.load('/data/users/2022Q1/May_2022Q1/small_particle/mask.npy')
+    mm = np.load('/GPFS/XF03ID1/users/2022Q2/Huang_2022Q2/Huolin/charged/mask_003.npy')
     #mm2 = np.load('/data/users/2021Q2/Huang_2021Q2/TMA_LCO_pristine/mask2.npy')
     #index = np.where(mask == 1)
     #mx = index[0]
@@ -264,10 +249,14 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
             nx,ny = np.shape(t)
             global diff_array
             diff_array = np.zeros((nx,ny,num_frame))
+            #diff_array_l = np.zeros((158,ny,num_frame))
+            #diff_array_r = np.zeros((140,ny,num_frame))
         #t[index] = 0
         #t[mask == 1] = 0
         #t[164,107] = 0
         diff_array[:,:,i] = t #* mask
+        #diff_array_l[:,:,i] = t[:158,:]
+        #diff_array_r[:,:,i] = t[158:,:]
 
 
     #diff_array[22,255,:] = 0
@@ -302,7 +291,11 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
         if i == 0:
             global roi
             roi = np.zeros(num_frame)
+            #roi_l = np.zeros(num_frame)
+            #roi_r = np.zeros(num_frame)
         roi[i] = np.sum(diff_array[:,:,i])
+        #roi_r[i] = np.sum(diff_array_r[:,:,i])
+        #roi_l[i] = np.sum(diff_array_l[:,:,i])
 
     global xrf
     if elem in df:
@@ -349,6 +342,8 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
             elif hdr.start.plan_name == 'FlyPlan2D':
                 xrf = np.reshape(xrf,(hdr.start.shape[1],hdr.start.shape[0]))
                 roi = np.reshape(roi,(hdr.start.shape[1],hdr.start.shape[0]))
+                #roi_r = np.reshape(roi_r,(hdr.start.shape[1],hdr.start.shape[0]))
+                #roi_l = np.reshape(roi_l,(hdr.start.shape[1],hdr.start.shape[0]))
                 #roi2 = np.reshape(roi2,(hdr.start.shape[1],hdr.start.shape[0]))
                 extent = (hdr.start.plan_args['scan_end1'], hdr.start.plan_args['scan_start1'],hdr.start.plan_args['scan_end2'],hdr.start.plan_args['scan_start2'])
                 #x_motor = hdr['motor1']
@@ -400,8 +395,12 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     plt.show()
 
     if save_flag:
-        io.imsave('/data/users/2022Q1/May_2022Q1/small_particle/rock_'+scan_num+'_roi.tif',roi.astype(np.float32))
-        io.imsave('/data/users/2022Q1/May_2022Q1/small_particle/rock_'+scan_num+'_xrf.tif',xrf.astype(np.float32))
-        io.imsave('/data/users/2022Q1/May_2022Q1/small_particle/rock_'+scan_num+'_diff_data.tif',diff_array.astype(np.float32))
+        io.imsave('/GPFS/XF03ID1/users/2022Q2/Huang_2022Q2/Huolin/charged/rock_'+scan_num+'_roi.tif',roi.astype(np.float32))
+        #io.imsave('/GPFS/XF03ID1/users/2022Q2/Huang_2022Q2/Huolin/pristine/rock_'+scan_num+'_roi_r.tif',roi_r.astype(np.float32))
+        #io.imsave('/GPFS/XF03ID1/users/2022Q2/Huang_2022Q2/Huolin/pristine/rock_'+scan_num+'_roi_l.tif',roi_l.astype(np.float32))
+        io.imsave('/GPFS/XF03ID1/users/2022Q2/Huang_2022Q2/Huolin/charged/rock_'+scan_num+'_xrf.tif',xrf.astype(np.float32))
+        io.imsave('/GPFS/XF03ID1/users/2022Q2/Huang_2022Q2/Huolin/charged/rock_'+scan_num+'_diff_data.tif',diff_array.astype(np.float32))
+        #io.imsave('/GPFS/XF03ID1/users/2022Q2/Huang_2022Q2/Huolin/pristine/rock_'+scan_num+'_diff_data_r.tif',diff_array_r.astype(np.float32))
+        #io.imsave('/GPFS/XF03ID1/users/2022Q2/Huang_2022Q2/Huolin/pristine/rock_'+scan_num+'_diff_data_l.tif',diff_array_l.astype(np.float32))
 
 

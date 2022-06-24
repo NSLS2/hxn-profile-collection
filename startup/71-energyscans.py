@@ -10,20 +10,28 @@ logger = logging.getLogger()
 
 class HXNEnergy():
     
-    def __init__(self, ugap_,bragg_e, dcm_pitch, fe_xbpm, ic1, calib_file_csv):
+    def __init__(self, ugap_,bragg_e, dcm_pitch, ic1, calib_file_csv):
 
         self.ugap = ugap_
         self.bragg_e = bragg_e
         self.dcm_pitch = dcm_pitch
-        self.fe_xbpm = fe_xbpm
         self.ic1 = ic1
         self.calib_file = calib_file_csv
-        #self.ugap_coeffs = [155.1, -862.9, 4146.7, 565.2] #find a smarter way, save as .json?
-        #self.dcm_p_coeffs = []
-        #self.hfm_p_coeffs = []
         self.df = pd.read_csv(self.calib_file)
         self.calibrate_ugap()
         self.calibrate_dcm_pitch()
+
+        self.defineFeedBackPVs()
+
+    def defineFeedBackPVs(self):
+        self.hcm_pf_sts = "XF:03IDC-CT{FbPid:01}PID:on"
+        self.hfm_pf_sts = "XF:03IDC-CT{FbPid:02}PID:on"
+
+        self.xbpm_x_rbv = "XF:03ID-BI{EM:BPM1}PosX:MeanValue_RBV"
+        self.xbpm_y_rbv = "XF:03ID-BI{EM:BPM1}PosY:MeanValue_RBV"
+
+        self.xbpm_x_val = "XF:03ID-BI{EM:BPM1}fast_pidX.VAL"
+        self.xbpm_x_val = "XF:03ID-BI{EM:BPM1}fast_pidY.VAL"
 
     def calcGap(self,E,harmonics = 5, offset = 0):
         E1 = E/harmonics
@@ -41,7 +49,7 @@ class HXNEnergy():
             if targetE>5.8 and targetE<25:     # if dialed a wrong number
                 
                 opt = np.array([self.calcGap(targetE, harmonics = hm) for hm in harmonics])
-                idx = np.where(np.logical_and(opt>=5400, opt<=10000)) #5400 beacuse of the ugap scan limit
+                idx = np.where(np.logical_and(opt>=5600, opt<=10000)) #5400 beacuse of the ugap scan limit
                 gap =  opt[idx][-1] #last one has lowest gap in the list
                 logger.info(f" estimated gap = {gap}")
                 
@@ -91,14 +99,14 @@ class HXNEnergy():
 
          caput("XF:03IDA-OP{Mir:1-Ax:Y}Mtr",positions[0])
          #caput("XF:03IDA-OP{Mir:2-Ax:Y}Mtr",positions[1])
-         yield from bps.mov(m2.y, positions[1])
+         yield from bps.mov(m1.y, positions[0], m2.y, positions[1] )
 
     def calculatePitch(self,targetE, offset = 0):
         
         calc_pitch =  np.polyval(self.dcm_p_coeffs, targetE) + offset
         return calc_pitch 
 
-    def move(self,targetE, harmChoice = "auto", moveMonoPitch = True):
+    def move(self,targetE, harmChoice = "auto", moveMonoPitch = True, moveMirror = "auto") :
         
         bbpm_auto = "XF:03ID{XBPM:17}AutoFbEn-Cmd"
         bbpm_x = "XF:03ID-BI{EM:BPM1}fast_pidX.FBON"
@@ -120,22 +128,53 @@ class HXNEnergy():
             logger.info("Energy reached")
 
             if moveMonoPitch:
-                logger.info(f"Moving Mono Pitch to {dcm_p_target}")
-                if bbpm_auto or bbpm_x or bbpm_y:
+
+                if caget(bbpm_auto) or caget(bbpm_x) or caget(bbpm_y):
+                    print(True)
                     caput(bbpm_auto,0)
+                    yield from bps.sleep(2)
                     caput(bbpm_x, 0)
                     caput(bbpm_y,0)
                     yield from bps.sleep(2)
+                    
+                    caput(self.hcm_pf_sts,0)
+                    yield from bps.sleep(2)
+                    caput(self.hfm_pf_sts,0)
+                    yield from bps.sleep(2)
+                    logger.info(f"Moving Mono Pitch to {dcm_p_target}")
                     yield from bps.mov(dcm.p,dcm_p_target)
+                    yield from bps.sleep(2)
+                    caput(self.hcm_pf_sts,1)
+                    yield from bps.sleep(2)
+                    caput(self.hfm_pf_sts,1)
+                        
                     yield from bps.sleep(2)
                     caput(bbpm_auto,1)
                     yield from bps.sleep(2)
+                    caput(bbpm_x, 1)
+                    yield from bps.sleep(2)
+                    caput(bbpm_y,1)
+                    yield from bps.sleep(5)
 
                 else:
-                    caput(bbpm_auto,0)
-                    caput(bbpm_x, 0)
-                    caput(bbpm_y,0)
+
+                    caput(self.hcm_pf_sts,0)
+                    yield from bps.sleep(2)
+                    caput(self.hfm_pf_sts,0)
+                    yield from bps.sleep(2)
+                    logger.info(f"Moving Mono Pitch to {dcm_p_target}")
                     yield from bps.mov(dcm.p,dcm_p_target)
+
+            if not moveMirror == "ignore":
+                yield from self.moveMirror(targetE, moveMirror)
+
+
+            '''
+            caput(self.hcm_pf_sts,1)
+            yield from bps.sleep(2)
+            caput(self.hfm_pf_sts,1)
+            yield from bps.sleep(2)
+            '''
             
             logger.info("Energy change completed")
 
@@ -287,12 +326,12 @@ class HXNEnergy():
         
         else:
             yield from bps.mov(motor, MtrPos)
-            print(peakPos)
+            #print(peakPos)
             return peakPos
         
 
 
-Energy = HXNEnergy(ugap,e,dcm.p, "fe_xbpm", "ic3", "/nsls2/data/hxn/shared/config/bluesky/profile_collection/startup/ugap_calib.csv")
+Energy = HXNEnergy(ugap,e,dcm.p, "ic3", "/nsls2/data/hxn/shared/config/bluesky/profile_collection/startup/ugap_calib.csv")
 
 
 

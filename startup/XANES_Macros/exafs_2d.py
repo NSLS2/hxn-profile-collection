@@ -53,6 +53,10 @@ FeEXAFS= {'high_e':7.5, 'low_e':7.1,
           'pre_edge':[(6.97,7.11,0.005)],
           'elem':"Fe", 'kmin':2, 'kmax':12, 'kstep':0.2}
 
+LuL3EXAFS =  {'high_e':9.3, 'high_e_zpz1':-5.425, 'zpz1_slope':-5.04,'low_e':9.2,
+            'pre_edge':[(9.150,9.200,0.005)],'elem':"Lu", 'kmin':2, 'kmax':12, 'kstep':0.1}
+
+
 
 """
 Cu E
@@ -107,7 +111,7 @@ def generateEPoints(ePointsGen,elem,kmin, kmax,kstep, reversed = True):
     return : list of energy points
 
     """
-    E0 = xraylib.EdgeEnergy(xraylib.SymbolToAtomicNumber(elem), xraylib.K_SHELL) + ktoe(kmin)*0.001 # kstart=2
+    E0 = xraylib.EdgeEnergy(xraylib.SymbolToAtomicNumber(elem), xraylib.L3_SHELL) + ktoe(kmin)*0.001 # kstart=2
     #print(E0)
 
     krangeE = E0 + 0.001*ktoe(np.arange(0.4,kmax,kstep))
@@ -139,7 +143,7 @@ def generateEPoints(ePointsGen,elem,kmin, kmax,kstep, reversed = True):
         return np.around(e_points,5)
 
 
-def generateEList(EXAFSParam = FeEXAFS, highEStart = True):
+def generateEList(EXAFSParam = FeEXAFS, highEStart = True, startFrom = 0):
 
     """
 
@@ -178,7 +182,7 @@ def generateEList(EXAFSParam = FeEXAFS, highEStart = True):
     e_list['ZP focus'] = zpz1_list
 
     #return the dataframe
-    return e_list
+    return e_list[startFrom:]
 
 def peak_the_flux():
 
@@ -198,17 +202,9 @@ def move_energy(e,zpz_):
     #tuning the scanning pv on to dispable c bpms
     caput('XF:03IDC-ES{Status}ScanRunning-I', 1)
 
-    yield from Energy.move(e, 3)
+    yield from Energy.move(e, moveMonoPitch=False, moveMirror = "ignore")
     yield from mov_zpz1(zpz_)
-    yield from bps.sleep(1)
-    
-    if caget("SR:APHLA:LBAgent{BUMP:C03-R7X1}X-FdbkEnabled") == 0:
-
-        caput("SR:APHLA:LBAgent{BUMP:C03-R7X1}X-FdbkEnabled",1)
-        caput("SR:APHLA:LBAgent{BUMP:C03-R7X1}Y-FdbkEnabled",1)
-
-        yield from bps.sleep(5)
-
+    yield from bps.sleep(10)
 
 
 
@@ -216,7 +212,7 @@ def zp_list_exafs2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
                     doAlignScan = True, alignX = (-2,2,100,0.1,'Fe',0.7, True),
                     alignY = (-2,2,100,0.1,'Fe',0.7, True), 
                     pdfElem = ('Fe','Cr'),doScan = True, moveOptics = True,pdfLog = True, 
-                    foilCalibScan = False, peakBeam = True,
+                    foilCalibScan = False, peakBeam = False, startEPoint = 0,
                     saveLogFolder = '/home/xf03id/Downloads'):
                     
                     
@@ -244,7 +240,7 @@ def zp_list_exafs2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
     # marker to track beam dump             
     beamDumpOccured = False
                     
-    e_list = generateEList(elemParam, highEStart =  highEStart)
+    e_list = generateEList(elemParam, highEStart =  highEStart, startFrom = startEPoint)
 
     #add real energy to the dataframe
     e_list['E Readback'] = np.nan 
@@ -285,7 +281,8 @@ def zp_list_exafs2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
     zpssy_i = zpssy.position
 
 
-    for i in range (len(e_list)):
+    for i in range (len(e_list[56:])):
+        i += 56
 
         #if beam dump occur turn the marker on
         if sclr2_ch2.get()<10000:
@@ -355,16 +352,19 @@ def zp_list_exafs2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
 
         elif doAlignScan:
             if alignX[-1]:
-                yield from fly1d(dets,zpssx,alignX[0],alignX[1],alignX[2],alignX[3])
+                yield from fly1d(dets_fs,zpssx,alignX[0],alignX[1],alignX[2],alignX[3])
                 xcen = return_line_center(-1,alignX[4],alignX[5])
                 yield from bps.movr(smarx, xcen*0.001)
                 print(f"zpssx centered to {xcen}")
 
             if alignY[-1]:
-                yield from fly1d(dets,zpssy,alignY[0],alignY[1],alignY[2],alignY[3])
+                yield from fly1d(dets_fs,zpssy,alignY[0],alignY[1],alignY[2],alignY[3])
                 ycen = return_line_center(-1,alignX[4],alignY[5])
                 yield from bps.movr(smary, ycen*0.001)
                 print(f"zpssy centered to {ycen}")
+
+        yield from bps.movr(smarx, +0.013)
+        yield from bps.movr(smary, +0.013)
 
 
         print(f'Current scan: {i+1}/{len(e_list)}')
@@ -373,13 +373,16 @@ def zp_list_exafs2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
 
         if dets == dets_fs: #for fast xanes scan, no transmission (merlin) in the list
 
-            if doScan: yield from fly2d(dets, mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t, dead_time=0.002) 
+            if doScan: yield from fly2d(dets, mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t) 
             #dead_time = 0.001 for 0.015 dwell
 
         else:
 
             if doScan: yield from fly2d(dets, mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t)
         yield from bps.sleep(1)
+
+        yield from bps.movr(smarx, -0.013)
+        yield from bps.movr(smary, -0.013)
 
         #close fast shutter
         #caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0) 
@@ -394,7 +397,7 @@ def zp_list_exafs2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
         #print(ycen,xcen)
 
         # get some scan details and add to the list of scan id and energy
-
+        '''
         last_sid = int(caget('XF:03IDC-ES{Status}ScanID-I'))
         e_pos = e.position
         
@@ -415,7 +418,7 @@ def zp_list_exafs2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
         # save the DF in the loop so quitting a scan won't affect
         filename = f"HXN_nanoXANES_StartID{int(e_list['Scan ID'][0])}_{len(e_list)}_e_points.csv"
         e_list.to_csv(os.path.join(saveLogFolder, filename), float_format= '%.5f')
-
+    
     #go back to max energy point if scans done reverese
     max_e_id = e_list['energy'].idxmax()
     e_max, ugap_max,  crl_max,zpz_max, *others = e_list.iloc[max_e_id]
@@ -428,7 +431,7 @@ def zp_list_exafs2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
 
     
     else: pass
-        
+    '''
     caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0) 
     if pdfLog: save_page() #save the pdf
 
@@ -476,3 +479,6 @@ def peak_b_bpm(bpm_name, start, end, n_steps):
 
     #zp_list_xanes2d(FeXANES, dets1, zpssx,-4,4,80,zpssy, -4,4,80,0.05, highEStart=False, alignElem='S', alignX = (-5,5,100,0.05,0.5), alignY = (-5,5,100,0
    #...: .05,05), pdfElem=["Fe", "S"], saveLogFolder="\data\Staff\Ajith\2022Q2")"
+
+
+   #zp_list_exafs2d(LuL3EXAFS,dets_fs,zpssx,-15,15,100,zpssy, -15,15,100,0.03,,highEStart = False,alignX = (-10,10,100,0.05,'Au_M',0.7, True),alignY = (-10,10,100,0.05,'Au_M',0.5, True), pdfElem = ('Lu_L','Au_M'), pdfLog = False, peakBeam = False,saveLogFolder = "/GPFS/XF03ID1/users/2022Q2/Tyson_2022Q2")

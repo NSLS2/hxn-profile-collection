@@ -34,8 +34,10 @@ def erf_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
     xdata=np.array(xdata,dtype=float)
     ydata=(df['Det1_'+elem]+df['Det2_'+elem]+df['Det3_'+elem])/df[mon]
     ydata=np.array(ydata,dtype=float)
-    ydata[ydata==np.nan] = 0
-    ydata[ydata==np.inf] = 0
+    ydata[ydata==np.nan] = 0#patch for ic3 returns zero
+    ydata[ydata==np.inf] = 0#patch for ic3 returns zero
+    ydata[0] = ydata[1] #patch for drop point issue
+    ydata[-1] = ydata[-2]#patch for drop point issue
     y_min=np.min(ydata)
     y_max=np.max(ydata)
     ydata=(ydata-y_min)/(y_max-y_min)
@@ -369,7 +371,7 @@ def zp_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem='
     yield from movr_zpz1(z_start)
     for i in range(z_num + 1):
 
-        yield from fly1d(dets1, mot, start, end, num, acq_time)
+        yield from fly1d(dets_fs, mot, start, end, num, acq_time)
         edge_pos,fwhm=erf_fit(-1,elem,mon,linear_flag=linFlag)
         fit_size[i]= fwhm
         z_pos[i]=zp.zpz1.position

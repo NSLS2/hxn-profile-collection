@@ -35,115 +35,65 @@ import scipy.constants as consts
 
 #Paramer list from previous runs in the order of atomic number of the element
 
-CrXANES = {'high_e':6.03, 'low_e':5.97, 
-          'high_e_ugap':6670, 'low_e_ugap':6620,
-          'high_e_crl':14, 'low_e_crl':14,'crl_comb':(8),
-          'high_e_zpz1':10.08, 'zpz1_slope':-5.9,
-          'energy':[(5.97,5.98,0.005),(5.981,6.03,0.001), (6.032,6.046,0.005)], 
-          'mirrorCoating': 'Si'}
-CrXANES_top = {'high_e':6.03, 'low_e':5.97, 
-          'high_e_ugap':6670, 'low_e_ugap':6620,
-          'high_e_crl':14, 'low_e_crl':14,'crl_comb':(8),
-          'high_e_zpz1':10.433, 'zpz1_slope':-5.04,
-          'energy':[(5.97,5.98,0.005),(5.981,6.03,0.001), (6.032,6.046,0.005)], 
-          'mirrorCoating': 'Si'}
-
-CrXANES_bottom = {'high_e':6.03, 'low_e':5.97, 
-          'high_e_ugap':6670, 'low_e_ugap':6620,
-          'high_e_crl':14, 'low_e_crl':14,'crl_comb':(8),
-          'high_e_zpz1':10.39, 'zpz1_slope':-5.04,
-          'energy':[(5.97,5.98,0.005),(5.981,6.03,0.001), (6.032,6.046,0.005)], 
-          'mirrorCoating': 'Si'}
+CrXANES = {'high_e':6.0, 'high_e_zpz1':10.48, 'zpz1_slope':-5.04,
+          'energy':[(5.97,5.98,0.005),(5.981,6.03,0.001), (6.032,6.046,0.005)] }
           
-MnXANES = {'high_e':6.6, 'low_e':6.5, 
-          'high_e_ugap':7142, 'low_e_ugap':7057,
-          'high_e_crl':-12, 'low_e_crl':-12,'crl_comb':(8,6),
-          'high_e_zpz1':68.3165, 'zpz1_slope':-5.04,
-          'energy':[(6.520,6.530,0.005),(6.531,6.580,0.001),(6.585,6.601,0.005)],
-          'mirrorCoating': 'Si'}
+MnXANES = {'high_e':6.6, 'high_e_zpz1':68.3165, 'zpz1_slope':-5.04,
+          'energy':[(6.520,6.530,0.005),(6.531,6.580,0.001),(6.585,6.601,0.005)]}
                
-FeXANES = {'high_e':7.2, 'low_e':7.1, 
-          'high_e_ugap':7695, 'low_e_ugap':7605,
-          'high_e_crl':4, 'low_e_crl':-6,'crl_comb':(12),
-          'high_e_zpz1':4.3826, 'zpz1_slope':-5.04,
-          'energy':[(7.08,7.10,0.002),(7.101,7.144,0.001),(7.146, 7.2, 0.002)],
-          'mirrorCoating': 'Si or Rh', 'zposaz':5000}
+FeXANES = {'high_e':7.2, 'high_e_zpz1':5.235, 'zpz1_slope':-5.04,
+          'energy':[(7.08,7.10,0.005),(7.101,7.140,0.001),(7.144, 7.2, 0.004)],}
 
-FeCalib = {'high_e':7.2, 'low_e':7.1, 
-          'high_e_ugap':7695, 'low_e_ugap':7605,
-          'high_e_crl':4, 'low_e_crl':-6,'crl_comb':(12),
-          'high_e_zpz1':4.3826, 'zpz1_slope':-5.04,
-          'energy':[(7.08, 7.15, 0.001)],
-          'mirrorCoating': 'Si or Rh', 'zposaz':5000}
+NiXANES = {'high_e':8.427, 'high_e_zpz1':58.32, 'zpz1_slope':-5.04,
+          'energy':[(8.30,8.32,0.005),(8.321,8.38,0.001),(8.382,8.430,0.005)],}
 
-ZnXANES =  {'high_e':9.7, 'low_e':9.6, 
-          'high_e_ugap':6485, 'low_e_ugap':6435,
-          'high_e_crl':5., 'low_e_crl':2.,'crl_comb':(22+4),
-          'high_e_zpz1':50.87, 'zpz1_slope':-5.9,
+CuXANES = {'high_e':9.06,  'high_e_zpz1':-4.905, 'zpz1_slope':-5.04,
+          'energy':[(8.96,8.975,0.005),(8.976,9.003,0.001)],}
+
+ZnXANES =  {'high_e':9.7, 'high_e_zpz1':50.87, 'zpz1_slope':-5.04,
           'energy':[(9.64,9.666,0.005),(9.6665,9.681,.0005),(9.682,9.701,0.002),(9.705,9.725,0.005)]}
 
+HfXANES =  {'high_e':9.6, 'high_e_zpz1':-7.775, 'zpz1_slope':-5.04,
+          'energy':[(9.500,9.540,0.005),(9.541,9.6,0.001)]}
 
-NiXANES = {'high_e':8.427, 'low_e':8.3, 
-          'high_e_ugap':5834, 'low_e_ugap':5768,
-          'high_e_crl':11.81, 'low_e_crl':8,'crl_comb':(12+4),
-          'high_e_zpz1':58.32, 'zpz1_slope':-5.9,
-          'energy':[(8.30,8.32,0.005),(8.321,8.38,0.001),(8.382,8.430,0.005)],
-          'mirrorCoating': 'Cr','zposaz':3500}
-
-CuXANES = {'high_e':9.06, 'low_e':8.96, 
-          'high_e_ugap':6165, 'low_e_ugap':6115,
-          'high_e_crl':10, 'low_e_crl':10,'crl_comb':(22),
-          'high_e_zpz1':-4.905, 'zpz1_slope':-5.04,
-          'energy':[(8.96,8.975,0.005),(8.976,9.003,0.001)],
-          'mirrorCoating': 'Cr','zposaz':3500}
-
-CuCalib = {'high_e':9.05, 'low_e':8.96, 
-          'high_e_ugap':6160, 'low_e_ugap':6115,
-          'high_e_crl':10, 'low_e_crl':10,'crl_comb':(22),
-          'high_e_zpz1':-4.76, 'zpz1_slope':-5.04,
-          'energy':[(8.96,9.04,0.001)],
-          'mirrorCoating': 'Cr','zposaz':3500}
-          
-
-FeXANES= {'high_e':7.5, 'low_e':7.1,
-          'high_e_zpz1':2.73, 'zpz1_slope':-5.04,
-          'energy':[(6.97,7.11,0.005),(7.111,7.150,0.001),(7.155,7.6,0.005)],
-          'mirror': 'Si','pitch' :0.4725, 'm2p':1.301442}
+LuL3XANES =  {'high_e':9.3, 'high_e_zpz1':-5.4246, 'zpz1_slope':-5.04,
+          'energy':[(9.150,9.200,0.005),(9.201,9.350,0.001),(9.352,9.400,0.002)]}
 
 
 """
-#Hafnium L_III edge
-#ZP #1, 244 um dia, 30 nm outmost, crl# 22, 3
-
-pre = np.linspace(9.540,9.550,6)
-XANES1 = np.linspace(9.552,9.580,29)
-post = np.linspace(9.582,9.640,30)
-
-#Hafnium L_III edge
-#ZP #1, 244 um dia, 30 nm outmost, crl# 22, 3
-
-pre = np.linspace(9.400,9.540,15)
-XANES1 = np.linspace(9.542,9.560,10)
-XANES2 = np.linspace(9.561,9.571,21)
-XANES3 = np.linspace(9.572,9.642,36)
-post = np.linspace(9.644,9.84,50)
-
-
-
 PreAs = np.linspace(11845,11860,6)
 As_XANES = np.linspace(11861,11885,49)
 PostAs = np.linspace(11886,11901,6)
 
 """
 
-
-
-
                                 ######################################
                                 ######### FUNCTIONS BELOW ############
                                 ######################################
-#copied from larch --modified
 
+
+def peak_the_flux():
+
+    """ Scan the c-bpm set points to find IC3 maximum """
+
+    print("IC3is below threshold; Peaking the beam.")
+    yield from bps.sleep(2)
+    yield from peak_bpm_y(-5,5,10)
+    yield from bps.sleep(1)
+    yield from peak_bpm_x(-15,15,6)
+    yield from bps.sleep(1)
+    yield from peak_bpm_y(-2,2,4)
+    
+
+def move_energy(e,zpz_ ):
+    yield from bps.sleep(1)
+
+    #tuning the scanning pv on to dispable c bpms
+    caput('XF:03IDC-ES{Status}ScanRunning-I', 1)
+
+    yield from Energy.move(e, moveMonoPitch=False, moveMirror = "ignore")
+    yield from mov_zpz1(zpz_)
+    yield from bps.sleep(4)
 
 
 
@@ -162,9 +112,17 @@ def generateEPoints(ePointsGen = [(9.645,9.665,0.005),(9.666,9.7,0.0006),(9.705,
 
     e_points = []
 
-    for values in ePointsGen:
-        #use np.arange to generate values and extend it to the e_points list
-        e_points.extend(np.arange(values[0],values[1],values[2]))
+    if isinstance(ePointsGen[0], tuple):
+
+        for values in ePointsGen:
+            #use np.arange to generate values and extend it to the e_points list
+            e_points.extend(np.arange(values[0],values[1],values[2]))
+
+    elif isinstance(ePointsGen, list):
+        e_points = ePointsGen
+
+    else:
+        raise TypeError("Invalid energy format")
 
     if reversed:
         #retrun list in the reversted order
@@ -198,7 +156,7 @@ def generateEList(XANESParam = CrXANES, highEStart = True):
     e_list['energy'] = generateEPoints (ePointsGen = XANESParam ['energy'], reversed = highEStart)
 
     #read the paramer dictionary and calculate ugap list
-    high_e, low_e = XANESParam['high_e'],XANESParam['low_e']
+    high_e = XANESParam['high_e']
 
     #zone plate increament is very close to the theorticla value , same step as above for zp focus
     zpz1_ref, zpz1_slope = XANESParam['high_e_zpz1'],XANESParam['zpz1_slope']
@@ -208,31 +166,9 @@ def generateEList(XANESParam = CrXANES, highEStart = True):
     #return the dataframe
     return e_list
 
-def peak_the_flux():
-
-    """ Scan the c-bpm set points to find IC3 maximum """
-
-    print("IC3is below threshold; Peaking the beam.")
-    yield from bps.sleep(2)
-    yield from peak_bpm_y(-5,5,10)
-    yield from bps.sleep(1)
-    yield from peak_bpm_x(-15,15,6)
-    yield from bps.sleep(1)
-    yield from peak_bpm_y(-2,2,4)
-    
-
-def move_energy(e,zpz_ ):
-    yield from bps.sleep(1)
-
-    #tuning the scanning pv on to dispable c bpms
-    caput('XF:03IDC-ES{Status}ScanRunning-I', 1)
-
-    yield from Energy.move(e, 3)
-    yield from mov_zpz1(zpz_)
-    yield from bps.sleep(1)
 
 
-def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,highEStart = True,
+def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,highEStart = False,
                     doAlignScan = True, alignX = (-2,2,100,0.1,'Fe',0.7, True),
                     alignY = (-2,2,100,0.1,'Fe',0.7, True), 
                     pdfElem = ('Fe','Cr'),doScan = True, moveOptics = True,pdfLog = True, 
@@ -319,14 +255,14 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
             yield from bps.sleep(200)
 
             #redo the previous energy
-            e_t, ugap_t, crl_t, zpz_t, *others = e_list.iloc[i-1]
+            e_t, zpz_t, *others = e_list.iloc[i-1]
 
             #turn off the beamdump marker
             beamDumpOccured = False
             
         else:
             #unwrap df row for energy change
-            e_t, ugap_t, crl_t, zpz_t, *others = e_list.iloc[i]
+            e_t, zpz_t, *others = e_list.iloc[i]
         
         if moveOptics: 
             yield from move_energy(e_t,zpz_t)
@@ -375,16 +311,19 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
 
         elif doAlignScan:
             if alignX[-1]:
-                yield from fly1d(dets,zpssx,alignX[0],alignX[1],alignX[2],alignX[3])
+                yield from fly1d(dets_fs,zpssx,alignX[0],alignX[1],alignX[2],alignX[3])
                 xcen = return_line_center(-1,alignX[4],alignX[5])
                 yield from bps.movr(smarx, xcen*0.001)
                 print(f"zpssx centered to {xcen}")
 
             if alignY[-1]:
-                yield from fly1d(dets,zpssy,alignY[0],alignY[1],alignY[2],alignY[3])
+                yield from fly1d(dets_fs,zpssy,alignY[0],alignY[1],alignY[2],alignY[3])
                 ycen = return_line_center(-1,alignX[4],alignY[5])
                 yield from bps.movr(smary, ycen*0.001)
                 print(f"zpssy centered to {ycen}")
+
+        yield from bps.movr(smarx, +0.013)
+        yield from bps.movr(smary, +0.013)
 
 
         print(f'Current scan: {i+1}/{len(e_list)}')
@@ -400,6 +339,10 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
 
             if doScan: yield from fly2d(dets, mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t)
         yield from bps.sleep(1)
+        
+        yield from bps.movr(smarx, -0.013)
+        yield from bps.movr(smary, -0.013)
+
 
         #close fast shutter
         #caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0) 
@@ -438,7 +381,7 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
 
     #go back to max energy point if scans done reverese
     max_e_id = e_list['energy'].idxmax()
-    e_max, ugap_max,  crl_max,zpz_max, *others = e_list.iloc[max_e_id]
+    e_max, zpz_max, *others = e_list.iloc[max_e_id]
     
     if not np.isclose(e_list['energy'].max(), e.position):
     
@@ -497,6 +440,14 @@ def peak_b_bpm(bpm_name, start, end, n_steps):
     #plt.close()
 
 
-    #zp_list_xanes2d(FeXANES, dets1, zpssx,-4,4,80,zpssy, -4,4,80,0.05, highEStart=False, alignElem='S', alignX = (-5,5,100,0.05,0.5), alignY = (-5,5,100,0
+    #zp_list_xanes2d(FeXANES, dets1, zpssx,-4,4,80,zpssy, -4,4,80,0.05, highEStart=False, alignX = (-5,5,100,0.05,0.5), alignY = (-5,5,100,0
    #...: .05,05), pdfElem=["Fe", "S"], saveLogFolder="\data\Staff\Ajith\2022Q2")"
 
+#<zp_list_xanes2d(LuL3XANES, dets_fs, zpssx,-15,15,100,zpssy, -15,15,100,0.02, highEStart=False,  alignX = (-10,10,10
+   #...: 0,0.05,"Au_M",0.5, True), alignY = (-10,10,100,0.05,"Au_M",0.5,True), pdfElem=["Lu_L", "Au_M"], peakBeam=False,saveLogFolder="/GPFS/XF03ID1/users/2022
+   #...: Q2/Tyson_2022Q2")
+#<zp_list_xanes2d(LuL3XANES, dets_fs, zpssx,-15,15,100,zpssy, -15,15,100,0.02, highEStart=False,  alignX = (-10,10,100,0.05,"Au_M",0.5, True), alignY = (-10
+   #...: ,10,100,0.05,"Au_M",0.5,True), pdfElem=["Lu_L", "Au_M"], peakBeam=False,saveLogFolder="/GPFS/XF03ID1/users/2022Q2/Tyson_2022Q2")
+
+#<zp_list_xanes2d(FeXANES, dets_fs, zpssx,-15,15,150,zpssy, -15,15,150,0.03, highEStart=False,  alignX = (-10,10,100,0.05,"Au_M",0.5, True), alignY = (-10
+   #...: ,10,100,0.05,"Au_M",0.5,True), pdfElem=["Fe", "Au_M"], peakBeam=False,saveLogFolder="/GPFS/XF03ID1/users/2022Q2/Tyson_2022Q2")
