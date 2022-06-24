@@ -22,7 +22,7 @@ def figure_with_insert_fig_button(*args, **kwargs):
 
 
 def plot2d(scan_id, elem, norm='sclr1_ch4'):
-    
+
     scan_info = db[scan_id]
     tmp = scan_info['start']
     y_motor = tmp['motors'][0]
@@ -328,7 +328,7 @@ def _load_scan(scan_id, fill_events=False):
         df = data_cache[scan_id]
     else:
         hdr = db[scan_id]
-        scan_id = hdr['start'].scan_id
+        scan_id = hdr['start']['scan_id']
         if scan_id not in data_cache:
             data_cache[scan_id] = db.get_table(hdr, fill=fill_events)
 

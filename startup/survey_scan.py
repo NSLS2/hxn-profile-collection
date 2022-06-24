@@ -6,8 +6,8 @@ from scipy import ndimage
 #from skimage.filters.rank import median
 from skimage.morphology import disk
 from skimage import io
-from databroker import Broker
-db = Broker.named('hxn')
+# from databroker.v0 import Broker
+# db = Broker.named('hxn')
 
 
 def rm_pixel(data,ix,iy):
@@ -184,7 +184,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     images = np.array(np.squeeze(images))
     plan_args = db[sid].start['plan_args']
 
-    
+
     ic = np.asfarray(df['sclr1_ch4'])
     index = np.where(ic == 0)
     nn = np.size(index[0])
