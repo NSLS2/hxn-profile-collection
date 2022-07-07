@@ -52,7 +52,7 @@ from hxnfly.callbacks import FlyLiveCrossSection
 
 #live_im_plot = FlyLiveImage(['Ca','W_L','Fe','Pt_L'], channels=[1, 2, 3])
 
-live_im_plot = FlyLiveImage(['Lu_L','Mn','Fe','Au_M'], channels=[1, 2, 3])
+live_im_plot = FlyLiveImage(['Cr','La_L','Ba_L','Cu'], channels=[1, 2, 3])
 
 # fly2dplot1 = FlyLiveCrossSection(['V'], channels=[1, 2, 3)
 
@@ -60,7 +60,7 @@ live_im_plot = FlyLiveImage(['Lu_L','Mn','Fe','Au_M'], channels=[1, 2, 3])
 #                     channels=[1, 2, 3],
 #                     )
 
-pt_plot = FlyRoiPlot(['Au_M'],
+pt_plot = FlyRoiPlot(['La_L'],
                      channels=[1, 2, 3],
                     )
 

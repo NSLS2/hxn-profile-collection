@@ -72,7 +72,7 @@ class HXNEnergy():
     
     def findAMirror(self,e):
     
-        EnergyToMirror = {(5,9):'Si',(9,15):'Cr',(15,20):'Rh',(20,25):'Pt'}
+        EnergyToMirror = {(5,8.5):'Si',(8.5,15):'Cr',(15,20):'Rh',(20,25):'Pt'}
     
         if not 5.5 <= e <= 25:
             raise ValueError (" Energy value out of range")
