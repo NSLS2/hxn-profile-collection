@@ -7,6 +7,7 @@ import tqdm
 
 from scipy.optimize import curve_fit
 from scipy import ndimage
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 import sys
 from datetime import datetime
@@ -17,6 +18,8 @@ from scipy.ndimage.filters import gaussian_filter
 
 #Add ctrl+c option to matplotlib
 matplotlib.rcParams['toolbar'] = 'toolmanager'
+
+warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 
 
 def focusmerlin(cnttime):
@@ -136,11 +139,11 @@ def go_det(det):
 
     if det == 'merlin':
         #while zposa.zposax.position<20:
-        yield from bps.mov(diff.x, 8.05, diff.y1,5.0, diff.y2,5.0, diff.z, -50, diff.cz, -24.7)
+        yield from bps.mov(diff.x, -5, diff.y1,4.6, diff.y2,4.6, diff.z, -50, diff.cz, -24.7)
         #yield from bps.mov(diff.y1,-3.2)
         #yield from bps.mov(diff.y2,-3.2)
     elif det == 'cam11':
-        yield from bps.mov(diff.x,214.58, diff.y1, 22.647, diff.y2, 22.647,diff.z, -50, diff.cz, -24.7)
+        yield from bps.mov(diff.x,218.53, diff.y1, 22.677, diff.y2, 22.677,diff.z, -50, diff.cz, -24.7)
         #yield from bps.mov(diff.y1,22.65)
         #yield from bps.mov(diff.y2,22.65)
     elif det =='telescope':
@@ -211,6 +214,80 @@ def lab_to_sample(x, z, alpha):
     zp = np.sin(alpha)*x + np.cos(alpha)*z
     return(xp, zp)
 
+def mll_mosaic_scan_incomplete(x_start, x_end, x_num, x_block, y_start, y_end, y_num, y_block, acq_time, elem=None):
+
+    max_travel = 500
+    angle = 15.0*np.pi/180.0
+
+    #initialize parameters
+    x_start = float(x_start)
+    x_end = float(x_end)
+    x_num = int(x_num)
+    y_num = int(y_num)
+    y_start = float(y_start)
+    y_end = float(y_end)
+    x_block = int(x_block)
+    y_block = int(y_block)
+
+    #read initial position
+    pre_ssx = dsx.position #smll.ssx.position
+    pre_ssy = dsy.position #smll.ssy.position
+    pre_ssz = dsz.position #smll.ssz.position
+
+    print('Initial dsx = ', pre_ssx)
+    print('Initial dsy = ', pre_ssy)
+    print('Initial dsz = ', pre_ssz)
+
+    #calculate block size
+    x_block_size = (x_end - x_start)
+    y_block_size = (y_end - y_start)
+
+    #move to first block
+    dx = -(x_block*x_block_size/2.0 - 0.5*x_block_size)
+    dy = -(y_block*y_block_size/2.0 - 0.5*y_block_size)
+
+    #if np.abs(dx) < max_travel and np.abs(dy) < max_travel:
+    #    #movr_sx(dx)
+    #    #movr_sy(dy)
+    #    #print('moving to the starting position ...')
+    #    yield from bps.movr(dsx, dx)
+    #    yield from bps.movr(dsy, dy)
+    #    dx_start = dsx.position
+    #    #print('at starting position')
+    #else:
+    #    raise KeyError('Too large travel range')
+
+    #start mosaic scan
+    for i in range(y_block):
+        for j in range(x_block):
+            #yield from smll_sync_piezos()
+            yield from fly2d(dets1, dssx, x_start+0.9*(j-1)*x_block_size, x_end+0.9*(j-1)*x_block_size, x_num, dssy, y_start+0.9*i*y_block_size, y_end+0.9*i*y_block_size, y_num, acq_time, return_speed=40)
+            merlin1.unstage()
+            xspress3.unstage()
+            yield from bps.sleep(2)
+            print('sleep 2 s')
+            #dx = x_block_size * 0.8
+            #movr_sx(dx)
+            #yield from bps.movr(dsx, dx)
+            #if elem is not None:
+            #    plot2dfly(-1, elem, 'sclr1_ch4')
+            #    plt.close()
+        #dx = -x_block_size*(x_block-1)
+        #dy = y_block_size * 0.8
+        #yield from bps.mov(dsx, dx_start)
+        #yield from bps.movr(dsy, dy)
+        #movr_sx(dx)
+        #movr_sy(dy)
+
+    #return to initial position
+    #print('Return to prior positions')
+    #mov_sx(pre_ssx)
+    #mov_sy(pre_ssy)
+    #yield from bps.mov(dsx, pre_ssx)
+    #yield from bps.mov(dsy, pre_ssy)
+
+    print('%d x %d mosaic scan finished' % (x_block, y_block))
+    
 def mll_mosaic_scan(x_start, x_end, x_num, x_block, y_start, y_end, y_num, y_block, acq_time, elem=None):
 
     max_travel = 500
@@ -227,13 +304,13 @@ def mll_mosaic_scan(x_start, x_end, x_num, x_block, y_start, y_end, y_num, y_blo
     y_block = int(y_block)
 
     #read initial position
-    pre_ssx = smll.ssx.position
-    pre_ssy = smll.ssy.position
-    pre_ssz = smll.ssz.position
+    pre_ssx = dsx.position #smll.ssx.position
+    pre_ssy = dsy.position #smll.ssy.position
+    pre_ssz = dsz.position #smll.ssz.position
 
-    print('Initial ssx = ', pre_ssx)
-    print('Initial ssy = ', pre_ssy)
-    print('Initial ssz = ', pre_ssz)
+    print('Initial dsx = ', pre_ssx)
+    print('Initial dsy = ', pre_ssy)
+    print('Initial dsz = ', pre_ssz)
 
     #calculate block size
     x_block_size = (x_end - x_start)
@@ -243,30 +320,45 @@ def mll_mosaic_scan(x_start, x_end, x_num, x_block, y_start, y_end, y_num, y_blo
     dx = -(x_block*x_block_size/2.0 - 0.5*x_block_size)
     dy = -(y_block*y_block_size/2.0 - 0.5*y_block_size)
 
-    if np.abs(dx) < max_travel and np.abs(dy) < max_travel:
-        movr_sx(dx)
-        movr_sy(dy)
-    else:
-        raise KeyError('Too large travel range')
+    #if np.abs(dx) < max_travel and np.abs(dy) < max_travel:
+    #    #movr_sx(dx)
+    #    #movr_sy(dy)
+    #    #print('moving to the starting position ...')
+    #    yield from bps.movr(dsx, dx)
+    #    yield from bps.movr(dsy, dy)
+    #    dx_start = dsx.position
+    #    #print('at starting position')
+    #else:
+    #    raise KeyError('Too large travel range')
 
     #start mosaic scan
     for i in range(y_block):
         for j in range(x_block):
-            yield from smll_sync_piezos()
-            RE(fly2d(smll.ssx, x_start, x_end, x_num, smll.ssy, y_start, y_end, y_num, acq_time, return_speed=40))
-            dx = x_block_size
-            movr_sx(dx)
-            if elem is not None:
-                plot2dfly(-1, elem, 'sclr1_ch4')
-        dx = -x_block_size*(x_block-1)
-        dy = y_block_size
-        movr_sx(dx)
-        movr_sy(dy)
+            #yield from smll_sync_piezos()
+            yield from fly2d(dets1, dssx, x_start+0.9*(j-1)*x_block_size, x_end+0.9*(j-1)*x_block_size, x_num, dssy, y_start+0.9*(i-1)*y_block_size, y_end+0.9*(i-1)*y_block_size, y_num, acq_time, return_speed=40)
+            merlin1.unstage()
+            xspress3.unstage()
+            yield from bps.sleep(2)
+            print('sleep 2 s')
+            #dx = x_block_size * 0.8
+            #movr_sx(dx)
+            #yield from bps.movr(dsx, dx)
+            #if elem is not None:
+            #    plot2dfly(-1, elem, 'sclr1_ch4')
+            #    plt.close()
+        #dx = -x_block_size*(x_block-1)
+        #dy = y_block_size * 0.8
+        #yield from bps.mov(dsx, dx_start)
+        #yield from bps.movr(dsy, dy)
+        #movr_sx(dx)
+        #movr_sy(dy)
 
     #return to initial position
-    print('Return to prior positions')
-    mov_sx(pre_ssx)
-    mov_sy(pre_ssy)
+    #print('Return to prior positions')
+    #mov_sx(pre_ssx)
+    #mov_sy(pre_ssy)
+    #yield from bps.mov(dsx, pre_ssx)
+    #yield from bps.mov(dsy, pre_ssy)
 
     print('%d x %d mosaic scan finished' % (x_block, y_block))
 
@@ -350,6 +442,73 @@ def mosaic_scan(x_start, x_end, x_num, y_start, y_end, y_num):
 
 def sin_offset(x, p0, p1, p2):
     return (p0 + p1 * np.sin((x + p2) * np.pi / 180.)) / np.cos(x * np.pi / 180.)
+
+def sin_func(x, p0, p1, p2, p3):
+    return (p0 + p1 * np.sin((x + p2) *p3* np.pi / 180.))
+
+
+def mll_mosaic_scan_CZ(x_start, x_end, x_num, y_start, y_end, y_num, step_size=0.01, elem='Au_L'):
+    x_start = float(x_start)
+    x_end = float(x_end)
+    x_num = int(x_num)
+    y_start = float(y_start)
+    y_end = float(y_end)
+    y_num = int(y_num)
+
+    #read initial position
+    pre_ssx = dsx.position #smll.ssx.position
+    pre_ssy = dsy.position #smll.ssy.position
+    pre_ssz = dsz.position #smll.ssz.position
+    pre_angle = dsth.position
+
+    print('Initial dsx = ', pre_ssx)
+    print('Initial dsy = ', pre_ssy)
+    print('Initial dsz = ', pre_ssz)
+
+    x_block_size = (x_end-x_start)/x_num
+    y_block_size = (y_end-y_start)/y_num
+
+    # move to start position
+    x_ini = pre_ssx + x_start + x_block_size/2
+    y_ini = pre_ssy + y_start + y_block_size/2
+    yield from bps.mov(dsx, x_ini)
+    yield from bps.mov(dsy, y_ini)
+    yield from bps.sleep(5)
+
+    for i in range(y_num):
+        print(i,dsy.position)
+        for j in range(x_num):
+            print(i,dsx.position)
+            yield from fly2d(dets1,dssx, -x_block_size/2, x_block_size/2, x_block_size/step_size, dssy, -y_block_size/2, y_block_size/2, y_block_size/step_size, 0.03)
+            merlin1.unstage()
+            xspress3.unstage()
+
+           # zps.zp_kill_piezos.put(1)
+            yield from bps.sleep(2)
+            yield from bps.movr(dsx, x_block_size)
+            # yield from bps.movr(dsz, x_block_size*sin(pre_angle))
+
+            print(f"Preparing the plot of the result ...")
+
+            try:
+                insert_multiple_xrf_map_to_pdf(-1,['Hf_L','Au_L'], "dsx")
+
+            except:
+                pass
+
+            yield from bps.sleep(2)
+ 
+
+        yield from bps.mov(dsx, x_ini)
+        yield from bps.movr(dsy, y_block_size)
+
+
+    print('mosaic scan finished, move back to prior positions')
+    yield from bps.mov(dsx, pre_ssx)
+    yield from bps.mov(dsy, pre_ssy)
+ #   yield from shutter('close')
+    yield from bps.sleep(2)
+    save_page()
 
 
 def sin_offset_fit(x, y, para):
@@ -850,6 +1009,15 @@ def tomo_scan_list_zp_no_move(angle_list, x_start, x_end, x_num,
 
 
 
+# start = [-75,-74,-73,-71,48,69,70,74,75,77,78,80,81,82,83,85,89,90]
+# def CZ_test2():
+#     for i in range(len(start)):
+#         try: 
+#             yield from mll_tomo_scan(start[i], start[i]+1, 1, -4.2, 4.2, 210, -2,2, 100, 0.03, 'W_L')
+#         except AttributeError:
+#             pass
+
+
 
 
 def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
@@ -878,7 +1046,8 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
     real_th_list = []
     scanid_list = []
 
-    y0 = dssy.position
+    th_init = smlld.dsth.position
+    y_init = dssy.position
 
     for i in range(angle_num + 1):
 
@@ -886,8 +1055,13 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
         #    sleep(60)
         yield from bps.mov(dssx, 0)
         yield from bps.mov(dssz, 0)
+        #yield from bps.sleep(2)
         angle = angle_start + i * angle_step
         yield from bps.mov(smlld.dsth, angle)
+
+        y_offset1 = sin_func(angle, 0.110, -0.586, 7.85,1.96)
+        y_offset2 = sin_func(th_init, 0.110, -0.586, 7.85,1.96)
+        yield from bps.mov(dssy,y_init+y_offset1-y_offset2)
 
         while (sclr2_ch2.get() < 10000):
             yield from bps.sleep(60)
@@ -895,8 +1069,8 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
         fs.stage()
         yield from bps.sleep(2)
         while (sclr2_ch4.get() < (0.9*ic_0)):
-            yield from peak_bpm_y(-5,5,1)
-            yield from peak_bpm_x(-15,15,5)
+            yield from peak_bpm_y(-5,5,10)
+            yield from peak_bpm_x(-15,15,10)
             ic_0 = sclr2_ch4.get()
         yield from bps.sleep(1)
         fs.unstage()
@@ -905,42 +1079,89 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
         #yield from bps.mov(dssy,-2)
         if np.abs(angle) < 44.99:
 
-            yield from fly2d(dets1,dssx,-10,10,50, dssy,-1,1,20,0.02,dead_time=0.003)
-            cx,cy = return_center_of_mass(-1,elem,0.2)
-            yield from bps.mov(dssx,cx)
-            yield from bps.mov(dssy,cy)
-
             #yield from bps.mov(dssx,0)
             #yield from bps.mov(dssz,0)
-            #yield from fly1d(dets1,dssx, -10, 10, 200, 0.03)
-            #xc = return_line_center(-1,elem,0.1)
-            #yield from bps.mov(dssx,xc)
-            #yield from fly1d(dets1,dssy,-3,0.5,100,0.03)
+            #yield from fly2d(dets1,dssx,-6,6,50, dssy,-0.5,0.5,20,0.02,dead_time=0.003)
+            #cx,cy = return_center_of_mass(-1,elem,0.1)
+            #yield from bps.mov(dssx,cx)
+            
+            #'''
+            yield from fly1d(dets1,dssx, -10, 10, 100, 0.1)
+            xc = return_line_center(-1,elem,0.35)
+            yield from bps.mov(dssx,xc)
+            
+            '''
+            ## for CZ testing
+            yield from fly1d(dets1, dssy, -3,0.25,100,0.03)  #yield from fly1d(dets1, dssy, -7,-3,100,0.03)
+            yc,yw = erf_fit(-1,elem,linear_flag=False)
+            plt.close()
+            yc_comp = yc + 1.2 #was 5.2
+            yield from bps.mov(dssy,yc_comp)
+
+            ## another fine scan
+            yield from bps.mov(dssx,0)
+            yield from bps.mov(dssz,0)
+            yield from fly1d(dets1,dssx, -7.5, 7.5, 100, 0.03)
+            xc = return_line_center(-1,elem,0.1)
+            yield from bps.mov(dssx,xc)
+
+            #yield from fly1d(dets1,dssy,-3.5,-1.5,100,0.05)
             #edge, fwhm = erf_fit(-1,elem,'sclr1_ch4',linear_flag=False)
             #plt.close()
-            #yield from bps.mov(dssy,edge + 1)
+            #if edge + 3 < 3 and edge + 3 > 1:
+            #    yield from bps.mov(dssy,edge + 3)
+            #else:
+            #    yield from bps.mov(dssy,2)
 
-
+            '''
         else:
+            #yield from bps.mov(dssx,0)
+            #yield from bps.mov(dssz,0)
+            #yield from fly2d(dets1,dssz,-6,6,50, dssy, -0.5,0.5,20,0.02,dead_time=0.003)
+            #cx,cy = return_center_of_mass(-1,elem,0.1)
+            #yield from bps.mov(dssz,cx)
 
-            yield from fly2d(dets1,dssz,-10,10,50, dssy, -1,1,20,0.02,dead_time=0.003)
-            cx,cy = return_center_of_mass(-1,elem,0.2)
-            yield from bps.mov(dssz,cx)
-            yield from bps.mov(dssy,cy)
-
+            #'''
             #yield from bps.movr(dssy,0.3)
             #yield from bps.mov(dssz,0)
             #yield from bps.mov(dssx,0)
-            #yield from fly1d(dets1,dssz, -10, 10, 200, 0.03)
-            #xc = return_line_center(-1,elem,0.1)
-            #yield from bps.mov(dssz,xc)
-            #yield from fly1d(dets1, dssy, -3,0.5,100,0.03)
-            #edge, fwhm = erf_fit(-1, elem,'sclr1_ch4',linear_flag=False)
+            yield from fly1d(dets1,dssz, -10, 10, 100, 0.1)
+            xc = return_line_center(-1,elem,0.35)
+            yield from bps.mov(dssz,xc)
+
+            '''
+            ## for CZ testing
+            yield from fly1d(dets1, dssy, -3,0.25,100,0.03)  #yield from fly1d(dets1, dssy, -7,-3,100,0.03)
+            yc,yw = erf_fit(-1,elem,linear_flag=False)
+            plt.close()
+            yc_comp = yc + 1.2 #was 5.2
+            yield from bps.mov(dssy,yc_comp)
+
+            #yield from bps.movr(dssy,0.3)
+            yield from bps.mov(dssz,0)
+            yield from bps.mov(dssx,0)
+            yield from fly1d(dets1,dssz, -7.5, 7.5, 100, 0.03)
+            xc = return_line_center(-1,elem,0.1)
+            yield from bps.mov(dssz,xc)
+
+            #yield from fly1d(dets1,dssy,-3.5,-1.5,100,0.05)
+            #edge, fwhm = erf_fit(-1,elem,'sclr1_ch4',linear_flag=False)
             #plt.close()
-            #yield from bps.mov(dssy,edge+1)
+            #if edge + 3 < 3 and edge + 3 > 1:
+            #    yield from bps.mov(dssy,edge + 3)
+            #else:
+            #    yield from bps.mov(dssy,2)
+            '''
+        #yield from fly1d(dets1, dssy, -10,10,100,0.03)
+        #yc = return_line_center(-1,elem,0.2)
+        #yield from bps.mov(dssy,cy)
 
-        #yield from bps.mov(dssy,0)
-
+        # ## for CZ testing
+        # yield from fly1d(dets1, dssy, -3,0.25,100,0.03)  #yield from fly1d(dets1, dssy, -7,-3,100,0.03)
+        # yc,yw = erf_fit(-1,elem,linear_flag=False)
+        # plt.close()
+        # yc_comp = yc + 1 #was 5.2
+        # yield from bps.mov(dssy,yc_comp)
 
         #merlin1.unstage()
         #xspress3.unstage()
@@ -962,8 +1183,8 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
         #xspress3.unstage()
 
         #'''
-        #yc,yw = erf_fit(-1,elem)
-        #yield from bps.mov(dssy,yc-4.2)
+    
+        #yield from bps.mov(dssy,cy)
 
         yield from bps.sleep(1)  # This pauses seems to resolve 2D plotting issues for the scans with multiple subscans.
 
@@ -996,12 +1217,18 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
         xspress3.unstage()
         #mov_to_image_cen_smar(-1)
         #yield from mov_to_image_cen_dsx(-1)
-
+        #yield from bps.mov(dssy,cy)
         print(f"Preparing the plot of the result ...")
+        yield from bps.sleep(2)
         plot2dfly(-1,elem)
+
         print(f"Inserting the plot into the PDF file ...")
-        insertFig(note='dsth = {}'.format(dsth.position))
+        sid = db[-1].start['scan_id']
+        yield from bps.sleep(1)
+        insertFig(note = f'dsth = {dsth.position :.2f}') #title = '{}'.format(sid)
+        yield from bps.sleep(1)
         plt.close()
+        yield from bps.sleep(1)
         print(f"Plotting of the result is completed.")
 
         # h = db[-1]
@@ -1024,7 +1251,7 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
         '''
 
     save_page()
-    yield from bps.mov(dsth, 0)
+    #yield from bps.mov(dsth, 0)
 
 
 
@@ -1196,6 +1423,9 @@ def zp_tomo_scan_scale(angle_start, angle_end, angle_num, x_start, x_end, x_num,
     #yield from bps.sleep(3)
     angle_step = (angle_end - angle_start) / angle_num
 
+    x_offset_um = 5
+    y_offset_um = 0
+
     for i in range(angle_num + 1):
         yield from bps.mov(zpssx,0)
         yield from bps.mov(zpssy,0)
@@ -1204,9 +1434,6 @@ def zp_tomo_scan_scale(angle_start, angle_end, angle_num, x_start, x_end, x_num,
         angle = angle_start + i * angle_step
         yield from bps.mov(zps.zpsth, angle)
 
-        #yield from bps.mov(zpssx,0)
-        #yield from bps.mov(zpssy,0)
-        #yield from bps.mov(zpssz,0)
 
         while (sclr2_ch2.get() < 10000):
             yield from bps.sleep(60)
@@ -1223,48 +1450,41 @@ def zp_tomo_scan_scale(angle_start, angle_end, angle_num, x_start, x_end, x_num,
 
         #'''
         if np.abs(angle) <= 45.:
+
             #yield from bps.movr(zpssy,-1)
-            yield from fly1d([fs, zebra, sclr1, xspress3], zpssx, -15, 15, 100, 0.03)
+            yield from fly1d(dets_fs, zpssx, -10, 10, 100, 0.1)
             yield from bps.sleep(1)
-            xc = return_line_center(-1,elem,0.2)
+            xc = return_line_center(-1,elem,0.5)
             #yield from bps.movr(zpssy,1)
             #if abs(xc)<2.5:
             if not np.isnan(xc):
                 #yield from bps.mov(zpssx,xc)
-                yield from bps.movr(zps.smarx,xc/1000)
+                yield from bps.movr(smarx,((xc+x_offset_um)/1000))
         else:
+            yield from bps.movr(smarz,5/1000)
+            yield from bps.movr(smary,5/1000)
             #yield from bps.mov(zpssz,0)
-            yield from fly1d([fs, zebra, sclr1, xspress3],zpssz, -15, 15, 100, 0.03)
+            yield from fly1d(dets_fs,zpssz, -10, 10, 100, 0.1)
             yield from bps.sleep(1)
-            xc = return_line_center(-1,elem,0.1)
+            xc = return_line_center(-1,elem,0.5)
             #if abs(xc)<2.5:
             if not np.isnan(xc):
                 #yield from bps.mov(zpssz,xc)
-                yield from bps.movr(zps.smarz,xc/1000)
-
-        #yield from bps.mov(zpssy,0)
-        yield from fly1d([fs, zebra, sclr1, xspress3], zpssy, -10,10, 100, 0.03)
-        yc = return_line_center(-1,elem,0.1)
+                yield from bps.movr(smarz,(xc+x_offset_um)/1000)
+        '''
+        #yield from bps.movr(zpssy,0)
+        yield from fly1d(dets_fs, zpssy, -5,5, 100, 0.1)
+        yc = return_line_center(-1,elem,0.5)
         #if not np.isnan(yc):
         #    yield from bps.mov(zpssy,yc)
         #edge,fwhm = erf_fit(-1,elem)
         plt.close()
         if not np.isnan(yc):
             #yield from bps.mov(zpssy,yc)
-            yield from bps.movr(zps.smary,yc/1000)
+            yield from bps.movr(smary,(yc+y_offset_um)/1000)
         #merlin1.unstage()
         xspress3.unstage()
-
-        ##yield from fly1d([fs, zebra, sclr1, xspress3],zpssy, -4, 4, 80, 0.03)
-        ##yield from bps.sleep(1)
-        ##yc = return_line_center(-1,elem,0.2)
-        #yc,yw = erf_fit(-1,elem)
-        #if abs(yc)<1:
-        #    yield from bps.movr(zps.smary,yc/1000)
-        #yield from bps.mov(dssy,yc)
-        ##if not np.isnan(yc):
-        ##    yield from bps.movr(zps.smary,yc/1000)
-        #'''
+        '''
 
         '''
         if np.abs(angle) <= 45:
@@ -1310,12 +1530,16 @@ def zp_tomo_scan_scale(angle_start, angle_end, angle_num, x_start, x_end, x_num,
             #         y_start, y_end, y_num, exposure, return_speed=40))
             yield from fly2d(dets1, zps.zpssz,x_start_real, x_end_real, x_num,zps.zpssy,y_start,y_end,y_num,exposure, dead_time=0.005,return_speed = 100)
 
+
+            yield from bps.movr(smarx, x_offset_um/1000)
+            yield from bps.movr(smary,y_offset_um/1000)
+
         #mov_to_image_cen_smar(-1)
         #yield from mov_to_image_cen_dsx(-1)
-        #plot2dfly(-1,elem,'sclr1_ch4')
-        #insertFig(note='zpsth = {}'.format(check_baseline(-1,'zpsth')))
-        #plt.close()
-        #merlin2.unstage()
+        plot2dfly(-1,elem,'sclr1_ch4')
+        insertFig(note='zpsth = {}'.format(check_baseline(-1,'zpsth')))
+        plt.close()
+        merlin1.unstage()
         xspress3.unstage()
         #print('waiting for 2 sec...')
         #yield from bps.sleep(5)
@@ -1452,65 +1676,84 @@ def move_fly_center(elem):
     #mov(eval(scanned_axis),x[i_max[0]][0])
 
 def mll_th_fly2d(th_start, th_end, num, mot1, x_start, x_end, x_num, mot2,y_start, y_end, y_num, sec):
+    
+    """relative theta"""
+    
     #yield from shutter('open')
     init_th = dsth.position
     th_step = (th_end - th_start) / num
-    #init_x = dssx.position
-    yield from bps.movr(dsth, th_start)
+    th_pos = np.linspace(init_th + th_start,init_th + th_end, num+1)
+    #yield from bps.movr(dsth, th_start)
     #yield from bps.movr(dssx, th_start)
     #fs.stage()
     #yield from bps.sleep(2)
-    #ic_0 = sclr2_ch4.get()
+    ic_0 = sclr2_ch4.get()
     #fs.unstage()
 
 
     for i in range(num + 1):
-
+        yield from bps.mov(dsth,th_pos[i])
         while (sclr2_ch2.get() < 10000):
             yield from bps.sleep(60)
             print('IC3 is lower than 10000, waiting...')
         #fs.stage()
         #yield from bps.sleep(5)
-        #while (sclr2_ch4.get() < (0.9*ic_0)):
-        #    yield from peak_bpm_y(-5,5,1)
-        #    yield from peak_bpm_x(-15,15,5)
-        #    ic_0 = sclr2_ch4.get()
-        #yield from bps.sleep(1)
+        while (sclr2_ch4.get() < (0.7*ic_0)):
+            yield from peak_bpm_y(-5,5,10)
+            yield from peak_bpm_x(-15,15,10)
+            ic_0 = sclr2_ch4.get()
+        yield from bps.sleep(1)
         #fs.unstage()
-
-        '''
-        yield from bps.sleep(1)
-        yield from (fly1d(dets1,mot1,align_z_start,align_z_end,100,0.05))
-        xc = return_line_center(-1, 'Ni', 0.2)
-        yield from bps.mov(mot1,xc)
-
-        yield from bps.sleep(1)
-        yield from (fly1d(dets1,mot2,align_y_start,align_y_end,100,0.05))
-        yc = return_line_center(-1, 'Ni', 0.2)
-        yield from bps.mov(mot2,yc)
-        '''
-        yield from fly2d(dets1,dssx,-1.5,1.5,50, dssy,-0.6,0.6,30,0.02,dead_time=0.003)
-        cx,cy = return_center_of_mass(-1,'W_L',0.3)
+        
+        
+        
+        yield from fly1d(dets1,dssx,-6,6,100,0.05)
+        cx = return_line_center(-1,'W_L',0.1)
         yield from bps.mov(dssx,cx)
-        yield from bps.mov(dssy,cy)
-        yield from bps.sleep(2)
+        yield from bps.sleep(1)
+        #yield from fly1d(dets1,dssy,-1.4,-0.8,100,0.05)
+        #edge,fwhm = erf_fit(-1,'W_L')
+        #cy = return_line_center(-1,'W_L',0.2)
+        #if np.abs(edge + 1.15 - 0.4) > 0.25:
+        #    yield from bps.mov(dssy,0.4)
+        #else:
+        #    yield from bps.mov(dssy,edge+1.15)
+        #plt.close()
+        #yield from bps.sleep(1)
+        
 
         yield from fly2d(dets1, mot1, x_start, x_end, x_num, mot2, y_start, y_end, y_num, sec, return_speed=40)
 
-        #merlin1.unstage()
-        #xspress3.unstage()
-        plot_data(-1,'Ge')
-        yield from bps.sleep(2)
-        insertFig(note = 'dsth = {}'.format(check_baseline(-1,'dsth')))
-        yield from bps.sleep(2)
-
-        plt.close()
-        #plot_img_sum(-1)
+        #yield from bps.movr(dssx,0.15)
+        #yield from bps.movr(dssy,-0.09)
+        print('2d scan done')
+        bps.sleep(1)
+        merlin1.unstage()
+        xspress3.unstage()
+        print('unstage detectors')
+        bps.sleep(1)
+        #plot_data(-1,'Ge')
+        #yield from bps.sleep(2)
         #insertFig(note = 'dsth = {}'.format(check_baseline(-1,'dsth')))
+        #yield from bps.sleep(2)
+
         #plt.close()
+        print('executing image saving ...')
+        try:
+            #plot_img_sum(-1,threshold=[0,2000])
+            #insertFig(note = f'dsth = {dsth.position :.3f}')
+            #plt.close()
+
+            plot_data(-1,'Cu')
+            insertFig(note = f'dsth = {dsth.position :.3f}')
+            plt.close()
+        except:
+            pass
+        print('image saved')
+        plt.close()
         #plot2dfly(-1,'Au_L')
 
-        yield from bps.movr(dsth, th_step)
+        #yield from bps.movr(dsth, th_step)
         #yield from bps.movr(dssx,th_step)
     yield from bps.mov(dsth, init_th)
     #yield from bps.mov(dssx,init_x)
@@ -1530,8 +1773,14 @@ def zp_th_fly2d(th_start, th_end, num, x_start, x_end, x_num, y_start, y_end, y_
     y0 = smary.position
     z0 = smarz.position
 
+    first_sid = int(caget('XF:03IDC-ES{Status}ScanID-I')+1)
+    
+    #for first iteration
+    time_e = time.time()+(x_num*y_num*sec)
 
     for i in range(num+1):
+
+        time_i = time.time()
 
         while sclr2_ch2.get() < 5000:
             yield from bps.sleep(60)
@@ -1545,21 +1794,24 @@ def zp_th_fly2d(th_start, th_end, num, x_start, x_end, x_num, y_start, y_end, y_
         #yield from bps.mov(zpssy,0)
         #'''
 
+        #yield from bps.movr(smarz, -0.015,smary,-0.015)
+
         yield from fly1d(dets_fs,zpssy,-5,5,100,0.03)
-        yc = return_line_center(-1,elem,threshold=0.5)
+        yc = return_line_center(-1,elem,threshold=0.3)
         #edge,fwhm=erf_fit(-1,elem)
         plt.close()
         #yield from bps.mov(zpssy,edge-2)
         yield from bps.mov(zpssy,yc)
+        
 
         yield from fly1d(dets_fs,zpssz,-5,5,100,0.03)
         #edge,fwhm=erf_fit(-1,elem)
-        plt.close()
-        xc = return_line_center(-1,elem,threshold=0.5)
+        #plt.close()
+        xc = return_line_center(-1,elem,threshold=0.3)
         yield from bps.mov(zpssz,xc)
-        #yield from bps.movr(smarz,xc/1000)
-        xspress3.unstage()
-
+        plt.close()
+        #yield from bps.movr(smarz,(xc/1000)+0.015, smary,(yc/1000)+0.015)
+        #xspress3.unstage()
 
         '''
         yield from fly1d(dets_fs,zpssy,0,3.5,100,0.03)
@@ -1575,15 +1827,35 @@ def zp_th_fly2d(th_start, th_end, num, x_start, x_end, x_num, y_start, y_end, y_
         #yield from bps.movr(smarx,cx/1000)
         #yield from bps.movr(smary,cy/1000)
 
+        #scan_time = (time_e-time_i)/60
+        #projected_tot_time = scan_time*60*(num+1-i)
+
+        #projected_end_time = time.time()+ projected_tot_time
+
+        #print(f"current scan is {i}/{num+1}. \n Last scan took about {scan_time}) minutes")
+        #print(f"New projected end time is {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(projected_end_time))}")
+
         yield from fly2d(dets1, zpssz, x_start, x_end, x_num, zpssy, y_start, y_end, y_num, sec, dead_time=0.004, return_speed=40)
 
 
         yield from bps.sleep(1)
         xspress3.unstage()
         merlin1.unstage()
-
-        #insert_xrf_map_to_pdf(-1,elem,'zpsth')
+        #yield from bps.movr(zpssz,0.05)
         '''
+
+        try:
+            #insert_diffSum_to_pdf(-1)
+
+            insert_xrf_map_to_pdf(-1,elements = ["Lu_L", "Mn"],title_= ['zpsth', 'energy'])
+
+        except:
+            pass
+
+        '''
+
+
+        #'''
         plot2dfly(-1,elem,'sclr1_ch4')
         insertFig(note = 'zpsth = {:.3f}'.format(check_baseline(-1,'zpsth')))
         plt.close()
@@ -1592,10 +1864,12 @@ def zp_th_fly2d(th_start, th_end, num, x_start, x_end, x_num, y_start, y_end, y_
         #plt.close()
         #plot2dfly(-1,'Au_L')
 
-        '''
+        #'''
 
         yield from bps.movr(zpsth, th_step)
         yield from bps.sleep(1)
+
+        time_e = time.time()
 
     yield from bps.mov(zpsth, init_th)
     #save_page()
@@ -1837,7 +2111,7 @@ def mov_diff(gamma, delta, r=500, calc=0):
 
     print('Make sure all motors are zeroed properly, '
           'otherwise calculation will be wrong.')
-    if x_yaw > 810 or x_yaw < -200:
+    if x_yaw > 825 or x_yaw < -200:
         print('diff_x = ', -x_yaw,
               ' out of range, move diff_z upstream and try again')
     elif dz < -250 or dz > 0:
@@ -2891,6 +3165,8 @@ def return_center_of_mass(scan_id = -1, elem = 'Cr',th=0.5):
     y = np.array(df2[motors[1]])
     #I0 = np.asfarray(df2.sclr1_ch4)
     I0 = np.asfarray(df2['sclr1_ch4'])
+    if I0[0]==0:
+        I0[0]=I0[1]
     scan_info=db[scan_id]
     tmp = scan_info['start']
     nx=tmp['plan_args']['num1']
@@ -4333,50 +4609,90 @@ def recover_and_scan(sid, dets, mot1, mot1_s, mot1_e, mot1_n, mot2, mot2_s, mot2
     
 
 
-def insert_xrf_map_to_pdf(scan = -1, element = 'Cr',title_ = 'energy', mon = 'sclr2_ch4'):
-
-    plot_data(scan, element)
-
-    #from datetime import datetime
-    #time_now = datetime.now()
-    #time_str = time_now.strftime("%Y/%m/%d %H:%M:%S")
-    time_str = str((db[int(scan)].table("baseline")['time'].values)[-1])
-
-    titleValue = (db[int(scan)].table("baseline")[title_].values)[0]
-
-    #insertFig(note = time_str, title = '= {:.4f}'.format(check_baseline(scan,title_)) )
-    insertFig(note = time_str, title = f"{title_} = {titleValue :.4f}" )
-
-    plt.close()
-
-def insert_diffSum_to_pdf(scan = -1,det = "merlin1", thMotor = "zpsth"):
-
-    plot_img_sum(scan, det)
-
-    time_str = str((db[int(scan)].table("baseline")['time'].values)[-1])
-
-    titleValue = (db[int(scan)].table("baseline")[thMotor].values)[0]
-
-    insertFig(note = time_str, title = f"{thMotor} = {titleValue :.4f}" )
-
-    plt.close()
-
-
-def insert_multiple_xrf_map_to_pdf(scan = -1, elements = ['Pt_L', 'Fe'],title_ = 'energy', mon = 'sclr2_ch4'):
+def insert_xrf_map_to_pdf(scan_id = -1, elements = ["Cr", "Fe"],
+                          title_ = ['energy','zpsth'], 
+                          norm = 'sclr1_ch4'):
 
     """
         insert 2D-XRF maps to the pdf log from a single scan
-        - elements has to be in the list. eg:["Cr", "Ti"]
-        - a title can be added to the figure. Commonly: "energy", "zpsth", "dsth"
-        - a time stamp will be added to the bottom of the figure
+        Paramaters
+            
+            - scan_id; relayive or absolute numbers eg: -1, 190543
+            - elements; list of elements eg:["Cr", "Ti"]
+            - title_; multiple titles can be added to the figure. eg: ["energy", "zpsth"], ["dsth"]
+            - norm; (optional) specify IC normaization. default is 'sclr1_ch4'; None ignores normalization
+            - a time stamp will be added to the bottom of the figure
 
     """
 
-    for elem in elements:
-        insert_xrf_map_to_pdf(scan = scan, element = elem,title_ = title_, mon = mon)
+    h = db[int(scan_id)]
+    df = h.table()
+    dim1,dim2 = h.start['num1'], h.start['num2']
 
-def insert_xrf_series_to_pdf(startSid,endSid, elements = ["Cr", "Ti"], figTitle = "energy",
-                             mon = 'sclr2_ch4', diffSum = False):
+    tot = len(elements)
+
+    if tot ==1:
+        cols = 1
+
+    else:
+        cols = 2
+
+
+    Rows = tot // cols 
+    
+    
+    if tot % cols != 0:
+        Rows += 1
+    
+    
+    Position = range(1,tot + 1)
+
+    fig = plt.figure()
+    fig.suptitle("scan_id = "+ str(h.start["scan_id"]), size = 'xx-large')
+
+    for n, elem in enumerate(elements):
+    
+        if elem in df:
+            det = df[elem]
+        else:
+            det = ( df[f'Det1_{elem}'] +
+                    df[f'Det1_{elem}'] +
+                    df[f'Det1_{elem}'] ). to_numpy()
+
+        if norm == None:
+            mon = np.ones_like(det)
+        
+        else:
+
+            mon = df[norm].to_numpy()
+            mon[mon == 0] = mon.mean()
+        
+        norm_data = np.float32(det/mon)
+
+        ax = fig.add_subplot(Rows,cols,Position[n])
+        im = ax.imshow(np.float32(norm_data.reshape(dim1,dim2)))
+        ax.set_title(elem)
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes('right', size='5%', pad=0.05)
+        fig.colorbar(im, cax=cax, orientation='vertical')
+        fig.tight_layout()
+
+
+    time_str = "scan date & time = " + df["time"].iloc[-1].strftime('%Y-%m-%d %X')
+
+    titleValue1 = (h.table("baseline")[title_[0]].values)[0]
+    titleValue2 = (h.table("baseline")[title_[1]].values)[0]
+
+    title_str = f"{title_[0]} = {titleValue1:.4f} , {title_[1]} = {titleValue2:.4f}"
+
+    #insertFig(note = time_str, title = '= {:.4f}'.format(check_baseline(scan,title_)) )
+    insertFig(note = time_str, title = title_str)
+
+    plt.close()
+
+
+def insert_xrf_series_to_pdf(startSid,endSid, elements = ["Cr", "Ti"], figTitle = ["energy","zpsth"],
+                             mon = 'sclr1_ch4', diffSum = False):
 
     """ insert 2D-XRF maps to the pdf log from a series of scan.
         - elements has to be in the list. eg:["Cr", "Ti"]
@@ -4397,6 +4713,13 @@ def insert_xrf_series_to_pdf(startSid,endSid, elements = ["Cr", "Ti"], figTitle 
 
     save_page()
 
+def insert_diffSum_to_pdf(scan = -1,det = "merlin1", thMotor = "zpsth"):
+
+    plot_img_sum(scan, det, threshold=[0,200000])
+    time_str = str((db[int(scan)].table("baseline")['time'].values)[-1])
+    titleValue = (db[int(scan)].table("baseline")[thMotor].values)[0]
+    insertFig(note = time_str, title = f"{thMotor} = {titleValue :.4f}" )
+    plt.close()
 
 def plot_data(sid = -1,  elem = 'Pt_L', mon = 'sclr1_ch4'):
 
@@ -4411,35 +4734,7 @@ def plot_data(sid = -1,  elem = 'Pt_L', mon = 'sclr1_ch4'):
 
         plot2dfly(sid, elem,  mon)
 
-def plotMosaic240x360(elem = "Mn"):
-    sn_list = [-16,-32,-48,-64,-80,-96]
-    title_list =  ["120x240","120x120","120x0","0x240","0x120","0x0"]
-
-    for sn, title in zip(sn_list,title_list):
-        plotMosaic(first_scan_num = sn, num_steps = 60,elem = elem, title = title+"_"+elem)
-        plt.savefig("/GPFS/XF03ID1/users/2022Q2/Pushkar_2022Q2/240x360scan_SLC_knockout_21489/"+title+"_"+elem+".png")
-        
-def Mosaic240x360(exposure_time = 0.03, step_size = 500):
-    lx = np.array((0,120,240))
-    ly = np.array((0,120))
-    
-    smarx_pos = smarx.position
-    smary_pos = smary.position
-    
-    for jj in lx:
-        for ii in ly:
-            print((ii,jj))
-            yield from bps.movr(smarx, ii*0.001)
-            yield from bps.movr(smary, jj*0.001)
-            
-            yield from Mosaic_Grid120(
-                exposure_time = exposure_time, 
-                step_size = step_size)
-
-            yield from bps.mov(smarx, smarx_pos)
-            yield from bps.mov(smary,smary_pos)     
-
-def Mosaic_Grid120(exposure_time = 0.03, step_size = 500):
+def Mosaic_Grid120(exposure_time = 0.03, step_size = 500, mll = False):
 
         X_position = np.linspace(-45,45,4)
         Y_position = np.linspace(-45,45,4)
@@ -4449,23 +4744,36 @@ def Mosaic_Grid120(exposure_time = 0.03, step_size = 500):
         smarx_i = smarx.position
         smary_i = smary.position
 
+        dsx_i = dsx.position
+        dsy_i = dsy.position
+
         for j in X_position:
                 for i in Y_position:
                         print((i,j))
-                        yield from bps.movr(smarx, i*0.001)
-                        yield from bps.movr(smary, j*0.001)
-                        yield from fly2d(dets_fs, zpssx,-15,15,num_steps,zpssy, -15,15,num_steps, exposure_time)
-                        yield from bps.sleep(6)
-                        yield from bps.mov(zpssx,0,zpssy,0)
+                        if mll:
+                            yield from bps.movr(dsx, i)
+                            yield from bps.movr(dsy, j)
+                            yield from fly2d(dets_fs, dssx,-15,15,num_steps,dssy, -15,15,num_steps, exposure_time)
+                            yield from bps.sleep(6)
+                            yield from bps.mov(dssx,0,dssy,0)
 
-                        yield from bps.mov(smarx, smarx_i)
-                        yield from bps.mov(smary,smary_i)                  
+                            yield from bps.mov(dsx, dsx_i)
+                            yield from bps.mov(dsy,dsy_i)    
+                        
+                        else:
 
-                        while (sclr2_ch2.get() < 5000):
-                                yield from bps.sleep(60)
-                                print('IC3 is lower than 5000, waiting...')
+                            yield from bps.movr(smarx, i*0.001)
+                            yield from bps.movr(smary, j*0.001)
+                            yield from fly2d(dets_fs, zpssx,-15,15,num_steps,zpssy, -15,15,num_steps, exposure_time)
+                            yield from bps.sleep(6)
+                            yield from bps.mov(zpssx,0,zpssy,0)
 
-def plotMosaic(first_scan_num = -16, num_steps = 30, elem = "S", title = "120x120"):
+                            yield from bps.mov(smarx, smarx_i)
+                            yield from bps.mov(smary,smary_i)                  
+                        
+                        yield from check_for_beam_dump(500)
+
+def plotMosaic(first_scan_num = -16, elem = "S", title = "120x120"):
     
     fig, axs = plt.subplots(4,4)
     fig.subplots_adjust(hspace = 0, wspace = -0.57)
@@ -4493,7 +4801,7 @@ def plotMosaic(first_scan_num = -16, num_steps = 30, elem = "S", title = "120x12
         norm_data = (det/mon)
 
         axs[i].imshow(np.float32(norm_data.reshape(dim1,dim2)))
-        axs[i].set_title(str(sid))
+        axs[i].set_title(str(h.start["scan_id"]))
         axs[i].set_xticklabels([])
         axs[i].set_yticklabels([])
         axs[i].set_xticks([])
@@ -4501,69 +4809,182 @@ def plotMosaic(first_scan_num = -16, num_steps = 30, elem = "S", title = "120x12
 
 #https://stackoverflow.com/questions/25124143/matplotlib-subplots-get-rid-of-tick-labels-altogether
 
+def mosaic_builder(ylen = 100, xlen = 100, overlap_per = 15):
 
-def TileScan(shape_xy = (3,4), step_size = 500, exposure_time = 0.05):
-    "one tile is 30x30"
+    """mosiac scan with 5 um overlap ; 
+    xlen and ylen should be multiple of 25"""
+
+    max_travel = 25
+        
+    dsx_i = dsx.position
+    dsy_i = dsy.position
 
     smarx_i = smarx.position
-    smary_i  = smary.position
+    smary_i = smary.position
 
-    print(f"Before Scan {smarx_i:.4f},{smary_i:.4f}")
+    scan_dim = max_travel - round(max_travel*overlap_per*0.01)
 
-    num_steps = int(30000/step_size)
+    x_tile = round(xlen/scan_dim)
+    y_tile = round(ylen/scan_dim)
 
-    x = numpy.arange(shape_xy[0])
-    y = numpy.arange(shape_xy[1])
-    coords = [[y0*25, x0*25] for y0 in y for x0 in x]
-    
-    for yx_pos in coords:
-        print(yx_pos)
+    xlen_updated = scan_dim*x_tile
+    ylen_updated = scan_dim*y_tile
+
+    X_position = np.linspace(0,xlen_updated-scan_dim,x_tile)
+    Y_position = np.linspace(0,ylen_updated-scan_dim,y_tile)
+
+    print(f"{X_position}, {Y_position}")
+    print(f"New X dim = {xlen_updated}, New X dim {ylen_updated}")
+    print(f" optimized scan x and y range = {xlen_updated}, {ylen_updated};\n"
+    f"Do you wish to continue? (y/n)")
+
+def mosaic_overlap_scan(dets = dets_fs, ylen = 100, xlen = 100, overlap_per = 15, dwell = 0.05, 
+                        step_size = 500, plot_elem = ["Cu","Fe","Ba_L","Ti"],mll = False):
+
+    """mosiac scan with 5 um overlap ; 
+    xlen and ylen should be multiple of 25"""
+
+    max_travel = 30
         
-        '''
-        yield from bps.movr(smary,yx_pos[0]*0.001)
-        yield from bps.movr(smarx,yx_pos[1]*0.001)
+    dsx_i = dsx.position
+    dsy_i = dsy.position
 
-        print(f"Before 2D Scan {smarx.position:4f},{smary.position:.4f}")        
+    smarx_i = smarx.position
+    smary_i = smary.position
 
-        yield from fly2d(dets_fs, zpssx,-15,15,num_steps,zpssy, -15,15,num_steps, exposure_time)
+    scan_dim = max_travel - round(max_travel*overlap_per*0.01)
 
-        yield from bps.sleep(2)
-        yield from bps.mov(zpssx,0,zpssy,0)
+    x_tile = round(xlen/scan_dim)
+    y_tile = round(ylen/scan_dim)
 
-        yield from bps.mov(smarx,smarx_i)
-        yield from bps.mov(smary,smary_i)
+    xlen_updated = scan_dim*x_tile
+    ylen_updated = scan_dim*y_tile
 
-        print(f"returned to {smarx.position:.4f},{smary.position:.4f}")
-        '''
 
-def plotTile(first_sid, shape_xy = (3,4), elem  = "S"):
+    X_position = np.linspace(0,xlen_updated-scan_dim,x_tile)
+    Y_position = np.linspace(0,ylen_updated-scan_dim,y_tile)
+
+    num_steps = round(max_travel*1000/step_size)
     
-    fig, axs = plt.subplots(shape_xy[1],shape_xy[0])
-    fig.subplots_adjust(hspace = 0, wspace=0)
+    unit = "minutes"
+    total_time = (num_steps**2*dwell*len(X_position)*len(Y_position))/60
+    
+
+    if total_time>60:
+        total_time/=60
+        unit = "hours"
+
+    #print(f'total time = {total_time} {unit}; 10 seconds to quit')
+
+    ask = input(f"Optimized scan x and y range = {xlen_updated} by {ylen_updated};"
+     f"\n total time = {total_time} {unit}"
+     f"\n Do you wish to continue? (y/n) ")
+
+    if ask == 'y':
+
+        #yield from bps.sleep(10)
+        first_sid = db[-1].start["scan_id"]+1
+
+        if mll:
+
+            yield from bps.movr(dsy, ylen_updated/-2)
+            yield from bps.movr(dsx, xlen_updated/-2)
+
+        else:
+            yield from bps.movr(smary, ylen_updated*-0.001/2)
+            yield from bps.movr(smarx, xlen_updated*-0.001/2)
+
+
+
+
+        for i in Y_position:
+                for j in X_position:
+                    print((i,j))
+                    yield from check_for_beam_dump(threshold=5000)
+                    yield from bps.sleep(3) #cbm catchup time
+
+                    if mll:
+
+                        yield from bps.movr(dsy, i)
+                        yield from bps.movr(dsx, j)
+                        yield from fly2d(dets,dssx,-15,15,num_steps,dssy,-15,15,num_steps,dwell)
+                        yield from bps.sleep(3)
+                        yield from bps.mov(dssx,0,dssy,0)
+                        insert_xrf_map_to_pdf(-1,plot_elem,'dsx')
+                        yield from bps.mov(dsx, dsx_i)
+                        yield from bps.mov(dsy,dsy_i)
+
+                    else:
+
+                        yield from bps.movr(smary, i*0.001)
+                        yield from bps.movr(smarx, j*0.001)
+                        yield from fly2d(dets, zpssx,-15,15,num_steps,zpssy, -15,15,num_steps,dwell)
+                        yield from bps.sleep(4)
+                        yield from bps.mov(zpssx,0,zpssy,0)
+                        '''
+                        try:
+                            insert_xrf_map_to_pdf(-1,plot_elem,'smarx')
+                        except:
+                            plt.close()
+                            pass
+                        '''
+
+                        yield from bps.mov(smarx, smarx_i)
+                        yield from bps.mov(smary,smary_i) 
+
+        save_page()                 
+        '''
+        plot_mosiac_overlap(grid_shape = (y_tile,x_tile), 
+                            first_scan_num = int(first_sid),
+                            elem = plot_elem[0], 
+                            show_scan_num = True)
+        '''
+    else:
+        return 
+
+
+def plot_mosiac_overlap(grid_shape = (4,4), first_scan_num = -8, 
+                        elem = "Fe", show_scan_num = True):
+    
+    fig, axs = plt.subplots(grid_shape[0],grid_shape[1])
+    fig.subplots_adjust(hspace = 0, wspace = -0.57)
     fig.suptitle(elem)
     axs = axs.ravel()
-    total_sns = len(axs.ravel())
 
-    for i in range(len(axs.ravel())):
-        sid = i+first_sid
+    for i in range(int(grid_shape[0]*grid_shape[1])):
+        sid = i+first_scan_num
         print(sid)
 
-        df = db[int(sid)].table()
+        h = db[int(sid)]
+        df = h.table()
+        dim1,dim2 = h.start['num1'], h.start['num2']
+
+    
 
         if elem in df:
             det = df[elem]
         else:
             det = ( df[f'Det1_{elem}'] +
                     df[f'Det1_{elem}'] +
-                    df[f'Det1_{elem}'])
+                    df[f'Det1_{elem}'] ). to_numpy()
 
         mon = df["sclr1_ch4"].to_numpy()
         mon[mon == 0] = mon.mean()
-        norm_data = (det/mon).to_numpy()
+        norm_data = (det/mon)
 
-        axs[i].imshow(np.float32(norm_data.reshape(-1,-1)))
-        axs[i].set_title(str(scan_id))
-
+        axs[i].imshow(np.float32(norm_data.reshape(dim1,dim2)))
+        if show_scan_num:
+            axs[i].set_title(
+                            str(h.start["scan_id"]), y=1.0, pad=-14,
+                            fontdict = {
+                                        'color':'r',
+                                        'fontsize':8,
+                                        }
+                            )
+        axs[i].set_xticklabels([])
+        axs[i].set_yticklabels([])
+        axs[i].set_xticks([])
+        axs[i].set_yticks([])
 
 def VMS_in():
 
@@ -4571,27 +4992,27 @@ def VMS_in():
     
     #vms
 
-    caput("XF:03IDA-OP{VMS:1-Ax:Y}Mtr.VAL", -0.07) #mirrorY
-    caput("XF:03IDA-OP{VMS:1-Ax:P}Mtr.VAL", 3.06) #mirror picth
+    #caput("XF:03IDA-OP{VMS:1-Ax:Y}Mtr.VAL", -0.07) #mirrorY
+    #caput("XF:03IDA-OP{VMS:1-Ax:P}Mtr.VAL", 3.06) #mirror picth
     caput("XF:03IDA-OP{VMS:1-Ax:YU}Mtr.VAL", -1.46) #upstream Y
     caput("XF:03IDA-OP{VMS:1-Ax:YD}Mtr.VAL",0.39) #downstream Y
     caput("XF:03IDA-OP{VMS:1-Ax:TX}Mtr.VAL", 0) #trans. X
-    caput("XF:03IDA-OP{VMS:1-Ax:PF}Mtr.VAL", 7) #pitch fine
+    #caput("XF:03IDA-OP{VMS:1-Ax:PF}Mtr.VAL", 7) #pitch fine
 
     #bbpm
-    caput("XF:03IDB-OP{Slt:SSA1-Ax:7}Mtr.VAL", -2.23)
-    caput("XF:03IDB-OP{Slt:SSA1-Ax:8}Mtr.VAL",-0.55)
+    caput("XF:03IDB-OP{Slt:SSA1-Ax:7}Mtr.VAL", -2.4)
+    caput("XF:03IDB-OP{Slt:SSA1-Ax:8}Mtr.VAL",0.25)
     
     #cbpm
-    caput("XF:03IDC-ES{BPM:7-Ax:Y}Mtr.VAL", 1.4)
+    caput("XF:03IDC-ES{BPM:7-Ax:Y}Mtr.VAL", 1.3)
 
-    for i in tqdm.tqdm(range(20)):
+    for i in tqdm.tqdm(range(30)):
         yield from bps.sleep(1)
 
     
     
     #move ssa2
-    yield from bps.mov(ssa2.hgap, 2, ssa2.vgap,2, ssa2.hcen,0.098,ssa2.vcen, -0.3)
+    yield from bps.mov(ssa2.hgap, 2, ssa2.vgap,2, ssa2.hcen,0.098,ssa2.vcen, 0)
     
     #move ssa1
     yield from bps.mov(ssa1.hgap, 2.0, ssa1.vgap,2.0, ssa1.hcen,0.079,ssa1.vcen, 1.7)
@@ -4605,33 +5026,92 @@ def VMS_out():
 
     #vms
 
-    caput("XF:03IDA-OP{VMS:1-Ax:Y}Mtr.VAL", -1.0) #mirrorY
-    caput("XF:03IDA-OP{VMS:1-Ax:P}Mtr.VAL", -0.0082) #mirror picth
-    caput("XF:03IDA-OP{VMS:1-Ax:YU}Mtr.VAL", -1.1) #upstream Y
-    caput("XF:03IDA-OP{VMS:1-Ax:YD}Mtr.VAL",-1.5) #downstream Y
-    caput("XF:03IDA-OP{VMS:1-Ax:TX}Mtr.VAL", 0.084) #trans. X
+    #caput("XF:03IDA-OP{VMS:1-Ax:Y}Mtr.VAL", -1.0) #mirrorY
+    #caput("XF:03IDA-OP{VMS:1-Ax:P}Mtr.VAL", -0.0082) #mirror picth
+    caput("XF:03IDA-OP{VMS:1-Ax:YU}Mtr.VAL", -2.2) #upstream Y
+    caput("XF:03IDA-OP{VMS:1-Ax:YD}Mtr.VAL",-2.6) #downstream Y
+    #caput("XF:03IDA-OP{VMS:1-Ax:TX}Mtr.VAL", 0.084) #trans. X
     caput("XF:03IDA-OP{VMS:1-Ax:PF}Mtr.VAL", 0) #pitch fine
 
     #bbpm
-    caput("XF:03IDB-OP{Slt:SSA1-Ax:7}Mtr.VAL", -0.06)
-    caput("XF:03IDB-OP{Slt:SSA1-Ax:8}Mtr.VAL",-0.2)
+    caput("XF:03IDB-OP{Slt:SSA1-Ax:7}Mtr.VAL", -0.16)
+    caput("XF:03IDB-OP{Slt:SSA1-Ax:8}Mtr.VAL",0.065)
     
     #cbpm
     caput("XF:03IDC-ES{BPM:7-Ax:Y}Mtr.VAL", 0.4)
 
     
-    for i in tqdm.tqdm(range(0, 20), desc ="Moving..."):
+    for i in tqdm.tqdm(range(0, 30), desc ="Moving..."):
         yield from bps.sleep(1)
     
 
     #move ssa2
-    yield from bps.mov(ssa2.hgap, 2, ssa2.vgap,2, ssa2.hcen,0.098,ssa2.vcen, -0.944)
+    yield from bps.mov(ssa2.hgap, 2, ssa2.vgap,2, ssa2.hcen,0,ssa2.vcen, -0.6765)
     
     #move ssa1
-    yield from bps.mov(ssa1.hgap, 2.64, ssa1.vgap,2.5, ssa1.hcen,-0.092,ssa1.vcen, -0.58)
+    yield from bps.mov(ssa1.hgap, 2.64, ssa1.vgap,2.5, ssa1.hcen,-0.092,ssa1.vcen, -0.78)
 
     print(" VMS out")
 
 
 
+def find_45_degree(start_angle,end_angle,num):
 
+
+    ''' Absolute angles'''
+
+    yield from bps.mov(dsth,start_angle)
+    #num = np.float(num)
+    #start_angle = np.float(start_angle)
+    #end_angle = np.float(end_angle)
+    step = (end_angle-start_angle)/num
+    w_x = np.zeros(num+1)
+    w_z = np.zeros(num+1)
+    th = np.zeros(num+1)
+    for i in range(num+1):
+        yield from fly1d(dets1,dssx,-10,10,200,0.05)
+        l,r,c=square_fit(-1,'Pt_L')
+        plt.close()
+        w_x[i] = r-l
+        yield from fly1d(dets1,dssz,-10,10,200,0.05)
+        l,r,c=square_fit(-1,'Pt_L')
+        plt.close()
+        w_z[i] = r-l
+        th[i]=dsth.position
+        yield from bps.sleep(1)
+        yield from bps.movr(dsth,step)
+    plt.figure()
+    plt.plot(th,w_x,'r+',th,w_z,'g-')
+    return th,w_x,w_z 
+
+
+def export_diff_fly2d(sid,
+                      elem,
+                      det_name = "merlin1", 
+                      zp_flag = True, 
+                      save_to = '/home/xf03id/Downloads'):
+
+    hdr = db[sid]
+
+    if hdr.start["plan_type"] == "FlyPlan2D":
+
+        bl = db[sid].table('baseline')
+        df = db.get_table(db[sid],fill=False)
+        images = list(hdr.data(det_name))
+        images = np.array(np.squeeze(images))
+        plan_args = hdr.start['plan_args']
+
+        
+        ic = np.asfarray(df['sclr1_ch4'])
+        index = np.where(ic == 0)
+        nn = np.size(index[0])
+        for i in range(nn):
+            ii = index[0][i]
+            ic[ii] = ic[ii+1]
+
+
+        num_frame,nnx,nny = np.shape(images)
+        t = np.flipud(images, axis = 0).T
+        t = t*ic[0] / ic[i]
+
+        diff_array = t.transpose(1,2,0)

@@ -1,14 +1,17 @@
 
 
-def my_export(sid,num=1, interval=1,det = 'merlin1', mon = 'sclr1_ch4'):
-    for i in range(num):
+def my_export(str_list, interval=1,det = 'merlin1', mon = 'sclr1_ch4'):
+    sid_list = get_sid_list(str_list = str_list,interval=interval)
+    num = np.size(sid_list)
+    for sid in sid_list:
         #sid, df = _load_scan(sid, fill_events=False)
+        sid = int(sid)
         h = db[sid]
-        sid = h.start['scan_id']
+        #sid = h.start['scan_id']
         df = h.table()
         mots = h.start['motors']
 
-        dir = os.path.join('/data/home/hyan/export','scan_{:06d}'.format((sid//10000)*10000))
+        dir = os.path.join('/data/home/home/hyan/export','scan_{:06d}'.format((sid//10000)*10000))
         if os.path.exists(dir) == False:
             print('{} does not exist.'.format(dir))
             mycmd = ''.join(['mkdir',' ',dir])
@@ -73,12 +76,16 @@ def my_export(sid,num=1, interval=1,det = 'merlin1', mon = 'sclr1_ch4'):
         '''
         sid = sid + interval
 
-def my_export_diffraction(sid_start, sid_end, interval, name_list,det = 'merlin1'):
-    for i in range (sid_start, sid_end+1,interval):
-        hdr = db[i]
+def my_export_diffraction(str_list, interval, name_list,det = 'merlin1'):
+    sid_list = get_sid_list(str_list = str_list,interval=interval)
+    num = np.size(sid_list)
+    
+    for sid in sid_list:
+        sid = int(sid)
+        hdr = db[sid]
         df = hdr.table()
-        sid = hdr.start['scan_id']
-        dir = os.path.join('/data/home/hyan/export','scan_{:06d}'.format((sid//10000)*10000))
+        #sid = hdr.start['scan_id']
+        dir = os.path.join('/data/home/home/hyan/export','scan_{:06d}'.format((sid//10000)*10000))
         if os.path.exists(dir) == False:
             print('{} does not exist.'.format(dir))
             mycmd = ''.join(['mkdir',' ',dir])
@@ -101,12 +108,15 @@ def my_export_diffraction(sid_start, sid_end, interval, name_list,det = 'merlin1
 
 
 
-def my_export_angle(sid_start,sid_end,interval,rot_motor):
+def my_export_angle(str_list,interval,rot_motor):
     j = 0
-    num = round((sid_end-sid_start)/interval)
-    angle = zeros((num+1,2))
-    for sid in range (sid_start, sid_end+1, interval):
-        dir = os.path.join('/data/home/hyan/export','scan_{:06d}'.format((sid//10000)*10000))
+    sid_list = get_sid_list(str_list = str_list,interval=interval)
+    num = np.size(sid_list)
+    #num = round((sid_end-sid_start)/interval)
+    angle = zeros((num,2))
+    for sid in sid_list:
+        sid = int(sid)
+        dir = os.path.join('/data/home/home/hyan/export','scan_{:06d}'.format((sid//10000)*10000))
         if os.path.exists(dir) == False:
             print('{} does not exist.'.format(dir))
             mycmd = ''.join(['mkdir',' ',dir])
@@ -119,13 +129,28 @@ def my_export_angle(sid_start,sid_end,interval,rot_motor):
         angle[j,0] = sid
         angle[j,1] = check_baseline(sid,rot_motor) 
         j = j+1 
-    path = os.path.join(dir, 'scan_{}_{}_angle.txt'.format(sid_start,sid_end))
+    path = os.path.join(dir, 'scan_{}_{}_angle.txt'.format(sid_list[0],sid_list[-1]))
     np.savetxt(path, angle, fmt ='%d %10.5f')
-    print('Angle list for scan {} to {} saved to {}'.format(sid_start,sid_end, path))    
+    print('Angle list for scan {} to {} saved to {}'.format(sid_list[0],sid_list[1], path))    
 
-    
-
-
+def get_sid_list(str_list, interval):
+    num_elem = np.size(str_list)
+    for i in range(num_elem):
+        str_elem = str_list[i].split('-')
+        if i == 0:
+            if np.size(str_elem) == 1:
+                tmp = int(str_elem[0])
+            else:
+                tmp = np.arange(int(str_elem[0]),int(str_elem[1])+1,interval)
+            sid_list = np.reshape(tmp,(-1,))
+        else:
+            if np.size(str_elem) == 1:
+                tmp = int(str_elem[0])
+            else:
+                tmp = np.arange(int(str_elem[0]),int(str_elem[1])+1,interval)
+            tmp = np.reshape(tmp,(-1,))
+            sid_list = np.concatenate((sid_list,tmp))
+    return sid_list
 '''
 def get_all_filenames(scan_id, key='merlin1'):
     #scan_id, df = _load_scan(scan_id, fill_events=False)

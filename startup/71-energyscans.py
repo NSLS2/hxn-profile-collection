@@ -334,5 +334,18 @@ class HXNEnergy():
 Energy = HXNEnergy(ugap,e,dcm.p, "ic3", "/nsls2/data/hxn/shared/config/bluesky/profile_collection/startup/ugap_calib.csv")
 
 
+def peak_hfm_pitch(fine = False, tweak_range = 0.005):
+
+    if fine:
+        yield from Energy.fluxOptimizerScan(m2.pf,-1*tweak_range ,tweak_range,10)
+    else:
+        yield from Energy.fluxOptimizerScan(m2.p,-1*tweak_range,tweak_range,10)
+
+def slit_centering_scan(ic = sclr2_ch4):
+
+    yield from Energy.fluxOptimizerScan(ssa2.hcen,-0.05,0.05,10, ic = ic)
+    yield from Energy.fluxOptimizerScan(ssa2.vcen,-0.02,0.02,10, ic = ic)
+
+
 
 

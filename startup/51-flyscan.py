@@ -52,7 +52,7 @@ from hxnfly.callbacks import FlyLiveCrossSection
 
 #live_im_plot = FlyLiveImage(['Ca','W_L','Fe','Pt_L'], channels=[1, 2, 3])
 
-live_im_plot = FlyLiveImage(['Cr','La_L','Ba_L','Cu'], channels=[1, 2, 3])
+live_im_plot = FlyLiveImage(['Cr','K','Fe','S'], channels=[1, 2, 3])
 
 # fly2dplot1 = FlyLiveCrossSection(['V'], channels=[1, 2, 3)
 
@@ -60,7 +60,7 @@ live_im_plot = FlyLiveImage(['Cr','La_L','Ba_L','Cu'], channels=[1, 2, 3])
 #                     channels=[1, 2, 3],
 #                     )
 
-pt_plot = FlyRoiPlot(['La_L'],
+pt_plot = FlyRoiPlot(['Fe'],
                      channels=[1, 2, 3],
                     )
 
@@ -68,13 +68,13 @@ pt_plot = FlyRoiPlot(['La_L'],
 # fly_scannable_detectors = [xspress3, zebra, sclr1, dexela1]
 fly_scannable_detectors = [xspress3, zebra, sclr1]
 fly1d = FlyPlan1D(usable_detectors=fly_scannable_detectors,
-                  scaler_channels=[1, 2, 3, 4, 5, 6, 7, 8])
+                  scaler_channels=range(1,17))
 
 fly1d.sub_factories = [maybe_a_table]
 fly1d.subs = [pt_plot, ]
 
 fly2d = FlyPlan2D(usable_detectors=fly_scannable_detectors,
-                  scaler_channels=[1, 2, 3, 4, 5, 6, 7, 8])
+                  scaler_channels=range(1,17))
 fly2d.sub_factories = [maybe_a_table]
 fly2d.subs = [pt_plot, live_im_plot, ]
 

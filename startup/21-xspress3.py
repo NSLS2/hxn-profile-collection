@@ -155,12 +155,12 @@ elem_L_list = np.array(['Zn_L','Ga_L','Ge_L','AS_L','Se_L','Br_L','Kr_L','Rb_L',
 
 energy_L_list = np.array([1012,1098,1186,1282,1379,1481,1585,1692,1806,1924,2044,2169,2292,2423,2558,2697,2838,2983,3133,3280,3444,3604,3768,3938,4110,4285,4467,4647,7899,8146,8398,8652,8911,9175,9442,9713,9989,10269,10551,10839,11131,11427,11727,12031,12339,12652,4839,5035,5228,5432,5633,5850,6053,6273,6498,6720,6949,7180,7416,7655,12968,13291,13614,13946,14282,14620,14961,15308,15660])
 
-elem_M_list = np.array(['Hf_M','Ta_M','W_M','Re_M','Os_M','Ir_M','Pt_M','Au_M','Hg_M','Tl_M','Pb_M','Bi_M','Po_M','At_M','Rn_M','Fr_M','Ra_M','Ac_M','Ce_M','Pr_M','Nd_M','Pm_M','Sm_M','Eu_M','Gd_M','Tb_M','Dy_M','Ho_M','Er_M','Tm_M','Yb_M','Lu_M','Th_M','Pa_M','U_M','Np_M','Pu_M','Am_M','Cm_M','Bk_M','Cf_M'])
+elem_M_list = np.array(['Hf_M','Ta_M','W_M','Re_M','Os_M','Ir_M','Pt_M','Au_M','Hg_M','Tl_M','Pb_M','Bi_M','Po_M','At_M','Rn_M','Fr_M','Ra_M','Ac_M','Ce_M','Pr_M','Nd_M','Pm_M','Sm_M','Eu_M','Gd_M','Tb_M','Dy_M','Ho_M','Er_M','Tm_M','Yb_M','Lu_M','Th_M','Pa_M','U_M','Np_M','Pu_M','Am_M','Cm_M','Bk_M','Cf_M']) 
 
 energy_M_list = np.array([1646,1712,1775,1840,1907,1976,2048,2118,2191,2267,2342,2418,2499,2577,2654,2732,2806,2900,884,927,979,1023,1078,1122,1181,1233,1284,1342,1404,1463,1526,1580,2990,3071,3164,3250,3339,3429,3525,3616,3709])
 
 
-elem_list_xspress3_roi = np.array(['Pt_L','Si','S','Ba_L','Ca','K','Fe','Zn','La_L','Hg_L','Ni','Cr','Co','Au_L','Cu','Mn'])
+elem_list_xspress3_roi = np.array(['Pt_M','Si','S','K','Mo_L','Ca','Fe','Zn','Cl','P','Ni','Cr','Co','Au_M','Cu','Mn'])
 
 
 def xspress3_roi_setup():

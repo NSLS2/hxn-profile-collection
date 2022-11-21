@@ -12,7 +12,7 @@ sclr1.scan_type_triggers['fly'] = []
 
 sclr1.read_attrs = ['channels', 'calculations']
 sclr1.mcas.kind = 'omitted'
-sclr1.channels.read_attrs = [f'chan{j}' for j in range(1, 6)]
+sclr1.channels.read_attrs = [f'chan{j}' for j in range(1, 17)]
 sclr1.calculations.read_attrs = ['calc5']
 # sclr1.hints = {'fields': [f'sclr1_ch{j}' for j in (1, 2, 3)]}
 
@@ -29,7 +29,7 @@ sclr1_ch5 = sclr1.channels.chan5
 
 sclr1_ch5_calc = sclr1.calculations.calc5.value
 
-n_scaler_mca = 8
+n_scaler_mca = 16
 sclr1_mca = [sclr1.mca_by_index[i] for i in range(1, n_scaler_mca + 1)]
 
 for mca in sclr1_mca:
@@ -41,7 +41,7 @@ sclr2 = StruckScaler('XF:03IDC-ES{Sclr:2}', name='sclr2')
 sclr2.read_attrs = ['channels', 'calculations']
 
 sclr2.mcas.kind = 'omitted'
-sclr2.channels.read_attrs = [f'chan{j}' for j in range(1, 6)]
+sclr2.channels.read_attrs = [f'chan{j}' for j in range(1, 17)]
 sclr2.calculations.read_attrs = ['calc5']
 # sclr2.hints = {'fields': [f'sclr2_ch{j}' for j in (2, 3, 4)]}
 

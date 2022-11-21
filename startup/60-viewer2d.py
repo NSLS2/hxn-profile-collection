@@ -474,6 +474,7 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
     title = 'Scan id %s. ' % scan_id + elem
     if elem in df:
         spectrum = np.asarray(df[elem], dtype=np.float32)
+
     else:
         roi_keys = ['Det%d_%s' % (chan, elem) for chan in channels]
 
@@ -482,6 +483,10 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
                 raise KeyError('ROI %s not found' % (key, ))
 
         spectrum = np.sum([getattr(df, roi) for roi in roi_keys], axis=0)
+        
+        #if spectrum[0] == 0:
+            #spectrum[0] = spectrum[1]
+
 
     hdr = db[scan_id]['start']
     if x is None:
@@ -496,8 +501,9 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
 
     if norm is not None:
         monitor = np.asarray(df[norm], dtype=np.float32)
-        monitor[monitor==0] = monitor.mean() #patch for dropping first data point
-        spectrum = spectrum/(monitor + 1e-8)
+        monitor = np.where(monitor == 0, np.nanmean(monitor),monitor) #patch for dropping first data point
+        spectrum = spectrum/(monitor)
+
 
     nx, ny = get_flyscan_dimensions(hdr)
     total_points = nx * ny
@@ -592,7 +598,7 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
     var_name = 'S_%d_%s' % (scan_id, elem)
     globals()[var_name] = spectrum2
     print('\tScan data available in variable: {}'.format(var_name))
-    return fig, ax1, ax2
+    return fig, ax1, ax2, spectrum
 
 
 def export(sid_start, sid_end, interval=1,
@@ -710,7 +716,8 @@ def plot_img_sum2(sid, det = 'merlin1', roi_flag=False,x_cen=0,y_cen=0,size=0):
         plt.imshow(image,extent=extent)
         plt.title('sid={} ROI SUM'.format(sid))
 
-def plot_img_sum(sid, det = 'merlin1',mon ='sclr1_ch4', roi_flag=False,x_cen=0,y_cen=0,size=0,threshold=[0,1e6]):
+def plot_img_sum(sid, det = 'merlin1',mon ='sclr1_ch4', 
+                 roi_flag=False,x_cen=0,y_cen=0,size=0,threshold=[0,1e6]):
     h = db[sid]
     sid = h.start['scan_id']
     imgs = list(h.data(det))
@@ -770,6 +777,50 @@ def plot_img_sum(sid, det = 'merlin1',mon ='sclr1_ch4', roi_flag=False,x_cen=0,y
         plt.imshow(image,extent=extent)
         plt.colorbar()
         plt.title('sid={} ROI SUM'.format(sid))
+
+
+def get_diff_sum(sid, det = 'merlin1',mon ='sclr1_ch4', 
+                 roi_flag=False,x_cen=0,y_cen=0,size=0,threshold=[0,1e5]):
+
+    h = db[sid]
+    sid = h.start['scan_id']
+    imgs = list(h.data(det))
+    #imgs = np.array(imgs)
+    imgs = np.array(np.squeeze(imgs))
+    #imgs[imgs>3*np.std(imgs)] = 0
+    imgs[imgs>threshold[1]]=0
+    imgs[imgs<threshold[0]]=0
+    df = h.table()
+    mon = np.array(df[mon],dtype=float32)
+    #figure_with_insert_fig_button()
+    #plt.imshow(imgs[0],clim=[0,50])
+    if roi_flag:
+        imgs = imgs[:,x_cen-size//2:x_cen+size//2,y_cen-size//2:y_cen+size//2]
+    mots = h.start['motors']
+    num_mots = len(mots)
+    #num_mots = 1
+    #df = h.table()
+    if num_mots == 1:
+        pass
+
+    elif num_mots == 2:
+        tot = np.sum(imgs,2)
+        tot = np.array(np.sum(tot,1),dtype=float32)
+        dim1 = h.start['num1']
+        dim2 = h.start['num2']
+        x = np.array(df[mots[0]])
+        y = np.array(df[mots[1]])
+        extent = (np.nanmin(x), np.nanmax(x),np.nanmax(y), np.nanmin(y))
+        tot =np.divide(tot, mon)
+        hlim = np.percentile(tot,99.99)
+        tot[tot > hlim] = 0
+        #idx = np.where(abs(tot - np.mean(tot)) >3*np.std(tot))
+        #tot[idx[0]] = np.mean(tot)
+        #tot = tot[abs(tot - np.mean(tot)) < 3 * np.std(tot)]
+        image = tot.reshape(dim2,dim1)
+
+        return np.float32(image)
+    
 
 def plot_xanes(sid, ref_sid=0,overlay=0):
     h = db[sid]

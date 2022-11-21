@@ -34,8 +34,8 @@ def erf_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
     xdata=np.array(xdata,dtype=float)
     ydata=(df['Det1_'+elem]+df['Det2_'+elem]+df['Det3_'+elem])/df[mon]
     ydata=np.array(ydata,dtype=float)
-    ydata[ydata==np.nan] = 0#patch for ic3 returns zero
-    ydata[ydata==np.inf] = 0#patch for ic3 returns zero
+    ydata[ydata==np.nan] = np.nanmean(ydata)#patch for ic3 returns zero
+    ydata[ydata==np.inf] = np.nanmean(ydata)#patch for ic3 returns zero
     ydata[0] = ydata[1] #patch for drop point issue
     ydata[-1] = ydata[-2]#patch for drop point issue
     y_min=np.min(ydata)
@@ -431,6 +431,10 @@ def return_line_center(sid,elem='Cr',threshold=0.2, neg_flag=0):
 
     df2 = h.table()
     xrf = np.array(df2['Det2_' + elem]+df2['Det1_' + elem] + df2['Det3_' + elem])
+
+    xrf[xrf==np.nan] = np.nanmean(xrf)#patch for ic3 returns zero
+    xrf[xrf==np.inf] = np.nanmean(xrf)#patch for ic3 returns zero
+
     #threshold = np.max(xrf)/10.0
     x_motor = h.start['motors']
     x = np.array(df2[x_motor[0]])
@@ -511,13 +515,13 @@ def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt_
         x[i] = a_start + i*a_step
         yield from bps.mov(zps.zpsth, x[i])
         if np.abs(x[i]) > 45.05:
-            yield from fly1d(dets6,zpssz,start,end,num,acq_time)
-            tmp = return_line_center(-1, elem=elem,threshold=0.5,neg_flag=neg_flag )
+            yield from fly1d(dets_fs,zpssz,start,end,num,acq_time)
+            tmp = return_line_center(-1, elem=elem,threshold=0.5,neg_flag=neg_flag)
             #tmp = return_tip_pos(-1, elem=elem)
             #tmp,fwhm = erf_fit(-1,elem = elem,linear_flag=False)
             y[i] = tmp*np.sin(x[i]*np.pi/180.0)
         else:
-            yield from fly1d(dets6,zpssx,start,end,num,acq_time)
+            yield from fly1d(dets_fs,zpssx,start,end,num,acq_time)
             tmp = return_line_center(-1,elem=elem,threshold=0.5,neg_flag=neg_flag )
             #tmp = return_tip_pos(-1, elem=elem)
             #tmp,fwhm = erf_fit(-1,elem = elem,linear_flag=False)
@@ -541,6 +545,9 @@ def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt_
 
 
 def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt_L', move_flag=0):
+    
+    y_init = dssy.position
+    #y_init = -0.5 #remove this temp.
     a_step = (a_end - a_start)/a_num
     x = np.zeros(a_num+1)
     y = np.zeros(a_num+1)
@@ -556,23 +563,35 @@ def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt
         #ddy = (-0.0024*angle)-0.185
         #dy = dy+ddy
         #yield from bps.movr(dssy,dy)
+
+        y_offset = sin_func(x[i], 0.110, -0.586, 7.85,1.96)
+        yield from bps.mov(dssy,y_init+y_offset)
+        
+
         if np.abs(x[i]) > 45.01:
-            yield from fly2d(dets1,dssz,start,end,num, dssy, -1,1,20,acq_time)
-            cx,cy = return_center_of_mass(-1,elem)
-            y[i] = cx*np.sin(x[i]*np.pi/180.0)
-            #yield from fly1d(dets1,dssz,start,end,num,acq_time)
-            #tmp = return_line_center(-1, elem=elem)
-            #y[i] = tmp*np.sin(x[i]*np.pi/180.0)
+            #yield from fly2d(dets1,dssz,start,end,num, dssy, -2,2,20,acq_time)
+            #cx,cy = return_center_of_mass(-1,elem,0.3)
+            #y[i] = cx*np.sin(x[i]*np.pi/180.0)
+            yield from fly1d(dets1,dssz,start,end,num,acq_time)
+            cen = return_line_center(-1, elem=elem,threshold = 0.3)
+            #cen, edg1, edg2 = square_fit(-1,elem=elem)
+            y[i] = cen*np.sin(x[i]*np.pi/180.0)
+            # yield from bps.mov(dssz,cen)
         else:
-            yield from fly2d(dets1,dssx,start,end,num, dssy, -1,1,20,acq_time)
-            cx,cy = return_center_of_mass(-1,elem)
-            y[i] = cx*np.cos(x[i]*np.pi/180.0)
-            #yield from fly1d(dets1,dssx,start,end,num,acq_time)
-            #tmp = return_line_center(-1,elem=elem)
-            #y[i] = tmp*np.cos(x[i]*np.pi/180.0)
+            #yield from fly2d(dets1,dssx,start,end,num, dssy, -2,2,20,acq_time)
+            #cx,cy = return_center_of_mass(-1,elem,0.3)
+            #y[i] = cx*np.cos(x[i]*np.pi/180.0)
+            yield from fly1d(dets1,dssx,start,end,num,acq_time)
+            cen = return_line_center(-1,elem=elem,threshold = 0.3)
+            #cen, edg1, edg2 = square_fit(-1,elem=elem)
+            y[i] = cen*np.cos(x[i]*np.pi/180.0)
             #y[i] = tmp*np.cos(x[i]*np.pi/180.0)
             #y[i] = -tmp*np.cos(x[i]*np.pi/180.0)
-        yield from bps.mov(dssy,cy)
+            # yield from bps.mov(dssx,cen)
+
+        ##v[i] = cy
+
+        #yield from bps.mov(dssy,cy)
         #yield from fly1d(dets1,dssy,-2,2,100,acq_time)
         #tmp = return_line_center(-1, elem=elem)
         #yield from bps.mov(dssy,tmp)
@@ -580,7 +599,7 @@ def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt
         #print('h_cen= ',y[i],'v_cen = ',v[i])
         #plot_data(-1,elem,'sclr1_ch4')
         #insertFig(note='dsth = {}'.format(check_baseline(-1,'dsth')))
-        plt.close()
+        #plt.close()
 
     y = -1*np.array(y)
     x = np.array(x)
@@ -598,6 +617,60 @@ def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt
 
     #plt.figure()
     #plt.plot(x,v)
+
+    x = np.array(x)
+    y = -np.array(y)
+
+    print(x)
+    print(y)
+    print(v)
+    #caliFIle = open('rotCali','wb')
+    #pickle.dump(y,CaliFile)
+    return v
+
+def mll_rot_alignment_2D(th_start, th_end, th_num, x_start, x_end, x_num,
+                         y_start, y_end, y_num, acq_time, elem='Pt_L', move_flag=0):
+    
+    th_list = np.linspace(th_start, th_end, th_num+1)
+    
+    x = th_list
+    y = np.zeros(th_num+1)
+    v = np.zeros(th_num+1)
+    orig_th = smlld.dsth.position
+    for i, th in enumerate(th_list):
+        yield from bps.mov(dssx,0, dssz,0, smlld.dsth,th)
+
+        if np.abs(x[i]) > 45.01:
+            yield from fly2d(dets1,
+                            dssz,
+                            x_start,
+                            x_end,
+                            x_num, 
+                            dssy, 
+                            y_start,
+                            y_end,
+                            y_num,
+                            acq_time
+                            )
+
+            cx,cy = return_center_of_mass(-1,elem,0.5)
+            y[i] = cx*np.sin(x[i]*np.pi/180.0)
+
+        else:
+            yield from fly2d(dets1,dssx,start,end,num, dssy, -0.5,0.5,20,acq_time)
+            cx,cy = return_center_of_mass(-1,elem,0.5)
+            y[i] = cx*np.cos(x[i]*np.pi/180.0)
+
+        yield from bps.mov(dssy,cy)
+
+    y = -1*np.array(y)
+    x = np.array(x)
+    r0, dr, offset = rot_fit_2(x,y)
+    yield from bps.mov(smlld.dsth, 0)
+    dx = -dr*np.sin(offset*np.pi/180)
+    dz = -dr*np.cos(offset*np.pi/180)
+
+    print('dx=',dx,'   ', 'dz=',dz)
 
     x = np.array(x)
     y = -np.array(y)
@@ -740,5 +813,96 @@ def scan_info(sid):
     si.command = scan_command(sid)
     si.det = h.start['detectors']
     return(si)
+
+
+def update_motor_position(motor, PV_name):
+
+    " updates readback and set point of a given PV"
+
+    #get readback 
+    dcm_p_rbk = motor.position
+    #dcm_p_set = dcm.p.user_setpoint.value #method to get set point val
+    yield from bps.sleep(2)
+    caput(PV_name,dcm_p_rbk)
+
+def synchronize_mirror_positions():
+    
+    """
+    synchronizes necessary mirror motor positions and reengage the feedbacks
+    TODO conditions for enganging and error handling
+    
+    """
+    
+    bbpm_auto = "XF:03ID{XBPM:17}AutoFbEn-Cmd"
+    bbpm_x = "XF:03ID-BI{EM:BPM1}fast_pidX.FBON"
+    bbpm_y = "XF:03ID-BI{EM:BPM1}fast_pidY.FBON"
+
+    bbpm_x_rbk_val = caget("XF:03ID-BI{EM:BPM1}PosX:MeanValue_RBV")
+    bbpm_y_rbk_val = caget("XF:03ID-BI{EM:BPM1}PosY:MeanValue_RBV")
+
+    hcm_pf_sts = "XF:03IDC-CT{FbPid:01}PID:on"
+    hfm_pf_sts = "XF:03IDC-CT{FbPid:02}PID:on"
+    
+
+    #make sure feedbacks are off
+    caput(bbpm_auto,0)
+    yield from bps.sleep(2)
+    caput(bbpm_x, 0)
+    caput(bbpm_y,0)
+    yield from bps.sleep(2)
+    print("B feedbacks are off")
+
+    caput(hcm_pf_sts,0)
+    yield from bps.sleep(2)
+    caput(hfm_pf_sts,0)
+    yield from bps.sleep(2)
+    print("mirror slow feedbacks are off")
+
+
+    yield from update_motor_position(dcm.p, "XF:03IDA-OP{Mon:1-Ax:P}Mtr.VAL")
+    print("DCM Pitch ; Done!")
+
+    yield from update_motor_position(dcm.r, "XF:03IDA-OP{Mon:1-Ax:R}Mtr.VAL")
+    print("DCM Roll ; Done!")
+
+    yield from update_motor_position(m2.p, "XF:03IDA-OP{Mir:2-Ax:P}Mtr.VAL")
+    print("HFM Pitch ; Done!")
+
+    yield from update_motor_position(m1.p, "XF:03IDA-OP{Mir:1-Ax:P}Mtr.VAL")
+    print("HCM Pitch ; Done!")
+
+    #reenable slow feedbacks
+    caput(hcm_pf_sts,1)
+    yield from bps.sleep(2)
+    caput(hfm_pf_sts,1)
+    yield from bps.sleep(2)
+    print("mirror slow feedbacks are on")
+
+    #reenable B feedbacks
+    caput(bbpm_x, bbpm_x_rbk_val)
+    yield from bps.sleep(2)
+    caput(bbpm_y, bbpm_y_rbk_val)
+    yield from bps.sleep(2)
+
+    print("B Feedbacks are on")
+
+
+def all_mll_optics_out():
+
+    #ensure fluorescence detecor is out; otherwise move it out 
+
+    if fdet1.x.position > -30:
+        yield from bps.mov(fdet1.x, -107)
+
+    #yield from 
+
+
+    
+
+
+
+
+
+
 
 
