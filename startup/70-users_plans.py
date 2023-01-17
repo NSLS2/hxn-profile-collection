@@ -13,7 +13,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from datetime import datetime
 from contextlib import suppress
 from scipy import signal
-from scipy.ndimage.filters import gaussian_filter
+from scipy.ndimage import gaussian_filter
 
 #Add ctrl+c option to matplotlib
 matplotlib.rcParams['toolbar'] = 'toolmanager'
