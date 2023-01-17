@@ -4,15 +4,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import tqdm
+import shutil
+import sys
 
 from scipy.optimize import curve_fit
 from scipy import ndimage
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-
-import sys
 from datetime import datetime
-import shutil
-
+from contextlib import suppress
 from scipy import signal
 from scipy.ndimage.filters import gaussian_filter
 
@@ -139,11 +138,11 @@ def go_det(det):
 
     if det == 'merlin':
         #while zposa.zposax.position<20:
-        yield from bps.mov(diff.x, -5, diff.y1,4.6, diff.y2,4.6, diff.z, -50, diff.cz, -24.7)
+        yield from bps.mov(diff.x, -2, diff.y1,1.6, diff.y2,1.6, diff.z, -50, diff.cz, -24.7)
         #yield from bps.mov(diff.y1,-3.2)
         #yield from bps.mov(diff.y2,-3.2)
     elif det == 'cam11':
-        yield from bps.mov(diff.x,218.53, diff.y1, 22.677, diff.y2, 22.677,diff.z, -50, diff.cz, -24.7)
+        yield from bps.mov(diff.x,206.83, diff.y1, 19.177, diff.y2, 19.177,diff.z, -50, diff.cz, -24.7)
         #yield from bps.mov(diff.y1,22.65)
         #yield from bps.mov(diff.y2,22.65)
     elif det =='telescope':
@@ -1761,7 +1760,7 @@ def mll_th_fly2d(th_start, th_end, num, mot1, x_start, x_end, x_num, mot2,y_star
     #yield from shutter('close')
 
 
-def zp_th_fly2d(th_start, th_end, num, x_start, x_end, x_num, y_start, y_end, y_num, sec,elem = 'Ti'):
+def zp_th_fly2d(th_start, th_end, num, x_start, x_end, x_num, y_start, y_end, y_num, sec,elem = 'Cu'):
     #yield from shutter('open')
     'move theta position relative and collect 2D scans'
 
@@ -1796,36 +1795,45 @@ def zp_th_fly2d(th_start, th_end, num, x_start, x_end, x_num, y_start, y_end, y_
 
         #yield from bps.movr(smarz, -0.015,smary,-0.015)
 
-        yield from fly1d(dets_fs,zpssy,-5,5,100,0.03)
-        yc = return_line_center(-1,elem,threshold=0.3)
+        ##yield from fly1d(dets_fs,zpssy,-10,10,100,0.03)
+        ##yc = return_line_center(-1,elem,threshold=0.3)
         #edge,fwhm=erf_fit(-1,elem)
-        plt.close()
+        ##plt.close()
         #yield from bps.mov(zpssy,edge-2)
-        yield from bps.mov(zpssy,yc)
+        ##yield from bps.mov(zpssy,yc)
         
 
-        yield from fly1d(dets_fs,zpssz,-5,5,100,0.03)
-        #edge,fwhm=erf_fit(-1,elem)
+        yield from fly1d(dets_fs,zpssz,-7,7,300,0.03)
+        #yc,fwhm=erf_fit(-1,elem)
         #plt.close()
         xc = return_line_center(-1,elem,threshold=0.3)
         yield from bps.mov(zpssz,xc)
         plt.close()
         #yield from bps.movr(smarz,(xc/1000)+0.015, smary,(yc/1000)+0.015)
-        #xspress3.unstage()
-
-        '''
-        yield from fly1d(dets_fs,zpssy,0,3.5,100,0.03)
-        #yc = return_line_center(-1,elem,threshold=0.5)
-        edge,fwhm=erf_fit(-1,elem)
-        plt.close()
-        yield from bps.mov(zpssy,edge)
         xspress3.unstage()
-        '''
+
+        
+        yield from fly1d(dets_fs,zpssy,-10,10,500,0.03)
+        yc = return_line_center(-1,elem,threshold=0.5)
+        #xc,fwhm=erf_fit(-1,elem)
+        plt.close()
+        yield from bps.mov(zpssy,yc)
+        xspress3.unstage()
+
+        '''yield from fly1d(dets_fs,zpssy,-3,3,150,0.03)
+        yc,fwhm=erf_fit(-1,elem)
+        plt.close()
+        #xc = return_line_center(-1,elem,threshold=0.3)
+        yield from bps.mov(zpssy,yc)
+        #plt.close()
+        #yield from bps.movr(smarz,(xc/1000)+0.015, smary,(yc/1000)+0.015)
+        xspress3.unstage()
+        
         #yield from fly2d(dets_fs, zpssx, -10, 10, 30, zpssy, -10, 10, 30,0.05)
         #xspress3.unstage()
         #cx,cy = return_center_of_mass(-1,'Mn')
         #yield from bps.movr(smarx,cx/1000)
-        #yield from bps.movr(smary,cy/1000)
+        #yield from bps.movr(smary,cy/1000)'''
 
         #scan_time = (time_e-time_i)/60
         #projected_tot_time = scan_time*60*(num+1-i)
@@ -1842,18 +1850,17 @@ def zp_th_fly2d(th_start, th_end, num, x_start, x_end, x_num, y_start, y_end, y_
         xspress3.unstage()
         merlin1.unstage()
         #yield from bps.movr(zpssz,0.05)
-        '''
+        
 
         try:
             #insert_diffSum_to_pdf(-1)
 
-            insert_xrf_map_to_pdf(-1,elements = ["Lu_L", "Mn"],title_= ['zpsth', 'energy'])
+            insert_xrf_map_to_pdf(-1,elements = ["Cu", "Ba_L"],title_= ['zpsth', 'energy'])
 
         except:
             pass
 
-        '''
-
+        
 
         #'''
         plot2dfly(-1,elem,'sclr1_ch4')
@@ -1868,6 +1875,8 @@ def zp_th_fly2d(th_start, th_end, num, x_start, x_end, x_num, y_start, y_end, y_
 
         yield from bps.movr(zpsth, th_step)
         yield from bps.sleep(1)
+        #yield from bps.movr(zpssz, -1)
+        #yield from bps.sleep(1)
 
         time_e = time.time()
 
@@ -4397,42 +4406,44 @@ def zp_rock(angle_start,angle_end,x_step, num):
     yield from bps.mov(p_v_rx,p_v_rx_0)
     yield from bps.mov(p_vy,p_vy_0)
 
-'''
-def peak_bpm_y(start,end,n_steps):
-    caput('XF:03IDC-ES{Status}ScanRunning-I', 1)
-    bpm_y_0 = caget('XF:03ID-BI{EM:BPM1}fast_pidY.VAL')
-    x = np.linspace(bpm_y_0+start,bpm_y_0+end,n_steps+1)
-    y = np.arange(n_steps+1)
-    #print(x)
-    for i in range(n_steps+1):
-        caput('XF:03ID-BI{EM:BPM1}fast_pidY.VAL',x[i])
-        if i == 0:
-            yield from bps.sleep(10)
-        else:
-            yield from bps.sleep(2)
-        y[i] = sclr2_ch4.get()
-    peak = x[y == np.max(y)]
-    #plt.figure()
-    #plt.plot(x,y)
-    #print(peak)
-    caput('XF:03ID-BI{EM:BPM1}fast_pidY.VAL',peak[0])
-    yield from bps.sleep(2)
+def peak_with_voltage(start,end,n_steps, pv_name = "XF:03ID-BI{EM:BPM1}DAC0"):
+
     shutter_b_cls_status = caget('XF:03IDB-PPS{PSh}Sts:Cls-Sts')
+    shutter_c_status = caget('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0')
+
     if shutter_b_cls_status == 0:
 
-        xbpmc_x = caget('XF:03ID-BI{EM:BPM2}PosX:MeanValue_RBV')
-        xbpmc_y = caget('XF:03ID-BI{EM:BPM2}PosY:MeanValue_RBV')
-        print(xbpmc_x,xbpmc_y)
-        caput('XF:03IDC-CT{FbPid:03}PID.VAL',xbpmc_y)
-        caput('XF:03IDC-CT{FbPid:04}PID.VAL',xbpmc_x)
+        dcm_pitch_volt = caget(pv_name)
+        x = np.linspace(dcm_pitch_volt+start,dcm_pitch_volt+end,n_steps+1)
+        y = np.arange(n_steps+1)
+
+        for i in tqdm.tqdm(range(n_steps+1),desc = 'peaking flux'):
+            
+            caput(pv_name,x[i])
+            yield from bps.sleep(4)
+            if shutter_c_status == 0:
+                y[i] = sclr2_ch2.get()
+            else:
+                y[i] = sclr2_ch4.get()
+        
+        peak = x[y == np.max(y)]
+
+        yield from bps.sleep(3)
+        caput(pv_name,peak[0])
+        yield from bps.sleep(3)
+
     else:
         print('Shutter B is Closed')
+        return
 
 
-    caput('XF:03IDC-ES{Status}ScanRunning-I', 0)
-    #plt.pause(5)
-    #plt.close()
-'''
+def peak_xy_volt(iter = 2):
+
+    for i in tqdm.tqdm(range(iter)):
+        yield from peak_with_voltage(-0.05,0.05,10, pv_name = "XF:03ID-BI{EM:BPM1}DAC0")
+        yield from peak_with_voltage(-0.05,0.05,10, pv_name = "XF:03ID-BI{EM:BPM1}DAC1")
+    
+
 def peak_bpm_x(start,end,n_steps):
     shutter_b_cls_status = caget('XF:03IDB-PPS{PSh}Sts:Cls-Sts')
     shutter_c_status = caget('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0')
@@ -4460,7 +4471,7 @@ def peak_bpm_x(start,end,n_steps):
         plt.figure()
         plt.plot(x,y)
         #plt.hold(2)
-        plt.close()
+        #plt.close()
 
         #print(peak)
         caput('XF:03ID-BI{EM:BPM1}fast_pidX.VAL',peak[0])
@@ -4625,70 +4636,72 @@ def insert_xrf_map_to_pdf(scan_id = -1, elements = ["Cr", "Fe"],
 
     """
 
-    h = db[int(scan_id)]
-    df = h.table()
-    dim1,dim2 = h.start['num1'], h.start['num2']
+    with suppress(Exception):
 
-    tot = len(elements)
+        h = db[int(scan_id)]
+        df = h.table()
+        dim1,dim2 = h.start['num1'], h.start['num2']
 
-    if tot ==1:
-        cols = 1
+        tot = len(elements)
 
-    else:
-        cols = 2
+        if tot ==1:
+            cols = 1
 
-
-    Rows = tot // cols 
-    
-    
-    if tot % cols != 0:
-        Rows += 1
-    
-    
-    Position = range(1,tot + 1)
-
-    fig = plt.figure()
-    fig.suptitle("scan_id = "+ str(h.start["scan_id"]), size = 'xx-large')
-
-    for n, elem in enumerate(elements):
-    
-        if elem in df:
-            det = df[elem]
         else:
-            det = ( df[f'Det1_{elem}'] +
-                    df[f'Det1_{elem}'] +
-                    df[f'Det1_{elem}'] ). to_numpy()
+            cols = 2
 
-        if norm == None:
-            mon = np.ones_like(det)
+
+        Rows = tot // cols 
         
-        else:
-
-            mon = df[norm].to_numpy()
-            mon[mon == 0] = mon.mean()
         
-        norm_data = np.float32(det/mon)
+        if tot % cols != 0:
+            Rows += 1
+        
+        
+        Position = range(1,tot + 1)
 
-        ax = fig.add_subplot(Rows,cols,Position[n])
-        im = ax.imshow(np.float32(norm_data.reshape(dim1,dim2)))
-        ax.set_title(elem)
-        divider = make_axes_locatable(ax)
-        cax = divider.append_axes('right', size='5%', pad=0.05)
-        fig.colorbar(im, cax=cax, orientation='vertical')
-        fig.tight_layout()
+        fig = plt.figure()
+        fig.suptitle("scan_id = "+ str(h.start["scan_id"]), size = 'xx-large')
+
+        for n, elem in enumerate(elements):
+        
+            if elem in df:
+                det = df[elem]
+            else:
+                det = ( df[f'Det1_{elem}'] +
+                        df[f'Det1_{elem}'] +
+                        df[f'Det1_{elem}'] ). to_numpy()
+
+            if norm == None:
+                mon = np.ones_like(det)
+            
+            else:
+
+                mon = df[norm].to_numpy()
+                mon[mon == 0] = mon.mean()
+            
+            norm_data = np.float32(det/mon)
+
+            ax = fig.add_subplot(Rows,cols,Position[n])
+            im = ax.imshow(np.float32(norm_data.reshape(dim2,dim1)))
+            ax.set_title(elem)
+            divider = make_axes_locatable(ax)
+            cax = divider.append_axes('right', size='5%', pad=0.05)
+            fig.colorbar(im, cax=cax, orientation='vertical')
+            fig.tight_layout()
 
 
-    time_str = "scan date & time = " + df["time"].iloc[-1].strftime('%Y-%m-%d %X')
+        time_str = "scan date & time = " + df["time"].iloc[-1].strftime('%Y-%m-%d %X')
 
-    titleValue1 = (h.table("baseline")[title_[0]].values)[0]
-    titleValue2 = (h.table("baseline")[title_[1]].values)[0]
+        titleValue1 = (h.table("baseline")[title_[0]].values)[0]
+        titleValue2 = (h.table("baseline")[title_[1]].values)[0]
 
-    title_str = f"{title_[0]} = {titleValue1:.4f} , {title_[1]} = {titleValue2:.4f}"
+        title_str = f"{title_[0]} = {titleValue1:.4f} , {title_[1]} = {titleValue2:.4f}"
 
-    #insertFig(note = time_str, title = '= {:.4f}'.format(check_baseline(scan,title_)) )
-    insertFig(note = time_str, title = title_str)
+        #insertFig(note = time_str, title = '= {:.4f}'.format(check_baseline(scan,title_)) )
+        insertFig(note = time_str, title = title_str)
 
-    plt.close()
+        plt.close()
 
 
 def insert_xrf_series_to_pdf(startSid,endSid, elements = ["Cr", "Ti"], figTitle = ["energy","zpsth"],
@@ -4709,7 +4722,7 @@ def insert_xrf_series_to_pdf(startSid,endSid, elements = ["Cr", "Ti"], figTitle 
             if diffSum:
                 insert_diffSum_to_pdf(scan = int(i),det = "merlin1", thMotor = "zpsth")
             else:
-                insert_multiple_xrf_map_to_pdf(int(i),elements,figTitle, mon=mon)
+                insert_xrf_map_to_pdf(int(i),elements,figTitle, mon=mon)
 
     save_page()
 
@@ -4734,109 +4747,7 @@ def plot_data(sid = -1,  elem = 'Pt_L', mon = 'sclr1_ch4'):
 
         plot2dfly(sid, elem,  mon)
 
-def Mosaic_Grid120(exposure_time = 0.03, step_size = 500, mll = False):
 
-        X_position = np.linspace(-45,45,4)
-        Y_position = np.linspace(-45,45,4)
-
-        num_steps = int(30*1000/step_size)
-
-        smarx_i = smarx.position
-        smary_i = smary.position
-
-        dsx_i = dsx.position
-        dsy_i = dsy.position
-
-        for j in X_position:
-                for i in Y_position:
-                        print((i,j))
-                        if mll:
-                            yield from bps.movr(dsx, i)
-                            yield from bps.movr(dsy, j)
-                            yield from fly2d(dets_fs, dssx,-15,15,num_steps,dssy, -15,15,num_steps, exposure_time)
-                            yield from bps.sleep(6)
-                            yield from bps.mov(dssx,0,dssy,0)
-
-                            yield from bps.mov(dsx, dsx_i)
-                            yield from bps.mov(dsy,dsy_i)    
-                        
-                        else:
-
-                            yield from bps.movr(smarx, i*0.001)
-                            yield from bps.movr(smary, j*0.001)
-                            yield from fly2d(dets_fs, zpssx,-15,15,num_steps,zpssy, -15,15,num_steps, exposure_time)
-                            yield from bps.sleep(6)
-                            yield from bps.mov(zpssx,0,zpssy,0)
-
-                            yield from bps.mov(smarx, smarx_i)
-                            yield from bps.mov(smary,smary_i)                  
-                        
-                        yield from check_for_beam_dump(500)
-
-def plotMosaic(first_scan_num = -16, elem = "S", title = "120x120"):
-    
-    fig, axs = plt.subplots(4,4)
-    fig.subplots_adjust(hspace = 0, wspace = -0.57)
-    fig.suptitle(title)
-    axs = axs.ravel()
-
-    for i in range(16):
-        sid = i+first_scan_num
-        print(sid)
-
-        h = db[int(sid)]
-        df = h.table()
-        dim1,dim2 = h.start['num1'], h.start['num2']
-
-
-        if elem in df:
-            det = df[elem]
-        else:
-            det = ( df[f'Det1_{elem}'] +
-                    df[f'Det1_{elem}'] +
-                    df[f'Det1_{elem}'] ). to_numpy()
-
-        mon = df["sclr1_ch4"].to_numpy()
-        mon[mon == 0] = mon.mean()
-        norm_data = (det/mon)
-
-        axs[i].imshow(np.float32(norm_data.reshape(dim1,dim2)))
-        axs[i].set_title(str(h.start["scan_id"]))
-        axs[i].set_xticklabels([])
-        axs[i].set_yticklabels([])
-        axs[i].set_xticks([])
-        axs[i].set_yticks([])
-
-#https://stackoverflow.com/questions/25124143/matplotlib-subplots-get-rid-of-tick-labels-altogether
-
-def mosaic_builder(ylen = 100, xlen = 100, overlap_per = 15):
-
-    """mosiac scan with 5 um overlap ; 
-    xlen and ylen should be multiple of 25"""
-
-    max_travel = 25
-        
-    dsx_i = dsx.position
-    dsy_i = dsy.position
-
-    smarx_i = smarx.position
-    smary_i = smary.position
-
-    scan_dim = max_travel - round(max_travel*overlap_per*0.01)
-
-    x_tile = round(xlen/scan_dim)
-    y_tile = round(ylen/scan_dim)
-
-    xlen_updated = scan_dim*x_tile
-    ylen_updated = scan_dim*y_tile
-
-    X_position = np.linspace(0,xlen_updated-scan_dim,x_tile)
-    Y_position = np.linspace(0,ylen_updated-scan_dim,y_tile)
-
-    print(f"{X_position}, {Y_position}")
-    print(f"New X dim = {xlen_updated}, New X dim {ylen_updated}")
-    print(f" optimized scan x and y range = {xlen_updated}, {ylen_updated};\n"
-    f"Do you wish to continue? (y/n)")
 
 def mosaic_overlap_scan(dets = dets_fs, ylen = 100, xlen = 100, overlap_per = 15, dwell = 0.05, 
                         step_size = 500, plot_elem = ["Cu","Fe","Ba_L","Ti"],mll = False):
@@ -4867,7 +4778,9 @@ def mosaic_overlap_scan(dets = dets_fs, ylen = 100, xlen = 100, overlap_per = 15
     num_steps = round(max_travel*1000/step_size)
     
     unit = "minutes"
-    total_time = (num_steps**2*dwell*len(X_position)*len(Y_position))/60
+    fly_time = (num_steps**2)*dwell*2
+    num_flys= len(X_position)*len(Y_position)
+    total_time = (fly_time*num_flys)/60
     
 
     if total_time>60:
@@ -4894,14 +4807,12 @@ def mosaic_overlap_scan(dets = dets_fs, ylen = 100, xlen = 100, overlap_per = 15
             yield from bps.movr(smary, ylen_updated*-0.001/2)
             yield from bps.movr(smarx, xlen_updated*-0.001/2)
 
-
-
-
-        for i in Y_position:
-                for j in X_position:
+        
+        for i in tqdm.tqdm(Y_position):
+                for j in tqdm.tqdm(X_position):
                     print((i,j))
                     yield from check_for_beam_dump(threshold=5000)
-                    yield from bps.sleep(3) #cbm catchup time
+                    yield from bps.sleep(1) #cbm catchup time
 
                     if mll:
 
@@ -4919,7 +4830,7 @@ def mosaic_overlap_scan(dets = dets_fs, ylen = 100, xlen = 100, overlap_per = 15
                         yield from bps.movr(smary, i*0.001)
                         yield from bps.movr(smarx, j*0.001)
                         yield from fly2d(dets, zpssx,-15,15,num_steps,zpssy, -15,15,num_steps,dwell)
-                        yield from bps.sleep(4)
+                        yield from bps.sleep(1)
                         yield from bps.mov(zpssx,0,zpssy,0)
                         '''
                         try:
@@ -5085,33 +4996,25 @@ def find_45_degree(start_angle,end_angle,num):
     return th,w_x,w_z 
 
 
-def export_diff_fly2d(sid,
-                      elem,
-                      det_name = "merlin1", 
-                      zp_flag = True, 
-                      save_to = '/home/xf03id/Downloads'):
+def feedback_auto_off(wait_time_sec = 0.5):
+    
+    beam_current = "SR:C03-BI{DCCT:1}I:Real-I"
+    fe_xbpm_current = "SR:C03-BI{XBPM:1}Ampl:CurrTotal-I"
+    fe_shutter_status = "XF:03ID-PPS{Sh:FE}Enbl-Sts"
+    ugap = "SR:C3-ID:G1{IVU20:1-Ax:Gap}-Mtr.RBV"
 
-    hdr = db[sid]
+    b_feeback_x = "XF:03ID-BI{EM:BPM1}fast_pidX.FBON"
+    b_feeback_y = "XF:03ID-BI{EM:BPM1}fast_pidY.FBON"
 
-    if hdr.start["plan_type"] == "FlyPlan2D":
 
-        bl = db[sid].table('baseline')
-        df = db.get_table(db[sid],fill=False)
-        images = list(hdr.data(det_name))
-        images = np.array(np.squeeze(images))
-        plan_args = hdr.start['plan_args']
+    while caget(beam_current)<10 or caget(fe_xbpm_current)<10 or caget(fe_shutter_status)==0:
 
+        if caget(b_feeback_x) == 1 or caget(b_feeback_y) == 1:
+            caput(b_feeback_x,0)
+            caput(b_feeback_y,0)
+            logger.info(f"feedback was disabled by {os.getlogin()}")
+
+        else:
+            pass
         
-        ic = np.asfarray(df['sclr1_ch4'])
-        index = np.where(ic == 0)
-        nn = np.size(index[0])
-        for i in range(nn):
-            ii = index[0][i]
-            ic[ii] = ic[ii+1]
-
-
-        num_frame,nnx,nny = np.shape(images)
-        t = np.flipud(images, axis = 0).T
-        t = t*ic[0] / ic[i]
-
-        diff_array = t.transpose(1,2,0)
+        time.sleep(wait_time_sec)

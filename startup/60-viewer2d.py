@@ -24,6 +24,7 @@ def figure_with_insert_fig_button(*args, **kwargs):
 def plot2d(scan_id, elem, norm='sclr1_ch4'):
 
     scan_info = db[scan_id]
+    scan_id, df = _load_scan(scan_id, fill_events=False)
     tmp = scan_info['start']
     y_motor = tmp['motors'][0]
     x_motor = tmp['motors'][1]

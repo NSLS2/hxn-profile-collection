@@ -341,10 +341,73 @@ def peak_hfm_pitch(fine = False, tweak_range = 0.005):
     else:
         yield from Energy.fluxOptimizerScan(m2.p,-1*tweak_range,tweak_range,10)
 
-def slit_centering_scan(ic = sclr2_ch4):
 
+def peak_dcm_roll(tweak_range = 0.005):
+
+    yield from Energy.fluxOptimizerScan(dcm.r,-1*tweak_range,tweak_range,10)
+
+def center_ssa2(ic = sclr2_ch4):
+
+    yield from Energy.fluxOptimizerScan(ssa2.vcen,-0.05,0.05,10, ic = ic)
     yield from Energy.fluxOptimizerScan(ssa2.hcen,-0.05,0.05,10, ic = ic)
     yield from Energy.fluxOptimizerScan(ssa2.vcen,-0.02,0.02,10, ic = ic)
+
+
+def find_beam_at_ssa2(iter = 1):
+
+    #b shutter open 
+    caput("XF:03IDB-PPS{PSh}Cmd:Opn-Cmd", 1)
+
+    for i in range(iter):
+        #fully open ssa2
+        yield from bps.mov(ssa2.hgap, 2, ssa2.vgap, 2) 
+
+        #hfm
+        yield from peak_hfm_pitch(fine = False, tweak_range = 0.05)
+        yield from peak_hfm_pitch(fine = False, tweak_range = 0.02)
+        yield from bps.mov(ssa2.hgap, 0.1)
+        yield from peak_hfm_pitch(fine = False, tweak_range = 0.005)
+        yield from peak_hfm_pitch(fine = True, tweak_range = 0.2)
+        
+        #dcm_roll
+        yield from bps.mov(ssa2.hgap, 2 ,ssa2.vgap, 0.1)
+        yield from peak_dcm_roll(0.02)
+        
+        #fully open ssa2
+        yield from bps.mov(ssa2.hgap, 2, ssa2.vgap, 2)
+
+
+def find_beam_at_cam11():
+    
+    #cam06 out
+    caput('XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.VAL', -50)
+
+    yield from bps.mov(ssa2.hgap, 2, ssa2.vgap, 2)
+    yield from bps.mov(s5.hgap, 4, s5.vgap, 4)
+
+    yield from go_det("cam11")
+
+    zp_osa_pos = caget("XF:03IDC-ES{ANC350:5-Ax:1}Mtr.VAL")
+
+    caput("XF:03IDC-ES{ANC350:5-Ax:1}Mtr.VAL", zp_osa_pos+2700)
+
+    #open c shutter
+    caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0", 1)
+
+    #move beam stop
+    zp_bsx_pos = caget("XF:03IDC-ES{ANC350:8-Ax:1}Mtr.VAL")
+    caput("XF:03IDC-ES{ANC350:8-Ax:1}Mtr.VAL", zp_bsx_pos+100)
+    
+
+
+
+
+
+
+
+
+
+
 
 
 

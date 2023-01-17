@@ -62,8 +62,10 @@ def erf_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
             popt,pcov=curve_fit(erfunc4,xdata,ydata,p0=[edge_pos,0.05,0.5,0,0])
             fit_data=erfunc4(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
     plt.plot(xdata,fit_data)
-    plt.title('sid= %d edge = %.3f, FWHM = %.2f nm' % (sid,popt[0], popt[1]*2.3548*1000.0))
+    plt.title(f'{sid = }, edge = {popt[0] :.3f}, FWHM = {popt[1]*2354.8 :.2f} nm \n {zp.zpz1.position = :.3f}')
     return (popt[0],popt[1]*2.3548*1000.0)
+
+
 def sici_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
     h=db[sid]
     sid=h['start']['scan_id']
@@ -815,76 +817,22 @@ def scan_info(sid):
     return(si)
 
 
-def update_motor_position(motor, PV_name):
 
-    " updates readback and set point of a given PV"
-
-    #get readback 
-    dcm_p_rbk = motor.position
-    #dcm_p_set = dcm.p.user_setpoint.value #method to get set point val
-    yield from bps.sleep(2)
-    caput(PV_name,dcm_p_rbk)
-
-def synchronize_mirror_positions():
+def sync_all_mirror_pitch():
     
     """
     synchronizes necessary mirror motor positions and reengage the feedbacks
     TODO conditions for enganging and error handling
     
     """
-    
-    bbpm_auto = "XF:03ID{XBPM:17}AutoFbEn-Cmd"
-    bbpm_x = "XF:03ID-BI{EM:BPM1}fast_pidX.FBON"
-    bbpm_y = "XF:03ID-BI{EM:BPM1}fast_pidY.FBON"
-
-    bbpm_x_rbk_val = caget("XF:03ID-BI{EM:BPM1}PosX:MeanValue_RBV")
-    bbpm_y_rbk_val = caget("XF:03ID-BI{EM:BPM1}PosY:MeanValue_RBV")
-
-    hcm_pf_sts = "XF:03IDC-CT{FbPid:01}PID:on"
-    hfm_pf_sts = "XF:03IDC-CT{FbPid:02}PID:on"
-    
-
-    #make sure feedbacks are off
-    caput(bbpm_auto,0)
-    yield from bps.sleep(2)
-    caput(bbpm_x, 0)
-    caput(bbpm_y,0)
-    yield from bps.sleep(2)
-    print("B feedbacks are off")
-
-    caput(hcm_pf_sts,0)
-    yield from bps.sleep(2)
-    caput(hfm_pf_sts,0)
-    yield from bps.sleep(2)
-    print("mirror slow feedbacks are off")
-
-
-    yield from update_motor_position(dcm.p, "XF:03IDA-OP{Mon:1-Ax:P}Mtr.VAL")
-    print("DCM Pitch ; Done!")
-
-    yield from update_motor_position(dcm.r, "XF:03IDA-OP{Mon:1-Ax:R}Mtr.VAL")
-    print("DCM Roll ; Done!")
-
-    yield from update_motor_position(m2.p, "XF:03IDA-OP{Mir:2-Ax:P}Mtr.VAL")
-    print("HFM Pitch ; Done!")
-
-    yield from update_motor_position(m1.p, "XF:03IDA-OP{Mir:1-Ax:P}Mtr.VAL")
+    yield from bps.mov(m1.p,m1.p.position)
     print("HCM Pitch ; Done!")
-
-    #reenable slow feedbacks
-    caput(hcm_pf_sts,1)
-    yield from bps.sleep(2)
-    caput(hfm_pf_sts,1)
-    yield from bps.sleep(2)
-    print("mirror slow feedbacks are on")
-
-    #reenable B feedbacks
-    caput(bbpm_x, bbpm_x_rbk_val)
-    yield from bps.sleep(2)
-    caput(bbpm_y, bbpm_y_rbk_val)
-    yield from bps.sleep(2)
-
-    print("B Feedbacks are on")
+    yield from bps.mov(m2.p,m2.p.position)
+    print("HFM Pitch ; Done!")
+    yield from bps.mov(dcm.p,dcm.p.position)
+    print("DCM Pitch ; Done!")
+    yield from bps.mov(dcm.r,dcm.r.position)
+    print("DCM Roll ; Done!")
 
 
 def all_mll_optics_out():

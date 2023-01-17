@@ -585,6 +585,42 @@ def theta_dexela(motorName,angle_start,angle_end,angle_step,exposure_time):
 
     yield from bps.mov(motorName,theta_zero)
 
+def zp_dexela_mosaic(scan_dim,exposure_time, filename = "test"):
+
+
+    pv_filename = epics.PV("XF:03IDC-ES{Dexela:1}TIFF1:FileName")
+    pv_.put(filename)
+
+    #caput("XF:03IDC-ES{Dexela:1}TIFF1:FileNumber", 0)
+
+
+    smarx_i = smarx.position
+    smary_i = smary.position
+
+    X_position = np.arange(0, scan_dim, 5)
+    Y_position = np.arange(0, scan_dim, 5)
+    
+    caput('XF:03IDC-ES{Dexela:1}cam1:AcquireTime',exposure_time)
+    caput('XF:03IDC-ES{Dexela:1}cam1:AcquirePeriod',exposure_time+0.2)
+    #open c
+    caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0",1)
+
+    for i in Y_position:
+        for j in X_position:
+            print((i,j))
+
+            yield from bps.movr(smary, i*0.001)
+            yield from bps.movr(smarx, j*0.001)
+            caput('XF:03IDC-ES{Dexela:1}TIFF1:Capture',1)
+            yield from bps.sleep(exposure_time+0.2)
+            yield from bps.sleep(1)
+    
+    #close c
+    caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0",0)
+
+    yield from bps.mov(smarx, smarx_i)
+    yield from bps.mov(smary,smary_i) 
+
 
 def repeat_2d(zs,ze,z_num):
     z_0 = zps.zpsz.position

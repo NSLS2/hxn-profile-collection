@@ -209,8 +209,9 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     #print(my)
     #m_num = np.shape(mx)
     #print('load mask 2')
-    #mm = np.load('/data/users/2022Q1/Singer_2022Q1/S1/mask.npy')
-    mask = np.load('/data/users/2022Q3/Liu_2022Q3/NiMn_NiCo_pristine_diff/mask.npy')
+    #mask = np.load('/data/users/2022Q3/Singer_2022Q3/Fe3O4_100nm_post-treatment/mask.npy')
+    #mask = np.load('/data/users/2022Q1/Singer_2022Q1/50nm_post-treatment_rocking/mask_userversion.npy')
+    #mask = np.load('/data/users/2022Q3/Xue_2022Q3/mask.npy')
     #mask = np.load('/data/users/2022Q3/Liu_2022Q3/NiMn_NiCo_4.5V_diff/mask.npy')
     #mm3 = np.load('/data/users/2021Q2/Liu_2021Q2/Z150_1/mask.npy')
     for i in range(num_frame):
@@ -220,7 +221,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
         t = np.flipud(images[i,:,:]).T
         #t = t * mask
         t = t*ic[0] / ic[i]
-        t = t #* mask
+        #t = t * mask
         #t *= (1-mm)
         #t *= (1-mm2)
         ##t = np.flipud(t)
@@ -256,7 +257,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
         #t[index] = 0
         #t[mask == 1] = 0
         #t[164,107] = 0
-        diff_array[:,:,i] = t * mask
+        diff_array[:,:,i] = t #+* mask
         #diff_array_l[:,:,i] = t[:158,:]
         #diff_array_r[:,:,i] = t[158:,:]
 
@@ -400,11 +401,11 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     #"""
 
     if save_flag:
-        io.imsave('/data/users/2022Q3/Liu_2022Q3/NiMn_NiCo_d2.7V_diff/'+scan_num+'_roi.tif',roi.astype(np.float32))
+        io.imsave('/data/users/2022Q3/Singer_2022Q3/BTO_10nm_38degphi/rock/'+scan_num+'_roi.tif',roi.astype(np.float32))
         #io.imsave('/GPFS/XF03ID1/users/2022Q2/Huang_2022Q2/Huolin/pristine/rock_'+scan_num+'_roi_r.tif',roi_r.astype(np.float32))
         #io.imsave('/GPFS/XF03ID1/users/2022Q2/Huang_2022Q2/Huolin/pristine/rock_'+scan_num+'_roi_l.tif',roi_l.astype(np.float32))
-        io.imsave('/data/users/2022Q3/Liu_2022Q3/NiMn_NiCo_d2.7V_diff/'+scan_num+'_xrf.tif',xrf.astype(np.float32))
-        io.imsave('/data/users/2022Q3/Liu_2022Q3/NiMn_NiCo_d2.7V_diff/'+scan_num+'_diff_data.tif',diff_array.astype(np.float32))
+        io.imsave('/data/users/2022Q3/Singer_2022Q3/BTO_10nm_38degphi/rock/'+scan_num+'_xrf.tif',xrf.astype(np.float32))
+        io.imsave('/data/users/2022Q3/Singer_2022Q3/BTO_10nm_38degphi/rock/'+scan_num+'_diff_data.tif',diff_array.astype(np.float32))
         #io.imsave('/GPFS/XF03ID1/users/2022Q2/Huang_2022Q2/Huolin/pristine/rock_'+scan_num+'_diff_data_r.tif',diff_array_r.astype(np.float32))
         #io.imsave('/GPFS/XF03ID1/users/2022Q2/Huang_2022Q2/Huolin/pristine/rock_'+scan_num+'_diff_data_l.tif',diff_array_l.astype(np.float32))
 
