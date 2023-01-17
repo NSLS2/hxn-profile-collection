@@ -14,8 +14,9 @@ class InsertionDevice(Device):
 
 
     def set(self, *args, **kwargs):
-        from ophyd.utils import set_and_wait
-        set_and_wait(self.brake, 1)
+        # from ophyd.utils import set_and_wait
+        # set_and_wait(self.brake, 1)
+        self.brake.set(1).wait()
         return self.gap.set(*args, **kwargs)
 
     def stop(self, *, success=False):
