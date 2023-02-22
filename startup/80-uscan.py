@@ -589,7 +589,7 @@ def zp_dexela_mosaic(scan_dim,exposure_time, filename = "test"):
 
 
     pv_filename = epics.PV("XF:03IDC-ES{Dexela:1}TIFF1:FileName")
-    pv_.put(filename)
+    pv_filename.put(filename)
 
     #caput("XF:03IDC-ES{Dexela:1}TIFF1:FileNumber", 0)
 

@@ -8,6 +8,8 @@ from epics import caget, caput
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
+wd = "/nsls2/data/hxn/shared/config/bluesky/profile_collection/startup/"
+
 class HXNEnergy():
     
     def __init__(self, ugap_,bragg_e, dcm_pitch, ic1, calib_file_csv):
@@ -18,8 +20,11 @@ class HXNEnergy():
         self.ic1 = ic1
         self.calib_file = calib_file_csv
         self.df = pd.read_csv(self.calib_file)
-        self.calibrate_ugap()
-        self.calibrate_dcm_pitch()
+        self.calibrate_optics(False)
+        #self.calibrate_ugap()
+        #self.calibrate_dcm_pitch()
+        #self.calibrate_hfm_pitch()
+        #self.calibrate_dcm_roll()
 
         self.defineFeedBackPVs()
 
@@ -33,20 +38,36 @@ class HXNEnergy():
         self.xbpm_x_val = "XF:03ID-BI{EM:BPM1}fast_pidX.VAL"
         self.xbpm_x_val = "XF:03ID-BI{EM:BPM1}fast_pidY.VAL"
 
+
+    def get_values(self,targetE):
+
+        u_gap, harmonics = self.gap(targetE, harmonicsChoice = -1)
+        dcm_pitch = self.calculatePitch(targetE)
+        dcm_roll = self.calculateRoll(targetE)
+        hfm_pitch = self.calculateHFMPitch(targetE)
+        mirror_coating = self.findAMirror(targetE)
+
+        logger.info(f"{u_gap = :.1f}\n{harmonics = }\n{dcm_pitch = :.4f}\n"
+                    f"{dcm_roll = :.4f}\n{hfm_pitch = :.4f}\n{mirror_coating = }")
+
+        return u_gap, harmonics,dcm_pitch,dcm_roll,hfm_pitch,mirror_coating
+
+
+
     def calcGap(self,E,harmonics = 5, offset = 0):
         E1 = E/harmonics
         calc_gap =  np.polyval(self.ugap_coeffs, E1) + offset
         return (np.around(calc_gap,1))
 
-    def gap(self,targetE, harmonicsChoice = "auto"):
+    def gap(self,targetE, harmonicsChoice = -1):
         
         "Estimate a suitable gap for target energy"
 
-        if harmonicsChoice == "auto":
+        if harmonicsChoice == -1:
         
             harmonics = np.array([3,5,7,9]) #harmonics options
 
-            if targetE>5.8 and targetE<25:     # if dialed a wrong number
+            if targetE>4.99 and targetE<25:     # if dialed a wrong number
                 
                 opt = np.array([self.calcGap(targetE, harmonics = hm) for hm in harmonics])
                 idx = np.where(np.logical_and(opt>=5600, opt<=10000)) #5400 beacuse of the ugap scan limit
@@ -74,7 +95,7 @@ class HXNEnergy():
     
         EnergyToMirror = {(5,8.5):'Si',(8.5,15):'Cr',(15,20):'Rh',(20,25):'Pt'}
     
-        if not 5.5 <= e <= 25:
+        if not 4.99 <= e <= 25:
             raise ValueError (" Energy value out of range")
         
         else:
@@ -101,12 +122,138 @@ class HXNEnergy():
          #caput("XF:03IDA-OP{Mir:2-Ax:Y}Mtr",positions[1])
          yield from bps.mov(m1.y, positions[0], m2.y, positions[1] )
 
+    def calibrate_optics(self, plot_after = False):
+
+        en = self.df["energy"].to_numpy()
+
+        adj_E = en/self.df["harmonic"].to_numpy()
+        ugaps = self.df["ugap"].to_numpy()
+        self.ugap_coeffs = np.polyfit(adj_E, ugaps, 3)
+
+        dcm_p = self.df["dcmPitch"].to_numpy()
+        self.dcm_p_coeffs = np.polyfit(en, dcm_p, 3)
+
+        m2_p = self.df["hfmPitch"].to_numpy()
+        self.m2p_coeffs = np.polyfit(en, m2_p, 3)
+
+        dcm_r = self.df["dcmRoll"].to_numpy()
+        self.dcm_r_coeffs = np.polyfit(en, dcm_r, 3)
+
+        if plot_after:
+
+            fig, axs = plt.subplots(2,2,figsize = (8,8))
+            fig.subplots_adjust(hspace = 0.8, wspace = 0.8)
+            fig.suptitle("Energy Calibration")
+            fig.show()
+            axs = axs.ravel()
+
+            axs[0].scatter(adj_E,ugaps,label='ugap')
+            axs[0].plot(adj_E, np.polyval(self.ugap_coeffs, adj_E),'r', label='ugap_fit')
+            axs[0].set_title("First order E vs Ugap")
+            axs[0].set_xlabel("First Order Energy (keV)")
+            axs[0].set_ylabel("undulator Gap (um)")
+
+            axs[1].scatter(en,dcm_p,label='dcm_p')
+            axs[1].plot(en, np.polyval(self.dcm_p_coeffs, en),'r', label='dcm_p_fit')
+            axs[1].set_title("E vs dcm_pitch")
+            axs[1].set_xlabel("Energy (keV)")
+            axs[1].set_ylabel("dcm_pitch")
+
+            axs[2].scatter(en,m2_p,label='m2_p')
+            axs[2].plot(en, np.polyval(self.m2p_coeffs, en),'r', label='m2_p_fit')
+            axs[2].set_title("E vs m2_pitch")
+            axs[2].set_xlabel("Energy (keV)")
+            axs[2].set_ylabel("m2_pitch")
+            
+            axs[3].scatter(en,dcm_r,label='dcm_r')
+            axs[3].plot(en, np.polyval(self.dcm_r_coeffs, en),'r', label='dcm_r_fit')
+            axs[3].set_title("E vs dcm_roll")
+            axs[3].set_xlabel("Energy (keV)")
+            axs[3].set_ylabel("dcm_roll")
+        
+
+
+    '''
+    def calibrate_ugap(self, plot_after = False):
+
+        adj_E = self.df["energy"].to_numpy()/self.df["harmonic"].to_numpy()
+        self.ugap_coeffs = np.polyfit(adj_E, self.df["ugap"].to_numpy(), 3)
+
+
+        if plot_after:
+
+            plt.figure()
+            plt.scatter(adj_E,self.df["ugap"],label='data')
+            plt.plot(adj_E, np.polyval(self.ugap_coeffs, adj_E),'r', label='fit')
+            plt.xlabel("First Order Energy (keV)")
+            plt.ylabel("undulator Gap (um)")
+            plt.legend()
+            plt.title(f"Undulator Calib_{pd.Timestamp.now().month}_{pd.Timestamp.now().year}")
+            plt.show()
+
+    def calibrate_dcm_pitch(self,plot_after = False):
+        
+        en, dcm_p = self.df["energy"].to_numpy(),self.df["dcmPitch"].to_numpy()
+        self.dcm_p_coeffs = np.polyfit(en, dcm_p, 3)
+        
+        if plot_after:
+
+            plt.figure()
+            plt.scatter(self.df["energy"],self.df["dcmPitch"],label='dcm_pitch')
+            plt.plot(self.df["energy"], np.polyval(self.dcm_p_coeffs, self.df["energy"]),'r', label='fit')
+            plt.xlabel("Energy (keV)")
+            plt.ylabel("undulator Gap (um)")
+            plt.legend()
+            plt.title(f"Undulator Calib_{pd.Timestamp.now().month}_{pd.Timestamp.now().year}")
+            plt.show()
+
+    def calibrate_hfm_pitch(self,plot_after = False):
+
+        self.m2p_coeffs = np.polyfit(self.df["energy"].to_numpy(), self.df["hfmPitch"].to_numpy(), 3)
+
+
+        if plot_after:
+
+            plt.figure()
+            plt.scatter(self.df["energy"],self.df["hfmPitch"],label='hfm_pitch')
+            plt.plot(self.df["energy"], np.polyval(self.m2p_coeffs, self.df["energy"]),'r', label='fit')
+            plt.xlabel("Energy (keV)")
+            plt.ylabel("hfm_pitch (um)")
+            plt.legend()
+            plt.title(f"Undulator Calib_{pd.Timestamp.now().month}_{pd.Timestamp.now().year}")
+            plt.show()
+
+    def calibrate_dcm_roll(self, plot_after = False):
+        
+        self.dcm_r_coeffs = np.polyfit(self.df["energy"].to_numpy(), self.df["dcmRoll"].to_numpy(), 3)
+
+        if plot_after:
+
+            plt.figure()
+            plt.scatter(self.df["energy"],self.df["dcmRoll"],label='dcm_roll')
+            plt.plot(self.df["energy"], np.polyval(self.dcm_r_coeffs, self.df["energy"]),'r', label='fit')
+            plt.xlabel("Energy (keV)")
+            plt.ylabel("dcm_roll (um)")
+            plt.legend()
+            plt.title(f"Undulator Calib_{pd.Timestamp.now().month}_{pd.Timestamp.now().year}")
+            plt.show()
+
+    '''
+
     def calculatePitch(self,targetE, offset = 0):
         
         calc_pitch =  np.polyval(self.dcm_p_coeffs, targetE) + offset
-        return calc_pitch 
+        return np.around(calc_pitch,4) 
 
-    def move(self,targetE, harmChoice = "auto", moveMonoPitch = True, moveMirror = "auto") :
+    def calculateRoll(self,targetE):
+        calc_r =  np.polyval(self.dcm_r_coeffs, targetE)
+        return (np.around(calc_r,4))
+
+    def calculateHFMPitch(self,targetE):
+        calc_m2p =  np.polyval(self.m2p_coeffs, targetE)
+        return (np.around(calc_m2p,4))
+
+    def move(self,targetE, harmChoice = -1, moveMonoPitch = True, moveMirror = "auto") :
         
         bbpm_auto = "XF:03ID{XBPM:17}AutoFbEn-Cmd"
         bbpm_x = "XF:03ID-BI{EM:BPM1}fast_pidX.FBON"
@@ -114,7 +261,11 @@ class HXNEnergy():
 
         gap, hrm = Energy.gap(targetE,harmChoice)
         dcm_p_target = self.calculatePitch(targetE)
-        logger.info(f"target pitch = {dcm_p_target}")
+        hfm_p_target = self.calculateHFMPitch(targetE)
+        dcm_r_target = self.calculateRoll(targetE)
+
+
+        logger.info(f"{dcm_p_target = :.4f}, {hfm_p_target = :.2f}, {dcm_r_target = :.4f}")
 
         if gap<5200 and gap>10000:
             raise ValueError ("Incorrect gap calculation")
@@ -129,92 +280,54 @@ class HXNEnergy():
 
             if moveMonoPitch:
 
-                if caget(bbpm_auto) or caget(bbpm_x) or caget(bbpm_y):
-                    print(True)
-                    caput(bbpm_auto,0)
-                    yield from bps.sleep(2)
-                    caput(bbpm_x, 0)
-                    caput(bbpm_y,0)
-                    yield from bps.sleep(2)
                     
-                    caput(self.hcm_pf_sts,0)
-                    yield from bps.sleep(2)
-                    caput(self.hfm_pf_sts,0)
-                    yield from bps.sleep(2)
-                    logger.info(f"Moving Mono Pitch to {dcm_p_target}")
-                    yield from bps.mov(dcm.p,dcm_p_target)
-                    yield from bps.sleep(2)
-                    caput(self.hcm_pf_sts,1)
-                    yield from bps.sleep(2)
-                    caput(self.hfm_pf_sts,1)
-                        
-                    yield from bps.sleep(2)
-                    caput(bbpm_auto,1)
-                    yield from bps.sleep(2)
-                    caput(bbpm_x, 1)
-                    yield from bps.sleep(2)
-                    caput(bbpm_y,1)
-                    yield from bps.sleep(5)
-
-                else:
-
-                    caput(self.hcm_pf_sts,0)
-                    yield from bps.sleep(2)
-                    caput(self.hfm_pf_sts,0)
-                    yield from bps.sleep(2)
-                    logger.info(f"Moving Mono Pitch to {dcm_p_target}")
-                    yield from bps.mov(dcm.p,dcm_p_target)
+                logger.info(f"Moving {dcm_p_target = :4f}")
+                yield from bps.mov(dcm.p,dcm_p_target)
+                logger.info(f"Moving {dcm_r_target = :4f}")
+                yield from bps.mov(dcm.r,dcm_r_target)
+                logger.info(f"Moving {hfm_p_target = :4f}")
+                yield from bps.mov(m2.p, hfm_p_target)
 
             if not moveMirror == "ignore":
                 yield from self.moveMirror(targetE, moveMirror)
-
-
-            '''
-            caput(self.hcm_pf_sts,1)
-            yield from bps.sleep(2)
-            caput(self.hfm_pf_sts,1)
-            yield from bps.sleep(2)
-            '''
             
             logger.info("Energy change completed")
 
 
-    def calibrate_ugap(self):
 
-        adj_E = self.df["energy"].to_numpy()/self.df["harmonic"].to_numpy()
-        self.ugap_coeffs = np.polyfit(adj_E, self.df["ugap"].to_numpy(), 3)
 
-    def calibrate_dcm_pitch(self):
-        
-        en, dcm_p = self.df["energy"].to_numpy(),self.df["dcmPitch"].to_numpy()
-        self.dcm_p_coeffs = np.polyfit(en, dcm_p, 3)
-        #logger.info(f" DCM_P Coefficients: {self.dcm_p_coeffs}")
-
-    def calibrate_hfm_pitch(self):
-        
-        self.dcm_p_coeffs = np.polyfit(self.df["energy"].to_numpy(), self.df["hfmPitch"].to_numpy(), 3)
-
-        pass
-
-    def calibrate_dcm_roll(self):
-        pass
-
-    @staticmethod
-    def autoUGapCalibration(EStart = 12, EEnd = 12.5, EStep = 10):
+    
+    def autoUGapCalibration(self,EStart = 8.5, EEnd = 9.5, EStep = 5):
 
         #Make sure to go to Pt coatings
 
-        caput("XF:03IDA-OP{Mir:2-Ax:Y}Mtr", 4)
-        caput("XF:03IDA-OP{Mir:1-Ax:Y}Mtr", 13.5)
+        #caput("XF:03IDA-OP{Mir:2-Ax:Y}Mtr", 4)
+        #caput("XF:03IDA-OP{Mir:1-Ax:Y}Mtr", 13.5)
+
+        #change IC1 sensivity to 5 um
+        #not that we are just caput the position of the value
+
+                            #move out,FS if in 
+
+        if caget('XF:03IDA-OP{FS:1-Ax:Y}Mtr.VAL')<-50:
+
+            caput('XF:03IDA-OP{FS:1-Ax:Y}Mtr.VAL', -20.)
+            yield from bps.sleep(10)
+            #caput('XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.VAL', -50)
+
+
+
+        caput("XF:03IDC-CT{SR570:1}sens_num.VAL",3)
+        caput("XF:03IDC-CT{SR570:1}sens_unit.VAL",2)
 
         #open ssa2        
-        caput('XF:03IDC-OP{Slt:SSA2-Ax:XAp}Mtr.VAL', 2.5)
-        caput('XF:03IDC-OP{Slt:SSA2-Ax:YAp}Mtr.VAL', 2.5)
+        caput('XF:03IDC-OP{Slt:SSA2-Ax:XAp}Mtr.VAL', 2)
+        caput('XF:03IDC-OP{Slt:SSA2-Ax:YAp}Mtr.VAL', 2)
 
-        #move out,FS if in 
 
-        caput('XF:03IDA-OP{FS:1-Ax:Y}Mtr.VAL', -20.)
-        #caput('XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.VAL', -50)
+
+        #setm2pf to 10
+        caput("XF:03IDA-OP{HFM:1-Ax:PF}Mtr.VAL", 10)
 
         ic1_init = sclr1_ch2.get()
         ugap_offset = 0
@@ -226,7 +339,11 @@ class HXNEnergy():
         print(df.head())
         yield from bps.sleep(2)
 
-        for i in range(len(ePoints)):
+        for i in tqdm.tqdm(range(len(ePoints)),desc = 'Undulator Energy Calibration'):
+
+            yield from check_for_beam_dump(1000)
+
+        #for i in range(len(ePoints)):
 
             if sclr2_ch2.get() < ic1_init*0.25:
                 raise RuntimeError ("Ion chamber value dropped; aborting calibration")
@@ -234,9 +351,11 @@ class HXNEnergy():
             if sclr2_ch2.get() < ic1_init*0.5:
                 yield from bps.mov(ssa2.vgap,1)
                 yield from fluxOptimizerScan(dcm.r,-0.03, 0.03, 12, ic = sclr2_ch2, moveToMax = True)
-                yield from bps.mov(ssa2.vgap,2.)
+                yield from bps.mov(ssa2.vgap,2)
 
-            gap_, hrm = Energy.gap(df["energy"][i])
+            target_e = df["energy"][i]
+
+            gap_, hrm = Energy.gap(target_e)
             gap = gap_+ np.around(ugap_offset,1)
 
             if abs(gap-ugap.position)>2000 and gap<5200 and gap>10000:
@@ -246,16 +365,36 @@ class HXNEnergy():
                 yield from bps.mov(ugap, gap)
                 logger.info("Gap moved")
 
-            yield from bps.mov(e,(df["energy"][i]))
+            yield from bps.mov(e,target_e)
+            yield from self.moveMirror(target_e)
             yield from bps.sleep(2)
-            yield from fluxOptimizerScan(ugap,-60, 60, 12, ic = sclr2_ch2, moveToMax = True)
+            yield from Energy.fluxOptimizerScan(ugap,-40, 40, 40, ic = sclr2_ch2, moveToMax = True)
             #yield from fluxOptimizerScan(ugap,-5, 5, 10, ic = xbpm, moveToMax = True)
             #if i%2 == 0
-            logger.info("performing m2_p centering")
-            yield from bps.mov(ssa2.hgap,1)
-            yield from fluxOptimizerScan(m2.p,-0.005, 0.005, 10, ic = sclr2_ch2, moveToMax = True)
-            yield from bps.mov(ssa2.hgap,2.5)
+
+            dcm_p_target = self.calculatePitch(target_e)
+            yield from bps.mov(dcm.p,dcm_p_target)
+            
+            logger.info("performing m2_p course centering")
+            yield from bps.mov(ssa2.hgap,2, ssa2.vgap,2)
+            yield from Energy.fluxOptimizerScan(m2.p,-0.005, 0.005, 10, ic = sclr2_ch2, moveToMax = True)
+            yield from Energy.fluxOptimizerScan(dcm.p,-0.01, 0.01, 10, ic = sclr2_ch2, moveToMax = True)
+
+            '''
+            yield from bps.mov(ssa2.hgap,0.1,ssa2.vgap,2 )
+            yield from fluxOptimizerScan(m2.pf,-0.2, 0.2, 10, ic = sclr2_ch2, moveToMax = True)
+            yield from bps.mov(ssa2.hgap,2.0, ssa2.vgap,0.1)
             yield from fluxOptimizerScan(dcm.p,-0.005, 0.005, 10, ic = sclr2_ch2, moveToMax = True)
+            '''
+            
+            
+            logger.info("optimize beam at ssa2")
+            yield from find_beam_at_ssa2(500,2)
+            m2_p = m2.p.position
+            yield from bps.mov(m2.pf, 10)
+            yield from bps.mov(m2.p,m2_p)
+            yield from bps.sleep(5)
+
 
             df["Time Stamp"].at[i] = pd.Timestamp.now()
             df['harmonic'].at[i] = hrm
@@ -264,7 +403,7 @@ class HXNEnergy():
             df['dcmRoll'].at[i] = dcm.r.position
             df['hfmPitch'].at[i] = m2.p.position
             df['IC1'].at[i] = sclr2_ch2.get()
-            df.to_csv("ugap_calib.csv",float_format= '%.5f')
+            df.to_csv(wd+"ugap_calib_01302023.csv",float_format= '%.5f')
             plt.close('all')
 
             ugap_offset = ugap.position - gap_
@@ -328,11 +467,6 @@ class HXNEnergy():
             yield from bps.mov(motor, MtrPos)
             #print(peakPos)
             return peakPos
-        
-
-
-Energy = HXNEnergy(ugap,e,dcm.p, "ic3", "/nsls2/data/hxn/shared/config/bluesky/profile_collection/startup/ugap_calib.csv")
-
 
 def peak_hfm_pitch(fine = False, tweak_range = 0.005):
 
@@ -353,34 +487,76 @@ def center_ssa2(ic = sclr2_ch4):
     yield from Energy.fluxOptimizerScan(ssa2.vcen,-0.02,0.02,10, ic = ic)
 
 
-def find_beam_at_ssa2(iter = 1):
+def find_beam_at_ssa2(ic1_target_k = 600, max_iter = 3):
+    
+    #move out FS
+    caput('XF:03IDA-OP{FS:1-Ax:Y}Mtr.VAL', -20.)
+    yield from bps.sleep(10)
+    caput("XF:03IDA-BI{FS:1-CAM:1}cam1:Acquire",0)
+
+    #move in CAM06
+    caput('XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.VAL', 0)
+    caput("XF:03IDC-ES{CAM:06}cam1:Acquire",1)
 
     #b shutter open 
     caput("XF:03IDB-PPS{PSh}Cmd:Opn-Cmd", 1)
 
-    for i in range(iter):
+    #get ic1 sensitivity
+    ic_sens = caget("XF:03IDC-CT{SR570:1}sens_num.VAL")
+    
+    #change IC1 sensivity to 5 um
+    #caput the position of the value
+    caput("XF:03IDC-CT{SR570:1}sens_num.VAL",2)
+    caput("XF:03IDC-CT{SR570:1}sens_unit.VAL",2)
+
+    #close b shutter, so that first iter works
+    caput("XF:03IDB-PPS{PSh}Cmd:Cls-Cmd", 1)
+    yield from bps.sleep(2)
+
+    iter=0
+
+    while caget("XF:03IDC-ES{Sclr:2}_cts1.B")<ic1_target_k*1000 and iter<max_iter:
+        
+        #b shutter open 
+        caput("XF:03IDB-PPS{PSh}Cmd:Opn-Cmd", 1)
+        yield from bps.sleep(2)
+        
         #fully open ssa2
         yield from bps.mov(ssa2.hgap, 2, ssa2.vgap, 2) 
 
         #hfm
         yield from peak_hfm_pitch(fine = False, tweak_range = 0.05)
-        yield from peak_hfm_pitch(fine = False, tweak_range = 0.02)
-        yield from bps.mov(ssa2.hgap, 0.1)
-        yield from peak_hfm_pitch(fine = False, tweak_range = 0.005)
-        yield from peak_hfm_pitch(fine = True, tweak_range = 0.2)
+        yield from peak_dcm_roll(0.05)
+
+        if not caget("XF:03IDC-ES{Sclr:2}_cts1.B")<1000:
+
+            yield from peak_hfm_pitch(fine = False, tweak_range = 0.02)
+            yield from bps.mov(ssa2.hgap, 0.1)
+            yield from peak_hfm_pitch(fine = False, tweak_range = 0.005)
+            yield from peak_hfm_pitch(fine = True, tweak_range = 0.2)
         
         #dcm_roll
         yield from bps.mov(ssa2.hgap, 2 ,ssa2.vgap, 0.1)
-        yield from peak_dcm_roll(0.02)
+        yield from peak_dcm_roll(0.05)
         
         #fully open ssa2
         yield from bps.mov(ssa2.hgap, 2, ssa2.vgap, 2)
+        iter += 1
+
+        plt.close("all")
+
+    #change back to initial sensitivity 
+    caput("XF:03IDC-CT{SR570:1}sens_num.VAL",ic_sens)
 
 
 def find_beam_at_cam11():
+
+    #close c shutter
+    caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0", 0)
     
     #cam06 out
     caput('XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.VAL', -50)
+    caput("XF:03IDC-ES{CAM:06}cam1:Acquire",0)
 
     yield from bps.mov(ssa2.hgap, 2, ssa2.vgap, 2)
     yield from bps.mov(s5.hgap, 4, s5.vgap, 4)
@@ -404,7 +580,7 @@ def find_beam_at_cam11():
 
 
 
-
+Energy = HXNEnergy(ugap,e,dcm.p, "ic3", wd+"ugap_calib.csv")
 
 
 

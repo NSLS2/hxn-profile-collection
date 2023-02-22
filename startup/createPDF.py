@@ -170,6 +170,9 @@ class BlankPage:
 
 def setup_pdf():
     global G_INFO
+
+    today = date.today()
+
     if os.path.isfile(PDF_FILE):
         infoFile = open(PDF_FILE,'rb')
         new_info = pickle.load(infoFile)
@@ -181,7 +184,9 @@ def setup_pdf():
         new_info.fname = tmp_file
     if os.path.isfile(new_info.fname):
         print('{} already exists.'.format(new_info.fname)+' New pages will be appended.')
-    tmp_date = input('Please enter date'+'('+new_info.date+')'+':')
+    
+    tmp_date = today.strftime("%b-%d-%Y")
+    #tmp_date = input('Please enter date'+'('+new_info.date+')'+':')
     if tmp_date != '':
         new_info.date = tmp_date
     tmp_sample = input('Please enter sample description'+'('+new_info.sample+')'+':')

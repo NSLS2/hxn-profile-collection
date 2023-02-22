@@ -45,11 +45,14 @@ CrXANES = {'high_e':6.0, 'high_e_zpz1':10.48, 'zpz1_slope':-5.04,
 MnXANES = {'high_e':6.6, 'high_e_zpz1':68.3165, 'zpz1_slope':-5.04,
           'energy':[(6.520,6.530,0.005),(6.531,6.580,0.001),(6.585,6.601,0.005)]}
                
-FeXANES = {'high_e':7.2, 'high_e_zpz1':6.542, 'zpz1_slope':-5.07,
+FeXANES = {'high_e':7.2, 'high_e_zpz1':6.615, 'zpz1_slope':-5.04,
           'energy':[(7.08,7.10,0.005),(7.101,7.140,0.001),(7.144, 7.2, 0.004)],}
 
-NiXANES = {'high_e':8.427, 'high_e_zpz1':58.32, 'zpz1_slope':-5.04,
-          'energy':[(8.30,8.32,0.005),(8.321,8.38,0.001),(8.382,8.430,0.005)],}
+FeXANES1 = {'high_e':7.2, 'high_e_zpz1':6.615, 'zpz1_slope':-5.04,
+          'energy':[(7.08,7.10,0.005),(7.101, 7.120, 0.001)],}
+
+NiXANES = {'high_e':8.300, 'high_e_zpz1':0.98, 'zpz1_slope':-5.04,
+          'energy':[(8.30,8.325,0.005),(8.326,8.360,0.001),(8.360,8.430,0.006)],}
 
 CuXANES = {'high_e':9.06,  'high_e_zpz1':-4.905, 'zpz1_slope':-5.04,
           'energy':[(8.96,8.975,0.005),(8.976,9.003,0.001)],}
@@ -90,10 +93,14 @@ def cbpm_on(action = True):
         caput(cbpm_y,0)
         time.sleep(2)
 
+def piezos_to_zero():
+
+    yield from bps.mov(zpssx,0,zpssy,0,zpssz,0)
+
 
 def peak_the_flux():
 
-    cbpm_on(True)
+    #cbpm_on(True)
 
     """ Scan the c-bpm set points to find IC3 maximum """
 
@@ -108,7 +115,7 @@ def peak_the_flux():
 
 def move_energy(e,zpz_ ):
     
-    cbpm_on(False)
+    #cbpm_on(False)
     yield from bps.sleep(1)
 
     #tuning the scanning pv on to dispable c bpms
@@ -119,7 +126,7 @@ def move_energy(e,zpz_ ):
     yield from mov_zpz1(zpz_)
     yield from bps.sleep(4)
 
-    cbpm_on(True)
+    #cbpm_on(True)
 
 
 
@@ -196,14 +203,13 @@ def generateEList(XANESParam = CrXANES, highEStart = True):
 
 
 
-def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,highEStart = False,
-                    doAlignScan = True, alignX = (-2,2,100,0.1,'Fe',0.7, True),
-                    alignY = (-2,2,100,0.1,'Fe',0.7, True), 
-                    pdfElem = ['Fe','Cr'],doScan = True, moveOptics = True,pdfLog = True, 
+def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,highEStart = True,
+                    doAlignScan = True, alignX = (-5,5,100,0.1,'Cr',0.5,-12,True),
+                    alignY = (-6,6,120,0.1,'Cr',0.5,25.4, True), 
+                    pdfElem = ['Fe','Ca'],doScan = True, moveOptics = True,pdfLog = True, 
                     foilCalibScan = False, peakBeam = True,
-                    saveLogFolder = '/home/xf03id/Downloads'):
-                    
-                    
+                    saveLogFolder = '/nsls2/data/hxn/legacy/users/2023Q1/Gascon_2023Q1'):
+
     """ 
     Function to run XANES Scan. 
     
@@ -268,14 +274,23 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
     mot1_i = mot1.position
     mot2_i = mot2.position
 
-    tot_time = (x_num*y_num*accq_t*len(e_list))/3600
+    tot_time_ = (x_num*y_num*accq_t*len(e_list))
+    tot_time = tot_time_/3600
+    
+    if doAlignScan:
+        overhead = 1.5
+    else:
+        overhead = 1.25
 
-    check = input(f"This plan takes about {tot_time*1.5 :.1f} hours, continue (y/n)?")
+    end_datetime = time.ctime(time.time()+tot_time_*overhead)
+
+    check = input(f"This plan takes about {tot_time*overhead :.1f} hours,"
+                    f"Projected to {end_datetime} continue (y/n)?")
 
     if check == "y":
 
-
-        for i in range (len(e_list)):
+        for i in tqdm.tqdm(range(len(e_list)),desc = 'Energy Scan'):
+        #for i in range (len(e_list)):
 
             #if beam dump occur turn the marker on
             if sclr2_ch2.get()<10000:
@@ -283,7 +298,7 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
                 cbpm_on(False)
 
             #wait if beam dump occured beamdump
-            yield from check_for_beam_dump(threshold=10000)
+            yield from check_for_beam_dump(threshold=5000)
             
             if beamDumpOccured:
                 #wait for about 3 minutes for all the feedbacks to kick in
@@ -348,17 +363,32 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
 
             elif doAlignScan:
 
-                if alignX[-1]:
-                    yield from fly1d(dets_fs,zpssx,alignX[0],alignX[1],alignX[2],alignX[3])
-                    xcen = return_line_center(-1,alignX[4],alignX[5])
-                    yield from bps.movr(smarx, xcen*0.001)
-                    print(f"zpssx centered to {xcen}")
+                try:
 
-                if alignY[-1]:
-                    yield from fly1d(dets_fs,zpssy,alignY[0],alignY[1],alignY[2],alignY[3])
-                    ycen = return_line_center(-1,alignX[4],alignY[5])
-                    yield from bps.movr(smary, ycen*0.001)
-                    print(f"zpssy centered to {ycen}")
+                    if alignX[-1]:
+                        yield from fly1d(dets_fs,zpssx,alignX[0],alignX[1],alignX[2],alignX[3])
+                        #xcen = return_line_center(-1,alignX[4],alignX[5])
+                        xcen,_ = erf_fit(-1,alignX[4])
+                        yield from bps.movr(smarx, (xcen+2)*0.001)
+                        print(f"zpssx centered to {xcen}")
+                        plt.close()
+                        yield from piezos_to_zero()
+
+                    if alignY[-1]:
+                        yield from fly1d(dets_fs,zpssy,alignY[0],alignY[1],alignY[2],alignY[3])
+                        ycen = return_line_center(-1,alignX[4],alignY[5])
+                        #ycen,_ = erf_fit(-1,alignX[4])
+                        yield from bps.movr(smary, (ycen+0.5)*0.001)
+                        print(f"zpssy centered to {ycen}")
+                        plt.close()
+                        yield from piezos_to_zero()
+
+
+                except:
+                    pass
+                
+                yield from bps.movr(smarx,alignX[-2]/1000)
+                yield from bps.movr(smary,alignY[-2]/1000)
 
             print(f'Current scan: {i+1}/{len(e_list)}')
 
@@ -376,6 +406,10 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
             yield from bps.sleep(1)
 
             cbpm_on(True)
+            yield from piezos_to_zero()
+
+            yield from bps.movr(smarx,alignX[-2]/-1000)
+            yield from bps.movr(smary,alignY[-2]/-1000)
 
             #close fast shutter
             caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0) 

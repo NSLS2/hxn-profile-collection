@@ -818,13 +818,17 @@ def scan_info(sid):
 
 
 
-def sync_all_mirror_pitch():
+def engage_mirror_feedback():
     
     """
     synchronizes necessary mirror motor positions and reengage the feedbacks
     TODO conditions for enganging and error handling
     
     """
+
+    caput("XF:03IDC-CT{FbPid:01}PID:on",0)
+    caput("XF:03IDC-CT{FbPid:02}PID:on",0)
+
     yield from bps.mov(m1.p,m1.p.position)
     print("HCM Pitch ; Done!")
     yield from bps.mov(m2.p,m2.p.position)
@@ -833,6 +837,27 @@ def sync_all_mirror_pitch():
     print("DCM Pitch ; Done!")
     yield from bps.mov(dcm.r,dcm.r.position)
     print("DCM Roll ; Done!")
+
+    print("Engaging feedbacks....")
+
+    m1_p = m1.p.position
+    m2_p = m2.p.position
+
+    yield from bps.mov(m2.pf, 10)
+    #yield from bps.mov(m1.pf, 10)
+    caput("XF:03IDA-OP{HCM:1-Ax:PF}Mtr.VAL",10) #m1_pf
+    yield from bps.mov(m1.p,m1_p)
+    yield from bps.sleep(3)
+    yield from bps.mov(m2.p,m2_p)
+    yield from bps.sleep(3)
+
+    caput("XF:03IDC-CT{FbPid:01}PID.I",0) #PID I value to zero
+    caput("XF:03IDC-CT{FbPid:02}PID.I",0) #PID I value to zero
+
+    caput("XF:03IDC-CT{FbPid:01}PID:on",1)
+    caput("XF:03IDC-CT{FbPid:02}PID:on",1)
+
+    print("Feedbacks Engaged....")
 
 
 def all_mll_optics_out():
@@ -843,6 +868,50 @@ def all_mll_optics_out():
         yield from bps.mov(fdet1.x, -107)
 
     #yield from 
+
+
+def set_motor_val_zero(pv):
+    set_pv = pv+".SET"
+    val_pv = pv+".VAL"
+    caput(set_pv,1)
+    caput(val_pv,0)
+    caput(set_pv,0)
+
+
+def zp_optics_to_zero():
+    
+    zpsx = "XF:03IDC-ES{ZpPI:1-zpsx}Mtr"
+    zpsz = "XF:03IDC-ES{ZpPI:1-zpsz}Mtr"
+    osax = "XF:03IDC-ES{ANC350:5-Ax:0}Mtr"
+    osay = "XF:03IDC-ES{ANC350:5-Ax:1}Mtr"
+    bsx = "XF:03IDC-ES{ANC350:8-Ax:0}Mtr"
+    bsy = "XF:03IDC-ES{ANC350:8-Ax:1}Mtr"
+    bsz = "XF:03IDC-ES{ANC350:8-Ax:2}Mtr"
+
+    list_of_mtrs = [zpsx,zpsz,osax,osay,bsx,bsy,bsz]
+
+    for mtr in list_of_mtrs:
+        set_motor_val_zero(mtr)
+
+
+def save_cam06_images(filename = "crl"):
+
+    pv_filename = epics.PV("XF:03IDC-ES{CAM:06}TIFF1:FileName")
+    
+    e_ = np.round(e.position,2)
+    th = caget("XF:03IDA-OP{Lens:CRL-Ax:P}Mtr.RBV")
+    exp_time = caget("XF:03IDC-ES{CAM:06}cam1:AcquireTime_RBV")
+    ic1 =sclr2_ch2.get()
+    filename_ = f'{filename}_e_{e_}_th_{th :.2f}_exp_{exp_time}_ic1_{ic1}'
+    pv_filename.put(filename_)
+
+    for i in range(3):
+        print(i)
+        time.sleep(2)
+        caput('XF:03IDC-ES{CAM:06}TIFF1:WriteFile',1)
+
+
+
 
 
     

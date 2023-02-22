@@ -99,7 +99,8 @@ _fs_config_db1 = {'host': db1_addr,
                   'database': 'filestore-2'}
 
 # Benchmark file
-f_benchmark = open("/home/xf03id/benchmark.out", "a+")
+#f_benchmark = open("/home/xf03id/benchmark.out", "a+")
+f_benchmark = open("/nsls2/data/hxn/shared/config/bluesky/profile_collection/benchmark.out", "a+")
 datum_counts = {}
 
 def sanitize_np(val):
