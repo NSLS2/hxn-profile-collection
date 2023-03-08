@@ -388,6 +388,9 @@ configure_base(
 from bluesky.callbacks.best_effort import BestEffortCallback
 
 bec = BestEffortCallback()
+table_max_lines = 10
+
+#bec.disable_table()
 
 # un import *
 ns = get_ipython().user_ns

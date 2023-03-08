@@ -777,7 +777,7 @@ def plot_img_sum2(sid, det = 'merlin1', roi_flag=False,x_cen=0,y_cen=0,size=0):
 
 def plot_img_sum(sid, det = 'merlin1',mon ='sclr1_ch4', 
                  roi_flag=False,x_cen=0,y_cen=0,size=0,threshold=[0,1e6]):
-    h = db[sid1]
+    h = db[sid]
     sid = h.start['scan_id']
     imgs = list(h.data(det))
     #imgs = np.array(imgs)

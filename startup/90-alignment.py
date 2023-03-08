@@ -1,6 +1,7 @@
 import logging
 import scipy
 import pickle
+import json
 import numpy as np
 import pandas as pd
 
@@ -518,7 +519,7 @@ def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt_
         yield from bps.mov(zps.zpsth, x[i])
         if np.abs(x[i]) > 45.05:
             yield from fly1d(dets_fs,zpssz,start,end,num,acq_time)
-            tmp = return_line_center(-1, elem=elem,threshold=0.5,neg_flag=neg_flag)
+            tmp = return_line_center(-1, elem=elem,threshold=0.8,neg_flag=neg_flag)
             #tmp = return_tip_pos(-1, elem=elem)
             #tmp,fwhm = erf_fit(-1,elem = elem,linear_flag=False)
             y[i] = tmp*np.sin(x[i]*np.pi/180.0)
@@ -909,6 +910,45 @@ def save_cam06_images(filename = "crl"):
         print(i)
         time.sleep(2)
         caput('XF:03IDC-ES{CAM:06}TIFF1:WriteFile',1)
+
+
+
+def update_det_pos(det = "merlin"):
+    json_path = "/nsls2/data/hxn/shared/config/bluesky/profile_collection/startup/diff_det_pos.json"
+    with open("json_path", "r") as read_file:
+        diff = json.load(read_file)
+
+    if det == "merlin":
+
+        diff['merlin_pos']['diff_x'] = diff.x.position
+        diff['merlin_pos']['diff_y1'] = diff.y1.position
+        diff['merlin_pos']['diff_y2'] = diff.y2.position
+        diff['merlin_pos']['diff_z'] = diff.z.position
+        diff['merlin_pos']['diff_cz'] = diff.cz.position
+
+    elif det == "cam11":
+
+        diff['cam11_pos']['diff_x'] = diff.x.position
+        diff['cam11_pos']['diff_y1'] = diff.y1.position
+        diff['cam11_pos']['diff_y2'] = diff.y2.position
+        diff['cam11_pos']['diff_z'] = diff.z.position
+        diff['cam11_pos']['diff_cz'] = diff.cz.position
+
+    elif det == "telescope":
+
+        diff['telescope_pos']['diff_x'] = diff.x.position
+        diff['telescope_pos']['diff_y1'] = diff.y1.position
+        diff['telescope_pos']['diff_y2'] = diff.y2.position
+        diff['merlin_pos']['diff_z'] = diff.z.position
+        diff['merlin_pos']['diff_cz'] = diff.cz.position
+
+    else:
+        raise KeyError ("Undefined detector name")
+        
+    
+    with open(json_path, "w") as out_file:
+        json.dump(diff, out_file, indent = 6)
+        out_file.close()
 
 
 

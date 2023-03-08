@@ -46,10 +46,10 @@ MnXANES = {'high_e':6.6, 'high_e_zpz1':68.3165, 'zpz1_slope':-5.04,
           'energy':[(6.520,6.530,0.005),(6.531,6.580,0.001),(6.585,6.601,0.005)]}
                
 FeXANES = {'high_e':7.2, 'high_e_zpz1':6.615, 'zpz1_slope':-5.04,
-          'energy':[(7.08,7.10,0.005),(7.101,7.140,0.001),(7.144, 7.2, 0.004)],}
+          'energy':[(7.09,7.105,0.005),(7.106,7.141,0.001),(7.142,7.160,0.002),(7.160, 7.2, 0.004)],}
 
-FeXANES1 = {'high_e':7.2, 'high_e_zpz1':6.615, 'zpz1_slope':-5.04,
-          'energy':[(7.08,7.10,0.005),(7.101, 7.120, 0.001)],}
+FeXANES_ctrl = {'high_e':7.2, 'high_e_zpz1':6.575, 'zpz1_slope':-5.04,
+          'energy':[(7.09,7.105,0.005),(7.106,7.141,0.001),(7.142,7.160,0.002),(7.160, 7.2, 0.004)],}
 
 NiXANES = {'high_e':8.300, 'high_e_zpz1':0.98, 'zpz1_slope':-5.04,
           'energy':[(8.30,8.325,0.005),(8.326,8.360,0.001),(8.360,8.430,0.006)],}
@@ -204,8 +204,8 @@ def generateEList(XANESParam = CrXANES, highEStart = True):
 
 
 def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,highEStart = True,
-                    doAlignScan = True, alignX = (-5,5,100,0.1,'Cr',0.5,-12,True),
-                    alignY = (-6,6,120,0.1,'Cr',0.5,25.4, True), 
+                    doAlignScan = True, alignX = (-5,5,100,0.05,'Cr',0.5,True),
+                    alignY = (-6,6,120,0.05,'Cr',0.5, True), xy_offset = (0,0),
                     pdfElem = ['Fe','Ca'],doScan = True, moveOptics = True,pdfLog = True, 
                     foilCalibScan = False, peakBeam = True,
                     saveLogFolder = '/nsls2/data/hxn/legacy/users/2023Q1/Gascon_2023Q1'):
@@ -262,13 +262,12 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
     
     #opening fast shutter for initial ic3 reading
     caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',1) 
-    yield from bps.sleep(5)
+    yield from bps.sleep(2)
+
+    logger.info("Reading IC3 value")
     
     #get the initial ic3 reading for peaking the beam
     ic_3_init =  sclr2_ch4.get()
-     
-    #close fast shutter after initial ic3 reading
-    #caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0) 
     
     #remeber the start positions
     mot1_i = mot1.position
@@ -293,7 +292,7 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
         #for i in range (len(e_list)):
 
             #if beam dump occur turn the marker on
-            if sclr2_ch2.get()<10000:
+            if sclr2_ch2.get()<1000:
                 beamDumpOccured = True
                 cbpm_on(False)
 
@@ -302,7 +301,7 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
             
             if beamDumpOccured:
                 #wait for about 3 minutes for all the feedbacks to kick in
-                yield from bps.sleep(200)
+                yield from bps.sleep(120)
 
                 #redo the previous energy
                 e_t, zpz_t, *others = e_list.iloc[i-1]
@@ -387,13 +386,13 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
                 except:
                     pass
                 
-                yield from bps.movr(smarx,alignX[-2]/1000)
-                yield from bps.movr(smary,alignY[-2]/1000)
+                yield from bps.movr(smarx,xy_offset[0]/1000)
+                yield from bps.movr(smary,xy_offset[1]/1000)
 
             print(f'Current scan: {i+1}/{len(e_list)}')
 
             # do the fly2d scan
-            cbpm_on(False)
+            #cbpm_on(False)
 
             if dets == dets_fs: #for fast xanes scan, no transmission (merlin) in the list
 
@@ -405,11 +404,11 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
                 if doScan: yield from fly2d(dets, mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t)
             yield from bps.sleep(1)
 
-            cbpm_on(True)
+            #cbpm_on(True)
             yield from piezos_to_zero()
 
-            yield from bps.movr(smarx,alignX[-2]/-1000)
-            yield from bps.movr(smary,alignY[-2]/-1000)
+            yield from bps.movr(smarx,xy_offset[0]/-1000)
+            yield from bps.movr(smary,xy_offset[1]/-1000)
 
             #close fast shutter
             caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0) 

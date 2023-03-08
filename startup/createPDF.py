@@ -168,6 +168,52 @@ class BlankPage:
         f.addFromList(story,self.c)
 
 
+def setup_pdf_function(sample_name = "Precious", 
+                       experimenters = "HX,NU,SER", img_to_add = "/data/users/hxn_logo.png"):
+#def setup_pdf():
+    global G_INFO
+
+    today = date.today()
+
+    if os.path.isfile(PDF_FILE):
+        infoFile = open(PDF_FILE,'rb')
+        new_info = pickle.load(infoFile)
+    else:
+        new_info = exp_info()
+    #print('Create a pdf eLog file and record experiment information. Press ENTER to accept existing values.')
+    #tmp_file = input('Please enter file name '+'('+new_info.fname+')'+':')
+    tmp_file = "/data/current_user/elog.pdf"
+    if tmp_file != '':
+        new_info.fname = tmp_file
+    if os.path.isfile(new_info.fname):
+        print('{} already exists.'.format(new_info.fname)+' New pages will be appended.')
+    
+    tmp_date = today.strftime("%b-%d-%Y")
+    #tmp_date = input('Please enter date'+'('+new_info.date+')'+':')
+    if tmp_date != '':
+        new_info.date = tmp_date
+    #tmp_sample = input('Please enter sample description'+'('+new_info.sample+')'+':')
+    tmp_sample = sample_name
+    if tmp_sample != '':
+        new_info.sample = tmp_sample
+    #tmp_experimenter = input('Please enter experimenters'+'('+new_info.experimenter+')'+':')
+    tmp_experimenter = experimenters
+    if tmp_experimenter != '':
+        new_info.experimenter = tmp_experimenter
+    #tmp_pic = input('Please specify the image file you want to attach. Type no if no image will be attached'+'('+new_info.pic+')'+':')
+    tmp_pic  = img_to_add
+    
+    if tmp_pic !='':
+        if tmp_pic == 'no':
+            new_info.pic = ''
+        else:
+            new_info.pic = tmp_pic
+    infoFile = open(PDF_FILE,'wb')
+    pickle.dump(new_info,infoFile)
+    G_INFO = new_info
+
+
+#def setup_pdf(sample_name = "Precious", experimenters = "HX,NU,SER")
 def setup_pdf():
     global G_INFO
 
@@ -180,6 +226,7 @@ def setup_pdf():
         new_info = exp_info()
     print('Create a pdf eLog file and record experiment information. Press ENTER to accept existing values.')
     tmp_file = input('Please enter file name '+'('+new_info.fname+')'+':')
+    #tmp_file = "/data/current_user/elog.pdf"
     if tmp_file != '':
         new_info.fname = tmp_file
     if os.path.isfile(new_info.fname):
@@ -190,9 +237,11 @@ def setup_pdf():
     if tmp_date != '':
         new_info.date = tmp_date
     tmp_sample = input('Please enter sample description'+'('+new_info.sample+')'+':')
+    #tmp_sample = sample_name
     if tmp_sample != '':
         new_info.sample = tmp_sample
     tmp_experimenter = input('Please enter experimenters'+'('+new_info.experimenter+')'+':')
+    #tmp_experimenter = experimenters
     if tmp_experimenter != '':
         new_info.experimenter = tmp_experimenter
     tmp_pic = input('Please specify the image file you want to attach. Type no if no image will be attached'+'('+new_info.pic+')'+':')

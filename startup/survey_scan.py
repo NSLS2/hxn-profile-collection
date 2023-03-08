@@ -209,7 +209,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     #print(my)
     #m_num = np.shape(mx)
     #print('load mask 2')
-    mask = np.load('/data/users/2023Q1/Robinson_2023Q1/mask.npy')
+    mask = np.load('/data/users/2023Q1/Liu_2023Q1/NMC_OCV/103/mask.npy')
 
     for i in range(num_frame):
         if np.mod(i,500) ==0:
@@ -398,11 +398,11 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     #"""
 
     if save_flag:
-        io.imsave('/data/users/2023Q1/Robinson_2023Q1/'+scan_num+'_roi.tif',roi.astype(np.float32))
+        io.imsave('/data/users/2023Q1/Liu_2023Q1/NMC_4.4V/101_n/'+scan_num+'_roi.tif',roi.astype(np.float32))
         #io.imsave('/GPFS/XF03ID1/users/2022Q2/Huang_2022Q2/Huolin/pristine/rock_'+scan_num+'_roi_r.tif',roi_r.astype(np.float32))
         #io.imsave('/GPFS/XF03ID1/users/2022Q2/Huang_2022Q2/Huolin/pristine/rock_'+scan_num+'_roi_l.tif',roi_l.astype(np.float32))
-        io.imsave('/data/users/2023Q1/Robinson_2023Q1/'+scan_num+'_xrf.tif',xrf.astype(np.float32))
-        io.imsave('/data/users/2023Q1/Robinson_2023Q1/'+scan_num+'_diff_data.tif',diff_array.astype(np.float32))
+        io.imsave('/data/users/2023Q1/Liu_2023Q1/NMC_4.4V/101_n/'+scan_num+'_xrf.tif',xrf.astype(np.float32))
+        io.imsave('/data/users/2023Q1/Liu_2023Q1/NMC_4.4V/101_n/'+scan_num+'_diff_data.tif',diff_array.astype(np.float32))
         #io.imsave('/GPFS/XF03ID1/users/2022Q2/Huang_2022Q2/Huolin/pristine/rock_'+scan_num+'_diff_data_r.tif',diff_array_r.astype(np.float32))
         #io.imsave('/GPFS/XF03ID1/users/2022Q2/Huang_2022Q2/Huolin/pristine/rock_'+scan_num+'_diff_data_l.tif',diff_array_l.astype(np.float32))
 

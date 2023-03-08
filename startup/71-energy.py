@@ -468,6 +468,47 @@ class HXNEnergy():
             #print(peakPos)
             return peakPos
 
+def foil_calib_scan(startE, endE,saveLogFolder):
+    
+    energies = np.arange(startE,endE,0.0005)
+    
+    print(len(energies))
+    
+    e_list = pd.DataFrame()
+    e_list['TimeStamp'] = pd.Timestamp.now()
+    e_list['energy'] = energies
+    e_list['E Readback'] = energies
+    e_list['IC3'] = sclr2_ch4.get()
+    e_list['IC0'] = sclr2_ch2.get()
+
+    print(e_list.head())
+    
+    time_ = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+    for i,en in tqdm.tqdm(enumerate(energies)):
+        print (i/len(energies))
+
+        yield from Energy.move(en, moveMonoPitch=False, moveMirror = "ignore")
+        yield from bps.sleep(2)
+        e_list['TimeStamp'].at[i] = pd.Timestamp.now()
+        e_list['IC3'].at[i] = sclr2_ch4.get() 
+        e_list['IC0'].at[i] = sclr2_ch2.get()
+        e_list['E Readback'].at[i] = e.position #add real energy to the dataframe
+
+        filename = f'HXN_nanoXANES_calib_{time_}.csv'
+        #filename = f'HXN_nanoXANES_calib.csv'
+        e_list.to_csv(os.path.join(saveLogFolder, filename), float_format= '%.5f')
+
+        
+
+    plt.figure()
+    spec = -1*np.log(e_list['IC3'].to_numpy()/e_list['IC0'].to_numpy())
+    plt.plot(e_list['E Readback'], spec)
+    plt.plot(e_list['E Readback'], np.gradient(spec))
+    plt.savefig(os.path.join(saveLogFolder, filename))
+    plt.show()
+
 def peak_hfm_pitch(fine = False, tweak_range = 0.005):
 
     if fine:
@@ -501,12 +542,13 @@ def find_beam_at_ssa2(ic1_target_k = 600, max_iter = 3):
     #b shutter open 
     caput("XF:03IDB-PPS{PSh}Cmd:Opn-Cmd", 1)
 
-    #get ic1 sensitivity
+    #get ic1 sensitivity and unit
     ic_sens = caget("XF:03IDC-CT{SR570:1}sens_num.VAL")
+    ic_unit = caget("XF:03IDC-CT{SR570:1}sens_unit.VAL")
     
-    #change IC1 sensivity to 5 um
+    #change IC1 sensivity to 10 um
     #caput the position of the value
-    caput("XF:03IDC-CT{SR570:1}sens_num.VAL",2)
+    caput("XF:03IDC-CT{SR570:1}sens_num.VAL",3)
     caput("XF:03IDC-CT{SR570:1}sens_unit.VAL",2)
 
     #close b shutter, so that first iter works
@@ -565,14 +607,19 @@ def find_beam_at_cam11():
 
     zp_osa_pos = caget("XF:03IDC-ES{ANC350:5-Ax:1}Mtr.VAL")
 
-    caput("XF:03IDC-ES{ANC350:5-Ax:1}Mtr.VAL", zp_osa_pos+2700)
+    if zp_osa_pos<100:
+
+        caput("XF:03IDC-ES{ANC350:5-Ax:1}Mtr.VAL", zp_osa_pos+2700)
 
     #open c shutter
     caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0", 1)
 
     #move beam stop
     zp_bsx_pos = caget("XF:03IDC-ES{ANC350:8-Ax:1}Mtr.VAL")
-    caput("XF:03IDC-ES{ANC350:8-Ax:1}Mtr.VAL", zp_bsx_pos+100)
+
+    if zp_bsx_pos<20:
+
+        caput("XF:03IDC-ES{ANC350:8-Ax:1}Mtr.VAL", zp_bsx_pos+100)
     
 
 
