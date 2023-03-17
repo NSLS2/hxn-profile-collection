@@ -635,3 +635,10 @@ from ophyd.areadetector import EpicsSignalWithRBV
 EpicsSignal.get = _epicssignal_get
 EpicsSignalRO.get = _epicssignal_get
 EpicsSignalWithRBV.get = _epicssignal_get
+
+from datetime import datetime
+# LARGE_FILE_DIRECTORY_PATH = "/data" + datetime.now().strftime("/%Y/%m/%d")
+LARGE_FILE_DIRECTORY_ROOT = "/data"
+LARGE_FILE_DIRECTORY_PATH = "/data" + datetime.now().strftime("/%Y/%m/%d")
+
+FIP_TESTING = False  # Remove after FIP testing is complete

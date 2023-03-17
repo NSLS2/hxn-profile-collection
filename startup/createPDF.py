@@ -182,7 +182,7 @@ def setup_pdf_function(sample_name = "Precious",
         new_info = exp_info()
     #print('Create a pdf eLog file and record experiment information. Press ENTER to accept existing values.')
     #tmp_file = input('Please enter file name '+'('+new_info.fname+')'+':')
-    tmp_file = "/data/current_user/elog.pdf"
+    tmp_file = "/data/users/current_user/elog.pdf"
     if tmp_file != '':
         new_info.fname = tmp_file
     if os.path.isfile(new_info.fname):

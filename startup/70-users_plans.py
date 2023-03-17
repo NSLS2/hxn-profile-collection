@@ -134,106 +134,6 @@ def zp_z_2dscan(z_start, z_end, z_num, mot1, start1, end1, num1, mot2, start2, e
     mov(zps.zpsz, init_sz)
 
 
-def go_det(det):
-
-    if caget("XF:03IDC-ES{Stg:FPDet-Ax:Y}Mtr.RBV")<380:
-
-        raise ValueError("Dexela detector maybe IN, Please move it away and try again!")
-        return
-    
-    else:
-
-        with open("/nsls2/data/hxn/shared/config/bluesky/profile_collection/startup/diff_det_pos.json") as fp:
-
-            diff_pos = json.load(fp)
-            #print(diff_pos)
-
-        merlin_pos = diff_pos["merlin_pos"]
-        cam11_pos = diff_pos["cam11_pos"]
-        telescope_pos = diff_pos["telescope_pos"]
-
-        if det == 'merlin':
-            #while zposa.zposax.position<20:
-            #yield from bps.mov(diff.x, -1.5, diff.y1,-12.9, diff.y2,-12.9, diff.z, -50, diff.cz, -24.7)
-            yield from bps.mov(diff.x, merlin_pos['diff_x'], 
-                            diff.y1,merlin_pos['diff_y1'], 
-                            diff.y2,merlin_pos['diff_y2'], 
-                            diff.z, merlin_pos['diff_z'], 
-                            diff.cz,merlin_pos['diff_cz']
-                            )
-            #yield from bps.mov(diff.y1,-3.2)
-            #yield from bps.mov(diff.y2,-3.2)
-        elif det == 'cam11':
-            #yield from bps.mov(diff.x,206.83, diff.y1, 19.177, diff.y2, 19.177,diff.z, -50, diff.cz, -24.7)
-            yield from bps.mov(diff.x, cam11_pos['diff_x'], 
-                            diff.y1,cam11_pos['diff_y1'], 
-                            diff.y2,cam11_pos['diff_y2'], 
-                            diff.z, cam11_pos['diff_z'], 
-                            diff.cz,cam11_pos['diff_cz']
-                            )
-            #yield from bps.mov(diff.y1,22.65)
-            #yield from bps.mov(diff.y2,22.65)
-        elif det =='telescope':
-            #yield from bps.mov(diff.x,-342, diff.z, -50, diff.cz, -24.7)
-            yield from bps.mov(diff.x,telescope_pos['diff_x'], 
-                            diff.z,telescope_pos['diff_z'], 
-                            diff.cz,telescope_pos['diff_cz'])
-            #yield from bps.mov(diff.z,-50)
-        else:
-            print('Inout det is not defined. '
-                'Available ones are merlin, cam11, telescope and tpx')
-
-
-def update_det_pos(det = "merlin"):
-    
-    json_path = "/nsls2/data/hxn/shared/config/bluesky/profile_collection/startup/diff_det_pos.json"
-    
-    with open(json_path, "r") as read_file:
-        diff_pos = json.load(read_file)
-
-    if det == "merlin":
-
-        diff_pos['merlin_pos']['diff_x'] = np.round(diff.x.position,2)
-        diff_pos['merlin_pos']['diff_y1'] = np.round(diff.y1.position,2)
-        diff_pos['merlin_pos']['diff_y2'] = np.round(diff.y2.position,2)
-        diff_pos['merlin_pos']['diff_z'] = np.round(diff.z.position,2)
-        diff_pos['merlin_pos']['diff_cz'] = np.round(diff.cz.position,2)
-
-    elif det == "cam11":
-
-        diff_pos['cam11_pos']['diff_x'] = np.round(diff.x.position,2)
-        diff_pos['cam11_pos']['diff_y1'] = np.round(diff.y1.position,2)
-        diff_pos['cam11_pos']['diff_y2'] = np.round(diff.y2.position,2)
-        diff_pos['cam11_pos']['diff_z'] = np.round(diff.z.position,2)
-        diff_pos['cam11_pos']['diff_cz'] = np.round(diff.cz.position,2)
-
-    elif det == "telescope":
-
-        diff_pos['telescope_pos']['diff_x'] = np.round(diff.x.position,2)
-        diff_pos['merlin_pos']['diff_z'] = np.round(diff.z.position,2)
-        diff_pos['merlin_pos']['diff_cz'] = np.round(diff.cz.position,2)
-
-    elif det == "out":
-        diff_pos['out']['diff_x'] = np.round(diff.x.position,2)
-        diff_pos['out']['diff_y1'] = np.round(diff.y1.position,2)
-        diff_pos['out']['diff_y2'] = np.round(diff.y2.position,2)
-        diff_pos['out']['diff_z'] = np.round(diff.z.position,2)
-        diff_pos['out']['diff_cz'] = np.round(diff.cz.position,2)
-
-    else:
-        raise KeyError ("Undefined detector name")
-    
-    read_file.close()
-    ext = datetime.now().strftime('%Y-%m-%d')
-    json_path_backup = f"/data/users/backup_params/diff_pos/{ext}_diff_det_pos.json"
-    
-    with open(json_path, "w") as out_file:
-        json.dump(diff_pos, out_file, indent = 6)
-
-    with open(json_path_backup, "w") as out_file:
-        json.dump(diff_pos, out_file, indent = 6)
-        
-    out_file.close()
 
 
 def sample_to_lab(xp, zp, alpha):
@@ -933,8 +833,8 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
 
         #while beamline_status.beam_current.get() <= 245:
         #    sleep(60)
-        yield from bps.mov(dssx, 0)
-        yield from bps.mov(dssz, 0)
+        #yield from bps.mov(dssx, 0)
+        #yield from bps.mov(dssz, 0)
         #yield from bps.sleep(2)
         angle = angle_start + i * angle_step
         yield from bps.mov(smlld.dsth, angle)
@@ -961,13 +861,15 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
 
             #yield from bps.mov(dssx,0)
             #yield from bps.mov(dssz,0)
+            
+            #used with au disk 
             #yield from fly2d(dets1,dssx,-6,6,50, dssy,-0.5,0.5,20,0.02,dead_time=0.003)
             #cx,cy = return_center_of_mass(-1,elem,0.1)
             #yield from bps.mov(dssx,cx)
             
             #'''
-            yield from fly1d(dets1,dssx, -10, 10, 100, 0.1)
-            xc = return_line_center(-1,elem,0.35)
+            yield from fly1d(dets1,dssx, -10, 10, 200, 0.03)
+            xc = return_line_center(-1,elem,0.05)
             yield from bps.mov(dssx,xc)
             
             '''
@@ -997,6 +899,8 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
         else:
             #yield from bps.mov(dssx,0)
             #yield from bps.mov(dssz,0)
+            
+            #used with au disk
             #yield from fly2d(dets1,dssz,-6,6,50, dssy, -0.5,0.5,20,0.02,dead_time=0.003)
             #cx,cy = return_center_of_mass(-1,elem,0.1)
             #yield from bps.mov(dssz,cx)
@@ -1005,8 +909,8 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
             #yield from bps.movr(dssy,0.3)
             #yield from bps.mov(dssz,0)
             #yield from bps.mov(dssx,0)
-            yield from fly1d(dets1,dssz, -10, 10, 100, 0.1)
-            xc = return_line_center(-1,elem,0.35)
+            yield from fly1d(dets1,dssz, -10, 10, 200, 0.03)
+            xc = return_line_center(-1,elem,0.05)
             yield from bps.mov(dssz,xc)
 
             '''
@@ -1032,9 +936,10 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
             #else:
             #    yield from bps.mov(dssy,2)
             '''
-        #yield from fly1d(dets1, dssy, -10,10,100,0.03)
-        #yc = return_line_center(-1,elem,0.2)
-        #yield from bps.mov(dssy,cy)
+        yield from fly1d(dets1, dssy, -2,2,200,0.03)
+        yc = return_line_center(-1,'Au_L',0.5)
+        #yc, yw = erf_fit(-1, elem, linear_flag=False)
+        yield from bps.mov(dssy,yc)
 
         # ## for CZ testing
         # yield from fly1d(dets1, dssy, -3,0.25,100,0.03)  #yield from fly1d(dets1, dssy, -7,-3,100,0.03)
@@ -1885,165 +1790,6 @@ def th_dscan(m_th, th_start, th_end, num, mot, x_start, x_end, x_num, sec):
 
 
 
-def mov_diff(gamma, delta, r=500, calc=0, check_for_dexela = True):
-    
-    if check_for_dexela and caget("XF:03IDC-ES{Stg:FPDet-Ax:Y}Mtr.RBV")<380:
-
-        raise ValueError("Dexela detector maybe IN, Please move it away and try again!")
-        return
-
-    else:
-
-        diff_z = diff.z.position
-
-        gamma = gamma * np.pi / 180
-        delta = delta * np.pi / 180
-        beta = 89.337 * np.pi / 180
-
-        z_yaw = 574.668 + 581.20 + diff_z
-        z1 = 574.668 + 395.2 + diff_z
-        z2 = z1 + 380
-        d = 395.2
-
-        x_yaw = np.sin(gamma) * z_yaw / np.sin(beta + gamma)
-        R_yaw = np.sin(beta) * z_yaw / np.sin(beta + gamma)
-        R1 = R_yaw - (z_yaw - z1)
-        R2 = R_yaw - (z_yaw - z2)
-        y1 = np.tan(delta) * R1
-        y2 = np.tan(delta) * R2
-        R_det = R1 / np.cos(delta) - d
-        dz = r - R_det
-
-        print('Make sure all motors are zeroed properly, '
-            'otherwise calculation will be wrong.')
-        if x_yaw > 825 or x_yaw < -200:
-            print('diff_x = ', -x_yaw,
-                ' out of range, move diff_z upstream and try again')
-        elif dz < -250 or dz > 0:
-            print('diff_cz = ', dz,
-                ' out of range, move diff_z up or down stream and try again')
-        elif y1 > 750:
-            print('diff_y1 = ', y1, ' out of range, move diff_z upstream '
-                'and try again')
-        elif y2 > 1000:
-            print('diff_y2 = ', y2, ' out of range, move diff_z upstream '
-                'and try again')
-        else:
-            print('diff_x = ', -x_yaw, ' diff_cz = ', dz,
-                ' diff_y1 = ', y1, ' diff_y2 = ', y2)
-            if calc == 0:
-
-                print('wait for 3 sec, hit Ctrl+c to quit the operation')
-                yield from bps.sleep(3)
-                yield from bps.mov(diff.y1,y1,
-                                diff.y2,y2,
-                                diff.x,-x_yaw,
-                                diff.yaw,gamma*180.0/np.pi,
-                                diff.cz,dz)
-                '''
-                diff.y1.move(y1, wait=False)
-                sleep(0.5)
-                diff.y2.move(y2, wait=False)
-                sleep(0.5)
-                diff.x.move(-x_yaw, wait=False)
-                sleep(0.5)
-                diff.yaw.move(gamma * 180. / np.pi, wait=False)
-                sleep(0.5)
-                diff.cz.move(dz, wait=False)
-                '''
-                while (diff.x.moving is True or diff.y1.moving is True or diff.y2.moving is True or diff.yaw.moving is True):
-                    yield from bps.sleep(2)
-            else:
-                print('Calculation mode; no motor will be moved')
-
-
-def wh_diff():
-    diff_z = diff.z.position
-    diff_yaw = diff.yaw.position * np.pi / 180.0
-    diff_cz = diff.cz.position
-    diff_x = diff.x.position
-    diff_y1 = diff.y1.position
-    diff_y2 = diff.y2.position
-
-    gamma = diff_yaw
-    beta = 89.337 * np.pi / 180
-    z_yaw = 574.668 + 581.20 + diff_z
-    z1 = 574.668 + 395.2 + diff_z
-    z2 = z1 + 380
-    d = 395.2
-
-    x_yaw = np.sin(gamma) * z_yaw / np.sin(beta + gamma)
-    R_yaw = np.sin(beta) * z_yaw / np.sin(beta + gamma)
-    R1 = R_yaw - (z_yaw - z1)
-    R2 = R_yaw - (z_yaw - z2)
-
-    # print('x_yaw = ', x_yaw, ' diff_x = ', diff_x)
-    if abs(x_yaw + diff_x) > 3:
-        print('Not a pure gamma rotation')
-        return -1,-1,-1
-
-    elif abs(diff_y1 / R1 - diff_y2 / R2) > 0.01:
-        print('Not a pure delta rotation')
-        return -1,-1,-1
-    else:
-        delta = np.arctan(diff_y1 / R1)
-        R_det = R1 / np.cos(delta) - d + diff_cz
-
-        Gamma = gamma * 180 / np.pi
-        Delta = delta * 180 / np.pi
-        print(f'{Gamma = :.2f}, {Delta  = :.2f} , r = {R_det :.2f}')
-        return Gamma, Delta, R_det
-
-
-def diff_status():
-
-    gma, delt, r = wh_diff()
-
-    if gma>0 or delt>0 or diff.yaw.position>0.5 or diff.y1.position>23:
-        return "diff_pos"
-
-    elif (int(gma) == 0 and int(delt) == 0) or (diff.x.position>10 and not diff.y1.position>23):
-        return "safe"
-
-
-def diff_to_home(move_out_later = False):
-
-    #close c shutter
-    caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0", 0)
-
-    gma, delt, r = wh_diff()
-
-    if diff_status() == "diff_pos":
-
-        if gma>10:
-
-            if r<450:
-                try:
-                    yield from mov_diff(gma-10, delt, 500)
-                except:
-                    pass
-
-            yield from bps.mov(diff.z, -1,diff.y1, 0, diff.y2, 0,diff.cz,-1)
-            #yield from bps.mov(diff.y1, 0, diff.y2, 0)
-            #yield from bps.mov(diff.cz,-1)
-
-            try:
-                yield from mov_diff(0, 0, 500)
-
-            except:
-                yield from bps.mov(diff.yaw, 0,diff.x, 0)
-                #yield from bps.mov(diff.x, 0)
-
-
-        else:
-            yield from mov_diff(0,0,500)
-
-    else:
-        yield from go_det("merlin")
-    
-    #TODO need to be better to avoid moving back and forth
-    if move_out_later:
-        yield from bps.mov(diff.x, -600)
 
 
 
@@ -3760,67 +3506,6 @@ def peak_all(x_start = -25,x_end=25,x_n_step=50, y_start = -15,y_end=15, y_n_ste
 	peak_bpm_y(y_start,y_end,y_n_step)
 
 
-
-def find_edge_2D(scan_id, elem, left_flag=True):
-
-    df2 = db.get_table(db[scan_id],fill=False)
-    xrf = np.asfarray(eval('df2.Det2_' + elem)) + np.asfarray(eval('df2.Det1_' + elem)) + np.asfarray(eval('df2.Det3_' + elem))
-    motors = db[scan_id].start['motors']
-    x = np.array(df2[motors[0]])
-    y = np.array(df2[motors[1]])
-    #I0 = np.asfarray(df2.sclr1_ch4)
-    I0 = np.asfarray(df2['sclr1_ch4'])
-    scan_info=db[scan_id]
-    tmp = scan_info['start']
-    nx=tmp['plan_args']['num1']
-    ny=tmp['plan_args']['num2']
-    xrf = xrf/I0
-    xrf = np.asarray(np.reshape(xrf,(ny,nx)))
-    l = np.linspace(y[0],y[-1],ny)
-    s = xrf.sum(1)
-    #if axis == 'x':
-        #l = np.linspace(x[0],x[-1],nx)
-        #s = xrf.sum(0)
-    #else:
-        #l = np.linspace(y[0],y[-1],ny)
-        #s = xrf.sum(1)
-
-
-	#plt.figure()
-	#plt.plot(l,s)
-	#plt.show()
-	#sd = np.diff(s)
-    sd = np.gradient(s)
-    if left_flag:
-        edge_loc1 = l[np.argmax(sd)]
-    else:
-        edge_loc1 = l[np.argmin(sd)]
-    #plt.plot(l,sd)
-	#plt.title('edge at '+np.str(edge_loc1))
-
-    sd2 = np.diff(s)
-    ll = l[:-1]
-	#plt.plot(ll,sd2)
-    if left_flag:
-        edge_loc2 = ll[np.argmax(sd2)]
-    else:
-        edge_loc2 = ll[np.argmin(sd2)]
-	#plt.xlabel('edge at '+np.str(edge_loc2))
-
-	#edge_pos=find_edge(l,s,10)
-	#pos = l[s == edge_pos]
-	#pos = l[s == np.gradient(s).max()]
-	#popt,pcov=curve_fit(erfunc1,l,s, p0=[edge_pos,0.05,0.5])
-    return edge_loc1,edge_loc2
-
-
-def check_for_beam_dump(threshold = 5000):
-
-    while (sclr2_ch2.get() < threshold):
-        yield from bps.sleep(60)
-        print (f"IC3 is lower than {threshold}, waiting...")
-
-
 def recover_and_scan(sid, dets, mot1, mot1_s, mot1_e, mot1_n, mot2, mot2_s, mot2_e, mot2_n, exp_t, moveZP = False):
 
     yield from recover_zp_scan_pos(int(sid),moveZP,1)
@@ -4110,124 +3795,4 @@ def plot_mosiac_overlap(grid_shape = (4,4), first_scan_num = -8,
         axs[i].set_xticks([])
         axs[i].set_yticks([])
 
-def VMS_in():
 
-    print("Please wait...")
-    
-    #vms
-
-    #caput("XF:03IDA-OP{VMS:1-Ax:Y}Mtr.VAL", -0.07) #mirrorY
-    #caput("XF:03IDA-OP{VMS:1-Ax:P}Mtr.VAL", 3.06) #mirror picth
-    caput("XF:03IDA-OP{VMS:1-Ax:YU}Mtr.VAL", -1.46) #upstream Y
-    caput("XF:03IDA-OP{VMS:1-Ax:YD}Mtr.VAL",0.39) #downstream Y
-    caput("XF:03IDA-OP{VMS:1-Ax:TX}Mtr.VAL", 0) #trans. X
-    #caput("XF:03IDA-OP{VMS:1-Ax:PF}Mtr.VAL", 7) #pitch fine
-
-    #bbpm
-    caput("XF:03IDB-OP{Slt:SSA1-Ax:7}Mtr.VAL", -2.4)
-    caput("XF:03IDB-OP{Slt:SSA1-Ax:8}Mtr.VAL",0.25)
-    
-    #cbpm
-    caput("XF:03IDC-ES{BPM:7-Ax:Y}Mtr.VAL", 1.3)
-
-    for i in tqdm.tqdm(range(30)):
-        yield from bps.sleep(1)
-
-    
-    
-    #move ssa2
-    yield from bps.mov(ssa2.hgap, 2, ssa2.vgap,2, ssa2.hcen,0.098,ssa2.vcen, 0)
-    
-    #move ssa1
-    yield from bps.mov(ssa1.hgap, 2.0, ssa1.vgap,2.0, ssa1.hcen,0.079,ssa1.vcen, 1.7)
-
-    print(" Aligned to VMS")
-
-def VMS_out():
-
-
-    print("Please wait...")
-
-    #vms
-
-    #caput("XF:03IDA-OP{VMS:1-Ax:Y}Mtr.VAL", -1.0) #mirrorY
-    #caput("XF:03IDA-OP{VMS:1-Ax:P}Mtr.VAL", -0.0082) #mirror picth
-    caput("XF:03IDA-OP{VMS:1-Ax:YU}Mtr.VAL", -2.2) #upstream Y
-    caput("XF:03IDA-OP{VMS:1-Ax:YD}Mtr.VAL",-2.6) #downstream Y
-    #caput("XF:03IDA-OP{VMS:1-Ax:TX}Mtr.VAL", 0.084) #trans. X
-    caput("XF:03IDA-OP{VMS:1-Ax:PF}Mtr.VAL", 0) #pitch fine
-
-    #bbpm
-    caput("XF:03IDB-OP{Slt:SSA1-Ax:7}Mtr.VAL", -0.16)
-    caput("XF:03IDB-OP{Slt:SSA1-Ax:8}Mtr.VAL",0.065)
-    
-    #cbpm
-    caput("XF:03IDC-ES{BPM:7-Ax:Y}Mtr.VAL", 0.4)
-
-    
-    for i in tqdm.tqdm(range(0, 30), desc ="Moving..."):
-        yield from bps.sleep(1)
-    
-
-    #move ssa2
-    yield from bps.mov(ssa2.hgap, 2, ssa2.vgap,2, ssa2.hcen,0,ssa2.vcen, -0.6765)
-    
-    #move ssa1
-    yield from bps.mov(ssa1.hgap, 2.64, ssa1.vgap,2.5, ssa1.hcen,-0.092,ssa1.vcen, -0.78)
-
-    print(" VMS out")
-
-
-
-def find_45_degree(start_angle,end_angle,num):
-
-
-    ''' Absolute angles'''
-
-    yield from bps.mov(dsth,start_angle)
-    #num = np.float(num)
-    #start_angle = np.float(start_angle)
-    #end_angle = np.float(end_angle)
-    step = (end_angle-start_angle)/num
-    w_x = np.zeros(num+1)
-    w_z = np.zeros(num+1)
-    th = np.zeros(num+1)
-    for i in range(num+1):
-        yield from fly1d(dets1,dssx,-10,10,200,0.05)
-        l,r,c=square_fit(-1,'Pt_L')
-        plt.close()
-        w_x[i] = r-l
-        yield from fly1d(dets1,dssz,-10,10,200,0.05)
-        l,r,c=square_fit(-1,'Pt_L')
-        plt.close()
-        w_z[i] = r-l
-        th[i]=dsth.position
-        yield from bps.sleep(1)
-        yield from bps.movr(dsth,step)
-    plt.figure()
-    plt.plot(th,w_x,'r+',th,w_z,'g-')
-    return th,w_x,w_z 
-
-
-def feedback_auto_off(wait_time_sec = 0.5):
-    
-    beam_current = "SR:C03-BI{DCCT:1}I:Real-I"
-    fe_xbpm_current = "SR:C03-BI{XBPM:1}Ampl:CurrTotal-I"
-    fe_shutter_status = "XF:03ID-PPS{Sh:FE}Sts:Cls-Sts"
-    ugap = "SR:C3-ID:G1{IVU20:1-Ax:Gap}-Mtr.RBV"
-
-    b_feeback_x = "XF:03ID-BI{EM:BPM1}fast_pidX.FBON"
-    b_feeback_y = "XF:03ID-BI{EM:BPM1}fast_pidY.FBON"
-
-    while True:
-        if caget(beam_current)<10 or caget(fe_xbpm_current)<10 or caget(fe_shutter_status)==1:
-
-            if caget(b_feeback_x) == 1 or caget(b_feeback_y) == 1:
-                caput(b_feeback_x,0)
-                caput(b_feeback_y,0)
-                logger.info(f"feedback was disabled by {os.getlogin()}")
-
-            else:
-                pass
-            
-        time.sleep(wait_time_sec)

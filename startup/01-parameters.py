@@ -2,9 +2,9 @@ import numpy as np
 import os
 
 
-roi_elems = ['Au_M','Si','Cl','P','Ti','Sr_L','La_L','Cr','Mn','Fe','Co','Ni','Cu','Zn','Pt_L','K'] #limit = 16 
-live_plot_elems = ['Sr_L','Ti','Mn','La_L'] # no limts but has to be in the above roi_elems
-line_plot_elem = ["Mn"] #only one element
+roi_elems = ['Au_M','Si','Cl','W_L','Ti','Ga','S','Cr','Mn','Fe','Co','Ni','Cu','Zn','Pt_L','Au_L'] #limit = 16 
+live_plot_elems = ['Ga','Au_L','Pt_L','W_L'] # no limts but has to be in the above roi_elems
+line_plot_elem = ["Pt_L"] #only one element
 
 
 def create_user_dir(users_name):

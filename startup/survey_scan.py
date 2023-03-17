@@ -209,7 +209,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     #print(my)
     #m_num = np.shape(mx)
     #print('load mask 2')
-    mask = np.load('/data/users/2023Q1/Liu_2023Q1/NMC_OCV/103/mask.npy')
+    mask = np.load('/data/users/2023Q1/Huang_2023Q1/TMA_LCO/mask.npy')
 
     for i in range(num_frame):
         if np.mod(i,500) ==0:
@@ -218,84 +218,24 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
         t = np.flipud(images[i,:,:]).T
         #t = t * mask
         t = t*ic[0] / ic[i]
-        #t = t * mask
-        #t *= (1-mm)
-        #t *= (1-mm2)
-        ##t = np.flipud(t)
-        #t[126,124] = 0
-        #t[126,124] = 0
-        #t *= (1-mm3)
-        #t *= (1-mm3)
-        #t *= (1-mm4)
-        #t[mm2 == 1.] == 0
-        #t[mm3 == 1.] == 0
-        #t[mm4 == 1.] == 0
-        #for jj in range(m_num[0]):
-        #    t = rm_pixel(t,mx[jj],my[jj])
-        '''
-        plt.figure()
-        plt.imshow(t)
-        plt.show()
-        ddd
-        '''
-        #if i == 0:
-        #    index = np.where(t >= 5)
-        #'''
-        #t[96,222] = 0.
-        #t[140,94] = 0.
-        #t[57,138] = 0.
-        #'''
+
         if i == 0:
             nx,ny = np.shape(t)
             global diff_array
             diff_array = np.zeros((nx,ny,num_frame))
-            #diff_array_l = np.zeros((158,ny,num_frame))
-            #diff_array_r = np.zeros((140,ny,num_frame))
+
         #t[index] = 0
         #t[mask == 1] = 0
         #t[164,107] = 0
         diff_array[:,:,i] = t * mask
-        #diff_array_l[:,:,i] = t[:158,:]
-        #diff_array_r[:,:,i] = t[158:,:]
 
 
-    #diff_array[22,255,:] = 0
-    #diff_array[296,281,:] = 0
-    #diff_array[91,221,:] = 0
-    #diff_array[440,381,:] = 0
-
-    #diff_array[diff_array > 200000] = 0
-    '''
-    #diff_array[diff_array > 1e4] = 0
-    diff_array[419,412,:] = 0
-    diff_array[431,408,:] = 0
-    diff_array[118,370,:] = 0
-    diff_array[145,357,:] = 0
-    diff_array[142,345,:] = 0
-    diff_array[57,462,:] = 0
-    diff_array[206,83,:] = 0
-    diff_array[115,348,:] = 0
-    diff_array[118,359,:] = 0
-    diff_array[446,385,:] = 0
-    '''
-    '''
-    diff_array[191,87,:] = 0
-    diff_array[124,57,:] = 0
-    diff_array[51,152,:] = 0
-    diff_array[114,113,:] = 0
-    diff_array[111,133,:] = 0
-    diff_array[134,122,:] = 0
-    '''
     #if elem == 'roi':
     for i in range(num_frame):
         if i == 0:
             global roi
             roi = np.zeros(num_frame)
-            #roi_l = np.zeros(num_frame)
-            #roi_r = np.zeros(num_frame)
         roi[i] = np.sum(diff_array[:,:,i])
-        #roi_r[i] = np.sum(diff_array_r[:,:,i])
-        #roi_l[i] = np.sum(diff_array_l[:,:,i])
 
     global xrf
     if elem in df:
@@ -397,13 +337,11 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
 
     #"""
 
+    fn = '/data/users/2023Q1/Huang_2023Q1/TMA_LCO/'
     if save_flag:
-        io.imsave('/data/users/2023Q1/Liu_2023Q1/NMC_4.4V/101_n/'+scan_num+'_roi.tif',roi.astype(np.float32))
-        #io.imsave('/GPFS/XF03ID1/users/2022Q2/Huang_2022Q2/Huolin/pristine/rock_'+scan_num+'_roi_r.tif',roi_r.astype(np.float32))
-        #io.imsave('/GPFS/XF03ID1/users/2022Q2/Huang_2022Q2/Huolin/pristine/rock_'+scan_num+'_roi_l.tif',roi_l.astype(np.float32))
-        io.imsave('/data/users/2023Q1/Liu_2023Q1/NMC_4.4V/101_n/'+scan_num+'_xrf.tif',xrf.astype(np.float32))
-        io.imsave('/data/users/2023Q1/Liu_2023Q1/NMC_4.4V/101_n/'+scan_num+'_diff_data.tif',diff_array.astype(np.float32))
-        #io.imsave('/GPFS/XF03ID1/users/2022Q2/Huang_2022Q2/Huolin/pristine/rock_'+scan_num+'_diff_data_r.tif',diff_array_r.astype(np.float32))
-        #io.imsave('/GPFS/XF03ID1/users/2022Q2/Huang_2022Q2/Huolin/pristine/rock_'+scan_num+'_diff_data_l.tif',diff_array_l.astype(np.float32))
+        io.imsave(fn+scan_num+'_roi.tif',roi.astype(np.float32))
+        io.imsave(fn+scan_num+'_xrf.tif',xrf.astype(np.float32))
+        io.imsave(fn+scan_num+'_diff_data.tif',diff_array.astype(np.float32))
+
 
 

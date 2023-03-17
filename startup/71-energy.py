@@ -288,6 +288,11 @@ class HXNEnergy():
                 logger.info(f"Moving {hfm_p_target = :4f}")
                 yield from bps.mov(m2.p, hfm_p_target)
 
+                #change merlin energy
+                caput("XF:03IDC-ES{Merlin:1}cam1:Acquire",1)
+                caput("XF:03IDC-ES{Merlin:1}cam1:OperatingEnergy", targetE)
+                
+
             if not moveMirror == "ignore":
                 yield from self.moveMirror(targetE, moveMirror)
             
