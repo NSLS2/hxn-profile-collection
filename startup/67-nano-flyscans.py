@@ -179,8 +179,8 @@ def scan_and_fly_base(detectors, xstart, xstop, xnum, ystart, ystop, ynum, dwell
     # row_stop = xstop + delta + (pxsize / 2)
     # row_start = xstart - delta - max(pxsize, 1)
     #row_stop = xstop + delta + max(pxsize, 1)
-    row_start = xstart - delta - pxsize
-    row_stop = xstop + delta + pxsize
+    d = min(delta + pxsize, 2)
+    row_start, row_stop = xstart - d, xstop + d
 
     # row_start, row_stop = xstart - 0.3, xstop + 0.3
 
@@ -608,10 +608,75 @@ def scan_and_fly_base(detectors, xstart, xstop, xnum, ystart, ystop, ynum, dwell
 
     return uid
 
-def nano_scan_and_fly(*args, extra_dets=None, **kwargs):
-    # RE(nano_scan_and_fly(-10, 10, 21, -1, 1, 5, 0.1, verbose=True))
-    kwargs.setdefault('xmotor', pt_tomo.ssx)
-    kwargs.setdefault('ymotor', pt_tomo.ssy)
+
+def pt_fly2d(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, scan_end2, num2, exposure_time, **kwargs):
+    """
+    Relative scan
+    """
+    m1_pos = motor1.position
+    m2_pos = motor2.position
+    print(f"Initial positions: m1_pos={m1_pos}  m2_pos={m2_pos}")
+    try:
+        start1, end1 = m1_pos + scan_start1, m1_pos + scan_end1
+        start2, end2 = m2_pos + scan_start2, m2_pos + scan_end2
+        yield from pt_fly2d_abs(
+            dets, motor1, start1, end1, num1, motor2, start2, end2, num2, exposure_time, **kwargs
+            )    
+    finally:
+        motor1.set(m1_pos).wait()
+        motor2.set(m2_pos).wait()
+
+
+def pt_fly2d_abs(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, scan_end2, num2, exposure_time, **kwargs):
+
+    range_min, range_max = -30, 30
+    for v in [scan_start1, scan_end1, scan_start2, scan_end2]:
+        if v < range_min or v > range_max:
+            raise ValueError(
+                f"Scan range exceed limits for the motors: "
+                f"start1={scan_start1} end1={scan_end1} start2={scan_start2} end2={scan_end2}"
+            )
+
+    # RE(pt_fly2d([eiger2], pt_tomo.ssx, -10, 10, 101, pt_tomo.ssy, -1, 1, 5, 0.01, plot=True))
+    kwargs.setdefault('xmotor', motor1)  # Fast motor
+    kwargs.setdefault('ymotor', motor2)  # Slow motor
+    kwargs.setdefault('flying_zebra', nano_flying_zebra)
+    args = [scan_start1, scan_end1, num1, scan_start2, scan_end2, num2, exposure_time]
+
+    # print(kwargs['xmotor'].name)
+    # print(kwargs['ymotor'].name)
+    # print(kwargs['flying_zebra'].name)
+
+    if motor1 == pt_tomo.ssx and motor2 == pt_tomo.ssy:
+        yield from abs_set(nano_flying_zebra.fast_axis, 'NANOHOR')
+        yield from abs_set(nano_flying_zebra.slow_axis, 'NANOVER')
+    elif motor1 == pt_tomo.ssy and motor2 == pt_tomo.ssx:
+        yield from abs_set(nano_flying_zebra.fast_axis, 'NANOVER')
+        yield from abs_set(nano_flying_zebra.slow_axis, 'NANOHOR')
+    else:
+        raise RuntimeError(f"Unsupported set of motors: motor1={motor1} motor2={motor2}")
+
+    # print(f"dets={dets} args={args} kwargs={kwargs}")
+
+    # _xs = kwargs.pop('xs', xs)
+    # if extra_dets is None:
+    #     extra_dets = []
+    # dets = [] if  _xs is None else [_xs]
+    # dets = dets + extra_dets
+    # print(f"dets={dets}")
+    print('Scan starting. Centering the scanner...')
+    # yield from mv(pt_tomo.ssx, 0, pt_tomo.ssy, 0, pt_tomo.ssz, 0)
+    yield from bps.sleep(2)
+    yield from scan_and_fly_base(dets, *args, **kwargs)
+    print('Scan finished. Centering the scanner...')
+    # yield from bps.sleep(1)
+    yield from set_scanner_velocity(30)
+
+
+def nano_x_scan_and_fly(*args, extra_dets=None, **kwargs):
+    # RE(nano_x_scan_and_fly(-10, 10, 101, -1, 1, 5, 0.01, plot=True, verbose=True))
+    kwargs.setdefault('xmotor', pt_tomo.ssx)  # Fast motor
+    kwargs.setdefault('ymotor', pt_tomo.ssy)  # Slow motor
     kwargs.setdefault('flying_zebra', nano_flying_zebra)
     # print(kwargs['xmotor'].name)
     # print(kwargs['ymotor'].name)
@@ -643,8 +708,8 @@ def nano_scan_and_fly(*args, extra_dets=None, **kwargs):
 
 
 def nano_y_scan_and_fly(*args, extra_dets=None, **kwargs):
-    kwargs.setdefault('xmotor', pt_tomo.ssy)
-    kwargs.setdefault('ymotor', pt_tomo.ssx)
+    kwargs.setdefault('xmotor', pt_tomo.ssy)  # Fast motor
+    kwargs.setdefault('ymotor', pt_tomo.ssx)  # Slow motor
     kwargs.setdefault('flying_zebra', nano_flying_zebra)
     # print(kwargs['xmotor'].name)
     # print(kwargs['ymotor'].name)

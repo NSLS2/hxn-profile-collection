@@ -173,6 +173,7 @@ class SRXZebra(Zebra):
         )
 
 
+load_positions_from_zebra = True
 
 class SRXFlyer1Axis(Device):
     """
@@ -270,11 +271,11 @@ class SRXFlyer1Axis(Device):
         ]}
 
         if dir == "NANOHOR":
-            sigs[self._encoder.pc.data.cap_enc1_bool] = 0
+            sigs[self._encoder.pc.data.cap_enc1_bool] = bool(load_positions_from_zebra)
         elif dir == "NANOVER":
-            sigs[self._encoder.pc.data.cap_enc2_bool] = 0
+            sigs[self._encoder.pc.data.cap_enc2_bool] = bool(load_positions_from_zebra)
         elif dir == "NANOZ":
-            sigs[self._encoder.pc.data.cap_enc3_bool] = 0
+            sigs[self._encoder.pc.data.cap_enc3_bool] = bool(load_positions_from_zebra)
         else:
             raise ValueError(f"Unknown value: dir={dir!r}")
 
