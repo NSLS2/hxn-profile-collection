@@ -1,3 +1,5 @@
+print(f"Loading {__file__!r} ...")
+
 from reportlab.pdfgen.canvas import Canvas
 import matplotlib.pyplot as plt
 import matplotlib

@@ -1,3 +1,5 @@
+print(f"Loading {__file__!r} ...")
+
 import functools
 import os
 import sys
@@ -775,18 +777,29 @@ def plot_img_sum2(sid, det = 'merlin1', roi_flag=False,x_cen=0,y_cen=0,size=0):
         plt.imshow(image,extent=extent)
         plt.title('sid={} ROI SUM'.format(sid))
 
-def plot_img_sum(sid, det = 'merlin1',mon ='sclr1_ch4', 
+def plot_img_sum(sid, det = 'merlin1',norm ='sclr1_ch4', 
                  roi_flag=False,x_cen=0,y_cen=0,size=0,threshold=[0,1e6]):
-    h = db[sid]
+    h = db[int(sid)]
     sid = h.start['scan_id']
-    imgs = list(h.data(det))
+    try:
+        imgs = np.stack(db[int(sid)].table(fill=True)[det])
+        #print("image load_error")
+    except ValueError:
+        imgs = list(h.data(det))
+        #print("image loaded")
     #imgs = np.array(imgs)
     imgs = np.array(np.squeeze(imgs))
+    print("image_squeezed")
+    #imgs.shape()
     #imgs[imgs>3*np.std(imgs)] = 0
     imgs[imgs>threshold[1]]=0
     imgs[imgs<threshold[0]]=0
+    print("thrshold set")
     df = h.table()
-    mon = np.array(df[mon],dtype=float32)
+    #print(df.head())
+    #mon = np.array(df[mon],dtype=float32)
+    mon = np.stack(h.table(fill=True)[norm])
+    print("mono_read")
     #figure_with_insert_fig_button()
     #plt.imshow(imgs[0],clim=[0,50])
     if roi_flag:
@@ -837,6 +850,85 @@ def plot_img_sum(sid, det = 'merlin1',mon ='sclr1_ch4',
         plt.colorbar()
         plt.title('sid={} ROI SUM'.format(sid))
 
+
+def plot_img_sum_fip(sid, det = 'merlin2_image',norm ='sclr1_ch4', 
+                 roi_flag=False,x_cen=0,y_cen=0,size=0,threshold=[0,1e6]):
+    h = db[int(sid)]
+    sid = h.start['scan_id']
+    try:
+        imgs = np.stack(db[int(sid)].table(fill=True)[det])
+        #print("image load_error")
+    except ValueError:
+        imgs = list(h.data(det))
+        #print("image loaded")
+    #imgs = np.array(imgs)
+    imgs = np.array(np.squeeze(imgs))
+    print(f"image_shape:", imgs.shape)
+    #imgs.shape()
+    #imgs[imgs>3*np.std(imgs)] = 0
+    imgs[imgs>threshold[1]]=0
+    imgs[imgs<threshold[0]]=0
+    print("thrshold set")
+    df = h.table()
+    #print(df.head())
+    #mon = np.array(df[mon],dtype=float32)
+    mon = np.stack(h.table(fill=True)[norm])
+    print("mono_read")
+    #figure_with_insert_fig_button()
+    #plt.imshow(imgs[0],clim=[0,50])
+    if roi_flag:
+        imgs = imgs[:,x_cen-size//2:x_cen+size//2,y_cen-size//2:y_cen+size//2]
+
+    scan_param = h.start["scan"]
+    mots = [scan_param["fast_axis"]["motor_name"],scan_param["slow_axis"]["motor_name"]]
+    num_mots = len(np.squeeze(scan_param['shape']))
+    #num_mots = 1
+    #df = h.table()
+    if scan_param['shape'][1] == 1:
+        #x = df[mots[0]]
+        x = np.arange(scan_param["shape"][0])
+        print(x)
+        tot = np.sum(imgs,2)
+        tot = np.array(np.sum(tot,1), dtype=float32)
+        tot = np.squeeze(np.divide(tot,mon))
+        print(tot)
+        #hlim = np.percentile(tot,99.99)
+        #tot[tot > hlim] = 0
+        #idx = np.where(abs(tot - np.mean(tot)) >3*np.std(tot))
+        #tot[idx[0]] = np.mean(tot)
+        #tot = tot[abs(tot - np.mean(tot)) < 3 * np.std(tot)]
+
+        figure_with_insert_fig_button()
+
+        plt.subplot(1,2,1)
+        plt.plot(x,tot)
+        plt.title('sid={}'.format(sid))
+        plt.subplot(1,2,2)
+        plt.semilogy(x,tot)
+        plt.title('sid={}'.format(sid))
+
+
+    else:
+        #tot = np.sum(imgs,2)
+        tot = np.array(np.sum(imgs,axis =(2,3)),dtype=float32)
+        print(tot.shape)
+        dim1 = np.array(scan_param["shape"][1])
+        dim2 = np.array(scan_param["shape"][0])
+        x = np.array(scan_param["shape"][1])
+        y = np.array(scan_param["shape"][0])
+        #extent = (np.nanmin(x), np.nanmax(x),np.nanmax(y), np.nanmin(y))
+        #256
+        scan_dim = scan_param["scan_input"]
+        extent = [scan_dim[0],scan_dim[1],scan_dim[3],scan_dim[4]]
+        figure_with_insert_fig_button()
+        print(tot.shape, mon.shape)
+
+
+        tot =np.divide(tot, mon)
+        image = tot.reshape(dim2,dim1)
+        plt.imshow(image,extent=extent)
+        plt.colorbar()
+        plt.title('sid={} ROI SUM'.format(sid))
 
 def get_diff_sum(sid, det = 'merlin1',mon ='sclr1_ch4', 
                  roi_flag=False,x_cen=0,y_cen=0,size=0,threshold=[0,1e5]):

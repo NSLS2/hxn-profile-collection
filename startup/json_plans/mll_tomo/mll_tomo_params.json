@@ -1,0 +1,63 @@
+{
+      "angle_info": {
+            "start": -90,
+            "end": 90,
+            "num": 90
+      },
+      "fly2d_scan": {
+            "det": "dets1",
+            "x_start": -1,
+            "x_end": 1,
+            "x_num": 100,
+            "y_start": -1,
+            "y_end": 1,
+            "y_num": 100,
+            "exposure": 0.03
+      },
+      "xalign": {
+            "do_align": true,
+            "start": -2,
+            "end": 2,
+            "num": 100,
+            "exposure": 0.03,
+            "elem": "Fe",
+            "center_with": "line_center",
+            "threshold": 0.5
+      },
+      "yalign": {
+            "do_align": true,
+            "start": -2,
+            "end": 2,
+            "num": 100,
+            "exposure": 0.03,
+            "elem": "Fe",
+            "center_with": "edge",
+            "threshold": 0.5
+      },
+      "align_2d_com": {
+            "do_align": false,
+            "x_start": -2,
+            "x_end": 2,
+            "x_num": 100,
+            "y_start": -2,
+            "y_end": 2,
+            "y_num": 100,
+            "exposure": 0.03,
+            "elem": "Fe",
+            "threshold": 0.5,
+            "move_x": true,
+            "move_y": true
+      },
+      "stop_iter": false,
+      "add_angles": [
+            91,
+            92
+      ],
+      "remove_angles": [
+            -90,
+            -91
+      ],
+      "stop_pdf": false,
+      "pause_scan": false,
+      "test": false
+}

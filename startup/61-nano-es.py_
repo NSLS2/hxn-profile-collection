@@ -1,4 +1,4 @@
-print(f"Loading {__file__}...")
+print(f"Loading {__file__!r} ...")
 
 class HXN_NanoStage(Device):
     ssx = Cpt(EpicsMotor, '{PT:Smpl-Ax:ssx}Mtr')  # Scanning piezo X

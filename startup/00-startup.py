@@ -1,3 +1,5 @@
+print(f"Loading {__file__!r} ...")
+
 import functools
 import os
 import time
@@ -122,7 +124,6 @@ def _write_to_file(col_name, method_name, t1, t2):
             "{0}: {1}, t1: {2} t2:{3} time:{4} \n".format(
                 col_name, method_name, t1, t2, (t2-t1),))
         f_benchmark.flush()
-
 
 class CompositeRegistry(Registry):
     '''Composite registry.'''
@@ -298,7 +299,6 @@ class CompositeRegistry(Registry):
 mds_db1 = MDS(_mds_config_db1, auth=False)
 db1 = Broker(mds_db1, CompositeRegistry(_fs_config_db1))
 
-
 # wrapper for two databases
 class CompositeBroker(Broker):
     """wrapper for two databases"""
@@ -413,7 +413,6 @@ RE.md['config'] = {}
 RE.md['beamline_id'] = 'HXN'
 RE.verbose = True
 
-
 from hxntools.scan_number import HxnScanNumberPrinter
 from hxntools.scan_status import HxnScanStatus
 from ophyd import EpicsSignal
@@ -439,7 +438,6 @@ for _event in ('start', 'stop'):
     RE.subscribe(uid_broadcaster, _event)
     RE.subscribe(hxn_scan_status, _event)
 
-
 def ensure_proposal_id(md):
     if 'proposal_id' not in md:
         raise ValueError("You forgot the proposal id.")
@@ -449,7 +447,8 @@ def ensure_proposal_id(md):
 # be nice on segfaults
 import faulthandler
 
-faulthandler.enable()
+# faulthandler.enable()
+
 
 # set up logging framework
 import logging
@@ -642,3 +641,10 @@ LARGE_FILE_DIRECTORY_ROOT = "/data"
 LARGE_FILE_DIRECTORY_PATH = "/data" + datetime.now().strftime("/%Y/%m/%d")
 
 FIP_TESTING = False  # Remove after FIP testing is complete
+
+
+def reload_bsui():
+    """Restarts the current bsui and updates live elements info."""
+    os.execl(sys.executable, sys.executable, * sys.argv)
+
+# del one_1d_step, one_nd_step, one_shot    

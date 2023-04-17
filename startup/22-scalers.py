@@ -1,3 +1,5 @@
+print(f"Loading {__file__!r} ...")
+
 from hxntools.struck_scaler import (HxnTriggeringScaler, StruckScaler)
 
 # - 3IDC RG:C4 VME scalers

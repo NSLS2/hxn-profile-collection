@@ -1,11 +1,27 @@
+print(f"Loading {__file__!r} ...")
+
 import numpy as np
 import os
+import sys
+import json
 
+with open("/nsls2/data/hxn/shared/config/bluesky/profile_collection/startup/plot_elems.json", "r") as fp:
+    xrf_elems = json.load(fp)
+    fp.close()
 
-roi_elems = ['Au_M','Si','Cl','W_L','Ti','Ga','S','Cr','Mn','Fe','Co','Ni','Cu','Zn','Pt_L','Au_L'] #limit = 16 
-live_plot_elems = ['Ga','Au_L','Pt_L','W_L'] # no limts but has to be in the above roi_elems
-line_plot_elem = ["Pt_L"] #only one element
+roi_elems = xrf_elems["roi_elems"]
+live_plot_elems  = xrf_elems["live_plot_elems"]
+line_plot_elem = xrf_elems["line_plot_elem"]
 
+update_elements = reload_bsui
+
+'''
+
+roi_elems = ['Cu','Ge','W_L','Ti','Si','Cl','Ga','S','Cr','Mn','Fe','Co','Ni','Zn','Pt_L','Au_L'] #limit = 16 
+live_plot_elems = roi_elems[:4] # no limts but has to be in the above roi_elems
+#live_plot_elems = ['Cu','Ge','Ti','W_L'] # no limts but has to be in the above roi_elems
+line_plot_elem = roi_elems[0] #only one element
+'''
 
 def create_user_dir(users_name):
     
@@ -52,8 +68,3 @@ def setup_new_user(name = "Lastname",experimenters = "HX,NU,SER", sample = "Gold
     insertTitle()
 
 
-'''
-merlin_pos = {'diff_x': 8, 'diff_y1':-12.9, 'diff_y2':-12.9, 'diff_z': -50, 'diff_cz': -24.7}
-cam11_pos = {'diff_x': 216.33, 'diff_y1': 19.177, 'diff_y2': 19.177, 'diff_z': -50, 'diff_cz': -24.7}
-telescope_pos = {'diff_x': -342,'diff_z': -50, 'diff_cz': -24.7}
-'''

@@ -1,8 +1,9 @@
+print(f"Loading {__file__!r} ...")
+
 from ophyd import (PVPositioner, Component as Cpt, EpicsSignal, EpicsSignalRO,
                    Signal, EpicsMotor)
 from ophyd.utils import ReadOnlyError
 import time as ttime
-
 
 
 class InsertionDevice(Device):

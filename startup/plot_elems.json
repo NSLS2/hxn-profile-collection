@@ -1,0 +1,29 @@
+{
+      "roi_elems": [
+            "Cu",
+            "Ge",
+            "W_L",
+            "Se",
+            "Si",
+            "Cl",
+            "Ga",
+            "S",
+            "Cr",
+            "Mn",
+            "Fe",
+            "Co",
+            "Ni",
+            "Zn",
+            "Pt_M",
+            "Au_L"
+      ],
+      "live_plot_elems": [
+            "Cu",
+            "Ge",
+            "W_L",
+            "Se"
+      ],
+      "line_plot_elem": [
+            "Cu"
+      ]
+}

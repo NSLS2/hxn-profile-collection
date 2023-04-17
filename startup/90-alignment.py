@@ -1,3 +1,5 @@
+print(f"Loading {__file__!r} ...")
+
 import logging
 import scipy
 import pickle
@@ -1122,6 +1124,8 @@ def go_det(det):
         cam11_pos = diff_pos["cam11_pos"]
         telescope_pos = diff_pos["telescope_pos"]
         out_pos = diff_pos["out"]
+        fip_merlin2 = diff_pos["fip_merlin2"]
+        xray_eye = diff_pos["xray_eye"]
 
         if det == 'merlin':
             #while zposa.zposax.position<20:
@@ -1159,6 +1163,14 @@ def go_det(det):
                             diff.z, out_pos['diff_z'], 
                             diff.cz,out_pos['diff_cz']
                             )
+            
+        elif det == "fip_merlin2":
+            caput("XF:03IDC-ES{MC:10-Ax:5}Mtr.VAL",fip_merlin2["bl_y"])
+            caput("XF:03IDC-ES{MC:10-Ax:6}Mtr.VAL",fip_merlin2["bl_x"])
+
+        elif det == "xray_eye":
+            caput("XF:03IDC-ES{MC:10-Ax:5}Mtr.VAL",xray_eye["bl_y"])
+            caput("XF:03IDC-ES{MC:10-Ax:6}Mtr.VAL",xray_eye["bl_x"])
 
 
         else:
@@ -1201,6 +1213,19 @@ def update_det_pos(det = "merlin"):
         diff_pos['out']['diff_y2'] = np.round(diff.y2.position,2)
         diff_pos['out']['diff_z'] = np.round(diff.z.position,2)
         diff_pos['out']['diff_cz'] = np.round(diff.cz.position,2)
+
+
+    elif det == "fip_merlin2":
+        
+        diff_pos["fip_merlin2"]['bl_y'] = caget("XF:03IDC-ES{MC:10-Ax:5}Mtr.VAL")
+        diff_pos["fip_merlin2"]['bl_x'] = caget("XF:03IDC-ES{MC:10-Ax:6}Mtr.VAL")
+
+
+    elif det == "xray_eye":
+
+        diff_pos["xray_eye"]['bl_y'] = caget("XF:03IDC-ES{MC:10-Ax:5}Mtr.VAL")
+        diff_pos["xray_eye"]['bl_x'] = caget("XF:03IDC-ES{MC:10-Ax:6}Mtr.VAL")
+
 
     else:
         raise KeyError ("Undefined detector name")

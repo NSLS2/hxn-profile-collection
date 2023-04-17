@@ -1,3 +1,5 @@
+print(f"Loading {__file__!r} ...")
+
 # vim: sw=4 ts=4 sts=4 expandtab smarttab
 # HXN fly-scan configuration
 from hxnfly.bs import (FlyPlan1D, FlyPlan2D, FlyStep1D, maybe_a_table)
@@ -78,12 +80,28 @@ fly1d = FlyPlan1D(usable_detectors=fly_scannable_detectors,
 fly1d.sub_factories = [maybe_a_table]
 fly1d.subs = [pt_plot, ]
 
-fly2d = FlyPlan2D(usable_detectors=fly_scannable_detectors,
+_fly2d = FlyPlan2D(usable_detectors=fly_scannable_detectors,
                   scaler_channels=range(1,17))
-fly2d.sub_factories = [maybe_a_table]
-fly2d.subs = [pt_plot, live_im_plot, ]
+_fly2d.sub_factories = [maybe_a_table]
+_fly2d.subs = [pt_plot, live_im_plot, ]
 
 flystep = FlyStep1D(usable_detectors=fly_scannable_detectors,
                     scaler_channels=[1, 2, 3, 4, 5, 6, 7, 8])
 flystep.sub_factories = [maybe_a_table]
 flystep.subs = [pt_plot, live_im_plot, ]
+
+def fly2d(dets,
+          motor1, scan_start1, scan_end1, num1,
+          motor2, scan_start2, scan_end2, num2,
+          exposure_time,
+          *,
+          dead_time=None, fly_type=None,
+          return_speed=None, max_points=None, md=None):
+  yield from _fly2d(
+        dets=dets, 
+        motor1=motor1, scan_start1=scan_start1, scan_end1=scan_end1, num1=num1,
+        motor2=motor2, scan_start2=scan_start2, scan_end2=scan_end2, num2=num1,
+        exposure_time=exposure_time,
+        dead_time=dead_time, fly_type=fly_type,
+        return_speed=return_speed, max_points=max_points, md=md
+  )

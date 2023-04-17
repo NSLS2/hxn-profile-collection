@@ -7,7 +7,7 @@
             "diff_cz": -24.7
       },
       "cam11_pos": {
-            "diff_x": 216.63,
+            "diff_x": 216.53,
             "diff_y1": 19.28,
             "diff_y2": 19.28,
             "diff_z": -50.0,
@@ -24,5 +24,13 @@
             "diff_y2": -12.9,
             "diff_z": -1.0,
             "diff_cz": -1.0
+      },
+      "fip_merlin2": {
+            "bl_y": -31.0,
+            "bl_x": 100.8
+      },
+      "xray_eye": {
+            "bl_y": 0,
+            "bl_x": 0
       }
 }

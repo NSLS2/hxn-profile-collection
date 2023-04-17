@@ -1,3 +1,5 @@
+print(f"Loading {__file__!r} ...")
+
 import IPython
 import bluesky.plan_stubs as bps
 import matplotlib.pyplot as plt

@@ -1,3 +1,5 @@
+print(f"Loading {__file__!r} ...")
+
 from ophyd import (EpicsMotor, Component as Cpt,
                    MotorBundle, Device)
 from hxntools.detectors.trigger_mixins import HxnModalBase

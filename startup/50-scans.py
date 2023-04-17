@@ -1,3 +1,5 @@
+print(f"Loading {__file__!r} ...")
+
 # vim: sw=4 ts=4 sts expandtab smarttab
 # HXN step-scan configuration
 

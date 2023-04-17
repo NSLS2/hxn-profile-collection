@@ -1,4 +1,4 @@
-print(f"Loading {__file__}...")
+print(f"Loading {__file__!r} ...")
 
 import time as ttime
 import numpy as np
@@ -16,7 +16,7 @@ from bluesky.preprocessors import (stage_decorator,
                                    run_decorator, subs_decorator,
                                    monitor_during_decorator, finalize_wrapper)
 import bluesky.plan_stubs as bps
-from bluesky.plan_stubs import (one_1d_step, kickoff, collect,
+from bluesky.plan_stubs import (kickoff, collect,
                                 complete, abs_set, mv, checkpoint)
 from bluesky.plans import (scan, )
 from bluesky.callbacks import CallbackBase, LiveGrid

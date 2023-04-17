@@ -1,3 +1,5 @@
+print(f"Loading {__file__!r} ...")
+
 import logging
 import numpy as np
 import pandas as pd
@@ -70,7 +72,7 @@ class HXNEnergy():
             if targetE>4.99 and targetE<25:     # if dialed a wrong number
                 
                 opt = np.array([self.calcGap(targetE, harmonics = hm) for hm in harmonics])
-                idx = np.where(np.logical_and(opt>=5600, opt<=10000)) #5400 beacuse of the ugap scan limit
+                idx = np.where(np.logical_and(opt>=6000, opt<=10000)) #6000 beacuse of the ugap scan limit
                 gap =  opt[idx][-1] #last one has lowest gap in the list
                 logger.info(f" estimated gap = {gap}")
                 
@@ -533,7 +535,7 @@ def center_ssa2(ic = sclr2_ch4):
     yield from Energy.fluxOptimizerScan(ssa2.vcen,-0.02,0.02,10, ic = ic)
 
 
-def find_beam_at_ssa2(ic1_target_k = 600, max_iter = 3):
+def find_beam_at_ssa2(ic1_target_k = 500, max_iter = 3):
     
     #move out FS
     caput('XF:03IDA-OP{FS:1-Ax:Y}Mtr.VAL', -20.)
@@ -551,9 +553,9 @@ def find_beam_at_ssa2(ic1_target_k = 600, max_iter = 3):
     ic_sens = caget("XF:03IDC-CT{SR570:1}sens_num.VAL")
     ic_unit = caget("XF:03IDC-CT{SR570:1}sens_unit.VAL")
     
-    #change IC1 sensivity to 10 um
+    #change IC1 sensivity to 5 um
     #caput the position of the value
-    caput("XF:03IDC-CT{SR570:1}sens_num.VAL",3)
+    caput("XF:03IDC-CT{SR570:1}sens_num.VAL",2)
     caput("XF:03IDC-CT{SR570:1}sens_unit.VAL",2)
 
     #close b shutter, so that first iter works

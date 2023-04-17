@@ -1,3 +1,5 @@
+print(f"Loading {__file__!r} ...")
+
 from ophyd import (EpicsSignal, EpicsSignalRO)
 from ophyd import (Device, Component as Cpt)
 
