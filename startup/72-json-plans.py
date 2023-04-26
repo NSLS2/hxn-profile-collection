@@ -371,8 +371,7 @@ def mll_tomo_json(path_to_json):
         if tomo_params["stop_iter"]:
             save_page()
             break
-
-
+        
         while tomo_params["pause_scan"]:
             yield from bps.sleep(10) #check if this freezes the gui or not
             with open(path_to_json,"r") as fp:
@@ -402,6 +401,20 @@ def mll_tomo_json(path_to_json):
         with open(path_to_json,"r") as fp:
             tomo_params = json.load(fp)
             fp.close()
+
+        #stop data collection if necessary.user input taken 
+        if tomo_params["stop_iter"]:
+            save_page()
+            break
+
+        while tomo_params["pause_scan"]:
+            yield from bps.sleep(10) #check if this freezes the gui or not
+            with open(path_to_json,"r") as fp:
+                tomo_params = json.load(fp)
+                fp.close() 
+
+            if not tomo_params["pause_scan"]:   
+                break
         
         if not angle in np.array(tomo_params["remove_angles"]):
             yield from tomo_scan_to_loop(angle, tomo_params)

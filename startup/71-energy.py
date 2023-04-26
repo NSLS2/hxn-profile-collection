@@ -528,7 +528,9 @@ def peak_dcm_roll(tweak_range = 0.005):
 
     yield from Energy.fluxOptimizerScan(dcm.r,-1*tweak_range,tweak_range,10)
 
-def center_ssa2(ic = sclr2_ch4):
+def center_ssa2(ic = None):
+    if ic is None:
+        ic = sclr2_ch4
 
     yield from Energy.fluxOptimizerScan(ssa2.vcen,-0.05,0.05,10, ic = ic)
     yield from Energy.fluxOptimizerScan(ssa2.hcen,-0.05,0.05,10, ic = ic)
@@ -637,8 +639,10 @@ def find_beam_at_cam11():
 Energy = HXNEnergy(ugap,e,dcm.p, "ic3", wd+"ugap_calib.csv")
 
 
-
-
-
-
-
+'''
+from bluesky_queueserver_api import BPlan
+from bluesky_queueserver_api.zmq import REManagerAPI
+RM = REManagerAPI()
+RM.item_execute((BPlan("fly2d", ["fs", "zebra", "sclr1", "merlin1", "xspress3"], "dssx", -1, 1, 10, "dssy", -1, 1, 10, 0.1)))
+RM.item_add((BPlan("fly2d", ["fs", "zebra", "sclr1", "merlin1", "xspress3"], "dssx", -1, 1, 10, "dssy", -1, 1, 10, 0.3)))
+'''

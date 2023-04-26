@@ -1431,6 +1431,118 @@ def find_edge_2D(scan_id, elem, left_flag=True):
     return edge_loc1,edge_loc2
 
 
+def update_xrf_elem_list(roi_elems = ['Cr', 'Ge', 'W_L', 'Se', 'Si', 'Cl', 'Ga', 'S', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Zn', 'Pt_M', 'Au_L'],
+                         live_plot_elems = ['Cr', 'Ge', 'W_L', 'Se'], line_plot_elem = "Cr"):
+        
+        xrf_elems = {}
+        xrf_elems["roi_elems"] = roi_elems
+        xrf_elems["live_plot_elems"] = live_plot_elems
+        xrf_elems["line_plot_elem"] = line_plot_elem
+        json_param_file = "/nsls2/data/hxn/shared/config/bluesky/profile_collection/startup/plot_elems.json"
+
+        with open(json_param_file, "w") as fp:
+            json.dump(xrf_elems, fp, indent = 6)
+            fp.close()
+        reload_bsui()
+
+
+def mll_sample_out():
+
+    if fdet1.x.position>-50:
+        raise ValueError("XRF detector is not in OUT position. Move it out <-50 and try again")
+    else:
+        yield from bps.mov(sbz,5000)
+        
+        if sbz.position>4800:
+            yield from bps.mov(sbx,-4000)
+        else:
+            raise ValueError("Sbz Motion Failed. Move it out and try again")
+        
+def mll_sampleX_in():        
+        
+        if sbz.position>4800:
+            yield from bps.mov(sbx,0)
+        else:
+            raise ValueError("Sbz is not close to 5000. Move it out and try again")
+        
+def mlls_out_for_loading():
+
+    if vmll.vz.position >-2000:
+        print("vmll.vz moving to -8000")
+        #yield from bps.mov(vmll.vz, -8000)
+        yield from bps.sleep(1)
+    else:
+        #raise ValueError("VZ<-2000 um; VZ is maybe already in out position")
+        print("VZ<-2000 um; VZ is maybe already in out position; trying to move hz")
+        pass
+    
+    if vmll.vz.position <-7900:
+        print("hmll.hz moving to -5000")
+        #yield from bps.mov(hmll.hz, -5000)
+    else:
+        raise ValueError("VMLL is not out; move it close to -8000 and try again")
+    
+    if hmll.hz.position >-4900:
+        print("HMLL motion failed try manually hz=-5000")
+        raise ValueError("HMLL motion failed try manually hz=-5000")
+    else:
+        return
+    
+    
+def mlls_in_after_loading():
+    
+    print("hmll.hz moving to 0")
+    #yield from bps.mov(hmll.hz, 0)
+    
+    if hmll.hz.position>-10:
+        print("vmll.vz moving to -0")
+        #yield from bps.mov(vmll.vz, 0)    
+    else:
+        raise ValueError("VMLL motion failed bacasue hz is not home; try manually vz=0 if hz~0")
+    
+    
+def mll_view(move_to = "cam11"):
+    
+    yield from bps.movr(mllbs.bsx,500,mllbs.bsy,-500)
+    yield from bps.movr(mllosa.osax,2700)
+    yield from bps.movr(vmll.vy,500)
+    yield from bps.movr(hmll.hx,-500)
+    yield from bps.mov(ssa2.hgap,2,ssa2.vgap,2)
+    yield from bps.mov(s5.hgap,4,s5.vgap,4)
+    yield from go_det(move_to)
+
+def stop_all_mll_motion():
+    hmll.stop()
+    vmll.stop()
+    mllosa.stop()
+    mllbs.stop()
+    smlld.stop()
+
+def stop_all_zp_motion():
+    zps.stop()
+    zp.stop()
+    zposa.stop()
+    zpbs.stop()
+
+
+def zero_child_components(parent_ = mllosa):
+
+    for comps in parent_.component_names:
+        eval(f"{parent_.name}.{comps}").set_current_position(0)
+
+def zero_all_mll_optics():
+
+    zero_child_components(parent_ = hmll)
+    zero_child_components(parent_ = vmll)
+    zero_child_components(parent_ = mllosa)
+    zero_child_components(parent_ = mllbs)
+
+        
+
+
+
+
+
 
 
 

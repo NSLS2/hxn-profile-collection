@@ -1,5 +1,3 @@
-print(f"Loading {__file__!r} ...")
-
 import numpy as np
 import os
 import sys
@@ -16,7 +14,6 @@ line_plot_elem = xrf_elems["line_plot_elem"]
 update_elements = reload_bsui
 
 '''
-
 roi_elems = ['Cu','Ge','W_L','Ti','Si','Cl','Ga','S','Cr','Mn','Fe','Co','Ni','Zn','Pt_L','Au_L'] #limit = 16 
 live_plot_elems = roi_elems[:4] # no limts but has to be in the above roi_elems
 #live_plot_elems = ['Cu','Ge','Ti','W_L'] # no limts but has to be in the above roi_elems

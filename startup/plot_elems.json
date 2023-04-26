@@ -1,6 +1,6 @@
 {
       "roi_elems": [
-            "Cu",
+            "Ir_L",
             "Ge",
             "W_L",
             "Se",
@@ -18,12 +18,12 @@
             "Au_L"
       ],
       "live_plot_elems": [
-            "Cu",
+            "Ir_L",
             "Ge",
             "W_L",
             "Se"
       ],
       "line_plot_elem": [
-            "Cu"
+            "Ir_L"
       ]
 }

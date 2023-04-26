@@ -3188,41 +3188,7 @@ def movr_mll_sbz(d):
     yield from bps.movr(dsy,-0.01*d)
 
 
-def trans_view():
-    yield from go_det('cam11')
 
-    yield from bps.movr(mllbs.bsx,500)
-    yield from bps.movr(mllbs.bsy,-500)
-
-    yield from bps.movr(mllosa.osax,2700)
-
-    yield from bps.movr(vmll.vy,500)
-    yield from bps.movr(hmll.hx,-500)
-
-
-    yield from bps.movr(ssa2.hgap,1)
-    yield from bps.movr(ssa2.vgap,1)
-
-    yield from bps.movr(s5.hgap,2)
-    yield from bps.movr(s5.vgap,2)
-
-def merlin_view():
-
-    yield from bps.movr(ssa2.hgap,-1)
-    yield from bps.movr(ssa2.vgap,-1)
-
-    yield from bps.movr(s5.hgap,-2)
-    yield from bps.movr(s5.vgap,-2)
-
-    yield from bps.movr(mllbs.bsx,-500)
-    yield from bps.movr(mllbs.bsy,500)
-
-    yield from bps.movr(osax,-2700)
-
-    yield from bps.movr(vmll.vy,-500)
-    yield from bps.movr(hmll.hx,500)
-
-    yield from go_det('merlin')
 
 # ========================================================================================================================
 
@@ -3648,12 +3614,14 @@ def plot_data(sid = -1,  elem = 'Pt_L', mon = 'sclr1_ch4'):
         plot2dfly(sid, elem,  mon)
 
 
-
-def mosaic_overlap_scan(dets = dets_fs, ylen = 100, xlen = 100, overlap_per = 15, dwell = 0.05, 
+def mosaic_overlap_scan(dets = None, ylen = 100, xlen = 100, overlap_per = 15, dwell = 0.05, 
                         step_size = 500, plot_elem = ["Cu","Fe","Ba_L","Ti"],mll = False):
 
     """mosiac scan with 5 um overlap ; 
     xlen and ylen should be multiple of 25"""
+
+    if dets is None:
+        dets = dets_fs
 
     max_travel = 30
         
