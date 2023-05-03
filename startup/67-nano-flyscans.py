@@ -118,8 +118,7 @@ def scan_and_fly_base(detectors, xstart, xstop, xnum, ystart, ystop, ynum, dwell
     # print(f"detectors_stage_once={detectors_stage_once}")
     # print(f"detectors_stage_every_row={detectors_stage_every_row}")
 
-    dets_by_name = {d.name : d
-                    for d in detectors}
+    dets_by_name = {d.name : d for d in detectors}
 
     flying_zebra.frame_per_point = xnum
 
@@ -153,6 +152,7 @@ def scan_and_fly_base(detectors, xstart, xstop, xnum, ystart, ystop, ynum, dwell
                 #  'autosummation' for longer exposure times, which may result in different
                 #  data representation for short and long exposures (just an assumption).
                 dpc.hdf5.warmup(acquire_time=acquire_time)
+                # pass
 
             dpc.cam.stage_sigs['acquire_time'] = acquire_time
             dpc.cam.stage_sigs['acquire_period'] = acquire_period
@@ -161,6 +161,7 @@ def scan_and_fly_base(detectors, xstart, xstop, xnum, ystart, ystop, ynum, dwell
             dpc.hdf5.stage_sigs['num_capture'] = xnum * ynum
             dpc.hdf5.frame_per_point = xnum
             del dpc
+
 
     # If delta is None, set delta based on time for acceleration
     if delta is None:
@@ -528,6 +529,7 @@ def scan_and_fly_base(detectors, xstart, xstop, xnum, ystart, ystop, ynum, dwell
         if d:
             yield from bps.mov(d.fly_next, True)
 
+
     @subs_decorator(livepopup)
     @subs_decorator({'start': at_scan})
     @subs_decorator({'stop': finalize_scan})
@@ -553,6 +555,7 @@ def scan_and_fly_base(detectors, xstart, xstop, xnum, ystart, ystop, ynum, dwell
         for n_row, step in enumerate(np.linspace(ystart, ystop, ynum)):
 
             print(f"Scanning row #{n_row + 1} (of {ynum}): Y={step:.3f}")
+            # yield from bps.sleep(10)
 
             if verbose:
                 print(f"Starting the next row")

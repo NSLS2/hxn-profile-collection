@@ -324,7 +324,8 @@ class SRXEiger(EigerSingleTriggerV33, EigerDetector):
             self.stage_sigs[self.cam.fw_enable] = 0      # Disable file writer
 
             self.stage_sigs[self.cam.image_mode] = 1    # 0 -single, 1 - multiple
-            self.stage_sigs[self.cam.trigger_mode] = 3  # 0 - internal, 3 - external enable
+            self.stage_sigs[self.cam.trigger_mode] = 2  # 0 - internal, 2 - external series, 3 - external enable
+            #   NOTE: 'external enable' is sensitive to noise in the triggering line
 
             self.stats1.ts.ts_acquire.set(1).wait()
 

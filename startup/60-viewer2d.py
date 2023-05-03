@@ -852,7 +852,7 @@ def plot_img_sum(sid, det = 'merlin1',norm ='sclr1_ch4',
 
 
 def plot_img_sum_fip(sid, det = 'merlin2_image',norm ='sclr1_ch4', 
-                 roi_flag=False,x_cen=0,y_cen=0,size=0,threshold=[0,1e6]):
+                 roi_flag=False,x_cen=0,y_cen=0,size=0,threshold=[0,1e6], normalize=True):
     h = db[int(sid)]
     sid = h.start['scan_id']
     try:
@@ -872,7 +872,8 @@ def plot_img_sum_fip(sid, det = 'merlin2_image',norm ='sclr1_ch4',
     df = h.table()
     #print(df.head())
     #mon = np.array(df[mon],dtype=float32)
-    mon = np.stack(h.table(fill=True)[norm])
+    if normalize:
+        mon = np.stack(h.table(fill=True)[norm])
     print("mono_read")
     #figure_with_insert_fig_button()
     #plt.imshow(imgs[0],clim=[0,50])
@@ -890,8 +891,10 @@ def plot_img_sum_fip(sid, det = 'merlin2_image',norm ='sclr1_ch4',
         print(x)
         tot = np.sum(imgs,2)
         tot = np.array(np.sum(tot,1), dtype=float32)
-        tot = np.squeeze(np.divide(tot,mon))
-        print(tot)
+        tot = np.squeeze(tot)
+        # tot = np.squeeze(np.divide(tot,mon))
+        if normalize:
+            tot = np.divide(tot,mon)
         #hlim = np.percentile(tot,99.99)
         #tot[tot > hlim] = 0
         #idx = np.where(abs(tot - np.mean(tot)) >3*np.std(tot))
@@ -907,7 +910,6 @@ def plot_img_sum_fip(sid, det = 'merlin2_image',norm ='sclr1_ch4',
         plt.semilogy(x,tot)
         plt.title('sid={}'.format(sid))
 
-
     else:
         #tot = np.sum(imgs,2)
         tot = np.array(np.sum(imgs,axis =(2,3)),dtype=float32)
@@ -921,11 +923,15 @@ def plot_img_sum_fip(sid, det = 'merlin2_image',norm ='sclr1_ch4',
         scan_dim = scan_param["scan_input"]
         extent = [scan_dim[0],scan_dim[1],scan_dim[3],scan_dim[4]]
         figure_with_insert_fig_button()
-        print(tot.shape, mon.shape)
 
+        if normalize:
+            print(tot.shape, mon.shape)
+            tot =np.divide(tot, mon)
 
-        tot =np.divide(tot, mon)
-        image = tot.reshape(dim2,dim1)
+        print(f"tot.shape={tot.shape}")        
+        # image = tot.reshape(dim2,dim1)
+        image = tot
+        print(f"image.shape={image.shape}")        
         plt.imshow(image,extent=extent)
         plt.colorbar()
         plt.title('sid={} ROI SUM'.format(sid))

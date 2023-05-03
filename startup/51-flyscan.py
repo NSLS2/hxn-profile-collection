@@ -74,11 +74,12 @@ pt_plot = FlyRoiPlot(['Fe'],
 # NOTE: indicate which detectors can be used in fly scans.
 # fly_scannable_detectors = [xspress3, zebra, sclr1, dexela1]
 fly_scannable_detectors = [xspress3, zebra, sclr1]
-fly1d = FlyPlan1D(usable_detectors=fly_scannable_detectors,
+_fly1d = FlyPlan1D(usable_detectors=fly_scannable_detectors,
                   scaler_channels=range(1,17))
 
-fly1d.sub_factories = [maybe_a_table]
-fly1d.subs = [pt_plot, ]
+_fly1d.sub_factories = [maybe_a_table]
+_fly1d.subs = [pt_plot, ]
+fly1d = _fly1d.__call__
 
 _fly2d = FlyPlan2D(usable_detectors=fly_scannable_detectors,
                   scaler_channels=range(1,17))

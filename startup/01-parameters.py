@@ -57,11 +57,21 @@ def create_user_symlink(src_dir = "/data/2023Q1/"):
     
 
 def setup_new_user(name = "Lastname",experimenters = "HX,NU,SER", sample = "Gold", sample_image = "/data/users/hxn_logo.png"):
-    
+    RE.md["PI"] = name
+    RE.md["experimenters"] = experimenters
+    RE.md["sample"] = sample
+
     udir = create_user_dir(name)
     print(f"User directory is; {udir}")
     create_user_symlink(src_dir = udir)
     setup_pdf_function(sample_name = sample, experimenters = experimenters, img_to_add = sample_image)
     insertTitle()
 
+from bluesky_queueserver_api import BPlan
+from bluesky_queueserver_api.zmq import REManagerAPI
+RM = REManagerAPI()
+# RM.item_execute((BPlan("fly2d", ["fs", "zebra", "sclr1", "merlin1", "xspress3"], "dssx", -1, 1, 10, "dssy", -1, 1, 10, 0.1)))
+# RM.item_add((BPlan("fly2d", ["fs", "zebra", "sclr1", "merlin1", "xspress3"], "dssx", -1, 1, 10, "dssy", -1, 1, 10, 0.3)))
 
+
+#XF:03IDC-VA{VT:Chm-TCG:2}P-I

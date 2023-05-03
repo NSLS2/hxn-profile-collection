@@ -3021,7 +3021,7 @@ def recover_mll_scan_pos_plan(scan_id, base_moveflag=True):
 
     return cur_pos
 
-def recover_mll_scan_pos(scan_id,moveflag=True,base_moveflag=True,det_moveflag=False):
+def recover_mll_scan_pos(scan_id,moveflag=True,base_moveflag=True):
     data = db.get_table(db[scan_id], stream_name='baseline')
     dsx_pos = data.dsx[1]
     dsy_pos = data.dsy[1]
@@ -3032,19 +3032,9 @@ def recover_mll_scan_pos(scan_id,moveflag=True,base_moveflag=True,det_moveflag=F
     dssx_pos = data.dssx[1]
     dssy_pos = data.dssy[1]
     dssz_pos = data.dssz[1]
-    #fdet1_x = data.fdet1_x[1]
-    #print(ssx,ssy,ssz)
-
-    print('scan '+np.str(scan_id))
-    print('dsx:',dsx_pos, ', dsy:',dsy_pos, ', dsz:',dsz_pos,', dsth:',dsth_pos)
-    print('sbx:',sbx_pos, ', sbz:',sbz_pos)
-    print('dssx:',dssx_pos,', dssy:',dssy_pos,', dssz:',dssz_pos)
 
     if moveflag:
-        #if det_moveflag:
-        #    mov(fdet1.x,fdet1_x)
-        #    print('moving flourescence det, wait 5 sec ...')
-        #    sleep(5)
+
         yield from bps.mov(smlld.dsz,dsz_pos)
         yield from bps.mov(smlld.dsx,dsx_pos)
         yield from bps.mov(smlld.dsy,dsy_pos)
@@ -3055,6 +3045,13 @@ def recover_mll_scan_pos(scan_id,moveflag=True,base_moveflag=True,det_moveflag=F
         if base_moveflag:
             yield from bps.mov(smlld.sbx,sbx_pos)
             yield from bps.mov(smlld.sbz,sbz_pos)
+
+    return_str1 = f"{scan_id =},{dsx_pos = :.1f},{dsy_pos = :.1f},{dsz_pos = :.1f}, {dsth_pos = :.1f} \n"
+    return_str2 =  f"{sbx_pos = :.1f}, {sbz_pos = :.1f}, {dssx_pos= :.1f}, {dssy_pos= :.1f}, {dssz_pos = :.1f}"
+    
+    return  return_str1+return_str2 
+    
+
 
 def recover_zp_scan_pos(scan_id,zp_move_flag=0,smar_move_flag=0):
     data = db.get_table(db[scan_id],stream_name='baseline')

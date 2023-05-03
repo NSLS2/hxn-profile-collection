@@ -639,10 +639,8 @@ def find_beam_at_cam11():
 Energy = HXNEnergy(ugap,e,dcm.p, "ic3", wd+"ugap_calib.csv")
 
 
-'''
-from bluesky_queueserver_api import BPlan
-from bluesky_queueserver_api.zmq import REManagerAPI
-RM = REManagerAPI()
-RM.item_execute((BPlan("fly2d", ["fs", "zebra", "sclr1", "merlin1", "xspress3"], "dssx", -1, 1, 10, "dssy", -1, 1, 10, 0.1)))
-RM.item_add((BPlan("fly2d", ["fs", "zebra", "sclr1", "merlin1", "xspress3"], "dssx", -1, 1, 10, "dssy", -1, 1, 10, 0.3)))
-'''
+# from bluesky_queueserver_api import BPlan
+# from bluesky_queueserver_api.zmq import REManagerAPI
+# RM = REManagerAPI()
+# RM.item_execute((BPlan("fly2d", ["fs", "zebra", "sclr1", "merlin1", "xspress3"], "dssx", -1, 1, 10, "dssy", -1, 1, 10, 0.1)))
+# RM.item_add((BPlan("fly2d", ["fs", "zebra", "sclr1", "merlin1", "xspress3"], "dssx", -1, 1, 10, "dssy", -1, 1, 10, 0.3)))

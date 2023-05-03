@@ -16,8 +16,8 @@ from ophyd.areadetector.filestore_mixins import resource_factory
 
 
 xs = None  # No Xspress3
-# use_sclr1 = False  # Set this False to run zebra without 'sclr1'
-use_sclr1 = True
+# use_sclr = False  # Set this False to run zebra without 'sclr'
+use_sclr = True
 
 
 class ZebraHDF5Handler(HandlerBase):
@@ -209,11 +209,11 @@ class SRXFlyer1Axis(Device):
     def sclr(self):
         return self._sis
 
-    def __init__(self, dets, sclr1, zebra, *, reg=db.reg, **kwargs):
+    def __init__(self, dets, sclr, zebra, *, reg=db.reg, **kwargs):
         super().__init__("", parent=None, **kwargs)
         self._mode = "idle"
         self._dets = dets
-        self._sis = sclr1
+        self._sis = sclr
         self._filestore_resource = None
         self._encoder = zebra
 
@@ -818,7 +818,7 @@ try:
         read_attrs=["pc.data.enc1", "pc.data.enc2", "pc.data.enc3", "pc.data.time"],
     )
     nano_flying_zebra = SRXFlyer1Axis(
-        list(xs for xs in [xs] if xs is not None), sclr1 if use_sclr1 else None, nanoZebra, name="nano_flying_zebra"
+        list(xs for xs in [xs] if xs is not None), sclr3 if use_sclr else None, nanoZebra, name="nano_flying_zebra"
     )
     # print('huge success!')
 except Exception as ex:
