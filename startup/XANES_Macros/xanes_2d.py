@@ -70,8 +70,21 @@ As_MLL_XANES = {'high_e':11.94,
                 'low_e_hmll_z':9,
                 'low_e_sbz':-39,
                 'energy':[(11.84,11.86,0.005),
-                          (11.861,11.886,0.00075),
-                          (11.89,11.940,0.005)]
+                          (11.861,11.88,0.001),
+                          (11.881,11.90,0.002),
+                          (11.90,11.94,0.005)]
+                          
+                }
+
+As_MLL_XANES_minE = {'high_e':11.94, 
+                'low_e':11.84,
+                'high_e_hmll_z':0,
+                'high_e_sbz':0,
+                'low_e_hmll_z':9,
+                'low_e_sbz':-39,
+                'energy':[11.84,11.869,11.870,
+                          11.872,11.878,11.880,
+                          11.905,11.94]
                           
                 }
 
@@ -514,8 +527,8 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
 
 
 def mll_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,highEStart = False,
-                    doAlignScan = True, alignX = (-1.,1.,100,0.05,'Fe',0.5,True),
-                    alignY = (-1.,1.,100,0.05,'Fe',0.5, True), xy_offset = (0,0),
+                    doAlignScan = True, alignX = (-2.5,2.5,100,0.05,'Fe',0.5,True),
+                    alignY = (-2.5,2.5,100,0.05,'Fe',0.5, True), xy_offset = (0,0),
                     pdfElem = ['Fe','As'],pdfLog = True,peakBeam = True,
                     saveLogFolder = '/data/users/current_user'):
 
@@ -750,8 +763,8 @@ def mll_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t
 
 
 def mll_list_xanes2d_no_input(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,highEStart = False,
-                    doAlignScan = True, alignX = (-1.25,1.25,100,0.05,'Fe',0.5,True),
-                    alignY = (-1.25,1.25,100,0.05,'Fe',0.5, True), xy_offset = (0,0),
+                    doAlignScan = True, alignX = (-2.5,2.5,100,0.05,'Fe',0.5,True),
+                    alignY = (-2.5,2.5,100,0.05,'Fe',0.5, True), xy_offset = (0,0),
                     pdfElem = ['Fe','As'],pdfLog = True,peakBeam = True,
                     saveLogFolder = '/data/users/current_user'):
 
@@ -1003,3 +1016,7 @@ def repeated_scan():
 
 #<zp_list_xanes2d(FeXANES, dets1, zpssx,-2.5,2.5,100,zpssy,-1.5,1.5,60,0.03, highEStart=False,  alignX = (-5,5,100,0.05,"Cr",0.5, True), alignY = (-4
    #...: ,4,100,0.05,"Cr",0.5,True), pdfElem=["Fe", "Cr"], peakBeam=False,saveLogFolder="/nsls2/data/hxn/legacy/users/2022Q3/Ajith_2022Q3")
+
+def two_xanes():
+    yield from mll_list_xanes2d_no_input(As_MLL_XANES,dets_fs,dssx,-2,2,125,dssy,-2,2,125,0.025, highEStart=True)
+    yield from mll_list_xanes2d_no_input(As_MLL_XANES_minE,dets_fs,dssx,-2,2,200,dssy,-2,2,200,0.02, highEStart=False)

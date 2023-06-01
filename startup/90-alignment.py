@@ -237,56 +237,6 @@ def find_2D_edge(sid, axis, elem):
     return edge
 
 
-def mll_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4'):
-    z_pos=np.zeros(z_num+1)
-    fit_size=np.zeros(z_num+1)
-    z_step = (z_end - z_start)/z_num
-    init_sz = smlld.sbz.position
-    yield from bps.movr(smlld.sbz, z_start)
-    for i in range(z_num + 1):
-
-        yield from fly1d(dets1, mot, start, end, num, acq_time)
-
-        #plot(-1, elem, mon)
-        #plt.title('sbz = %.3f' % smlld.sbz.position)
-        '''
-        h=db[-1]
-        sid=h['start']['scan_id']
-        df=db.get_table(h)
-        xdata=df[mot]
-        xdata=np.array(xdata,dtype=float)
-        x_mean=np.mean(xdata)
-        xdata=xdata-x_mean
-        ydata=(df['Det1_'+elem]+df['Det2_'+elem]+df['Det3_'+elem])/df[mon]
-        ydata=np.array(ydata,dtype=float)
-        y_min=np.min(ydata)
-        y_max=np.max(ydata)
-        ydata=(ydata-y_min)/y_max
-        y_mean = np.mean(ydata)
-        half_size = int (len(ydata)/2)
-        y_half_mean = np.mean(ydata[0:half_size])
-        if y_half_mean < y_mean:
-            popt,pcov=curve_fit(erfunc1,xdata,ydata)
-            fit_data=erfunc1(xdata,popt[0],popt[1],popt[2]);
-        else:
-            popt,pcov=curve_fit(erfunc2,xdata,ydata)
-            fit_data=erfunc2(xdata,popt[0],popt[1],popt[2]);
-        plt.figure()
-        plt.plot(xdata,ydata,'bo')
-        plt.plot(xdata,fit_data)
-        z_pos[i]=smlld.sbz.position
-        fit_size[i]=popt[1]*2.3548*1000
-        plt.title('sid = %d sbz = %.3f um FWHM = %.2f nm' %(sid,smlld.sbz.position,fit_size[i]))
-        '''
-        edge_pos,fwhm=erf_fit(-1,elem,mon,linear_flag=False)
-        fit_size[i]= fwhm
-        z_pos[i]=smlld.sbz.position
-        yield from bps.movr(smlld.sbz, z_step)
-    yield from bps.mov(smlld.sbz, init_sz)
-    plt.figure()
-    plt.plot(z_pos,fit_size,'bo')
-    plt.xlabel('sbz')
-
 def find_edge(xdata,ydata,size):
     set_point=0.5
     j=int (ceil(size/2.0))
@@ -312,14 +262,42 @@ def find_double_edge(xdata, ydata, size):
         #edge_2 = cen - (edge_1 - cen)
         edge_2 = find_edge(xdata[1:index],ydata[1:index],size)
         return(edge_2,edge_1)
+
+def mll_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4'):
+
+    """usage: <mll_z_alignment(-20,20,10,dssy,-0.5,0.5,100,0.05)"""
+    
+    z_pos=np.zeros(z_num+1)
+    fit_size=np.zeros(z_num+1)
+    z_step = (z_end - z_start)/z_num
+    init_sz = smlld.sbz.position
+    yield from bps.movr(smlld.sbz, z_start)
+    for i in range(z_num + 1):
+
+        yield from fly1d(dets_fs, mot, start, end, num, acq_time)
+
+        edge_pos,fwhm=erf_fit(-1,elem,mon,linear_flag=False)
+        fit_size[i]= fwhm
+        z_pos[i]=smlld.sbz.position
+        if abs(edge_pos)<12:
+            yield from bps.mov(mot, edge_pos)
+        yield from bps.movr(smlld.sbz, z_step)
+    yield from bps.mov(smlld.sbz, init_sz)
+    plt.figure()
+    plt.plot(z_pos,fit_size,'bo')
+    plt.xlabel('sbz')
+
 def hmll_z_alignment(z_start, z_end, z_num, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4'):
+
+    """ usage:hmll_z_alignment(-10, 10, 10, -0.5, 0.5, 100, 0.05) """
+
     z_pos=np.zeros(z_num+1)
     fit_size=np.zeros(z_num+1)
     z_step = (z_end - z_start)/z_num
     init_hz = hmll.hz.position
     yield from bps.movr(hmll.hz, z_start)
     for i in range(z_num + 1):
-        yield from fly1d(dets1,dssx, start, end, num, acq_time)
+        yield from fly1d(dets_fs,dssx, start, end, num, acq_time)
         edge_pos,fwhm=erf_fit(-1,elem,mon)
         fit_size[i]=fwhm
         z_pos[i]=hmll.hz.position
@@ -337,7 +315,7 @@ def mll_vchi_alignment(vchi_start, vchi_end, vchi_num, mot, start, end, num, acq
     init_vchi = vmll.vchi.position
     yield from bps.movr(vmll.vchi, vchi_start)
     for i in range(vchi_num + 1):
-        yield from fly1d(dets1, mot, start, end, num, acq_time,dead_time=0.002)
+        yield from fly1d(dets_fs, mot, start, end, num, acq_time,dead_time=0.002)
         edge_pos,fwhm=erf_fit(-1,elem,mon)
         fit_size[i]=fwhm
         vchi_pos[i]=vmll.vchi.position
@@ -354,7 +332,7 @@ def vmll_z_alignment(z_start, z_end, z_num, start, end, num, acq_time, elem='Pt_
     init_vz = vmll.vz.position
     yield from bps.movr(vmll.vz, z_start)
     for i in range(z_num + 1):
-        yield from fly1d(dets1,dssy, start, end, num, acq_time)
+        yield from fly1d(dets_fs,dssy, start, end, num, acq_time)
         edge_pos,fwhm=erf_fit(-1,elem,mon)
         #plt.title('vz={}'.format(vmll.vz.position),loc='right')
         fit_size[i]=fwhm
@@ -571,18 +549,21 @@ def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt
         #ddy = (-0.0024*angle)-0.185
         #dy = dy+ddy
         #yield from bps.movr(dssy,dy)
-
+        '''
         y_offset1 = sin_func(x[i], 0.110, -0.586, 7.85,1.96)
         y_offset2 = sin_func(th_init, 0.110, -0.586, 7.85,1.96)
         yield from bps.mov(dssy,y_init+y_offset1-y_offset2)
-
+        '''
 
         if np.abs(x[i]) > 45.01:
             #yield from fly2d(dets1,dssz,start,end,num, dssy, -2,2,20,acq_time)
             #cx,cy = return_center_of_mass(-1,elem,0.3)
             #y[i] = cx*np.sin(x[i]*np.pi/180.0)
             yield from fly1d(dets1,dssz,start,end,num,acq_time)
+            #plot(-1, elem)
+            #plt.close()
             cen = return_line_center(-1, elem=elem,threshold = 0.3)
+            #plt.close()
             #cen, edg1, edg2 = square_fit(-1,elem=elem)
             y[i] = cen*np.sin(x[i]*np.pi/180.0)
             # yield from bps.mov(dssz,cen)
@@ -592,6 +573,8 @@ def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt
             #y[i] = cx*np.cos(x[i]*np.pi/180.0)
             yield from fly1d(dets1,dssx,start,end,num,acq_time)
             cen = return_line_center(-1,elem=elem,threshold = 0.3)
+            #plot(-1, elem)
+            #plt.close()
             #cen, edg1, edg2 = square_fit(-1,elem=elem)
             y[i] = cen*np.cos(x[i]*np.pi/180.0)
             #y[i] = tmp*np.cos(x[i]*np.pi/180.0)
@@ -871,26 +854,7 @@ def engage_mirror_feedback():
     print("Feedbacks Engaged....")
 
 
-def mll_sample_out_docs():
-    """
-    vmll vz -8000 and confirm movement
-    hmll hz -5000 and confirm movement
 
-    sbz +5000
-    sbx -4000
-    """
-
-def mll_optics_out_docs():
-    """
-    move the mll bsx 500 +x 
-    move mll bsy 500 -y'
-
-    vmll vy + 500
-    hmll hx -500
-    osax +2600 um
-
-
-    """
     
     #ensure fluorescence detecor is out; otherwise move it out 
 
@@ -1465,51 +1429,94 @@ def mll_sampleX_in():
         else:
             raise ValueError("Sbz is not close to 5000. Move it out and try again")
         
-def mlls_out_for_loading():
+def move_mlls_upstream():
 
-    if vmll.vz.position >-2000:
+    """
+    vmll vz -8000 and confirm movement
+    hmll hz -5000 and confirm movement
+
+    """
+
+    if abs(vmll.vz.position)>2000:
         print("vmll.vz moving to -8000")
-        #yield from bps.mov(vmll.vz, -8000)
+        yield from bps.mov(vmll.vz, -8000)
         yield from bps.sleep(1)
     else:
-        #raise ValueError("VZ<-2000 um; VZ is maybe already in out position")
+        raise ValueError("VZ<-2000 um; VZ is maybe already in out position")
         print("VZ<-2000 um; VZ is maybe already in out position; trying to move hz")
         pass
     
-    if vmll.vz.position <-7900:
+    if abs(vmll.vz.position)>7900:
         print("hmll.hz moving to -5000")
-        #yield from bps.mov(hmll.hz, -5000)
+        yield from bps.mov(hmll.hz, -5000)
     else:
         raise ValueError("VMLL is not out; move it close to -8000 and try again")
     
-    if hmll.hz.position >-4900:
+    if abs(hmll.hz.position)>4900:
         print("HMLL motion failed try manually hz=-5000")
         raise ValueError("HMLL motion failed try manually hz=-5000")
     else:
         return
     
     
-def mlls_in_after_loading():
+def move_mlls_downstream():
     
     print("hmll.hz moving to 0")
-    #yield from bps.mov(hmll.hz, 0)
+    yield from bps.mov(hmll.hz, 0)
     
-    if hmll.hz.position>-10:
+    if abs(hmll.hz.position)<10:
         print("vmll.vz moving to -0")
-        #yield from bps.mov(vmll.vz, 0)    
+        yield from bps.mov(vmll.vz, 0)    
     else:
         raise ValueError("VMLL motion failed bacasue hz is not home; try manually vz=0 if hz~0")
+
+def mlls_optics_out_for_cam11():
     
+    """
+    move the mll bsx 500 +x 
+    move mll bsy 500 -y'
+
+    vmll vy + 500
+    hmll hx -500
+    osax +2600 um
+
+    """
+
+    if abs(vmll.vy.position)<10 and abs(hmll.hx.position)<10:
+        yield from bps.movr(vmll.vy,500)
+        yield from bps.movr(hmll.hx,-500)
+    else:
+        raise ValueError("lens positions are not close to zero")
+        pass
+
+    if abs(mllosa.osax.position)<10:
+        yield from bps.movr(mllosa.osax,+2600)
+
+    else:
+        raise ValueError(f"OSA_X position not close to zero osax = {mllosa.osax.position :.1f}")
+        pass
+
+    if abs(mllbs.bsx.position)<10 and abs(mllbs.bsy.position)<10:
+        yield from bps.movr(mllbs.bsx,500)
+        yield from bps.movr(mllbs.bsy,-500)
+    else:
+        raise ValueError(f"bemastop positions are not close to zero."
+                        f"bsx = {mllbs.bsx.position :.1f},bsy = {mllbs.bsy.position :.1f}")
+        pass
+
     
 def mll_view(move_to = "cam11"):
     
-    yield from bps.movr(mllbs.bsx,500,mllbs.bsy,-500)
-    yield from bps.movr(mllosa.osax,2700)
-    yield from bps.movr(vmll.vy,500)
-    yield from bps.movr(hmll.hx,-500)
-    yield from bps.mov(ssa2.hgap,2,ssa2.vgap,2)
-    yield from bps.mov(s5.hgap,4,s5.vgap,4)
-    yield from go_det(move_to)
+    
+    # yield from bps.movr(mllbs.bsx,500,mllbs.bsy,-500)
+    # yield from bps.movr(mllosa.osax,2700)
+    # yield from bps.movr(vmll.vy,500)
+    # yield from bps.movr(hmll.hx,-500)
+    # yield from bps.mov(ssa2.hgap,2,ssa2.vgap,2)
+    # yield from bps.mov(s5.hgap,4,s5.vgap,4)
+    # yield from go_det(move_to)
+    pass
+    
 
 def stop_all_mll_motion():
     hmll.stop()
@@ -1536,6 +1543,63 @@ def zero_all_mll_optics():
     zero_child_components(parent_ = vmll)
     zero_child_components(parent_ = mllosa)
     zero_child_components(parent_ = mllbs)
+
+def mll_to_unfocused_beam():
+    check_list = [mllbs.bsx,mllbs.bsy,mllosa.osax,vmll.vy,hmll.hx]
+
+    for mtr in check_list:
+        if abs(mtr.position)>2:
+            raise ValueError(f"{mtr.name} is not close to zero. Unable to go to unfocused_beam")
+            return
+    
+    zero_all_mll_optics()
+    caput("XF:03IDC-ES{IO:1}DO:1-Cmd",0)
+    yield from bps.sleep(3)
+
+    yield from go_det("cam11")
+
+    if caget("XF:03IDC-ES{IO:1}DO:1-Sts")==0:
+        yield from bps.sleep(3)
+        yield from bps.mov(mllbs.bsx,500, mllbs.bsy,-500,mllosa.osax,2600)
+        yield from bps.mov(mllosa.osax,2600)
+        yield from bps.mov(ssa2.hgap, 2,ssa2.vgap, 2,s5.hgap,4,s5.vgap,4 )
+        yield from bps.mov(fdet1.x, -12)
+
+        if abs(fdet1.x.position)>11.9:
+            yield from bps.mov(vmll.vy, 500, hmll.hx, -500)
+
+        else:
+            raise ValueError("Fluorescence detector motion failed")
+            return 
+
+    else:
+        raise ValueError("Merlin shutter motion failed")
+        return
+
+def mll_to_nanobeam():
+    
+    yield from bps.mov(ssa2.hgap, 0.05,ssa2.vgap, 0.03,s5.hgap,0.12,s5.vgap,0.12)
+    yield from bps.mov(mllbs.bsx,0, mllbs.bsy,0,mllosa.osax,0)
+    yield from bps.mov(mllosa.osax,0)
+    yield from bps.mov(vmll.vy, 0, hmll.hx, 0)
+    yield from bps.sleep(3)
+    #caput("XF:03IDC-ES{IO:1}DO:1-Cmd",1)
+    if abs(hmll.hx.position)<2:
+        yield from bps.mov(fdet1.x, -8)
+
+    else:
+        raise ValueError("HMLL HX motion failed")
+
+    check_list = [mllbs.bsx,mllbs.bsy,mllosa.osax,vmll.vy,hmll.hx]
+
+    for mtr in check_list:
+        if abs(mtr.position)>2:
+            raise ValueError(f"{mtr.name} motion failed")
+
+    
+
+
+
 
         
 

@@ -99,9 +99,9 @@ def fly2d(dets,
           dead_time=None, fly_type=None,
           return_speed=None, max_points=None, md=None):
   yield from _fly2d(
-        dets=dets, 
+        dets=dets,
         motor1=motor1, scan_start1=scan_start1, scan_end1=scan_end1, num1=num1,
-        motor2=motor2, scan_start2=scan_start2, scan_end2=scan_end2, num2=num1,
+        motor2=motor2, scan_start2=scan_start2, scan_end2=scan_end2, num2=num2,
         exposure_time=exposure_time,
         dead_time=dead_time, fly_type=fly_type,
         return_speed=return_speed, max_points=max_points, md=md

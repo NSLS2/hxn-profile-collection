@@ -173,7 +173,7 @@ class SRXZebra(Zebra):
         )
 
 
-load_positions_from_zebra = True
+load_positions_from_zebra = False
 
 class SRXFlyer1Axis(Device):
     """
@@ -430,8 +430,14 @@ class SRXFlyer1Axis(Device):
         # The numbers are picked using trial and error method and work for dwell time
         #   up to 0.004 s (250 Hz acquistion rate).
         velocity = pxsize / dwell
-        x_debounce = 0.0025 * velocity  # The true debounce time is 0.0016392 s
+        
+        if any([("merlin" in _) for _ in dets_by_name]):
+            x_debounce = 0.0025 * velocity  # The true debounce time is 0.0016392 s
+        else:
+            x_debounce = 0
+
         pulse_width = pxsize * 0.9 - x_debounce
+
         if pulse_width < 0:
             raise Exception(f"Dwell time is too small ...")
         self._encoder.pc.pulse_width.put(pulse_width)

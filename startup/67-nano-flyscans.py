@@ -166,11 +166,12 @@ def scan_and_fly_base(detectors, xstart, xstop, xnum, ystart, ystop, ynum, dwell
     # If delta is None, set delta based on time for acceleration
     if delta is None:
         # MIN_DELTA = 0.5  # old default value
-        # v = ((xstop - xstart) / (xnum - 1)) / dwell  # compute "stage speed"
+        v = ((xstop - xstart) / (xnum - 1)) / dwell  # compute "stage speed"
+        t_acc = 0.2
         # t_acc = xmotor.acceleration.get()  # acceleration time
-        # delta = 0.5 * t_acc * v  # distance the stage will travel in t_acc
+        delta = 0.5 * t_acc * v  # distance the stage will travel in t_acc
         # delta = np.amax((delta, MIN_DELTA))
-        delta = 0.500
+        delta = min(0.5, delta + 0.1)
 
 
     # Move to start scanning location

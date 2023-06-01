@@ -23,11 +23,6 @@ class HXNEnergy():
         self.calib_file = calib_file_csv
         self.df = pd.read_csv(self.calib_file)
         self.calibrate_optics(False)
-        #self.calibrate_ugap()
-        #self.calibrate_dcm_pitch()
-        #self.calibrate_hfm_pitch()
-        #self.calibrate_dcm_roll()
-
         self.defineFeedBackPVs()
 
     def defineFeedBackPVs(self):
@@ -56,7 +51,7 @@ class HXNEnergy():
 
 
 
-    def calcGap(self,E,harmonics = 5, offset = 0):
+    def calcGap(self,E,harmonics = 5, offset = -9):
         E1 = E/harmonics
         calc_gap =  np.polyval(self.ugap_coeffs, E1) + offset
         return (np.around(calc_gap,1))
@@ -174,74 +169,6 @@ class HXNEnergy():
             axs[3].set_ylabel("dcm_roll")
         
 
-
-    '''
-    def calibrate_ugap(self, plot_after = False):
-
-        adj_E = self.df["energy"].to_numpy()/self.df["harmonic"].to_numpy()
-        self.ugap_coeffs = np.polyfit(adj_E, self.df["ugap"].to_numpy(), 3)
-
-
-        if plot_after:
-
-            plt.figure()
-            plt.scatter(adj_E,self.df["ugap"],label='data')
-            plt.plot(adj_E, np.polyval(self.ugap_coeffs, adj_E),'r', label='fit')
-            plt.xlabel("First Order Energy (keV)")
-            plt.ylabel("undulator Gap (um)")
-            plt.legend()
-            plt.title(f"Undulator Calib_{pd.Timestamp.now().month}_{pd.Timestamp.now().year}")
-            plt.show()
-
-    def calibrate_dcm_pitch(self,plot_after = False):
-        
-        en, dcm_p = self.df["energy"].to_numpy(),self.df["dcmPitch"].to_numpy()
-        self.dcm_p_coeffs = np.polyfit(en, dcm_p, 3)
-        
-        if plot_after:
-
-            plt.figure()
-            plt.scatter(self.df["energy"],self.df["dcmPitch"],label='dcm_pitch')
-            plt.plot(self.df["energy"], np.polyval(self.dcm_p_coeffs, self.df["energy"]),'r', label='fit')
-            plt.xlabel("Energy (keV)")
-            plt.ylabel("undulator Gap (um)")
-            plt.legend()
-            plt.title(f"Undulator Calib_{pd.Timestamp.now().month}_{pd.Timestamp.now().year}")
-            plt.show()
-
-    def calibrate_hfm_pitch(self,plot_after = False):
-
-        self.m2p_coeffs = np.polyfit(self.df["energy"].to_numpy(), self.df["hfmPitch"].to_numpy(), 3)
-
-
-        if plot_after:
-
-            plt.figure()
-            plt.scatter(self.df["energy"],self.df["hfmPitch"],label='hfm_pitch')
-            plt.plot(self.df["energy"], np.polyval(self.m2p_coeffs, self.df["energy"]),'r', label='fit')
-            plt.xlabel("Energy (keV)")
-            plt.ylabel("hfm_pitch (um)")
-            plt.legend()
-            plt.title(f"Undulator Calib_{pd.Timestamp.now().month}_{pd.Timestamp.now().year}")
-            plt.show()
-
-    def calibrate_dcm_roll(self, plot_after = False):
-        
-        self.dcm_r_coeffs = np.polyfit(self.df["energy"].to_numpy(), self.df["dcmRoll"].to_numpy(), 3)
-
-        if plot_after:
-
-            plt.figure()
-            plt.scatter(self.df["energy"],self.df["dcmRoll"],label='dcm_roll')
-            plt.plot(self.df["energy"], np.polyval(self.dcm_r_coeffs, self.df["energy"]),'r', label='fit')
-            plt.xlabel("Energy (keV)")
-            plt.ylabel("dcm_roll (um)")
-            plt.legend()
-            plt.title(f"Undulator Calib_{pd.Timestamp.now().month}_{pd.Timestamp.now().year}")
-            plt.show()
-
-    '''
-
     def calculatePitch(self,targetE, offset = 0):
         
         calc_pitch =  np.polyval(self.dcm_p_coeffs, targetE) + offset
@@ -337,7 +264,6 @@ class HXNEnergy():
         caput("XF:03IDA-OP{HFM:1-Ax:PF}Mtr.VAL", 10)
 
         ic1_init = sclr1_ch2.get()
-        ugap_offset = 0
         df = pd.DataFrame(columns = ["Time Stamp","energy","harmonic","ugap","dcmPitch",'dcmRoll', "hfmPitch", "IC1"], dtype = "object")
 
         ePoints = np.linspace(EStart, EEnd, EStep+1)
@@ -363,7 +289,6 @@ class HXNEnergy():
             target_e = df["energy"][i]
 
             gap_, hrm = Energy.gap(target_e)
-            gap = gap_+ np.around(ugap_offset,1)
 
             if abs(gap-ugap.position)>2000 and gap<5200 and gap>10000:
                 raise ValueError ("Incorrect gap calculation")
@@ -513,8 +438,36 @@ def foil_calib_scan(startE, endE,saveLogFolder):
     spec = -1*np.log(e_list['IC3'].to_numpy()/e_list['IC0'].to_numpy())
     plt.plot(e_list['E Readback'], spec)
     plt.plot(e_list['E Readback'], np.gradient(spec))
-    plt.savefig(os.path.join(saveLogFolder, filename))
+    plt.savefig(os.path.join(saveLogFolder, f'HXN_nanoXANES_calib_{time_}.png'))
     plt.show()
+
+
+
+def foil_calib_d2_scan(startE, endE,saveLogFolder = "/data/users/current_user"):
+
+    dE = endE-startE
+    dUgap = Energy.calcGap(endE)-Energy.calcGap(startE)
+    
+    yield from Energy.move(startE, moveMonoPitch=False)
+    yield from d2scan(dets_fs,100, e, 0, dE, ugap, 0, dUgap, 1)
+
+    h = db[-1]
+    sd = h.start["scan_id"]
+
+    df = h.table()
+    plt.figure()
+
+    en_ = np.array(df['energy'],dtype=np.float32) 
+    I = np.array(df['sclr1_ch4'],dtype=np.float32) 
+    Io = np.array(df['sclr1_ch2'],dtype=np.float32) 
+    spec = -1*np.log(I/Io)
+    plt.plot(en_, spec, label = "xanes")
+    plt.plot(en_, np.gradient(spec),label = "derivative")
+    plt.savefig(os.path.join(saveLogFolder, f'HXN_nanoXANES_calib_{sd}.png'))
+    #bps.sleep(2)
+    plt.legend()
+    plt.show()
+
 
 def peak_hfm_pitch(fine = False, tweak_range = 0.005):
 
@@ -630,17 +583,4 @@ def find_beam_at_cam11():
 
         caput("XF:03IDC-ES{ANC350:8-Ax:1}Mtr.VAL", zp_bsx_pos+100)
     
-
-
-
-
-
-
 Energy = HXNEnergy(ugap,e,dcm.p, "ic3", wd+"ugap_calib.csv")
-
-
-# from bluesky_queueserver_api import BPlan
-# from bluesky_queueserver_api.zmq import REManagerAPI
-# RM = REManagerAPI()
-# RM.item_execute((BPlan("fly2d", ["fs", "zebra", "sclr1", "merlin1", "xspress3"], "dssx", -1, 1, 10, "dssy", -1, 1, 10, 0.1)))
-# RM.item_add((BPlan("fly2d", ["fs", "zebra", "sclr1", "merlin1", "xspress3"], "dssx", -1, 1, 10, "dssy", -1, 1, 10, 0.3)))

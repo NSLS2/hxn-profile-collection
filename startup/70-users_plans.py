@@ -1486,6 +1486,7 @@ def mll_th_fly2d(th_start, th_end, num, mot1, x_start, x_end, x_num, mot2,y_star
 
     for i in range(num + 1):
         yield from bps.mov(dsth,th_pos[i])
+        '''
         while (sclr2_ch2.get() < 10000):
             yield from bps.sleep(60)
             print('IC3 is lower than 10000, waiting...')
@@ -1497,13 +1498,18 @@ def mll_th_fly2d(th_start, th_end, num, mot1, x_start, x_end, x_num, mot2,y_star
             ic_0 = sclr2_ch4.get()
         yield from bps.sleep(1)
         #fs.unstage()
+        '''
         
-        
-        
-        yield from fly1d(dets1,dssx,-6,6,100,0.05)
-        cx = return_line_center(-1,'W_L',0.1)
+        '''
+        yield from fly1d(dets_fs,dssx,-4,4,100,0.05)
+        cx = return_line_center(-1,'Co',0.3)
         yield from bps.mov(dssx,cx)
         yield from bps.sleep(1)
+        yield from fly1d(dets_fs,dssy,-4,4,100,0.05)
+        cy = return_line_center(-1,'Co',0.3)
+        yield from bps.mov(dssy,cy)
+        yield from bps.sleep(1)
+        '''
         #yield from fly1d(dets1,dssy,-1.4,-0.8,100,0.05)
         #edge,fwhm = erf_fit(-1,'W_L')
         #cy = return_line_center(-1,'W_L',0.2)
@@ -1521,7 +1527,7 @@ def mll_th_fly2d(th_start, th_end, num, mot1, x_start, x_end, x_num, mot2,y_star
         #yield from bps.movr(dssy,-0.09)
         print('2d scan done')
         bps.sleep(1)
-        merlin1.unstage()
+        merlin2.unstage()
         xspress3.unstage()
         print('unstage detectors')
         bps.sleep(1)
@@ -1537,7 +1543,7 @@ def mll_th_fly2d(th_start, th_end, num, mot1, x_start, x_end, x_num, mot2,y_star
             #insertFig(note = f'dsth = {dsth.position :.3f}')
             #plt.close()
 
-            plot_data(-1,'Cu')
+            plot_data(-1,'Si')
             insertFig(note = f'dsth = {dsth.position :.3f}')
             plt.close()
         except:
@@ -3480,7 +3486,51 @@ def recover_and_scan(sid, dets, mot1, mot1_s, mot1_e, mot1_n, mot2, mot2_s, mot2
     yield from bps.sleep(3)
     yield from bps.mov(zpssx,0,zpssy,0)
     yield from bps.sleep(3)
+
+def get_current_position(zp_flag = True):
+        roi = {}
+        if zp_flag:
+
+            fx, fy, fz = zpssx.position, zpssy.position, zpssz.position
+            cx, cy, cz = smarx.position, smary.position, smarz.position
+            zpz1_pos = zp.zpz1.position
+            zp_sx, zp_sz = zps.zpsx.position, zps.zpsz.position
+            th = zpsth.position
+            
+            roi = {
+                "zpssx": fx, "zpssy": fy, "zpssz": fz,
+                "smarx": cx, "smary": cy, "smarz": cz,
+                "zp.zpz1": zpz1_pos, "zpsth": th,
+                "zps.zpsx": zp_sx, "zps.zpsz": zp_sz
+            }
+
+        else:
+            fx, fy, fz = dssx.position, dssy.position, dssz.position
+            cx, cy, cz = dsx.position, dsy.position, dsz.position
+            sbz_pos = sbz.position
+            th = dsth.position
+            roi = {
+                "dssx": fx, "dsy": fy, "dsz": fz,
+                "dsx": cx, "dsy": cy, "dsz": cz,
+                "sbz": sbz_pos, "dsth": th,
+            }
+
+        return roi
+
+
+def recover_pos_and_scan(label,roi_positions, dets, mot1, mot1_s, mot1_e, mot1_n, mot2, mot2_s, mot2_e, mot2_n, exp_t):
     
+    print(f"{label} running")
+    for key, value in roi_positions.items():
+        if not key == "zp.zpz1":
+            yield from bps.mov(eval(key), value)
+        elif key == "zp.zpz1":
+            yield from mov_zpz1(value)
+
+        print(f"{key} moved to {value :.3f}")
+    #yield from check_for_beam_dump(threshold = 5000)
+    yield from fly2d(dets, mot1, mot1_s, mot1_e, mot1_n, mot2, mot2_s, mot2_e, mot2_n, exp_t)
+
 
 
 def insert_xrf_map_to_pdf(scan_id = -1, elements = ["Cr", "Fe"],
@@ -3761,5 +3811,89 @@ def plot_mosiac_overlap(grid_shape = (4,4), first_scan_num = -8,
         axs[i].set_yticklabels([])
         axs[i].set_xticks([])
         axs[i].set_yticks([])
+
+
+def plot_scalrs(sid, elem = "W_L", norm = True):
+    grid_shape = (2,3)
+    fig, axs = plt.subplots(grid_shape[0],grid_shape[1], figsize = (12,8))
+    #fig.subplots_adjust(hspace = 0, wspace = -0.57)
+    
+    axs = axs.ravel()
+    h = db[int(sid)]
+    
+    df = h.table()
+    if elem in df:
+        det = df[elem]
+    else:
+        det = ( df[f'Det1_{elem}'] +
+                df[f'Det1_{elem}'] +
+                df[f'Det1_{elem}'] ). to_numpy()
+    scl4 = df["sclr1_ch4"].to_numpy()
+    scl9 = df["sclr1_ch9"].to_numpy()
+    scl10 = df["sclr1_ch10"].to_numpy()
+    scl11 = df["sclr1_ch11"].to_numpy()
+    scl12 = df["sclr1_ch12"].to_numpy()
+
+    if norm:
+        scl9 = scl9/scl4
+        scl10 = scl10/scl4
+        scl11 = scl11/scl4
+        scl12 = scl12/scl4
+
+    if len(h.start["motors"])==2:
+        dim1,dim2 = h.start['num1'], h.start['num2']
+
+        img = axs[0].imshow(np.float32(scl9.reshape(dim1,dim2)))
+        axs[0].set_title("sclr1_ch9")
+        fig.colorbar(img)
+        img = axs[1].imshow(np.float32(scl10.reshape(dim1,dim2)))
+        axs[1].set_title("sclr1_ch10")
+        fig.colorbar(img)
+        img = axs[2].imshow(np.float32(scl11.reshape(dim1,dim2)))
+        axs[2].set_title("sclr1_ch11")
+        fig.colorbar(img)
+        img = axs[3].imshow(np.float32(scl12.reshape(dim1,dim2)))
+        axs[3].set_title("sclr1_ch12")
+        fig.colorbar(img)
+
+        sq = scl9**2+scl10**2
+        img = axs[4].imshow(np.float32(sq.reshape(dim1,dim2)))
+        axs[4].set_title("sclr1_ch9^2+sclr1_ch10^2")
+        fig.colorbar(img)
+
+        img = axs[5].imshow(np.float32(det.reshape(dim1,dim2)))
+        axs[5].set_title(f"{elem}")
+        fig.colorbar(img)
+
+
+    elif len(h.start["motors"])==1:
+
+        img = axs[0].plot(np.float32(scl9))
+        axs[0].set_title("sclr1_ch9")
+
+        img = axs[1].plot(np.float32(scl10))
+        axs[1].set_title("sclr1_ch10")
+
+        img = axs[2].plot(np.float32(scl11))
+        axs[2].set_title("sclr1_ch11")
+
+        img = axs[3].plot(np.float32(scl12))
+        axs[3].set_title("sclr1_ch12")
+
+        sq = scl9**2+scl10**2
+        img = axs[4].plot(np.float32(sq))
+        axs[4].set_title("sclr1_ch9^2+sclr1_ch10^2")
+
+        img = axs[5].plot(np.float32(det))
+        axs[5].set_title(f"{elem}")
+
+    im_title = "scan_id="+ str(h.start["scan_id"])
+    fig.suptitle(im_title)
+    fig.savefig(f"/data/users/current_user/{im_title}.png")
+
+
+
+
+
 
 

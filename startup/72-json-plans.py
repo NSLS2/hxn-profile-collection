@@ -178,7 +178,9 @@ def align_2d_com_scan(angle,mtr1,x_s,x_e,x_n,mtr2,y_s,y_e,y_n,exp,elem_,threshol
     if move_y:
         yield from bps.mov(mtr2,cy)
 
-def tomo_scan_to_loop(angle, tomo_params):
+def tomo_scan_to_loop(angle, tomo_params, ic_init):
+
+        caput("XF:03IDC-ES{Merlin:2}HDF1:NDArrayPort","ROI1") #patch for merlin2 issuee
         
         #get parameters from json
         xalign = tomo_params["xalign"]
@@ -188,24 +190,26 @@ def tomo_scan_to_loop(angle, tomo_params):
         dets = det_dict[image_scan["det"]]
 
 
-
         yield from bps.mov(dsth, angle)
 
         # precalculated y offset, mll only 
-        #y_offset1 = sin_func(angle, 0.110, -0.586, 7.85,1.96)
-        #y_offset2 = sin_func(th_init, 0.110, -0.586, 7.85,1.96)
-        #yield from bps.mov(dssy,y_init+y_offset1-y_offset2)
+        y_init = tomo_params["y_init"]
+        th_init = tomo_params["th_init"]
+        y_offset1 = sin_func(angle, 0.110, -0.586, 7.85,1.96)
+        y_offset2 = sin_func(th_init, 0.110, -0.586, 7.85,1.96)
+        yield from bps.mov(dssy,y_init+y_offset1-y_offset2)
 
 
         #look for beam dump and ic3 threshold, ignores for code tests using json
         if not tomo_params["test"]:
             yield from check_for_beam_dump()
 
-            while (sclr2_ch2.get() < (0.9*ic_0)):
-                yield from peak_bpm_y(-5,5,10)
-                yield from peak_bpm_x(-15,15,10)
-                ic_0 = sclr2_ch2.get()
+            while (sclr2_ch2.get() < (0.9*ic_init)):
+                 yield from peak_bpm_y(-5,5,10)
+                 yield from peak_bpm_x(-15,15,10)
+                 ic_0 = sclr2_ch2.get()
         
+        yield from bps.mov(dssx,0,dssz,0)
 
         #1d alignment sequence, based on angle x or z will be scanned
         if np.abs(angle) < 44.99:
@@ -315,7 +319,8 @@ def tomo_scan_to_loop(angle, tomo_params):
         if not tomo_params["stop_pdf"]:
 
             try:
-                insert_xrf_map_to_pdf(-1,["Au_L"], "dsth")
+                insert_xrf_map_to_pdf(-1,["Cu"], "dsth")
+                plt.close()
             
             except:
                 pass
@@ -347,6 +352,9 @@ def mll_tomo_json(path_to_json):
     ic_0 = sclr2_ch2.get()
     th_init = dsth.position
     y_init = dssy.position
+    tomo_params["th_init"] = th_init
+    tomo_params["y_init"] = y_init
+
 
     #set the pause and stop inter keys to False before the loop
     #to reverse the abort scan and pause when using the gui
@@ -380,11 +388,13 @@ def mll_tomo_json(path_to_json):
 
             if not tomo_params["pause_scan"]:   
                 break
-            
+        
+        if tomo_params["remove_angles"]==None:
+            tomo_params["remove_angles"] = []
 
         if not angle in np.array(tomo_params["remove_angles"]):
             #tomo scan at a single angle
-            yield from tomo_scan_to_loop(angle, tomo_params)
+            yield from tomo_scan_to_loop(angle, tomo_params,ic_0)
 
         else:
             print(f"{angle} skipped")
@@ -393,35 +403,40 @@ def mll_tomo_json(path_to_json):
         
     #TODO add angles to scan; need to be better
     #sort based on what current angle is
-    added_angles = tomo_params["add_angles"]
+    if not tomo_params["add_angles"]==None:
     
-    for angle in tqdm.tqdm(added_angles,desc = 'MLL Tomo Scan; Additional Angles'):
+        added_angles = tomo_params["add_angles"]
         
-        #open the json file to catch any updates 
-        with open(path_to_json,"r") as fp:
-            tomo_params = json.load(fp)
-            fp.close()
-
-        #stop data collection if necessary.user input taken 
-        if tomo_params["stop_iter"]:
-            save_page()
-            break
-
-        while tomo_params["pause_scan"]:
-            yield from bps.sleep(10) #check if this freezes the gui or not
+        for angle in tqdm.tqdm(added_angles,desc = 'MLL Tomo Scan; Additional Angles'):
+            
+            #open the json file to catch any updates 
             with open(path_to_json,"r") as fp:
                 tomo_params = json.load(fp)
-                fp.close() 
+                fp.close()
 
-            if not tomo_params["pause_scan"]:   
+            #stop data collection if necessary.user input taken 
+            if tomo_params["stop_iter"]:
+                save_page()
                 break
-        
-        if not angle in np.array(tomo_params["remove_angles"]):
-            yield from tomo_scan_to_loop(angle, tomo_params)
 
-        else:
-            print(f"{angle} skipped")
-            pass
+            while tomo_params["pause_scan"]:
+                yield from bps.sleep(10) #check if this freezes the gui or not
+                with open(path_to_json,"r") as fp:
+                    tomo_params = json.load(fp)
+                    fp.close() 
+
+                if not tomo_params["pause_scan"]:   
+                    break
+            
+            if not angle in np.array(tomo_params["remove_angles"]):
+                yield from tomo_scan_to_loop(angle, tomo_params,ic_0)
+
+            else:
+                print(f"{angle} skipped")
+                pass
+
+    else:
+        pass
 
     #save pdf
     save_page()

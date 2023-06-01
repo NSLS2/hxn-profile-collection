@@ -211,7 +211,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     #print(my)
     #m_num = np.shape(mx)
     #print('load mask 2')
-    mask = np.load('/data/users/2023Q1/Huang_2023Q1/TMA_LCO/mask.npy')
+    mask = np.load('/data/users/2023Q2/Huang_2023Q2/Si_solid/mask.npy')
 
     for i in range(num_frame):
         if np.mod(i,500) ==0:
@@ -339,7 +339,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
 
     #"""
 
-    fn = '/data/users/2023Q1/Huang_2023Q1/TMA_LCO/'
+    fn = '/data/users/2023Q2/Huang_2023Q2/Si_solid/'
     if save_flag:
         io.imsave(fn+scan_num+'_roi.tif',roi.astype(np.float32))
         io.imsave(fn+scan_num+'_xrf.tif',xrf.astype(np.float32))
