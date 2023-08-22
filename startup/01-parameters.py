@@ -60,6 +60,7 @@ def setup_new_user(name = "Lastname",experimenters = "HX,NU,SER", sample = "Gold
     RE.md["PI"] = name
     RE.md["experimenters"] = experimenters
     RE.md["sample"] = sample
+    RE.md["scan_name"] = sample+"_1"
 
     udir = create_user_dir(name)
     print(f"User directory is; {udir}")

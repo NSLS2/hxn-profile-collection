@@ -56,7 +56,7 @@ sclr2_ch5 = sclr2.channels.chan5
 sclr2_ch4_calc = sclr2.calculations.calc4.value
 
 
-sclr3 = HxnTriggeringScaler('XF:03IDC-ES{Sclr:3}', name='sclr1')
+sclr3 = HxnTriggeringScaler('XF:03IDC-ES{Sclr:3}', name='sclr3')
 # let the scans know which detectors sclr1 triggers:
 # sclr3.scan_type_triggers['step'] = [zebra, merlin1, xspress3]
 sclr3.scan_type_triggers['step'] = [zebra, xspress3]

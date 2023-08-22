@@ -45,8 +45,8 @@ CrXANES = {'high_e':6.0, 'high_e_zpz1':10.48, 'zpz1_slope':-5.04,
 MnXANES = {'high_e':6.6, 'high_e_zpz1':68.3165, 'zpz1_slope':-5.04,
           'energy':[(6.520,6.530,0.005),(6.531,6.580,0.001),(6.585,6.601,0.005)]}
                
-FeXANES = {'high_e':7.2, 'high_e_zpz1':6.615, 'zpz1_slope':-5.04,
-          'energy':[(7.09,7.105,0.005),(7.106,7.141,0.001),(7.142,7.160,0.002),(7.160, 7.2, 0.004)],}
+FeXANES = {'high_e':7.2, 'high_e_zpz1':6.41, 'zpz1_slope':-5.04,
+          'energy':[(7.09,7.105,0.005),(7.106,7.141,0.001),(7.14,7.20,0.005)],}
 
 NiXANES = {'high_e':8.300, 'high_e_zpz1':0.98, 'zpz1_slope':-5.04,
           'energy':[(8.30,8.325,0.005),(8.326,8.360,0.001),(8.360,8.430,0.006)],}
@@ -275,11 +275,11 @@ def generateEList_MLL(XANESParam = As_MLL_XANES, highEStart = False):
     return e_list
 
 def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,highEStart = True,
-                    doAlignScan = True, alignX = (-5,5,100,0.05,'Cr',0.5,True),
-                    alignY = (-6,6,120,0.05,'Cr',0.5, True), xy_offset = (0,0),
-                    pdfElem = ['Fe','Ca'],doScan = True, moveOptics = True,pdfLog = True, 
+                    doAlignScan = True, alignX = (-4,4,100,0.05,'Cr',0.5,True),
+                    alignY = (-5,5,100,0.05,'Cr',0.5, True), xy_offset = (0,0),
+                    pdfElem = ['Fe','Cr'],doScan = True, moveOptics = True,pdfLog = True, 
                     foilCalibScan = False, peakBeam = True,
-                    saveLogFolder = '/nsls2/data/hxn/legacy/users/2023Q1/Gascon_2023Q1'):
+                    saveLogFolder = '/data/users/current_user'):
 
     """ 
     Function to run XANES Scan. 
@@ -434,28 +434,29 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
 
                     if alignX[-1]:
                         yield from fly1d(dets_fs,zpssx,alignX[0],alignX[1],alignX[2],alignX[3])
-                        #xcen = return_line_center(-1,alignX[4],alignX[5])
-                        xcen,_ = erf_fit(-1,alignX[4])
-                        yield from bps.movr(smarx, (xcen+2)*0.001)
+                        xcen = return_line_center(-1,alignX[4],alignX[5])
+                        #xcen,_ = erf_fit(-1,alignX[4])
+                        yield from bps.mov(zpssx, xcen)
                         print(f"zpssx centered to {xcen}")
                         plt.close()
-                        yield from piezos_to_zero()
+                        #yield from piezos_to_zero()
 
                     if alignY[-1]:
                         yield from fly1d(dets_fs,zpssy,alignY[0],alignY[1],alignY[2],alignY[3])
                         ycen = return_line_center(-1,alignX[4],alignY[5])
                         #ycen,_ = erf_fit(-1,alignX[4])
-                        yield from bps.movr(smary, (ycen+0.5)*0.001)
+                        #yield from bps.movr(smary, (ycen+0.5)*0.001)
+                        yield from bps.mov(zpssy, ycen)
                         print(f"zpssy centered to {ycen}")
                         plt.close()
-                        yield from piezos_to_zero()
+                        #yield from piezos_to_zero()
 
 
                 except:
                     pass
                 
-                yield from bps.movr(smarx,xy_offset[0]/1000)
-                yield from bps.movr(smary,xy_offset[1]/1000)
+                #yield from bps.movr(smarx,xy_offset[0]/1000)
+                #yield from bps.movr(smary,xy_offset[1]/1000)
 
             print(f'Current scan: {i+1}/{len(e_list)}')
 
@@ -474,9 +475,6 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
 
             #cbpm_on(True)
             yield from piezos_to_zero()
-
-            yield from bps.movr(smarx,xy_offset[0]/-1000)
-            yield from bps.movr(smary,xy_offset[1]/-1000)
 
             #close fast shutter
             caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0) 
@@ -1014,8 +1012,7 @@ def repeated_scan():
 #<zp_list_xanes2d(LuL3XANES, dets_fs, zpssx,-15,15,100,zpssy, -15,15,100,0.02, highEStart=False,  alignX = (-10,10,100,0.05,"Au_M",0.5, True), alignY = (-10
    #...: ,10,100,0.05,"Au_M",0.5,True), pdfElem=["Lu_L", "Au_M"], peakBeam=False,saveLogFolder="/GPFS/XF03ID1/users/2022Q2/Tyson_2022Q2")
 
-#<zp_list_xanes2d(FeXANES, dets1, zpssx,-2.5,2.5,100,zpssy,-1.5,1.5,60,0.03, highEStart=False,  alignX = (-5,5,100,0.05,"Cr",0.5, True), alignY = (-4
-   #...: ,4,100,0.05,"Cr",0.5,True), pdfElem=["Fe", "Cr"], peakBeam=False,saveLogFolder="/nsls2/data/hxn/legacy/users/2022Q3/Ajith_2022Q3")
+#<zp_list_xanes2d(FeXANES, dets1, zpssx,-2.0, 2.0, 80,zpssy,-3.5,0.5,80,0.030, highEStart=True)
 
 def two_xanes():
     yield from mll_list_xanes2d_no_input(As_MLL_XANES,dets_fs,dssx,-2,2,125,dssy,-2,2,125,0.025, highEStart=True)

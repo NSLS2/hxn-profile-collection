@@ -6,6 +6,7 @@ import pickle
 import json
 import numpy as np
 import pandas as pd
+#mpl.use('agg')
 
 from scipy.optimize import curve_fit
 from epics import caget, caput
@@ -28,6 +29,7 @@ def sicifunc(z,a,b,c):
     return c*(-scipy.sinc(b*(z-a)/np.pi)*scipy.sin(b*(z-a))+si+np.pi/2.0)/np.pi
 def squarefunc(z,c,a1,b1,a2,b2):
     return c*(scipy.special.erf((z-a1)/(b1*np.sqrt(2.0)))-scipy.special.erf((z-a2)/(b2*np.sqrt(2.0))))
+    
 def erf_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
     h=db[sid]
     sid=h['start']['scan_id']
@@ -65,8 +67,46 @@ def erf_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
             popt,pcov=curve_fit(erfunc4,xdata,ydata,p0=[edge_pos,0.05,0.5,0,0])
             fit_data=erfunc4(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
     plt.plot(xdata,fit_data)
-    plt.title(f'{sid = }, edge = {popt[0] :.3f}, FWHM = {popt[1]*2354.8 :.2f} nm \n {zp.zpz1.position = :.3f}')
+    plt.title(f'{sid = }, edge = {popt[0] :.3f}, FWHM = {popt[1]*2354.8 :.2f} nm')
     return (popt[0],popt[1]*2.3548*1000.0)
+    
+    
+def erf_fit_no_plot(sid,elem,mon='sclr1_ch4',linear_flag=True):
+    h=db[sid]
+    sid=h['start']['scan_id']
+    df=h.table()
+    mots=h.start['motors']
+    xdata=df[mots[0]]
+    xdata=np.array(xdata,dtype=float)
+    ydata=(df['Det1_'+elem]+df['Det2_'+elem]+df['Det3_'+elem])/df[mon]
+    ydata=np.array(ydata,dtype=float)
+    ydata[ydata==np.nan] = np.nanmean(ydata)#patch for ic3 returns zero
+    ydata[ydata==np.inf] = np.nanmean(ydata)#patch for ic3 returns zero
+    ydata[0] = ydata[1] #patch for drop point issue
+    ydata[-1] = ydata[-2]#patch for drop point issue
+    y_min=np.min(ydata)
+    y_max=np.max(ydata)
+    ydata=(ydata-y_min)/(y_max-y_min)
+    y_mean = np.mean(ydata)
+    half_size = int (len(ydata)/2)
+    y_half_mean = np.mean(ydata[0:half_size])
+    edge_pos=find_edge(xdata,ydata,10)
+    if y_half_mean < y_mean:
+        if linear_flag == False:
+            popt,pcov=curve_fit(erfunc1,xdata,ydata, p0=[edge_pos,0.05,0.5])
+            fit_data=erfunc1(xdata,popt[0],popt[1],popt[2]);
+        else:
+            popt,pcov=curve_fit(erfunc3,xdata,ydata, p0=[edge_pos,0.05,0.5,0,0])
+            fit_data=erfunc3(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
+    else:
+        if linear_flag == False:
+            popt,pcov=curve_fit(erfunc2,xdata,ydata,p0=[edge_pos,0.05,0.5])
+            fit_data=erfunc2(xdata,popt[0],popt[1],popt[2]);
+        else:
+            popt,pcov=curve_fit(erfunc4,xdata,ydata,p0=[edge_pos,0.05,0.5,0,0])
+            fit_data=erfunc4(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
+
+    return popt[0],popt[1]*2.3548*1000.0,xdata,ydata,fit_data
 
 
 def sici_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
@@ -263,6 +303,167 @@ def find_double_edge(xdata, ydata, size):
         edge_2 = find_edge(xdata[1:index],ydata[1:index],size)
         return(edge_2,edge_1)
 
+
+
+def movr_zpz1(dz):
+    yield from bps.movr(zp.zpz1, dz)
+    #movr(zp.zpx, dz * 3.75)
+    yield from bps.movr(zp.zpy, -0.003035*dz)
+    yield from bps.movr(zp.zpx, dz*0.00111)
+
+def mov_zpz1(pos):
+    c_zpz1 = zp.zpz1.position
+    dz = pos - c_zpz1
+    yield from movr_zpz1(dz)
+    
+def z_focus_alignment(mot_name,z_start, z_end, z_num, mot, start, end, num, acq_time, elem='Pt_L',linFlag = True,mon='sclr1_ch4'):
+    
+    print(f"{mot_name.name} moves relatively and find the focus with a knife-edge at each position")
+    
+    z_pos=np.linspace(z_start, z_end,z_num+1)
+    fit_size=np.zeros(z_num+1)
+    z_step = (z_end - z_start)/z_num
+    init_z = mot_name.position
+    
+    # subplot_num = int(np.ceil((z_num+1)/2))
+    # fig, ax = plt.subplots(subplot_num,subplot_num)
+    # ax = ax.ravel()
+    
+    if mot_name == zp.zpz1:
+        yield from movr_zpz1(z_start*0.001) 
+    else:
+        yield from bps.movr(mot_name,z_start)
+    
+    
+    for i in tqdm.tqdm(range(z_num + 1)):
+
+        yield from fly1d(dets_fs, mot, start, end, num, acq_time)
+        edge_pos,fwhm=erf_fit(-1,elem,mon,linear_flag=linFlag)
+        # sid = int(caget("XF:03IDC-ES{Status}ScanID-I"))
+        # edge_pos,fwhm,x_data,y_data,y_fit = erf_fit_no_plot(sid,elem,mon='sclr1_ch4',linear_flag=True)
+        # edge_pos, fwhm = 1,0.5
+        # x_data =np.random.rand(num)
+        # y_data = np.random.rand(num)
+        # y_fit = np.random.rand(num)
+
+        fit_size[i]= fwhm
+        #z_pos[i]=mot_name.position
+        '''
+        p1 = ax[i].plot(x_data,y_data,'bo')
+        p2 = ax[i].plot(x_data,y_fit,'r')
+        ax[i].title.set_text(f"{sid = }, {mot_name.name} = {mot_name.position :.3f}, {fwhm = :.1f}")
+        plt.show()
+        '''
+        if mot_name == zp.zpz1:
+            #print(f"{z_step = }")
+            yield from movr_zpz1(z_step*0.001)
+        else:
+            yield from bps.movr(mot_name,z_step)
+            
+        if abs(edge_pos)<14:
+            yield from bps.mov(mot, edge_pos)
+    
+    if mot_name == zp.zpz1:
+        yield from mov_zpz1(init_z)
+    else:
+        yield from bps.mov(mot_name,init_z)
+    
+    figure_with_insert_fig_button()
+    plt.title("Z Focus Scan")
+    plt.plot(np.array(z_pos),np.array(fit_size),'bo')
+    plt.xlabel(mot_name.name+" (um)")
+    plt.show()
+    return
+
+
+
+def zp_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem='Cr',linFlag = True,mon='sclr1_ch4'):
+
+    if abs(z_start)<1 or abs(z_end)<1:
+        raise ValueError("Expected Z values in microns")
+    
+    else:
+
+        yield from z_focus_alignment(zp.zpz1,
+                                    z_start, 
+                                    z_end, 
+                                    z_num, 
+                                    mot, 
+                                    start, 
+                                    end, 
+                                    num, 
+                                    acq_time, 
+                                    elem=elem,
+                                    linFlag = linFlag,
+                                    mon=mon)
+
+def mll_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, linFlag = True,elem='Pt_L',mon='sclr1_ch4'):
+    
+    yield from z_focus_alignment(smlld.sbz,
+                            z_start, 
+                            z_end, 
+                            z_num, 
+                            mot, 
+                            start, 
+                            end, 
+                            num, 
+                            acq_time, 
+                            elem=elem,
+                            linFlag = linFlag,
+                            mon=mon)
+    
+
+def hmll_z_alignment(z_start, z_end, z_num, start, end, num, acq_time, linFlag = True, elem='Pt_L',mon='sclr1_ch4'):
+
+    yield from z_focus_alignment(hmll.hz,
+                            z_start, 
+                            z_end, 
+                            z_num, 
+                            dssx, 
+                            start, 
+                            end, 
+                            num, 
+                            acq_time, 
+                            elem=elem,
+                            linFlag = linFlag,
+                            mon=mon)
+    
+def mll_vchi_alignment(vchi_start, vchi_end, vchi_num, mot, start, end, num, acq_time, linFlag = True, elem='Pt_L',mon='sclr1_ch4'):
+    
+    yield from z_focus_alignment(vmll.vchi,
+                        vchi_start, 
+                        vchi_end, 
+                        vchi_num, 
+                        mot, 
+                        start, 
+                        end, 
+                        num, 
+                        acq_time, 
+                        elem=elem,
+                        linFlag = linFlag,
+                        mon=mon)
+
+
+
+def vmll_z_alignment(z_start, z_end, z_num, start, end, num, acq_time, linFlag = True, elem='Pt_L',mon='sclr1_ch4'):
+
+    yield from z_focus_alignment(vmll.vz,
+                        z_start, 
+                        z_end, 
+                        z_num, 
+                        dssy, 
+                        start, 
+                        end, 
+                        num, 
+                        acq_time, 
+                        elem=elem,
+                        linFlag = linFlag,
+                        mon=mon)
+
+
+
+'''
+
 def mll_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4'):
 
     """usage: <mll_z_alignment(-20,20,10,dssy,-0.5,0.5,100,0.05)"""
@@ -324,6 +525,13 @@ def mll_vchi_alignment(vchi_start, vchi_end, vchi_num, mot, start, end, num, acq
     plt.figure()
     plt.plot(vchi_pos,fit_size,'bo')
     plt.xlabel('vchi')
+    
+    fig, ax = plt.subplots()
+    ax.plot(vchi_pos,fit_size,'bo')
+    ax.set_xlabel('vchi')
+    ax.set_xticks(vchi_pos)
+    ax.set_yticks(fit_size)
+    plt.show()
 
 def vmll_z_alignment(z_start, z_end, z_num, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4'):
     z_pos=np.zeros(z_num+1)
@@ -339,9 +547,14 @@ def vmll_z_alignment(z_start, z_end, z_num, start, end, num, acq_time, elem='Pt_
         z_pos[i]=vmll.vz.position
         yield from bps.movr(vmll.vz, z_step)
     yield from bps.mov(vmll.vz, init_vz)
-    plt.figure()
-    plt.plot(z_pos,fit_size,'bo')
-    plt.xlabel('vz')
+    
+    fig, ax = plt.subplots()
+    ax.plot(z_pos,fit_size,'bo')
+    ax.set_xlabel('vz')
+    ax.set_xticks(z_pos)
+    ax.set_yticks(fit_size)
+    plt.show()
+
 
 def zp_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem=' ',linFlag = True,mon='sclr1_ch4'):
     
@@ -363,10 +576,11 @@ def zp_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem='
         merlin1.unstage()
         xspress3.unstage()
     yield from movr_zpz1(-1*z_end)
-    plt.figure()
-    plt.plot(z_pos,fit_size,'bo')
-    plt.xlabel('zpz1')
-
+    fig, ax = plt.subplots()
+    ax.plot(z_pos,fit_size,'bo')
+    ax.set_xlabel('zpz1')
+    plt.show()
+'''
 
 def pos2angle(col,row):
 
@@ -500,13 +714,13 @@ def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt_
         yield from bps.mov(zps.zpsth, x[i])
         if np.abs(x[i]) > 45.05:
             yield from fly1d(dets_fs,zpssz,start,end,num,acq_time)
-            tmp = return_line_center(-1, elem=elem,threshold=0.8,neg_flag=neg_flag)
+            tmp = return_line_center(-1, elem=elem,threshold=0.3,neg_flag=neg_flag)
             #tmp = return_tip_pos(-1, elem=elem)
             #tmp,fwhm = erf_fit(-1,elem = elem,linear_flag=False)
             y[i] = tmp*np.sin(x[i]*np.pi/180.0)
         else:
             yield from fly1d(dets_fs,zpssx,start,end,num,acq_time)
-            tmp = return_line_center(-1,elem=elem,threshold=0.5,neg_flag=neg_flag )
+            tmp = return_line_center(-1,elem=elem,threshold=0.3,neg_flag=neg_flag )
             #tmp = return_tip_pos(-1, elem=elem)
             #tmp,fwhm = erf_fit(-1,elem = elem,linear_flag=False)
             y[i] = tmp*np.cos(x[i]*np.pi/180.0)
@@ -518,7 +732,7 @@ def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt_
     dx = -dr*np.sin(offset*np.pi/180)/1000.0
     dz = -dr*np.cos(offset*np.pi/180)/1000.0
 
-    print('dx=',dx,'   ', 'dz=',dz)
+    print(f'{dx = :.3f},   {dz = :.3f}')
 
     if move_flag:
         yield from bps.movr(zps.smarx, dx)
@@ -562,9 +776,10 @@ def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt
             yield from fly1d(dets1,dssz,start,end,num,acq_time)
             #plot(-1, elem)
             #plt.close()
-            cen = return_line_center(-1, elem=elem,threshold = 0.3)
+            cen = return_line_center(-1, elem=elem,threshold = 0.6)
             #plt.close()
             #cen, edg1, edg2 = square_fit(-1,elem=elem)
+            #cen, fwhm = erf_fit(-1,elem=elem)
             y[i] = cen*np.sin(x[i]*np.pi/180.0)
             # yield from bps.mov(dssz,cen)
         else:
@@ -572,7 +787,7 @@ def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt
             #cx,cy = return_center_of_mass(-1,elem,0.3)
             #y[i] = cx*np.cos(x[i]*np.pi/180.0)
             yield from fly1d(dets1,dssx,start,end,num,acq_time)
-            cen = return_line_center(-1,elem=elem,threshold = 0.3)
+            cen = return_line_center(-1,elem=elem,threshold = 0.6)
             #plot(-1, elem)
             #plt.close()
             #cen, edg1, edg2 = square_fit(-1,elem=elem)
@@ -653,7 +868,7 @@ def mll_rot_alignment_2D(th_start, th_end, th_num, x_start, x_end, x_num,
             y[i] = cx*np.sin(x[i]*np.pi/180.0)
 
         else:
-            yield from fly2d(dets1,dssx,start,end,num, dssy, -0.5,0.5,20,acq_time)
+            yield from fly2d(dets1,dssx,start,end,num, dssy, -2,2,20,acq_time)
             cx,cy = return_center_of_mass(-1,elem,0.5)
             y[i] = cx*np.cos(x[i]*np.pi/180.0)
 
@@ -863,29 +1078,6 @@ def engage_mirror_feedback():
 
     #yield from 
 
-
-def set_motor_val_zero(pv):
-    set_pv = pv+".SET"
-    val_pv = pv+".VAL"
-    caput(set_pv,1)
-    caput(val_pv,0)
-    caput(set_pv,0)
-
-
-def zp_optics_to_zero():
-    
-    zpsx = "XF:03IDC-ES{ZpPI:1-zpsx}Mtr"
-    zpsz = "XF:03IDC-ES{ZpPI:1-zpsz}Mtr"
-    osax = "XF:03IDC-ES{ANC350:5-Ax:0}Mtr"
-    osay = "XF:03IDC-ES{ANC350:5-Ax:1}Mtr"
-    bsx = "XF:03IDC-ES{ANC350:8-Ax:0}Mtr"
-    bsy = "XF:03IDC-ES{ANC350:8-Ax:1}Mtr"
-    bsz = "XF:03IDC-ES{ANC350:8-Ax:2}Mtr"
-
-    list_of_mtrs = [zpsx,zpsz,osax,osay,bsx,bsy,bsz]
-
-    for mtr in list_of_mtrs:
-        set_motor_val_zero(mtr)
 
 
 def save_cam06_images(filename = "crl"):
@@ -1443,7 +1635,7 @@ def move_mlls_upstream():
         yield from bps.sleep(1)
     else:
         raise ValueError("VZ<-2000 um; VZ is maybe already in out position")
-        print("VZ<-2000 um; VZ is maybe already in out position; trying to move hz")
+        #print("VZ<-2000 um; VZ is maybe already in out position; trying to move hz")
         pass
     
     if abs(vmll.vz.position)>7900:
@@ -1503,19 +1695,6 @@ def mlls_optics_out_for_cam11():
         raise ValueError(f"bemastop positions are not close to zero."
                         f"bsx = {mllbs.bsx.position :.1f},bsy = {mllbs.bsy.position :.1f}")
         pass
-
-    
-def mll_view(move_to = "cam11"):
-    
-    
-    # yield from bps.movr(mllbs.bsx,500,mllbs.bsy,-500)
-    # yield from bps.movr(mllosa.osax,2700)
-    # yield from bps.movr(vmll.vy,500)
-    # yield from bps.movr(hmll.hx,-500)
-    # yield from bps.mov(ssa2.hgap,2,ssa2.vgap,2)
-    # yield from bps.mov(s5.hgap,4,s5.vgap,4)
-    # yield from go_det(move_to)
-    pass
     
 
 def stop_all_mll_motion():
@@ -1532,19 +1711,42 @@ def stop_all_zp_motion():
     zpbs.stop()
 
 
-def zero_child_components(parent_ = mllosa):
+def zero_child_components(parent_ = mllosa, tolerance =10):
 
     for comps in parent_.component_names:
-        eval(f"{parent_.name}.{comps}").set_current_position(0)
+        mtr = eval(f"{parent_.name}.{comps}")
+        if abs(mtr.position) < abs(tolerance):
+            mtr.set_current_position(0)
+            
+        else:
+            raise ValueError(f'{mtr.name} is out of the tolerence limit')
+    
 
-def zero_all_mll_optics():
+def zero_mll_optics():
 
     zero_child_components(parent_ = hmll)
     zero_child_components(parent_ = vmll)
     zero_child_components(parent_ = mllosa)
     zero_child_components(parent_ = mllbs)
 
-def mll_to_unfocused_beam():
+
+def zero_zp_optics():
+
+    if zps.zpsx.position>0.2 or zps.zpsz.position>0.2:
+    
+        raise ValueError(f"zpsx or zpsz is not close to zero. Aborted")
+        
+    else:
+    
+        zps.zpsx.set_current_position(0)
+        zps.zpsz.set_current_position(0)
+        
+        
+    zero_child_components(parent_ = zposa,tolerance = 50)
+    zero_child_components(parent_ = zpbs,tolerance = 50)
+
+
+def mll_to_cam11_view():
     check_list = [mllbs.bsx,mllbs.bsy,mllosa.osax,vmll.vy,hmll.hx]
 
     for mtr in check_list:
@@ -1578,6 +1780,9 @@ def mll_to_unfocused_beam():
 
 def mll_to_nanobeam():
     
+    #close c shutter
+    caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0", 0)
+    
     yield from bps.mov(ssa2.hgap, 0.05,ssa2.vgap, 0.03,s5.hgap,0.12,s5.vgap,0.12)
     yield from bps.mov(mllbs.bsx,0, mllbs.bsy,0,mllosa.osax,0)
     yield from bps.mov(mllosa.osax,0)
@@ -1595,6 +1800,362 @@ def mll_to_nanobeam():
     for mtr in check_list:
         if abs(mtr.position)>2:
             raise ValueError(f"{mtr.name} motion failed")
+
+
+def zp_to_nanobeam(peak_the_flux_after = False):
+
+    #close c shutter
+    caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0", 0)
+    
+    check_points = ["zposa.zposay", "zpbs.zpbsy"]
+    
+    for mtrs in check_points:
+        if abs(eval(mtrs).position)<20:
+            raise ValueError (f"{eval(mtrs).position} is close to zero; expected to be in out position")
+    
+    yield from bps.mov(ssa2.hgap, 0.05,ssa2.vgap, 0.03,s5.hgap,0.3,s5.vgap,0.3,)
+    yield from bps.movr(zposa.zposay, -2700,zpbs.zpbsy, -100 )
+    yield from bps.sleep(3)
+    #caput("XF:03IDC-ES{IO:1}DO:1-Cmd",1)
+
+    for mtr in check_points:
+        if abs(eval(mtr).position)>20:
+            raise ValueError(f"{eval(mtr).name} motion failed")
+            
+    
+    #yield from center_ssa2(ic = None)     
+    if peak_the_flux_after:
+        yield from peak_the_flux()
+        
+def zp_to_cam11_view():
+
+    #close c shutter
+    caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0", 0)
+    
+    #cam06 out in case
+    caput('XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.VAL', -50)
+    caput("XF:03IDC-ES{CAM:06}cam1:Acquire",0)
+    
+    check_points = ["zposa.zposay", "zpbs.zpbsy"]
+    
+    for mtrs in check_points:
+        if not abs(eval(mtrs).position)<20:
+            raise ValueError (f"{eval(mtrs).position} is not at close to zero; you maybe in out")
+
+    yield from bps.mov(ssa2.hgap, 2, ssa2.vgap, 2,s5.hgap, 4, s5.vgap, 4)
+
+    yield from go_det("cam11")
+
+    zp_osa_pos = caget("XF:03IDC-ES{ANC350:5-Ax:1}Mtr.VAL")
+
+    if zp_osa_pos<100:
+
+        caput("XF:03IDC-ES{ANC350:5-Ax:1}Mtr.VAL", zp_osa_pos+2700)
+
+    #open c shutter
+    caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0", 1)
+
+    #move beam stop
+    zp_bsx_pos = caget("XF:03IDC-ES{ANC350:8-Ax:1}Mtr.VAL")
+
+    if zp_bsx_pos<20:
+
+        caput("XF:03IDC-ES{ANC350:8-Ax:1}Mtr.VAL", zp_bsx_pos+100)
+            
+            
+def center_ssa2(ic = None):
+    if ic is None:
+        ic = sclr2_ch4
+
+    yield from Energy.fluxOptimizerScan(ssa2.vcen,-0.05,0.05,10, ic = ic)
+    plt.close()
+    yield from Energy.fluxOptimizerScan(ssa2.hcen,-0.05,0.05,10, ic = ic)
+    plt.close()
+    yield from Energy.fluxOptimizerScan(ssa2.vcen,-0.02,0.02,10, ic = ic)
+    plt.close()
+
+def find_beam_at_ssa2(ic1_target_k = 500, max_iter = 3):
+    
+    
+    #disengage feedbacks
+    caput("XF:03IDC-CT{FbPid:01}PID:on",0)
+    caput("XF:03IDC-CT{FbPid:02}PID:on",0)
+    
+    caput("XF:03ID-BI{EM:BPM1}fast_pidX.FBON",0)
+    caput("XF:03ID-BI{EM:BPM1}fast_pidY.FBON",0)
+    
+    #move out FS
+    caput('XF:03IDA-OP{FS:1-Ax:Y}Mtr.VAL', -20.)
+    yield from bps.sleep(10)
+    caput("XF:03IDA-BI{FS:1-CAM:1}cam1:Acquire",0)
+
+    #move in CAM06
+    caput('XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.VAL', 0)
+    caput("XF:03IDC-ES{CAM:06}cam1:Acquire",1)
+
+    #b shutter open 
+    caput("XF:03IDB-PPS{PSh}Cmd:Opn-Cmd", 1)
+
+    #get ic1 sensitivity and unit
+    ic_sens = caget("XF:03IDC-CT{SR570:1}sens_num.VAL")
+    ic_unit = caget("XF:03IDC-CT{SR570:1}sens_unit.VAL")
+    
+    #change IC1 sensivity to 5 um
+    #caput the position of the value
+    caput("XF:03IDC-CT{SR570:1}sens_num.VAL",2)
+    caput("XF:03IDC-CT{SR570:1}sens_unit.VAL",2)
+
+    #close b shutter, so that first iter works
+    caput("XF:03IDB-PPS{PSh}Cmd:Cls-Cmd", 1)
+    yield from bps.sleep(2)
+
+    iter=0
+
+    while caget("XF:03IDC-ES{Sclr:2}_cts1.B")<ic1_target_k*1000 and iter<max_iter:
+        
+        #b shutter open 
+        caput("XF:03IDB-PPS{PSh}Cmd:Opn-Cmd", 1)
+        yield from bps.sleep(2)
+        
+        #fully open ssa2
+        yield from bps.mov(ssa2.hgap, 2, ssa2.vgap, 2) 
+
+        #hfm
+        yield from peak_hfm_pitch(fine = False, tweak_range = 0.05)
+        yield from peak_dcm_roll(0.05)
+
+        if not caget("XF:03IDC-ES{Sclr:2}_cts1.B")<1000:
+
+            yield from peak_hfm_pitch(fine = False, tweak_range = 0.02)
+            yield from bps.mov(ssa2.hgap, 0.5)
+            yield from peak_hfm_pitch(fine = False, tweak_range = 0.005)
+            yield from peak_hfm_pitch(fine = True, tweak_range = 0.2)
+        
+        #dcm_roll
+        yield from bps.mov(ssa2.hgap, 2 ,ssa2.vgap, 0.5)
+        yield from peak_dcm_roll(0.05)
+        
+        #fully open ssa2
+        yield from bps.mov(ssa2.hgap, 2, ssa2.vgap, 2)
+        iter += 1
+
+        plt.close("all")
+
+    #change back to initial sensitivity 
+    caput("XF:03IDC-CT{SR570:1}sens_num.VAL",ic_sens)
+
+
+        
+def take_cam11_flatfield():
+    print("make sure that beam is on an empty area")
+    
+    #disable old correction
+    caput("XF:03IDC-ES{CAM:11}Proc1:EnableFlatField",0)
+    
+    #save bg
+    caput("XF:03IDC-ES{CAM:11}Proc1:SaveFlatField",1)
+    
+    #enable bg
+    caput("XF:03IDC-ES{CAM:11}Proc1:EnableFlatField",1)
+    
+    #set counts to 2500
+    #caput("loc://Ccam_11Max(65536)",2500)
+
+
+################Plans for Peaking flux with Feedbacks##############
+
+def peak_with_voltage(start,end,n_steps, pv_name = "XF:03ID-BI{EM:BPM1}DAC0"):
+
+    shutter_b_cls_status = caget('XF:03IDB-PPS{PSh}Sts:Cls-Sts')
+    shutter_c_status = caget('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0')
+
+    if shutter_b_cls_status == 0:
+
+        dcm_pitch_volt = caget(pv_name)
+        x = np.linspace(dcm_pitch_volt+start,dcm_pitch_volt+end,n_steps+1)
+        y = np.arange(n_steps+1)
+
+        for i in tqdm.tqdm(range(n_steps+1),desc = 'peaking flux'):
+
+            caput(pv_name,x[i])
+            yield from bps.sleep(4)
+            if shutter_c_status == 0:
+                y[i] = sclr2_ch2.get()
+            else:
+                y[i] = sclr2_ch4.get()
+
+        peak = x[y == np.max(y)]
+
+        yield from bps.sleep(3)
+        caput(pv_name,peak[0])
+        yield from bps.sleep(3)
+
+    else:
+        print('Shutter B is Closed')
+        return
+
+
+def peak_xy_volt(iter = 2):
+
+    for i in tqdm.tqdm(range(iter)):
+        yield from peak_with_voltage(-0.05,0.05,10, pv_name = "XF:03ID-BI{EM:BPM1}DAC0")
+        yield from peak_with_voltage(-0.05,0.05,10, pv_name = "XF:03ID-BI{EM:BPM1}DAC1")
+
+
+def peak_bpm_x(start,end,n_steps):
+    shutter_b_cls_status = caget('XF:03IDB-PPS{PSh}Sts:Cls-Sts')
+    shutter_c_status = caget('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0')
+
+    if shutter_b_cls_status == 0:
+
+        caput('XF:03IDC-ES{Status}ScanRunning-I', 1)
+        bpm_y_0 = caget('XF:03ID-BI{EM:BPM1}fast_pidX.VAL')
+        x = np.linspace(bpm_y_0+start,bpm_y_0+end,n_steps+1)
+        y = np.arange(n_steps+1)
+        #print(x)
+        for i in range(n_steps+1):
+            caput('XF:03ID-BI{EM:BPM1}fast_pidX.VAL',x[i])
+            if i == 0:
+                yield from bps.sleep(8)
+            else:
+                yield from bps.sleep(5)
+
+            if shutter_c_status == 0:
+                y[i] = sclr2_ch2.get()
+            else:
+                y[i] = sclr2_ch4.get()
+        peak = x[y == np.max(y)]
+
+        plt.figure()
+        plt.plot(x,y)
+        #plt.hold(2)
+        #plt.close()
+
+        #print(peak)
+        caput('XF:03ID-BI{EM:BPM1}fast_pidX.VAL',peak[0])
+        yield from bps.sleep(5)
+
+        xbpmc_x = caget('XF:03ID-BI{EM:BPM2}PosX:MeanValue_RBV')
+        xbpmc_y = caget('XF:03ID-BI{EM:BPM2}PosY:MeanValue_RBV')
+        print(xbpmc_x,xbpmc_y)
+        caput('XF:03IDC-CT{FbPid:03}PID.VAL',xbpmc_y)
+        caput('XF:03IDC-CT{FbPid:04}PID.VAL',xbpmc_x)
+        caput('XF:03IDC-ES{Status}ScanRunning-I', 0)
+
+
+    else:
+        print('Shutter B is Closed')
+
+    #plt.pause(5)
+    #plt.close()
+
+def peak_bpm_y(start,end,n_steps):
+    shutter_b_cls_status = caget('XF:03IDB-PPS{PSh}Sts:Cls-Sts')
+    shutter_c_status = caget('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0')
+
+
+    if shutter_b_cls_status == 0:
+
+        caput('XF:03IDC-ES{Status}ScanRunning-I', 1)
+        bpm_y_0 = caget('XF:03ID-BI{EM:BPM1}fast_pidY.VAL')
+        x = np.linspace(bpm_y_0+start,bpm_y_0+end,n_steps+1)
+        y = np.arange(n_steps+1)
+        #print(x)
+        for i in range(n_steps+1):
+            caput('XF:03ID-BI{EM:BPM1}fast_pidY.VAL',x[i])
+            if i == 0:
+                yield from bps.sleep(5)
+            else:
+                yield from bps.sleep(2)
+
+            if shutter_c_status == 0:
+                y[i] = sclr2_ch2.get()
+
+            else:
+                y[i] = sclr2_ch4.get()
+
+
+        peak = x[y == np.max(y)]
+        plt.figure()
+        plt.plot(x,y)
+        #plt.hold(2)
+        plt.close()
+        #print(peak)
+        caput('XF:03ID-BI{EM:BPM1}fast_pidY.VAL',peak[0])
+        yield from bps.sleep(2)
+
+        xbpmc_x = caget('XF:03ID-BI{EM:BPM2}PosX:MeanValue_RBV')
+        xbpmc_y = caget('XF:03ID-BI{EM:BPM2}PosY:MeanValue_RBV')
+        print(xbpmc_x,xbpmc_y)
+        caput('XF:03IDC-CT{FbPid:03}PID.VAL',xbpmc_y)
+        caput('XF:03IDC-CT{FbPid:04}PID.VAL',xbpmc_x)
+        caput('XF:03IDC-ES{Status}ScanRunning-I', 0)
+
+
+    else:
+        print('Shutter B is Closed')
+
+    #plt.pause(5)
+    #plt.close()
+
+def peak_all(x_start = -25,x_end=25,x_n_step=50, y_start = -15,y_end=15, y_n_step=30):
+
+	peak_bpm_y(y_start,y_end,y_n_step)
+	peak_bpm_x(x_start,x_end,x_n_step)
+	peak_bpm_y(y_start,y_end,y_n_step)
+    
+    
+def peak_the_flux():
+
+   
+
+    """ Scan the c-bpm set points to find IC3 maximum """
+    
+    #open c
+    caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0",1)
+
+    print("Peaking the flux.")
+    yield from bps.sleep(2)
+    yield from peak_bpm_y(-4,4,10)
+    plt.close()
+    yield from bps.sleep(1)
+    yield from peak_bpm_x(-10,10,6)
+    plt.close()
+    yield from bps.sleep(1)
+    yield from peak_bpm_y(-2,2,4)
+    plt.close()
+    #close c
+    caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0",0)
+
+
+
+def toggle_merlin_filer(filter_to  = "in"):
+    
+    if filter_to == "in":
+        caput("XF:03IDC-ES{IO:1}DO:1-Cmd",1)
+        time.sleep(2)
+
+        if caget("XF:03IDC-ES{IO:1}DO:1-Sts") != 1:
+            raise ValueError("filter motion failed")
+
+    elif filter_to == "out":
+        caput("XF:03IDC-ES{IO:1}DO:1-Cmd",0)
+
+        time.sleep(2)
+        if caget("XF:03IDC-ES{IO:1}DO:1-Sts") != 0:
+            raise ValueError("filter motion failed")
+
+
+
+    
+    
+
+    
+    
+    
+    
+    
+    
 
     
 

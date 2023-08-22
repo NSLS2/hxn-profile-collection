@@ -9,7 +9,7 @@ det_dict = {"dets1":dets1,
             "dets_fs":dets_fs}
 
 
-def make_mll_tomo_plan(save_as = "/data/user_macros/HXN_GUI/Scan/json_plans/mll_tomo/mll_tomo_params.json" ):
+def make_mll_tomo_plan(save_as = "/nsls2/data/hxn/legacy/user_macros/HXN_GUI/Scan/temp_files/mll_tomo_params.json" ):
 
     mll_tomo_scan = {   
                     "angle_info":{"start":-90, 
@@ -69,8 +69,6 @@ def make_mll_tomo_plan(save_as = "/data/user_macros/HXN_GUI/Scan/json_plans/mll_
             json.dump(mll_tomo_scan,fp, indent=6)
 
     fp.close()
-
-
 
 def align_scan(mtr, start,end,num,exp,elem_, align_with="line_center", threshold = 0.5):
 
@@ -180,14 +178,14 @@ def align_2d_com_scan(angle,mtr1,x_s,x_e,x_n,mtr2,y_s,y_e,y_n,exp,elem_,threshol
 
 def tomo_scan_to_loop(angle, tomo_params, ic_init):
 
-        caput("XF:03IDC-ES{Merlin:2}HDF1:NDArrayPort","ROI1") #patch for merlin2 issuee
+        #caput("XF:03IDC-ES{Merlin:2}HDF1:NDArrayPort","ROI1") #patch for merlin2 issuee
         
         #get parameters from json
         xalign = tomo_params["xalign"]
         yalign = tomo_params["yalign"]
         align_2d = tomo_params["align_2d_com"]
         image_scan = tomo_params["fly2d_scan"]
-        dets = det_dict[image_scan["det"]]
+        dets = eval(image_scan["det"])
 
 
         yield from bps.mov(dsth, angle)
@@ -324,7 +322,7 @@ def tomo_scan_to_loop(angle, tomo_params, ic_init):
             
             except:
                 pass
-
+                
 def mll_tomo_json(path_to_json):
 
 
@@ -430,6 +428,289 @@ def mll_tomo_json(path_to_json):
             
             if not angle in np.array(tomo_params["remove_angles"]):
                 yield from tomo_scan_to_loop(angle, tomo_params,ic_0)
+
+            else:
+                print(f"{angle} skipped")
+                pass
+
+    else:
+        pass
+
+    #save pdf
+    save_page()
+
+###################ZP Diffraction######################        
+
+def make_zp_diff_plan(save_as = "/nsls2/data/hxn/legacy/user_macros/HXN_GUI/Scan/temp_files/zp_diff_params.json" ):
+
+    zp_diff_scan = {   
+                    "angle_info":{"start":70, 
+                                "end":71, 
+                                "num":20}, 
+
+                    "fly2d_scan":{'det':'dets1',
+                                "x_motor":"zpssx",
+                                "x_start":-1,
+                                "x_end":1,
+                                "x_num":100, 
+                                "y_motor":"zpssy",
+                                "y_start":-1,
+                                "y_end":1,
+                                "y_num":100,  
+                                "exposure":0.03},
+
+                    "xalign":{"do_align":True,
+                            "x_motor":"zpssx",
+                            "start":-2,
+                            "end": 2,
+                            "num": 100,
+                            "exposure": 0.03,
+                            "elem": "Fe",
+                            "center_with":"line_center",
+                            "threshold": 0.5},
+                    
+                    "yalign":{"do_align":True,
+                            "y_motor":"zpssy",
+                            "start":-2,
+                            "end": 2,
+                            "num": 100,
+                            "exposure": 0.03,
+                            "elem": "Fe",
+                            "center_with":"line_center",
+                            "threshold": 0.5},
+
+                    "align_2d_com":{"do_align":False,
+                            "x_motor":"zpssx",
+                            "x_start":-2,
+                            "x_end": 2,
+                            "x_num": 100,
+                            "y_motor":"zpssy",
+                            "y_start":-2,
+                            "y_end": 2,
+                            "y_num": 100,
+                            "exposure": 0.03,
+                            "elem": "Fe",
+                            "threshold": 0.5,
+                            "move_x":True,
+                            "move_y":True},
+                    
+                    "stop_iter":False,
+                    "add_angles":[],
+                    "remove_angles":[],
+                    "stop_pdf":False,
+                    "pause_scan":False,
+                    "test":False 
+                }
+
+
+    with open(save_as,"w") as fp:
+            json.dump(zp_diff_scan,fp, indent=6)
+
+    fp.close()
+                
+                
+def diff_scan_to_loop(angle, tomo_params, ic_init):
+
+        #caput("XF:03IDC-ES{Merlin:2}HDF1:NDArrayPort","ROI1") #patch for merlin2 issuee
+        
+        #get parameters from json
+        xalign = tomo_params["xalign"]
+        yalign = tomo_params["yalign"]
+        align_2d = tomo_params["align_2d_com"]
+        image_scan = tomo_params["fly2d_scan"]
+        dets = eval(image_scan["det"])
+
+
+        yield from bps.mov(dsth, angle)
+
+
+        #look for beam dump and ic3 threshold, ignores for code tests using json
+        if not tomo_params["test"]:
+            yield from check_for_beam_dump()
+
+            while (sclr2_ch2.get() < (0.9*ic_init)):
+                 yield from peak_bpm_y(-5,5,10)
+                 yield from peak_bpm_x(-15,15,10)
+                 ic_0 = sclr2_ch2.get()
+        
+
+
+
+        if xalign["do_align"]:
+            yield from align_scan(eval(xalign["x_motor"]), 
+                            xalign["start"], 
+                            xalign["end"], 
+                            xalign["num"], 
+                            xalign["exposure"],
+                            xalign["elem"],
+                            xalign["center_with"],
+                            xalign["threshold"],
+                            )
+
+        #2d alignemnt using center of mass if condition is true
+        elif align_2d["do_align"]:
+
+            x_start_real = align_2d["x_start"] / np.cos(angle * np.pi / 180.)
+            x_end_real = align_2d["x_end"] / np.cos(angle * np.pi / 180.)
+
+
+            yield from align_2d_com_scan(
+                                        eval(align_2d["x_motor"]),
+                                        align_2d["x_start"],
+                                        align_2d["x_end"],
+                                        align_2d["x_num"],
+                                        eval(align_2d["y_motor"]),
+                                        align_2d["y_start"], 
+                                        align_2d["y_end"], 
+                                        align_2d["y_num"], 
+                                        align_2d["exposure"],
+                                        align_2d["elem"],
+                                        align_2d["threshold"],
+                                        align_2d["move_x"],
+                                        align_2d["move_y"],)
+
+        else:
+            pass
+            
+        
+        #1d y alignemnt scan
+        if yalign["do_align"]:
+            yield from align_scan(eval(yalign["y_motor"]), 
+                                yalign["start"], 
+                                yalign["end"], 
+                                yalign["num"], 
+                                yalign["exposure"],
+                                yalign["elem"],
+                                yalign["center_with"],
+                                yalign["threshold"],
+                )
+            
+        else:
+            pass
+        
+        
+        yield from fly2d( 
+                        dets,
+                        eval(image_scan["x_motor"]),
+                        image_scan["x_start"],
+                        image_scan["x_end"],
+                        image_scan["x_num"],
+                        eval(image_scan["y_motor"]),
+                        image_scan["y_start"],
+                        image_scan["y_end"],
+                        image_scan["y_num"],
+                        image_scan["exposure"]
+                        )
+        #save images to pdf if
+        if not tomo_params["stop_pdf"]:
+
+            try:
+                insert_xrf_map_to_pdf(-1,["Cu"], "dsth")
+                plt.close()
+            
+            except:
+                pass
+
+def diff_json(path_to_json):
+
+
+    """mll_tomo_scan by taking parameters from a json file,
+    TODO add angles smartly
+    
+    """
+
+    #open json file for angle info first
+    with open(path_to_json,"r") as fp:
+        tomo_params = json.load(fp)
+    fp.close()
+    print("json file loaded")
+
+    #create angle list for iteration
+    angle_info = tomo_params["angle_info"]
+    print(angle_info)
+    angles = np.linspace(angle_info["start"], 
+                        angle_info["end"],
+                        angle_info["num"]+1
+                        )
+    print(angles)
+    
+    #get some initial parameters 
+    ic_0 = sclr2_ch2.get()
+
+    #set the pause and stop inter keys to False before the loop
+    #to reverse the abort scan and pause when using the gui
+    tomo_params["stop_iter"] = False
+    tomo_params["pause_scan"] = False
+
+    with open(path_to_json,"w") as fp:
+            json.dump(tomo_params,fp, indent=6)
+
+    fp.close()
+
+
+    #loop with list of angles
+    for angle in tqdm.tqdm(angles,desc = 'Diff Scan'):
+
+        #open the json file to catch any updates 
+        with open(path_to_json,"r") as fp:
+            tomo_params = json.load(fp)
+            fp.close()
+
+        #stop data collection if necessary.user input taken 
+        if tomo_params["stop_iter"]:
+            save_page()
+            break
+        
+        while tomo_params["pause_scan"]:
+            yield from bps.sleep(10) #check if this freezes the gui or not
+            with open(path_to_json,"r") as fp:
+                tomo_params = json.load(fp)
+                fp.close() 
+
+            if not tomo_params["pause_scan"]:   
+                break
+        
+        if tomo_params["remove_angles"]==None:
+            tomo_params["remove_angles"] = []
+
+        if not angle in np.array(tomo_params["remove_angles"]):
+            #tomo scan at a single angle
+            yield from diff_scan_to_loop(angle, tomo_params,ic_0)
+
+        else:
+            print(f"{angle} skipped")
+            pass
+
+        
+    #TODO add angles to scan; need to be better
+    #sort based on what current angle is
+    if not tomo_params["add_angles"]==None:
+    
+        added_angles = tomo_params["add_angles"]
+        
+        for angle in tqdm.tqdm(added_angles,desc = 'MLL Tomo Scan; Additional Angles'):
+            
+            #open the json file to catch any updates 
+            with open(path_to_json,"r") as fp:
+                tomo_params = json.load(fp)
+                fp.close()
+
+            #stop data collection if necessary.user input taken 
+            if tomo_params["stop_iter"]:
+                save_page()
+                break
+
+            while tomo_params["pause_scan"]:
+                yield from bps.sleep(10) #check if this freezes the gui or not
+                with open(path_to_json,"r") as fp:
+                    tomo_params = json.load(fp)
+                    fp.close() 
+
+                if not tomo_params["pause_scan"]:   
+                    break
+            
+            if not angle in np.array(tomo_params["remove_angles"]):
+                yield from diff_scan_to_loop(angle, tomo_params,ic_0)
 
             else:
                 print(f"{angle} skipped")

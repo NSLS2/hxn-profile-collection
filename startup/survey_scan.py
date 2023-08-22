@@ -1,5 +1,3 @@
-print(f"Loading {__file__!r} ...")
-
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
@@ -188,11 +186,12 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
 
 
     ic = np.asfarray(df['sclr1_ch4'])
+    #print(np.shape(ic))
     index = np.where(ic == 0)
     nn = np.size(index[0])
     for i in range(nn):
         ii = index[0][i]
-        ic[ii] = ic[ii+1]
+        ic[ii] = ic[ii-1]
     #print('done ic')
     #ic_0 = 153000
 
@@ -211,8 +210,11 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     #print(my)
     #m_num = np.shape(mx)
     #print('load mask 2')
-    mask = np.load('/data/users/2023Q2/Huang_2023Q2/Si_solid/mask.npy')
-
+    #mask = np.load('/data/users/2023Q2/Guo_2023Q2/diff/mask_3.npy')
+    #mask = np.load('/data/users/2022Q1/Singer_2022Q1/50nm_post-treatment_rocking/mask_userversion.npy')
+    #mask = np.load('/data/users/2022Q3/Xue_2022Q3/mask.npy')
+    #mask = np.load('/data/users/2022Q3/Liu_2022Q3/NiMn_NiCo_4.5V_diff/mask.npy')
+    #mm3 = np.load('/data/users/2021Q2/Liu_2021Q2/Z150_1/mask.npy')
     for i in range(num_frame):
         if np.mod(i,500) ==0:
             print('load frame ',i, '/', num_frame)
@@ -220,24 +222,58 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
         t = np.flipud(images[i,:,:]).T
         #t = t * mask
         t = t*ic[0] / ic[i]
+       
 
         if i == 0:
             nx,ny = np.shape(t)
             global diff_array
             diff_array = np.zeros((nx,ny,num_frame))
-
+            #diff_array_l = np.zeros((158,ny,num_frame))
+            #diff_array_r = np.zeros((140,ny,num_frame))
         #t[index] = 0
         #t[mask == 1] = 0
         #t[164,107] = 0
-        diff_array[:,:,i] = t * mask
+        diff_array[:,:,i] = t #+* mask
 
 
+
+    #diff_array[22,255,:] = 0
+    #diff_array[296,281,:] = 0
+    #diff_array[91,221,:] = 0
+    #diff_array[440,381,:] = 0
+
+    #diff_array[diff_array > 200000] = 0
+    '''
+    #diff_array[diff_array > 1e4] = 0
+    diff_array[419,412,:] = 0
+    diff_array[431,408,:] = 0
+    diff_array[118,370,:] = 0
+    diff_array[145,357,:] = 0
+    diff_array[142,345,:] = 0
+    diff_array[57,462,:] = 0
+    diff_array[206,83,:] = 0
+    diff_array[115,348,:] = 0
+    diff_array[118,359,:] = 0
+    diff_array[446,385,:] = 0
+    '''
+    '''
+    diff_array[191,87,:] = 0
+    diff_array[124,57,:] = 0
+    diff_array[51,152,:] = 0
+    diff_array[114,113,:] = 0
+    diff_array[111,133,:] = 0
+    diff_array[134,122,:] = 0
+    '''
     #if elem == 'roi':
     for i in range(num_frame):
         if i == 0:
             global roi
             roi = np.zeros(num_frame)
+            #roi_l = np.zeros(num_frame)
+            #roi_r = np.zeros(num_frame)
         roi[i] = np.sum(diff_array[:,:,i])
+        #roi_r[i] = np.sum(diff_array_r[:,:,i])
+        #roi_l[i] = np.sum(diff_array_l[:,:,i])
 
     global xrf
     if elem in df:
@@ -334,16 +370,19 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     fig3 = plt.figure(3)
     ax3 = fig3.add_subplot(111)
 
-    
+
     plt.show()
 
     #"""
 
-    fn = '/data/users/2023Q2/Huang_2023Q2/Si_solid/'
+    fn = '/data/users/2023Q2/Shao_2023Q2/V2O3/40nm/'
+    
+    if not os.path.exists(fn):
+        os.makedirs(fn)
+    
+    
     if save_flag:
         io.imsave(fn+scan_num+'_roi.tif',roi.astype(np.float32))
         io.imsave(fn+scan_num+'_xrf.tif',xrf.astype(np.float32))
         io.imsave(fn+scan_num+'_diff_data.tif',diff_array.astype(np.float32))
-
-
 
