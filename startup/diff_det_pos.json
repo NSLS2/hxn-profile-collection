@@ -1,15 +1,15 @@
 {
       "merlin_pos": {
-            "diff_x": 7.5,
-            "diff_y1": -12.9,
-            "diff_y2": -12.9,
-            "diff_z": -50.0005,
+            "diff_x": 8.5,
+            "diff_y1": 2.1,
+            "diff_y2": 2.09,
+            "diff_z": -50.0,
             "diff_cz": -24.7
       },
       "cam11_pos": {
-            "diff_x": 216.69,
-            "diff_y1": 19.27,
-            "diff_y2": 19.26,
+            "diff_x": 216.38,
+            "diff_y1": 19.31,
+            "diff_y2": 19.3,
             "diff_z": -50.0,
             "diff_cz": -24.7
       },

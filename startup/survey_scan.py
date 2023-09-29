@@ -199,28 +199,16 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     #images = np.array(np.squeeze(list(hdr.data(det_name))))
     print(np.shape(images))
     num_frame,nnx,nny = np.shape(images)
-    # mm = 1
-    #mask = 1-io.imread('/data/users/2020Q3/Huang_2020Q3/NPO_mask.tif')
-    #mm = np.load('/data/users/2022Q3/Huang_2022Q3/A1_diff_mask.npy')
-    #mm2 = np.load('/data/users/2021Q2/Huang_2021Q2/TMA_LCO_pristine/mask2.npy')
-    #index = np.where(mask == 1)
-    #mx = index[0]
-    #my = index[1]
-    #print(mx)
-    #print(my)
-    #m_num = np.shape(mx)
-    #print('load mask 2')
-    #mask = np.load('/data/users/2023Q2/Guo_2023Q2/diff/mask_3.npy')
-    #mask = np.load('/data/users/2022Q1/Singer_2022Q1/50nm_post-treatment_rocking/mask_userversion.npy')
-    #mask = np.load('/data/users/2022Q3/Xue_2022Q3/mask.npy')
-    #mask = np.load('/data/users/2022Q3/Liu_2022Q3/NiMn_NiCo_4.5V_diff/mask.npy')
-    #mm3 = np.load('/data/users/2021Q2/Liu_2021Q2/Z150_1/mask.npy')
+
+    mask = np.load('/data/users/2023Q3/Liu_2023Q3/NNCM_3.75V_004/mask.npy')
+    #mask = np.load('/data/users/2023Q3/Liu_2023Q3/LCO/mask.npy')
+
     for i in range(num_frame):
         if np.mod(i,500) ==0:
             print('load frame ',i, '/', num_frame)
         #t = np.flipud(images.get_frame(i)[0]).T
         t = np.flipud(images[i,:,:]).T
-        #t = t * mask
+        t = t * mask
         t = t*ic[0] / ic[i]
        
 
@@ -375,7 +363,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
 
     #"""
 
-    fn = '/data/users/2023Q2/Shao_2023Q2/V2O3/40nm/'
+    fn = '/data/users/2023Q3/Liu_2023Q3/LNCM811_pre/'
     
     if not os.path.exists(fn):
         os.makedirs(fn)

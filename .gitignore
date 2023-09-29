@@ -62,6 +62,7 @@ security
 #history*.sqlite*
 *.sqlite*
 profile_default
+benchmark.out
 
 *.sw*
 startup/20-detectors.py.bak.write-on-gpfs-on-merlin_matt_20200219

@@ -17,11 +17,9 @@ For XANES Scan: <zp_list_xanes2d(FeXANES,dets1,zpssx,-13,11,150,zpssy,-13,11,150
                     alignX = (-1,1,100,0.1),
                     alignY = (-1,1,100,0.1), pdfElem = ['Fe','Cr'],
                     saveLogFolder = '/data/users/2021Q3/Ajith_2021Q3')
+                    
+<zp_list_xanes2d(CuXANES, dets_fs, zpssx,-3, 3, 100,zpssy,-2,2,100,0.025, highEStart=False)
 
-
-For Foil Calibration: <zp_list_xanes2d(e_list,dets6,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
-                    xcen = 0, ycen = 0, doAlignScan = False, pdfLog = False,
-                    foilCalibScan = True, peakBeam = False)
 
 """
 
@@ -42,17 +40,24 @@ import scipy.constants as consts
 CrXANES = {'high_e':6.0, 'high_e_zpz1':10.48, 'zpz1_slope':-5.04,
           'energy':[(5.97,5.98,0.005),(5.981,6.03,0.001), (6.032,6.046,0.005)] }
           
-MnXANES = {'high_e':6.6, 'high_e_zpz1':68.3165, 'zpz1_slope':-5.04,
-          'energy':[(6.520,6.530,0.005),(6.531,6.580,0.001),(6.585,6.601,0.005)]}
+MnXANES = {'high_e':6.6, 'high_e_zpz1':9.31, 'zpz1_slope':-5.04,
+          'energy':[(6.510,6.530,0.005),(6.531,6.570,0.001),(6.575,6.600,0.005)]}
                
 FeXANES = {'high_e':7.2, 'high_e_zpz1':6.41, 'zpz1_slope':-5.04,
           'energy':[(7.09,7.105,0.005),(7.106,7.141,0.001),(7.14,7.20,0.005)],}
+          
+CoXANES = {'high_e':7.8, 'high_e_zpz1':3.197, 'zpz1_slope':-5.04,          
+            'energy':[(7.690,7.705,0.005),(7.706,7.760,0.001),(7.765,7.800,0.005)],}
+
+#CoXANES = {'high_e':7.8, 'high_e_zpz1':3.2725, 'zpz1_slope':-5.04,
+#          'energy':[(7.736,7.760,0.001),(7.765,7.800,0.005)],}
+
 
 NiXANES = {'high_e':8.300, 'high_e_zpz1':0.98, 'zpz1_slope':-5.04,
           'energy':[(8.30,8.325,0.005),(8.326,8.360,0.001),(8.360,8.430,0.006)],}
 
-CuXANES = {'high_e':9.06,  'high_e_zpz1':-4.905, 'zpz1_slope':-5.04,
-          'energy':[(8.96,8.975,0.005),(8.976,9.003,0.001)],}
+CuXANES = {'high_e':9.05,  'high_e_zpz1':-2.735, 'zpz1_slope':-5.04,
+          'energy':[(8.960,8.975,0.005),(8.976,9.010,0.001),(9.0125,9.05,0.004)],}
 
 ZnXANES =  {'high_e':9.7, 'high_e_zpz1':50.87, 'zpz1_slope':-5.04,
           'energy':[(9.64,9.666,0.005),(9.6665,9.681,.0005),(9.682,9.701,0.002),(9.705,9.725,0.005)]}
@@ -113,6 +118,9 @@ def piezos_to_zero():
 
 
 def peak_the_flux():
+    
+    #yield from peak_xy_volt(1) #temp
+
 
     #cbpm_on(True)
 
@@ -125,6 +133,7 @@ def peak_the_flux():
     yield from peak_bpm_x(-10,10,6)
     yield from bps.sleep(1)
     yield from peak_bpm_y(-2,2,4)
+    
     
 
 def move_energy(e,zpz_ ):
@@ -274,12 +283,12 @@ def generateEList_MLL(XANESParam = As_MLL_XANES, highEStart = False):
     #return the dataframe
     return e_list
 
-def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,highEStart = True,
-                    doAlignScan = True, alignX = (-4,4,100,0.05,'Cr',0.5,True),
-                    alignY = (-5,5,100,0.05,'Cr',0.5, True), xy_offset = (0,0),
-                    pdfElem = ['Fe','Cr'],doScan = True, moveOptics = True,pdfLog = True, 
-                    foilCalibScan = False, peakBeam = True,
-                    saveLogFolder = '/data/users/current_user'):
+def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,highEStart = False,
+                	doAlignScan = True, alignX = (-15,15,100,0.1,'Cu',0.2,True),
+                	alignY = (-15,15,100,0.1,'Cu',0.2, True), xy_offset = (0,0),
+                	pdfElem = ['Cu'],doScan = True, moveOptics = True,pdfLog = True,
+                	foilCalibScan = False, peakBeam = True,
+                	saveLogFolder = '/data/users/current_user'):
 
     """ 
     Function to run XANES Scan. 
@@ -431,25 +440,28 @@ def zp_list_xanes2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
             elif doAlignScan:
 
                 try:
-
-                    if alignX[-1]:
-                        yield from fly1d(dets_fs,zpssx,alignX[0],alignX[1],alignX[2],alignX[3])
-                        xcen = return_line_center(-1,alignX[4],alignX[5])
-                        #xcen,_ = erf_fit(-1,alignX[4])
-                        yield from bps.mov(zpssx, xcen)
-                        print(f"zpssx centered to {xcen}")
-                        plt.close()
-                        #yield from piezos_to_zero()
-
+                
                     if alignY[-1]:
                         yield from fly1d(dets_fs,zpssy,alignY[0],alignY[1],alignY[2],alignY[3])
                         ycen = return_line_center(-1,alignX[4],alignY[5])
                         #ycen,_ = erf_fit(-1,alignX[4])
-                        #yield from bps.movr(smary, (ycen+0.5)*0.001)
-                        yield from bps.mov(zpssy, ycen)
+                        yield from bps.movr(smary, (ycen)*0.001)
+                        #yield from bps.mov(zpssy, ycen)
                         print(f"zpssy centered to {ycen}")
                         plt.close()
-                        #yield from piezos_to_zero()
+                        yield from piezos_to_zero()
+
+                    if alignX[-1]:
+                        yield from fly1d(dets_fs,zpssx,alignX[0],alignX[1],alignX[2],alignX[3])
+                        xcen = return_line_center(-1,alignX[4],alignX[5])
+                        yield from bps.movr(smarx, (xcen)*0.001)
+                        #xcen,_ = erf_fit(-1,alignX[4])
+                        #yield from bps.mov(zpssx, xcen)
+                        print(f"zpssx centered to {xcen}")
+                        plt.close()
+                        yield from piezos_to_zero()
+
+
 
 
                 except:

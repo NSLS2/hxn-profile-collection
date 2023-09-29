@@ -1090,9 +1090,9 @@ def zp_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
 
 
         #'''
-        if np.abs(angle) <= 60.:
+        if np.abs(angle) <= 45.:
             #yield from bps.movr(zpssy,-1)
-            yield from fly1d([fs, zebra, sclr1, xspress3], zpssx, -5, 5, 100, 0.03)
+            yield from fly1d([fs, zebra, sclr1, xspress3], zpssx, -10, 10, 100, 0.03)
             yield from bps.sleep(1)
             xc = return_line_center(-1,elem,0.2)
             #yield from bps.movr(zpssy,1)
@@ -1102,7 +1102,7 @@ def zp_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
                 #yield from bps.movr(zps.smarx,xc/1000)
         else:
             #yield from bps.mov(zpssz,0)
-            yield from fly1d([fs, zebra, sclr1, xspress3],zpssz, -5, 5, 100, 0.03)
+            yield from fly1d([fs, zebra, sclr1, xspress3],zpssz, -10, 10, 100, 0.03)
             yield from bps.sleep(1)
             xc = return_line_center(-1,elem,0.2)
             #if abs(xc)<2.5:
@@ -1245,8 +1245,8 @@ def zp_tomo_scan_scale(angle_start, angle_end, angle_num, x_start, x_end, x_num,
             #yield from bps.movr(zpssy,1)
             #if abs(xc)<2.5:
             if not np.isnan(xc):
-                yield from bps.mov(zpssx,xc)
-                #yield from bps.movr(smarx,xc/1000)
+                #yield from bps.mov(zpssx,xc)
+                yield from bps.movr(smarx,xc/1000)
         else:
             #yield from bps.movr(smarz,5/1000)
             #yield from bps.movr(smary,5/1000)
@@ -1256,19 +1256,19 @@ def zp_tomo_scan_scale(angle_start, angle_end, angle_num, x_start, x_end, x_num,
             xc = return_line_center(-1,elem,0.2)
             #if abs(xc)<2.5:
             if not np.isnan(xc):
-                yield from bps.mov(zpssz,xc)
-                #yield from bps.movr(smarz,xc/1000)
+                #yield from bps.mov(zpssz,xc)
+                yield from bps.movr(smarz,xc/1000)
         #'''
         #yield from bps.movr(zpssy,0)
-        yield from fly1d(dets_fs, zpssy, -5,5, 100, 0.03)
+        yield from fly1d(dets_fs, zpssy, -10,10, 100, 0.03)
         yc = return_line_center(-1,elem,0.2)
         #if not np.isnan(yc):
         #    yield from bps.mov(zpssy,yc)
         #edge,fwhm = erf_fit(-1,elem)
         plt.close()
         if not np.isnan(yc):
-            yield from bps.mov(zpssy,yc)
-            #yield from bps.movr(smary,(yc+y_offset_um)/1000)
+            #yield from bps.mov(zpssy,yc)
+            yield from bps.movr(smary,yc/1000)
         #merlin1.unstage()
         xspress3.unstage()
         #'''
@@ -1290,7 +1290,7 @@ def zp_tomo_scan_scale(angle_start, angle_end, angle_num, x_start, x_end, x_num,
 
         x_scale_factor = 0.9542
         z_scale_factor = 1.0309
-        angle_offset = -2.18
+        angle_offset = 0. #-2.18
 
         angle_tmp = angle #+ angle_offset
         if np.abs(angle) <= 45.0:
@@ -1303,7 +1303,7 @@ def zp_tomo_scan_scale(angle_start, angle_end, angle_num, x_start, x_end, x_num,
             #                 zpssx, x_start_real, x_end_real, x_num, exposure, return_speed=40)
             #RE(fly2d(zpssx, x_start_real, x_end_real, x_num, zpssy,
             #         y_start, y_end, y_num, exposure, return_speed=40))
-            yield from fly2d(dets1, zps.zpssx,x_start_real, x_end_real, x_num,zps.zpssy,y_start,y_end,y_num,exposure, dead_time=0.005,return_speed=100)
+            yield from fly2d(dets_fs, zps.zpssx,x_start_real, x_end_real, x_num,zps.zpssy,y_start,y_end,y_num,exposure, dead_time=0.005,return_speed=100)
             #plot2dfly(-1,elem,'sclr1_ch4')
             #insertFig(note='zpsth = {}'.format(check_baseline(-1,'zpsth')))
             #plt.close()
@@ -1325,7 +1325,7 @@ def zp_tomo_scan_scale(angle_start, angle_end, angle_num, x_start, x_end, x_num,
             #                 zpssz, x_start_real, x_end_real, x_num, exposure, return_speed=40)
             #RE(fly2d(zpssz, x_start_real, x_end_real, x_num, zpssy,
             #         y_start, y_end, y_num, exposure, return_speed=40))
-            yield from fly2d(dets1, zps.zpssz,x_start_real, x_end_real, x_num,zps.zpssy,y_start,y_end,y_num,exposure, dead_time=0.005,return_speed = 100)
+            yield from fly2d(dets_fs, zps.zpssz,x_start_real, x_end_real, x_num,zps.zpssy,y_start,y_end,y_num,exposure, dead_time=0.005,return_speed = 100)
             #plot2dfly(-1,elem,'sclr1_ch4')
             #insertFig(note='zpsth = {}'.format(check_baseline(-1,'zpsth')))
             #plt.close()
@@ -1579,35 +1579,35 @@ def zp_th_fly2d(th_start, th_end, num, mot1, x_start, x_end, x_num, mot2, y_star
         if do_align:
             
             #Move to the fiducial from scan start point 
-            yield from bps.movr(smary,-45*0.001)
+            #yield from bps.movr(smary,-45*0.001)
         
 
-            yield from fly1d(dets1,mot1,-3,3,100,0.04)
+            yield from fly1d(dets_fs,mot1,-4,4,100,0.04)
             #xc,fwhm=erf_fit(-1,elem,linear_flag=True)
             #except:pass
             #plt.close()
-            xc = return_line_center(-1,elem,threshold=0.5)
-            print('xc='+str(xc))
+            xc = return_line_center(-1,elem,threshold=0.3)
+            #print('xc='+str(xc))
             #If fiducial is far away comment out piezo, uncomment coarse
             yield from bps.mov(mot1,xc)
             #yield from bps.movr(smarx,(xc+4)*0.001)
 
-            yield from fly1d(dets1,mot2,-14,14,200,0.04)
-            #yc = return_line_center(-1,elem,threshold=0.3)
-            #yield from bps.mov(mot2,yc)
-            yc,fwhm=erf_fit(-1,elem,linear_flag=True)
-            print('yc='+str(yc))
+            yield from fly1d(dets_fs,mot2,-5,5,100,0.04)
+            yc = return_line_center(-1,elem,threshold=0.3)
+            yield from bps.mov(mot2,yc)
+            #yc,fwhm=erf_fit(-1,elem,linear_flag=True)
+            #print('yc='+str(yc))
             #yield from bps.mov(mot2,yc+2)
             #yield from bps.movr(smary,(yc/1000)-0.002)
-            plt.close()
+            #plt.close()
             #yield from bps.movr(smarx,(-10/1000))
-            yield from bps.mov(mot2,yc)
+            #yield from bps.mov(mot2,yc)
             #plt.close()
 
             #Move Back to center of Scan Area
-            yield from bps.movr(smary,42*0.001)
+            #yield from bps.movr(smary,42*0.001)
             #yield from bps.movr(smarz,-2*0.001)
-            yield from bps.movr(zpssz,-0.2)
+            #yield from bps.movr(zpssz,-0.2)
             
             
 

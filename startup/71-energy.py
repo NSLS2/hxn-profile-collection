@@ -51,7 +51,7 @@ class HXNEnergy():
 
 
 
-    def calcGap(self,E,harmonics = 5, offset = -9):
+    def calcGap(self,E,harmonics = 5, offset = -4):
         E1 = E/harmonics
         calc_gap =  np.polyval(self.ugap_coeffs, E1) + offset
         return (np.around(calc_gap,1))
@@ -115,7 +115,7 @@ class HXNEnergy():
              positions = MirrorPos[mirror]
              logger.info(f"Moving to {mirror}")
 
-         caput("XF:03IDA-OP{Mir:1-Ax:Y}Mtr",positions[0])
+         #caput("XF:03IDA-OP{Mir:1-Ax:Y}Mtr",positions[0])
          #caput("XF:03IDA-OP{Mir:2-Ax:Y}Mtr",positions[1])
          yield from bps.mov(m1.y, positions[0], m2.y, positions[1] )
 
@@ -125,16 +125,16 @@ class HXNEnergy():
 
         adj_E = en/self.df["harmonic"].to_numpy()
         ugaps = self.df["ugap"].to_numpy()
-        self.ugap_coeffs = np.polyfit(adj_E, ugaps, 5)
+        self.ugap_coeffs = np.polyfit(adj_E, ugaps, 3)
 
         dcm_p = self.df["dcmPitch"].to_numpy()
-        self.dcm_p_coeffs = np.polyfit(en, dcm_p, 5)
+        self.dcm_p_coeffs = np.polyfit(en, dcm_p, 3)
 
         m2_p = self.df["hfmPitch"].to_numpy()
-        self.m2p_coeffs = np.polyfit(en, m2_p, 5)
+        self.m2p_coeffs = np.polyfit(en, m2_p, 3)
 
         dcm_r = self.df["dcmRoll"].to_numpy()
-        self.dcm_r_coeffs = np.polyfit(en, dcm_r, 5)
+        self.dcm_r_coeffs = np.polyfit(en, dcm_r, 3)
 
         if plot_after:
 
@@ -320,17 +320,19 @@ class HXNEnergy():
             #yield from fluxOptimizerScan(ugap,-5, 5, 10, ic = xbpm, moveToMax = True)
             #if i%2 == 0
 
-            dcm_p_target = Energy.calculatePitch(target_e)
-            yield from bps.mov(dcm.p,dcm_p_target)
+            #dcm_p_target = Energy.calculatePitch(target_e)
+            #yield from bps.mov(dcm.p,dcm_p_target)
             
             logger.info("performing m2_p course centering")
-            yield from bps.mov(ssa2.hgap,2, ssa2.vgap,2)
+            yield from bps.mov(ssa2.hgap,1, ssa2.vgap,2)
             yield from Energy.fluxOptimizerScan(m2.p,-0.005, 0.005, 10, ic = sclr2_ch2, moveToMax = True)
             yield from Energy.fluxOptimizerScan(dcm.p,-0.01, 0.01, 10, ic = sclr2_ch2, moveToMax = True)
+            yield from bps.mov(ssa2.hgap,2, ssa2.vgap,1)
+            yield from Energy.fluxOptimizerScan(dcm.r,-0.01, 0.01, 10, ic = sclr2_ch2, moveToMax = True)
 
            
             logger.info("optimize beam at ssa2")
-            yield from find_beam_at_ssa2(500,2)
+            #yield from find_beam_at_ssa2(500,1)
             m2_p = m2.p.position
             yield from bps.mov(m2.pf, 10)
             yield from bps.mov(m2.p,m2_p)
@@ -344,7 +346,7 @@ class HXNEnergy():
             df['dcmRoll'].at[i] = dcm.r.position
             df['hfmPitch'].at[i] = m2.p.position
             df['IC1'].at[i] = sclr2_ch2.get()
-            df.to_csv(wd+"ugap_calib_06152023.csv",float_format= '%.5f')
+            df.to_csv(wd+"ugap_calib_09122023.csv",float_format= '%.5f')
             plt.close('all')
 
             ugap_offset = ugap.position - gap_
@@ -369,8 +371,56 @@ class HXNEnergy():
 
     @staticmethod
     def fluxOptimizerScan(motor,rel_start, rel_end, steps, ic = sclr2_ch2, moveToMax = True):
-
+        #TODO replace with a step scan
   
+        MtrPos = motor.position
+
+
+        x = np.linspace(MtrPos+rel_start, MtrPos+rel_end, steps+1)
+        y = np.arange(steps+1)
+
+        
+        for i in tqdm.tqdm(y,desc = "peaking "+str(motor.name)):
+
+            yield from bps.mov(motor, x[i])
+            
+            if motor == m2.p:
+                yield from bps.sleep(4)
+
+            else:
+
+                yield from bps.sleep(2)
+            
+            if ic==xbpm:
+                y[i] = caget("XF:03ID-BI{EM:BPM1}SumAll:MeanValue_RBV")
+
+            else:
+            
+                y[i] = ic.get()
+
+
+        peakPos = x[y == np.max(y)][-1]
+
+        plt.figure()
+        plt.title(motor.name)
+        plt.plot(x,y)
+
+
+        if moveToMax:
+
+            yield from bps.mov(motor, peakPos)
+        
+        else:
+            yield from bps.mov(motor, MtrPos)
+            #print(peakPos)
+            return peakPos
+            
+            
+    def fluxOptimizerScan2(motor,rel_start, rel_end, steps, ic = sclr2_ch2, moveToMax = True):
+        #TODO replace with a step scan
+  
+  
+        yield from dscan([zebra,sclr1], MtrPos, rel_start, rel_end, steps)
         MtrPos = motor.position
 
 
@@ -430,6 +480,8 @@ def plot_calib_results(csv_file):
     plt.show()
 
 def foil_calib_scan(startE, endE,saveLogFolder):
+
+    """absolute energy"""
     
     energies = np.arange(startE,endE,0.0005)
     
@@ -474,6 +526,8 @@ def foil_calib_scan(startE, endE,saveLogFolder):
 
 def foil_calib_d2_scan(startE, endE,saveLogFolder = "/data/users/current_user"):
 
+    """absolute start and end E"""
+
     dE = endE-startE
     dUgap = Energy.calcGap(endE)-Energy.calcGap(startE)
     
@@ -481,6 +535,25 @@ def foil_calib_d2_scan(startE, endE,saveLogFolder = "/data/users/current_user"):
     yield from d2scan(dets_fs,100, e, 0, dE, ugap, 0, dUgap, 1)
 
     h = db[-1]
+    sd = h.start["scan_id"]
+
+    df = h.table()
+    plt.figure()
+
+    en_ = np.array(df['energy'],dtype=np.float32) 
+    I = np.array(df['sclr1_ch4'],dtype=np.float32) 
+    Io = np.array(df['sclr1_ch2'],dtype=np.float32) 
+    spec = -1*np.log(I/Io)
+    plt.plot(en_, spec, label = "xanes")
+    plt.plot(en_, np.gradient(spec),label = "derivative")
+    plt.savefig(os.path.join(saveLogFolder, f'HXN_nanoXANES_calib_{sd}.png'))
+    #bps.sleep(2)
+    plt.legend()
+    plt.show()
+    
+def plot_foil_calib(sid=-1, saveLogFolder = "/data/users/current_user"):
+    
+    h = db[int(sid)]
     sd = h.start["scan_id"]
 
     df = h.table()
@@ -511,6 +584,6 @@ def peak_dcm_roll(tweak_range = 0.005):
     yield from Energy.fluxOptimizerScan(dcm.r,-1*tweak_range,tweak_range,10)
 
 
-Energy = HXNEnergy(ugap,e,dcm.p, "ic3", wd+"ugap_calib_06152023.csv")
+Energy = HXNEnergy(ugap,e,dcm.p, "ic3", wd+"ugap_calib_09122023.csv")
 
 #/home/xf03id/.ipython/profile_collection/startup/ugap_calib_06152023.csv

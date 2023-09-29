@@ -1,0 +1,41 @@
+{
+      
+      "fly2d_scan": {
+            "det": "dets_fs",
+            "x_start": -3,
+            "x_end": 3,
+            "x_num": 100,
+            "y_start": -3,
+            "y_end": 3,
+            "y_num": 100,
+            "exposure": 0.02
+      },
+      "xalign": {
+            "do_align": true,
+            "start": -15,
+            "end": 15,
+            "num": 100,
+            "exposure": 0.1,
+            "elem": "Cu",
+            "center_with": "line_center",
+            "threshold": 0.5
+      },
+      "yalign": {
+            "do_align": true,
+            "start": -15,
+            "end": 15,
+            "num": 100,
+            "exposure": 0.1,
+            "elem": "Cu",
+            "center_with": "line_center",
+            "threshold": 0.3
+      },
+      "start_from_high_e":false,
+      "stop_iter": false,
+      "pause_scan": false,
+      "pdf_log":true,
+      "pdf_elems:["Cu"],
+      "peak_flux":true,
+      "save_log_to":"/data/users/current_user"
+      
+}

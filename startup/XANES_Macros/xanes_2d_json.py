@@ -8,7 +8,7 @@ ReadMe:
 
 EXAMPLE OF USAGE:
 
-<zp_spectro_tomo_scan(CoXANES,path_to_json,pdfElem = ['Co','Mn'],pdfLog = True, peakBeam = True,saveLogFolder = '/nsls2/data/hxn/legacy/users/current_user/spectro-tomo/cycled_nmc811/co-spectro-tomo')
+<run_zp_xanes(CuXANES,"/data/current_user/xanes_2d_test.json")
 
 
 """
@@ -21,36 +21,39 @@ from datetime import datetime
 import scipy.constants as consts
 
 
+
 #Paramer list from previous runs in the order of atomic number of the element
-            
-FeXANES = {'high_e':7.2, 'high_e_zpz1':6.41, 'zpz1_slope':-5.04}
-CoXANES = {'high_e':7.8, 'high_e_zpz1':3.2725, 'zpz1_slope':-5.04}
+
+CrXANES = {'high_e':6.0, 'high_e_zpz1':10.48, 'zpz1_slope':-5.04,
+          'energy':[(5.97,5.98,0.005),(5.981,6.03,0.001), (6.032,6.046,0.005)] }
+          
+MnXANES = {'high_e':6.6, 'high_e_zpz1':9.31, 'zpz1_slope':-5.04,
+          'energy':[(6.510,6.530,0.005),(6.531,6.570,0.001),(6.575,6.600,0.005)]}
+               
+FeXANES = {'high_e':7.2, 'high_e_zpz1':6.41, 'zpz1_slope':-5.04,
+          'energy':[(7.09,7.105,0.005),(7.106,7.141,0.001),(7.14,7.20,0.005)],}
+          
+CoXANES = {'high_e':7.8, 'high_e_zpz1':3.197, 'zpz1_slope':-5.04,          
+            'energy':[(7.690,7.705,0.005),(7.706,7.760,0.001),(7.765,7.800,0.005)],}
+
+#CoXANES = {'high_e':7.8, 'high_e_zpz1':3.2725, 'zpz1_slope':-5.04,
+#          'energy':[(7.736,7.760,0.001),(7.765,7.800,0.005)],}
 
 
-As_MLL_XANES = {'high_e':11.94, 
-                'low_e':11.84,
-                'high_e_hmll_z':0,
-                'high_e_sbz':0,
-                'low_e_hmll_z':9,
-                'low_e_sbz':-39,
-                'energy':[(11.84,11.86,0.005),
-                          (11.861,11.88,0.001),
-                          (11.881,11.90,0.002),
-                          (11.90,11.94,0.005)]
-                          
-                }
+NiXANES = {'high_e':8.300, 'high_e_zpz1':0.98, 'zpz1_slope':-5.04,
+          'energy':[(8.30,8.325,0.005),(8.326,8.360,0.001),(8.360,8.430,0.006)],}
 
-As_MLL_XANES_minE = {'high_e':11.94, 
-                'low_e':11.84,
-                'high_e_hmll_z':0,
-                'high_e_sbz':0,
-                'low_e_hmll_z':9,
-                'low_e_sbz':-39,
-                'energy':[11.84,11.869,11.870,
-                          11.872,11.878,11.880,
-                          11.905,11.94]
-                          
-                }
+CuXANES = {'high_e':9.05,  'high_e_zpz1':-2.735, 'zpz1_slope':-5.04,
+          'energy':[(8.950,8.975,0.005),(8.976,9.005,0.001),(9.009,9.033,0.004)],}
+
+ZnXANES =  {'high_e':9.7, 'high_e_zpz1':50.87, 'zpz1_slope':-5.04,
+          'energy':[(9.64,9.666,0.005),(9.6665,9.681,.0005),(9.682,9.701,0.002),(9.705,9.725,0.005)]}
+
+HfXANES =  {'high_e':9.6, 'high_e_zpz1':-7.775, 'zpz1_slope':-5.04,
+          'energy':[(9.500,9.540,0.005),(9.541,9.6,0.001)]}
+
+LuL3XANES =  {'high_e':9.3, 'high_e_zpz1':-5.4246, 'zpz1_slope':-5.04,
+          'energy':[(9.150,9.200,0.005),(9.201,9.350,0.001),(9.352,9.400,0.002)]}
 
                                 ######################################
                                 ######### FUNCTIONS BELOW ############
@@ -76,56 +79,16 @@ def piezos_to_zero():
 
 
 
-def move_energy_and_angle(e,angle,zpz_):
+def move_energy(e,zpz_ ):
 
     yield from Energy.move(e, moveMonoPitch=False, moveMirror = "ignore")
     yield from mov_zpz1(zpz_)
-    yield from bps.mov(zpsth, angle)
     yield from bps.sleep(2)
+
     #cbpm_on(True)
 
 
-def create_energy_angle_df(filename, XANESParam = FeXANES):
 
-    """
-
-    Generates a pandas dataframe of optics motor positions. Function uses high E and low E values in the dictionary
-    to generate motor positions for all the energy points, assuming linear relationship.
-
-    input: Dictionary conating optics values at 2 positions (high E and low E), option to start from high E or low E
-
-    return : Dataframe looks like below;
-
-       energy     ZP focus
-    0   7.175     65.6575
-    1   7.170     65.6870
-    2   7.165     65.7165
-    3   7.160     65.7460
-    4   7.155     65.7755
-
-    """
-    # empty dataframe
-    e_list = pd.DataFrame()
-    
-    enegy_and_angle = np.loadtxt(filename)
-    e_points = enegy_and_angle[:,1]/1000
-    angles = enegy_and_angle[:,0]
-
-    #add list of energy as first column to DF
-    e_list['energy'] = e_points
-    e_list['angle'] = angles
-    
-
-    #read the paramer dictionary and calculate ugap list
-    high_e = XANESParam['high_e']
-
-    #zone plate increament is very close to the theorticla value , same step as above for zp focus
-    zpz1_ref, zpz1_slope = XANESParam['high_e_zpz1'],XANESParam['zpz1_slope']
-    zpz1_list = zpz1_ref + (e_list['energy'] - high_e)*zpz1_slope
-    e_list['ZP focus'] = zpz1_list
-
-    #return the dataframe
-    return e_list
 
 def alignment_scan(mtr, start,end,num,exp,elem_, align_with="line_center", threshold = 0.5, move_coarse = True):
 
@@ -160,55 +123,138 @@ def alignment_scan(mtr, start,end,num,exp,elem_, align_with="line_center", thres
     print(f"{mtr.name} centered to {xc :.2f}")
     
     if move_coarse:
+        yield from piezos_to_zero()
         yield from bps.movr(eval(fly_to_coarse[mtr.name]),xc/1000)
         
     else:
         yield from bps.mov(mtr,xc)
 
-def zp_tomo_2d_scan(angle,dets_,x_start,x_end,x_num,y_start,y_end,y_num,exp):
-    print("zp tomo 2d scan")
-    
-    x_scale_factor = 0.9542
-    z_scale_factor = 1.0309
+                        
 
-    if np.abs(angle) < 44.99:
-                
-        x_start_real = x_start / np.cos(angle * np.pi / 180.)/ x_scale_factor
-        x_end_real = x_end / np.cos(angle * np.pi / 180.)/ x_scale_factor
+def generateEPoints(ePointsGen = [(9.645,9.665,0.005),(9.666,9.7,0.0006),(9.705,9.725,0.005)],reversed = True):
 
-        yield from fly2d(dets_, 
-                        zpssx,
-                        x_start_real,
-                        x_end_real,
-                        x_num,
-                        zpssy,
-                        y_start, 
-                        y_end, 
-                        y_num, 
-                        exp
-                        )
+    """
+
+    Generates a list of energy values from the given list
+
+    input: Tuples in the format (start energy, end energy, energy resolution),
+    if reversed is true the list will be transposed
+
+    return : list of energy points
+
+    """
+
+    e_points = []
+
+    if isinstance(ePointsGen[0], tuple):
+
+        for values in ePointsGen:
+            #use np.arange to generate values and extend it to the e_points list
+            e_points.extend(np.arange(values[0],values[1],values[2]))
+
+    elif isinstance(ePointsGen, list):
+        e_points = ePointsGen
 
     else:
+        raise TypeError("Invalid energy format")
 
-        x_start_real = x_start / np.abs(np.sin(angle * np.pi / 180.))/ z_scale_factor
-        x_end_real = x_end / np.abs(np.sin(angle * np.pi / 180.))/ z_scale_factor
-        print(x_start_real,x_end_real)
+    if reversed:
+        #retrun list in the reversted order
+        return e_points[::-1]
+    else:
+        return e_points                 
+                        
+                        
+def generateEList(XANESParam = CrXANES, highEStart = True):
 
-        yield from fly2d(dets_, 
-                        zpssz,
-                        x_start_real,
-                        x_end_real,
-                        x_num,
-                        zpssy,
-                        y_start, 
-                        y_end, 
-                        y_num, 
-                        exp
-                        )
+    """
 
-def zp_spectro_tomo_scan(elemParam,path_to_json,pdfElem = ['Fe','Cr'],
-                        pdfLog = True, peakBeam = True,
-                        saveLogFolder = '/data/users/current_user'):
+    Generates a pandas dataframe of optics motor positions. Function uses high E and low E values in the dictionary
+    to generate motor positions for all the energy points, assuming linear relationship.
+
+    input: Dictionary conating optics values at 2 positions (high E and low E), option to start from high E or low E
+
+    return : Dataframe looks like below;
+
+       energy    ugap  crl_theta  ZP focus
+    0   7.175  7652.5       1.75   65.6575
+    1   7.170  7648.0       1.30   65.6870
+    2   7.165  7643.5       0.85   65.7165
+    3   7.160  7639.0       0.40   65.7460
+    4   7.155  7634.5      -0.05   65.7755
+
+    """
+    # empty dataframe
+    e_list = pd.DataFrame()
+
+    #add list of energy as first column to DF
+    e_list['energy'] = generateEPoints (ePointsGen = XANESParam ['energy'], reversed = highEStart)
+
+    #read the paramer dictionary and calculate ugap list
+    high_e = XANESParam['high_e']
+
+    #zone plate increament is very close to the theorticla value , same step as above for zp focus
+    zpz1_ref, zpz1_slope = XANESParam['high_e_zpz1'],XANESParam['zpz1_slope']
+    zpz1_list = zpz1_ref + (e_list['energy'] - high_e)*zpz1_slope
+    e_list['ZP focus'] = zpz1_list
+
+    #return the dataframe
+    return e_list
+
+def generateEList_MLL(XANESParam = CuXANES, highEStart = False):
+    print("generating e_list")
+
+    """
+
+    Generates a pandas dataframe of optics motor positions. Function uses high E and low E values in the dictionary
+    to generate motor positions for all the energy points, assuming linear relationship.
+
+    input: Dictionary conating optics values at 2 positions (high E and low E), option to start from high E or low E
+
+    return : Dataframe looks like below;
+
+       energy    ugap  crl_theta  ZP focus
+    0   7.175  7652.5       1.75   65.6575
+    1   7.170  7648.0       1.30   65.6870
+    2   7.165  7643.5       0.85   65.7165
+    3   7.160  7639.0       0.40   65.7460
+    4   7.155  7634.5      -0.05   65.7755
+
+    """
+    # empty dataframe
+    e_list = pd.DataFrame()
+
+    #add list of energy as first column to DF
+    e_list['energy'] = generateEPoints (ePointsGen = XANESParam ['energy'], reversed = highEStart)
+
+    #read the paramer dictionary and calculate ugap list
+    high_e = XANESParam['high_e']
+    low_e = XANESParam['low_e']
+
+    #lens increament
+
+    high_hmll = XANESParam['high_e_hmll_z']
+    high_sbz = XANESParam['high_e_sbz']
+    low_hmll = XANESParam['low_e_hmll_z']
+    low_sbz = XANESParam['low_e_sbz']
+
+
+    hmll_z_slope = (high_hmll-low_hmll)/(high_e-low_e)
+    sbz_slope = (high_sbz-low_sbz)/(high_e-low_e)
+    print(sbz_slope)
+
+
+    hmll_list = high_hmll + (e_list['energy'] - high_e)*hmll_z_slope
+    sbz_list = high_sbz + (e_list['energy'] - high_e)*sbz_slope
+    
+    e_list['hmll_hz'] = hmll_list
+    e_list['sbz'] = sbz_list
+
+
+    #return the dataframe
+    return e_list                        
+
+def run_zp_xanes(elemParam,path_to_parameter_file):
 
     """ 
     Function to run XANES Scan. 
@@ -228,17 +274,23 @@ def zp_spectro_tomo_scan(elemParam,path_to_json,pdfElem = ['Fe','Cr'],
            12. Options to do foil calibration scans
            13. Save important information in CSV format to selected forlder 
            14. The user can turn on and off alignemnt scans
-    
+          "start_from_high_e":false,
+      "stop_iter": false,
+      "pause_scan": false,
+      "pdf_log":true,
+      "pdf_elems:["Cu"],
+      "peak_flux":true,
+      "save_log_to":"/data/users/current_user"
     
     """   
     #load paramfile
-    with open(path_to_json,"r") as fp:
+    with open(path_to_parameter_file,"r") as fp:
         scan_params = json.load(fp)
         fp.close()
     # marker to track beam dump             
-    beamDumpOccured = False
+    beamDumpOccured = False    
                     
-    e_list = create_energy_angle_df(scan_params["energy_angle_list_file"], XANESParam = elemParam)
+    e_list = generateEList(elemParam, highEStart =  scan_params["start_from_high_e"])
 
     #add real energy to the dataframe
     e_list['E Readback'] = np.nan 
@@ -290,13 +342,13 @@ def zp_spectro_tomo_scan(elemParam,path_to_json,pdfElem = ['Fe','Cr'],
         #for i in range (len(e_list)):
 
             #open the json file to catch any updates 
-            with open(path_to_json,"r") as fp:
+            with open(path_to_parameter_file,"r") as fp:
                 scan_params = json.load(fp)
                 fp.close()
 
             while scan_params["pause_scan"]:
                 yield from bps.sleep(10) #check if this freezes the gui or not
-                with open(path_to_json,"r") as fp:
+                with open(path_to_parameter_file,"r") as fp:
                     scan_params = json.load(fp)
                     fp.close() 
 
@@ -327,9 +379,9 @@ def zp_spectro_tomo_scan(elemParam,path_to_json,pdfElem = ['Fe','Cr'],
                 
             else:
                 #unwrap df row for energy change
-                e_t,angle_t,zpz_t, *others = e_list.iloc[i]
+                e_t,zpz_t, *others = e_list.iloc[i]
             
-            yield from move_energy_and_angle(e_t,angle_t,zpz_t)
+            yield from move_energy(e_t,zpz_t)
 
             #open fast shutter to check if ic3 reading is satistactory
             caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',1) 
@@ -339,9 +391,10 @@ def zp_spectro_tomo_scan(elemParam,path_to_json,pdfElem = ['Fe','Cr'],
             ic3_ = sclr2_ch4.get()
             
             # if ic3 value is below the threshold, peak the beam
-            if ic3_ < ic_3_init*0.8:
+            #if ic3_ < ic_3_init*0.9:
+            if ic3_ < ic_3_init*scan_params["flux_threshold"]:
                 
-                if peakBeam: yield from peak_the_flux()
+                if scan_params["peak_flux"]: yield from peak_the_flux()
                 fluxPeaked = True # for df record
             else:
                 fluxPeaked = False
@@ -366,21 +419,7 @@ def zp_spectro_tomo_scan(elemParam,path_to_json,pdfElem = ['Fe','Cr'],
                 pass
 
             else:
-                if np.abs(angle_t) < 44.99:
-                    mtr = zpssx
-                else:
-                    mtr = zpssz
-                
-                if alignX["do_align"]:
-                    yield from alignment_scan(  mtr, 
-                                                alignX["start"],
-                                                alignX["end"],
-                                                alignX["num"],
-                                                alignX["exposure"],
-                                                alignX["elem"],
-                                                align_with=alignX["center_with"], 
-                                                threshold = alignX["threshold"])                
-
+            
                 if alignY["do_align"]:
                     yield from alignment_scan(  zpssy, 
                                                 alignY["start"],
@@ -391,22 +430,37 @@ def zp_spectro_tomo_scan(elemParam,path_to_json,pdfElem = ['Fe','Cr'],
                                                 align_with=alignY["center_with"], 
                                                 threshold = alignY["threshold"]
                                                 ) 
+                
+                if alignX["do_align"]:
+                    yield from alignment_scan(  zpssx, 
+                                                alignX["start"],
+                                                alignX["end"],
+                                                alignX["num"],
+                                                alignX["exposure"],
+                                                alignX["elem"],
+                                                align_with=alignX["center_with"], 
+                                                threshold = alignX["threshold"])                
+
+
             # alignment_scan(mtr, start,end,num,exp,elem_, align_with="line_center", threshold = 0.5):
+            
                                                                        
 
             print(f'Current scan: {i+1}/{len(e_list)}')
             image_scan = scan_params["fly2d_scan"]
 
-            yield from zp_tomo_2d_scan( angle_t,
-                                        eval(image_scan["det"]),
-                                        image_scan["x_start"],
-                                        image_scan["x_end"],
-                                        image_scan["x_num"],
-                                        image_scan["y_start"],
-                                        image_scan["y_end"],
-                                        image_scan["y_num"],
-                                        image_scan["exposure"]
-                                        )
+            yield from fly2d( 
+                            eval(image_scan["det"]),
+                            zpssx,
+                            image_scan["x_start"],
+                            image_scan["x_end"],
+                            image_scan["x_num"],
+                            zpssy,
+                            image_scan["y_start"],
+                            image_scan["y_end"],
+                            image_scan["y_num"],
+                            image_scan["exposure"]
+                            )
             yield from bps.sleep(1)
 
             #close fast shutter
@@ -426,17 +480,17 @@ def zp_spectro_tomo_scan(elemParam,path_to_json,pdfElem = ['Fe','Cr'],
             e_list['IC3_before_peak'].at[i] = ic3_ #ic3 right after e change, no peaking
             fluxPeaked = False #reset
             
-            if pdfLog:
+            if scan_params["pdf_log"]:
                 try:
-                    insert_xrf_map_to_pdf(-1,pdfElem,title_=['energy', 'zpsth'])# plot data and add to pdf
+                    insert_xrf_map_to_pdf(-1,scan_params["pdf_elems"],title_=['energy', 'zpsth'])# plot data and add to pdf
                 except:
                     pass
             # save the DF in the loop so quitting a scan won't affect
-            filename = f"HXN_spectro-tomo_startID{int(e_list['Scan ID'][0])}_{len(e_list)}_e_angle_points.csv"
-            e_list.to_csv(os.path.join(saveLogFolder, filename), float_format= '%.5f')
+            filename = f"HXN_2d_xanes_startID{int(e_list['Scan ID'][0])}_{len(e_list)}_e_angle_points.csv"
+            e_list.to_csv(os.path.join(scan_params["save_log_to"], filename), float_format= '%.5f')
 
         caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0) 
-        if pdfLog: save_page() #save the pdf
+        if scan_params["pdf_log"]: save_page() #save the pdf
 
     else:
         return

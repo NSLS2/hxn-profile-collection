@@ -308,13 +308,15 @@ def find_double_edge(xdata, ydata, size):
 def movr_zpz1(dz):
     yield from bps.movr(zp.zpz1, dz)
     #movr(zp.zpx, dz * 3.75)
-    yield from bps.movr(zp.zpy, -0.003035*dz)
-    yield from bps.movr(zp.zpx, dz*0.00111)
+    yield from bps.movr(zp.zpy, (-0.003035)*dz) #follow the sign for corr factors
+    yield from bps.movr(zp.zpx, dz*(0.00111+0.00067))
 
 def mov_zpz1(pos):
     c_zpz1 = zp.zpz1.position
     dz = pos - c_zpz1
     yield from movr_zpz1(dz)
+    
+'''
     
 def z_focus_alignment(mot_name,z_start, z_end, z_num, mot, start, end, num, acq_time, elem='Pt_L',linFlag = True,mon='sclr1_ch4'):
     
@@ -348,12 +350,12 @@ def z_focus_alignment(mot_name,z_start, z_end, z_num, mot, start, end, num, acq_
 
         fit_size[i]= fwhm
         #z_pos[i]=mot_name.position
-        '''
+        
         p1 = ax[i].plot(x_data,y_data,'bo')
         p2 = ax[i].plot(x_data,y_fit,'r')
         ax[i].title.set_text(f"{sid = }, {mot_name.name} = {mot_name.position :.3f}, {fwhm = :.1f}")
         plt.show()
-        '''
+        
         if mot_name == zp.zpz1:
             #print(f"{z_step = }")
             yield from movr_zpz1(z_step*0.001)
@@ -580,12 +582,11 @@ def zp_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem='
     ax.plot(z_pos,fit_size,'bo')
     ax.set_xlabel('zpz1')
     plt.show()
-'''
 
 def pos2angle(col,row):
 
     # old Dexelar calibration
-    '''
+    
     pix = 74.8
     R = 2.315e5
     th1 = 0.7617
@@ -594,7 +595,7 @@ def pos2angle(col,row):
     phi2 = 2.5335
     phi3 = -0.1246
     alpha = 8.5*np.pi/180
-    '''
+    
     # new Dexelar calibration at position 0
     pix = 74.8
     R = 2.6244e5
@@ -1840,7 +1841,7 @@ def zp_to_cam11_view():
     
     for mtrs in check_points:
         if not abs(eval(mtrs).position)<20:
-            raise ValueError (f"{eval(mtrs).position} is not at close to zero; you maybe in out")
+            raise ValueError (f"{eval(mtrs).name} is not at close to zero; you maymove it in to proceed")
 
     yield from bps.mov(ssa2.hgap, 2, ssa2.vgap, 2,s5.hgap, 4, s5.vgap, 4)
 
