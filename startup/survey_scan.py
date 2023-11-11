@@ -200,15 +200,15 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     print(np.shape(images))
     num_frame,nnx,nny = np.shape(images)
 
-    mask = np.load('/data/users/2023Q3/Liu_2023Q3/NNCM_3.75V_004/mask.npy')
-    #mask = np.load('/data/users/2023Q3/Liu_2023Q3/LCO/mask.npy')
+    #mask = np.load('/data/users/2023Q3/Liu_2023Q3/NNCM_3.75V_004/mask.npy')
+    mask = np.load('/data/users/2023Q3/Eum_2023Q3/s4_diff/mask.npy')
 
     for i in range(num_frame):
         if np.mod(i,500) ==0:
             print('load frame ',i, '/', num_frame)
         #t = np.flipud(images.get_frame(i)[0]).T
         t = np.flipud(images[i,:,:]).T
-        t = t * mask
+        t = t # * mask
         t = t*ic[0] / ic[i]
        
 
@@ -221,7 +221,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
         #t[index] = 0
         #t[mask == 1] = 0
         #t[164,107] = 0
-        diff_array[:,:,i] = t #+* mask
+        diff_array[:,:,i] = t * mask
 
 
 
@@ -363,7 +363,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
 
     #"""
 
-    fn = '/data/users/2023Q3/Liu_2023Q3/LNCM811_pre/'
+    fn = '/nsls2/data/hxn/legacy/users/2023Q3/Eum_2023Q3/s1_diff/'
     
     if not os.path.exists(fn):
         os.makedirs(fn)

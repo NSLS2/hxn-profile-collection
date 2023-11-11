@@ -534,8 +534,6 @@ def diff_scan_to_loop(angle, tomo_params, ic_init):
                  ic_0 = sclr2_ch2.get()
         
 
-
-
         if xalign["do_align"]:
             yield from align_scan(eval(xalign["x_motor"]), 
                             xalign["start"], 
@@ -549,9 +547,6 @@ def diff_scan_to_loop(angle, tomo_params, ic_init):
 
         #2d alignemnt using center of mass if condition is true
         elif align_2d["do_align"]:
-
-            x_start_real = align_2d["x_start"] / np.cos(angle * np.pi / 180.)
-            x_end_real = align_2d["x_end"] / np.cos(angle * np.pi / 180.)
 
 
             yield from align_2d_com_scan(
@@ -611,7 +606,7 @@ def diff_scan_to_loop(angle, tomo_params, ic_init):
             except:
                 pass
 
-def diff_json(path_to_json):
+def run_diff_scan(path_to_json):
 
 
     """mll_tomo_scan by taking parameters from a json file,
@@ -621,7 +616,7 @@ def diff_json(path_to_json):
 
     #open json file for angle info first
     with open(path_to_json,"r") as fp:
-        tomo_params = json.load(fp)
+        scan_params= json.load(fp)
     fp.close()
     print("json file loaded")
 
@@ -653,7 +648,7 @@ def diff_json(path_to_json):
 
         #open the json file to catch any updates 
         with open(path_to_json,"r") as fp:
-            tomo_params = json.load(fp)
+            scan_params= json.load(fp)
             fp.close()
 
         #stop data collection if necessary.user input taken 
@@ -664,7 +659,7 @@ def diff_json(path_to_json):
         while tomo_params["pause_scan"]:
             yield from bps.sleep(10) #check if this freezes the gui or not
             with open(path_to_json,"r") as fp:
-                tomo_params = json.load(fp)
+                scan_params= json.load(fp)
                 fp.close() 
 
             if not tomo_params["pause_scan"]:   
@@ -692,7 +687,7 @@ def diff_json(path_to_json):
             
             #open the json file to catch any updates 
             with open(path_to_json,"r") as fp:
-                tomo_params = json.load(fp)
+                scan_params= json.load(fp)
                 fp.close()
 
             #stop data collection if necessary.user input taken 
@@ -703,7 +698,7 @@ def diff_json(path_to_json):
             while tomo_params["pause_scan"]:
                 yield from bps.sleep(10) #check if this freezes the gui or not
                 with open(path_to_json,"r") as fp:
-                    tomo_params = json.load(fp)
+                    scan_params= json.load(fp)
                     fp.close() 
 
                 if not tomo_params["pause_scan"]:   

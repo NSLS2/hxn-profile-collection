@@ -1,15 +1,22 @@
 {
       "merlin_pos": {
-            "diff_x": 8.5,
-            "diff_y1": 2.1,
-            "diff_y2": 2.09,
+            "diff_x": -8.02,
+            "diff_y1": -14.23,
+            "diff_y2": -14.23,
             "diff_z": -50.0,
             "diff_cz": -24.7
       },
       "cam11_pos": {
-            "diff_x": 216.38,
-            "diff_y1": 19.31,
-            "diff_y2": 19.3,
+            "diff_x": 216.77,
+            "diff_y1": 19.36,
+            "diff_y2": 19.35,
+            "diff_z": -50.0,
+            "diff_cz": -24.7
+      },
+      "diode_pos": {
+            "diff_x": 201.57,
+            "diff_y1": 99.31,
+            "diff_y2": 99.3,
             "diff_z": -50.0,
             "diff_cz": -24.7
       },

@@ -41,7 +41,10 @@ def recover_pos_and_scan(label,roi_positions, dets, mot1, mot1_s, mot1_e, mot1_n
 
         print(f"{key} moved to {value :.3f}")
 
+        
+
     yield from check_for_beam_dump(threshold = 5000)
+
     if sclr2_ch2.get() < ic1_count*0.9:
          yield from peak_the_flux()
     else:

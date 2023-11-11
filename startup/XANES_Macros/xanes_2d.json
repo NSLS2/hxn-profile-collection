@@ -11,7 +11,7 @@
             "exposure": 0.02
       },
       "xalign": {
-            "do_align": true,
+            "do_align": false,
             "start": -15,
             "end": 15,
             "num": 100,
@@ -21,7 +21,7 @@
             "threshold": 0.5
       },
       "yalign": {
-            "do_align": true,
+            "do_align": false,
             "start": -15,
             "end": 15,
             "num": 100,
