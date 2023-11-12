@@ -185,13 +185,13 @@ class HxnEigerDetector(HxnModalTrigger, EigerDetector):
         cam.stage_sigs[cam.image_mode] = 'Multiple'
         cam.stage_sigs[cam.trigger_mode] = 'External Enable'
 
-        # NOTE: these values specify a debounce time for external triggering so
-        #       they should be set to < 0.5 the expected exposure time, or at
-        #       minimum the lowest possible dead time = 1.64ms
-        expected_exposure = 0.001
-        min_dead_time = 0.00164
+        # When Eiger is in 'external enable' mode, the exposure time is used to
+        # set the bit depth of the detector. It is recommended that the exposure
+        # is set to the minimum expected exposure, so it should be set using plan
+        # parameters. 
+        expected_exposure = 0.5  
         self.stage_sigs[self.cam.acquire_time] = expected_exposure
-        self.stage_sigs[self.cam.acquire_period] = expected_exposure + min_dead_time
+        self.stage_sigs[self.cam.acquire_period] = expected_exposure
 
         # self.cam.stage_sigs[self.cam.trigger_mode] = 'Trigger Enable'
 
