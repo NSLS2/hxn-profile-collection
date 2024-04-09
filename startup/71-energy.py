@@ -491,9 +491,9 @@ def plot_calib_results(csv_file):
     plt.title(f"Undulator Calib_{pd.Timestamp.now().month}_{pd.Timestamp.now().year}")
     plt.show()
 
-def foil_calib_scan_no_dscan(startE, endE,saveLogFolder):
+def foil_calib_scan(startE, endE,saveLogFolder):
 
-    """absolute energy, patch for dscan issue"""
+    """absolute energy"""
     
     energies = np.arange(startE,endE,0.0005)
     
@@ -536,7 +536,7 @@ def foil_calib_scan_no_dscan(startE, endE,saveLogFolder):
 
 
 
-def foil_calib_scan(startE, endE,saveLogFolder = "/data/users/current_user", save_as = "ta_Foil_calib_Mar11_2024"):
+def foil_calib_d2_scan(startE, endE,saveLogFolder = "/data/users/current_user", save_as = "ta_Foil_calib_Mar11_2024"):
 
     """absolute start and end E"""
 
@@ -548,11 +548,8 @@ def foil_calib_scan(startE, endE,saveLogFolder = "/data/users/current_user", sav
     yield from d2scan(dets_fs,num_steps, e, 0, dE, ugap, 0, dUgap, 0.5)
     plot_foil_calib(sid=-1, saveLogFolder = saveLogFolder, save_as = save_as)
 
-
     
 def plot_foil_calib(sid=-1, saveLogFolder = "/data/users/current_user",save_as = "Au_Foil_calib_Jan2024"):
-
-    calib_data = pd.DataFrame()
     
     h = db[int(sid)]
     sd = h.start["scan_id"]
@@ -564,11 +561,6 @@ def plot_foil_calib(sid=-1, saveLogFolder = "/data/users/current_user",save_as =
     I = np.array(df['sclr1_ch4'],dtype=np.float32) 
     Io = np.array(df['sclr1_ch2'],dtype=np.float32) 
     spec = -1*np.log(I/Io)
-
-    calib_data["energy"] = en_
-    calib_data["absorbance"] = spec
-    calib_data["derivative"] = np.gradient(spec)
-
     ax.plot(en_, spec, label = "xanes")
     ax.plot(en_, np.gradient(spec),label = "derivative")
     edge_pos = en_[np.argmax(np.gradient(spec))]
@@ -577,7 +569,6 @@ def plot_foil_calib(sid=-1, saveLogFolder = "/data/users/current_user",save_as =
     #bps.sleep(2)
     plt.legend()
     plt.savefig(os.path.join(saveLogFolder, f'{save_as}_{sd}.png'))
-    calib_data.to_csv(os.path.join(saveLogFolder, f'{save_as}_{sd}.csv'))
     plt.show()
 
 
