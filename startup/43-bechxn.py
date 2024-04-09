@@ -7,6 +7,8 @@ from bluesky.callbacks.mpl_plotting import LivePlot, LiveGrid, LiveScatter
 
 import matplotlib.pyplot as plt
 
+print(f"Loading {__file__!r} ...")
+
 from itertools import count
 
 def hinted_fields(descriptor):

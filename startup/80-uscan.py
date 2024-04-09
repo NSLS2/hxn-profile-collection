@@ -1,4 +1,6 @@
 
+print(f"Loading {__file__!r} ...")
+
 from epics import caput,caget
 
 
@@ -589,7 +591,7 @@ def zp_dexela_mosaic(scan_dim,exposure_time, filename = "test"):
 
 
     pv_filename = epics.PV("XF:03IDC-ES{Dexela:1}TIFF1:FileName")
-    pv_.put(filename)
+    pv_filename.put(filename)
 
     #caput("XF:03IDC-ES{Dexela:1}TIFF1:FileNumber", 0)
 
@@ -599,7 +601,7 @@ def zp_dexela_mosaic(scan_dim,exposure_time, filename = "test"):
 
     X_position = np.arange(0, scan_dim, 5)
     Y_position = np.arange(0, scan_dim, 5)
-    
+
     caput('XF:03IDC-ES{Dexela:1}cam1:AcquireTime',exposure_time)
     caput('XF:03IDC-ES{Dexela:1}cam1:AcquirePeriod',exposure_time+0.2)
     #open c
@@ -614,13 +616,87 @@ def zp_dexela_mosaic(scan_dim,exposure_time, filename = "test"):
             caput('XF:03IDC-ES{Dexela:1}TIFF1:Capture',1)
             yield from bps.sleep(exposure_time+0.2)
             yield from bps.sleep(1)
-    
+
     #close c
     caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0",0)
 
     yield from bps.mov(smarx, smarx_i)
-    yield from bps.mov(smary,smary_i) 
+    yield from bps.mov(smary,smary_i)
 
+def amp_get_gain(id):
+    lookup_num = [1,2,5,10,20,50,100,200,500]
+    lookup_unit = [1e-12,1e-9,1e-6,1e-3]
+    epics_num = 'XF:03IDC-CT{SR570:%d}sens_num.VAL'%id
+    epics_unit = 'XF:03IDC-CT{SR570:%d}sens_unit.VAL'%id
+    gain_num = lookup_num[int(caget(epics_num))]
+    gain_unit = lookup_unit[int(caget(epics_unit))]
+    return gain_num * gain_unit
+
+def amp_increase_gain(id):
+    epics_num = 'XF:03IDC-CT{SR570:%d}sens_num.VAL'%id
+    epics_unit = 'XF:03IDC-CT{SR570:%d}sens_unit.VAL'%id
+    gain_num = int(caget(epics_num))
+    gain_unit = int(caget(epics_unit))
+    if gain_num == 0 and gain_unit>0:
+        caput(epics_unit,gain_unit-1)
+        caput(epics_num,8)
+        return 1
+    elif gain_num > 0:
+        caput(epics_num,gain_num-1)
+        return 1
+    return 0
+
+def amp_decrease_gain(id):
+    epics_num = 'XF:03IDC-CT{SR570:%d}sens_num.VAL'%id
+    epics_unit = 'XF:03IDC-CT{SR570:%d}sens_unit.VAL'%id
+    gain_num = int(caget(epics_num))
+    gain_unit = int(caget(epics_unit))
+    if gain_unit == 3:
+        return 0
+    if gain_num == 8 and gain_unit<3:
+        caput(epics_unit,gain_unit+1)
+        caput(epics_num,0)
+        return 1
+    elif gain_num < 8:
+        caput(epics_num,gain_num+1)
+        return 1
+    return 0
+
+def diode_measure_flux():
+    import scipy.interpolate
+    import time
+    diode_table_energy = [5.,6.,8.,10.,12.,14.,16.,18.]
+    diode_table_sensitivity = [185.58,238.96,332.82,387.11,385.09,348.91,302.47,257.55]
+    s_interp = lambda x: np.exp(scipy.interpolate.interp1d(diode_table_energy,np.log(diode_table_sensitivity),'cubic')(x))
+    napGhz = s_interp(e.position)
+    v = caget('XF:03IDC-ES{IO:2}AI:1-I')
+    while v<0.1 or v>3:
+        print('Adjusting diode amplifier gain...')
+        if v<0.1:
+            st = amp_increase_gain(5)
+            if st == 0:
+                print('No signal on diode 1, check that diode is in and shutters are open')
+                return 0
+        if v>3:
+            st = amp_decrease_gain(5)
+            if st == 0:
+                print('Minimal gain reached, signal might be saturated')
+                break
+        time.sleep(1)
+        v = caget('XF:03IDC-ES{IO:2}AI:1-I')
+    ncounts = 50
+    volts = np.zeros(ncounts)
+    print('Counting %d points at 3 Hz for average intensity'%ncounts)
+    for i in range(ncounts):
+        volts[i] = caget('XF:03IDC-ES{IO:2}AI:1-I')
+        time.sleep(0.3)
+    gain_na = amp_get_gain(5)*1e9
+    fluxs = volts * gain_na/napGhz * 1e9
+    plt.plot(fluxs)
+    plt.ylabel('Flux [photon/s]')
+    flux = np.mean(fluxs)
+    print('%.5E photon/s'%flux)
+    return(flux)
 
 def repeat_2d(zs,ze,z_num):
     z_0 = zps.zpsz.position

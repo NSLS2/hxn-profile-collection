@@ -1,3 +1,5 @@
+print(f"Loading {__file__!r} ...")
+
 import math
 
 from ophyd import (PVPositionerPC, EpicsMotor, Signal, EpicsSignal,

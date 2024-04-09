@@ -1,6 +1,6 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
-*.py[cod]
+# *.py[cod]
 
 # C extensions
 *.so
@@ -62,6 +62,7 @@ security
 #history*.sqlite*
 *.sqlite*
 profile_default
+benchmark.out
 
 *.sw*
 startup/20-detectors.py.bak.write-on-gpfs-on-merlin_matt_20200219
@@ -89,3 +90,6 @@ startup/plt
 startup/shutil
 startup/sys
 startup/css-workspace-xf03id-ws1/
+
+startup/existing_plans_and_devices.yaml
+

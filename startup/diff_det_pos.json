@@ -1,0 +1,50 @@
+{
+      "merlin_pos": {
+            "diff_x": -3.52,
+            "diff_y1": -14.23,
+            "diff_y2": -14.22,
+            "diff_z": -50.0,
+            "diff_cz": -24.7
+      },
+      "cam11_pos": {
+            "diff_x": 216.66,
+            "diff_y1": 19.27,
+            "diff_y2": 19.25,
+            "diff_z": -50.0,
+            "diff_cz": -24.7
+      },
+      "diode_pos": {
+            "diff_x": 201.57,
+            "diff_y1": 99.31,
+            "diff_y2": 99.3,
+            "diff_z": -50.0,
+            "diff_cz": -24.7
+      },
+      "telescope_pos": {
+            "diff_x": -342,
+            "diff_z": -50,
+            "diff_cz": -24.7
+      },
+      "out": {
+            "diff_x": -700.0,
+            "diff_y1": -12.9,
+            "diff_y2": -12.9,
+            "diff_z": -1.0,
+            "diff_cz": -1.0
+      },
+      "fip_merlin2": {
+            "bl_y": -31.0,
+            "bl_x": 100.8
+      },
+      "xray_eye": {
+            "bl_y": 0,
+            "bl_x": 0
+      },
+      "eiger_pos2": {
+            "diff_x": 220.53,
+            "diff_y1": 137.31,
+            "diff_y2": 137.3,
+            "diff_z": -50.0,
+            "diff_cz": -24.7
+      }
+}

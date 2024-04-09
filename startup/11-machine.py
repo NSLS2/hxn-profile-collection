@@ -1,8 +1,9 @@
+print(f"Loading {__file__!r} ...")
+
 from ophyd import (PVPositioner, Component as Cpt, EpicsSignal, EpicsSignalRO,
                    Signal, EpicsMotor)
 from ophyd.utils import ReadOnlyError
 import time as ttime
-
 
 
 class InsertionDevice(Device):
@@ -14,8 +15,9 @@ class InsertionDevice(Device):
 
 
     def set(self, *args, **kwargs):
-        from ophyd.utils import set_and_wait
-        set_and_wait(self.brake, 1)
+        # from ophyd.utils import set_and_wait
+        # set_and_wait(self.brake, 1)
+        self.brake.set(1).wait()
         return self.gap.set(*args, **kwargs)
 
     def stop(self, *, success=False):

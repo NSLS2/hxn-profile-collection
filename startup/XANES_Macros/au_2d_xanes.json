@@ -1,0 +1,62 @@
+{
+      "fly2d_scan": {
+            "det": "dets1",
+            "x_start": -2.5,
+            "x_end": 2.5,
+            "x_num": 125,
+            "y_start": -2.5,
+            "y_end": 2.5,
+            "y_num": 125,
+            "exposure": 0.02
+      },
+      "xalign": {
+            "do_align": false,
+            "start": -5,
+            "end": 5,
+            "num": 100,
+            "exposure": 0.03,
+            "elem": "Mn",
+            "center_with": "line_center",
+            "threshold": 0.1
+      },
+      "yalign": {
+            "do_align": false,
+            "start": -5,
+            "end": 4,
+            "num": 100,
+            "exposure": 0.03,
+            "elem": "Mn",
+            "center_with": "line_center",
+            "threshold": 0.5
+      },
+      "start_from_high_e":false,
+      "stop_iter": true,
+      "pause_scan": false,
+      "pdf_log":true,
+      "pdf_elems":["Au_L"],
+      "peak_flux":true,
+      "flux_threshold":0.9,
+      "save_log_to":"/data/users/current_user/",
+      "elem_params": {
+            "high_e": 12,
+            "high_e_zpz1": -25.416,
+            "zpz1_slope": -5.04,
+            "energy": [
+                  [
+                        11.880,
+                        11.910,
+                        0.005
+                  ],
+                  [
+                        11.911,
+                        11.960,
+                        0.001
+                  ],
+                  [
+                        11.965,
+                        12.000,
+                        0.005
+                  ]
+            ]
+      }
+}

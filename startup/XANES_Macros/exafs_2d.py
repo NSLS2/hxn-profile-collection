@@ -55,7 +55,7 @@ MnEXAFS= {'high_e':6.6,
 
 FeEXAFS= {'high_e':7.6, 
           'low_e':7.1,
-          'high_e_zpz1':4.49, 
+          'high_e_zpz1':4.535, 
           'zpz1_slope':-5.04,
           'pre_edge':[(6.97,7.11,0.010)],
           'elem':"Fe", 
@@ -88,7 +88,7 @@ def etok(energy):
 
     if energy < 0: return 0
 
-    return np.around(np.sqrt(energy*ETOK),2)
+    return np.around(np.sqrt(energy*ETOK),5)
 
 def ktoe(k):
     """convert photo-electron wavenumber to energy"""
@@ -257,7 +257,7 @@ def zp_list_exafs2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
     # marker to track beam dump             
     beamDumpOccured = False
                     
-    e_list = generateEList(elemParam, highEStart =  False, startFrom = startEPoint)
+    e_list = generateEList(elemParam, highEStart =  highEStart, startFrom = startEPoint)
 
     #add real energy to the dataframe
     e_list['E Readback'] = np.nan 
@@ -343,7 +343,7 @@ def zp_list_exafs2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
             ic3_ = sclr2_ch4.get()
             
             # if ic3 value is below the threshold, peak the beam
-            if ic3_ < ic_3_init*0.85:
+            if ic3_ < ic_3_init*0.9:
                 
                 #if peakBeam: yield from peak_the_flux()
                 if peakBeam: yield from peak_xy_volt(2)
@@ -555,20 +555,20 @@ def run_exafs():
     yield from zp_list_exafs2d(FeEXAFS,
                             dets_fs,
                             zpssx,
-                            -1.5,
-                            1.5,
-                            30,
+                            -2.5,
+                            1.8,
+                            43,
                             zpssy,
-                            -1.5,
-                            1.5,
-                            30,
+                            -1.8,
+                            2.5,
+                            43,
                             0.1,
-                            highEStart = False, 
+                            highEStart = True, 
                             doAlignScan = True, 
-                            alignX = (-3,3,100,0.03,'Cr',0.7, True), 
-                            alignY = (-3,3,100,0.03,'Cr',0.7, True),
+                            alignX = (-5,5,100,0.03,'Cr',0.5, True), 
+                            alignY = (-5,5,100,0.03,'Cr',0.2, True),
                             pdfElem = ['Fe','Cr'],
                             pdfLog = True, 
                             peakBeam = True, 
                             startEPoint = 0,
-                            saveLogFolder = '/nsls2/data/hxn/legacy/users/2022Q3/Ajith_2022Q3/nano-EXAFS/')
+                            saveLogFolder = '/nsls2/data/hxn/legacy/users/2023Q1/Ajith_2023Q1')

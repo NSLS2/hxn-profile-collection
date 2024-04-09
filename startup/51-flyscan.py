@@ -1,3 +1,5 @@
+print(f"Loading {__file__!r} ...")
+
 # vim: sw=4 ts=4 sts=4 expandtab smarttab
 # HXN fly-scan configuration
 from hxnfly.bs import (FlyPlan1D, FlyPlan2D, FlyStep1D, maybe_a_table)
@@ -52,33 +54,61 @@ from hxnfly.callbacks import FlyLiveCrossSection
 
 #live_im_plot = FlyLiveImage(['Ca','W_L','Fe','Pt_L'], channels=[1, 2, 3])
 
-live_im_plot = FlyLiveImage(['Cu', 'Ba_L','Ti'], channels=[1, 2, 3])
-
+#live_im_plot = FlyLiveImage(['Fe','Ca','Cl','S'], channels=[1, 2, 3])
+live_im_plot = FlyLiveImage(live_plot_elems, channels=[1, 2, 3])
 # fly2dplot1 = FlyLiveCrossSection(['V'], channels=[1, 2, 3)
 
 #pt_plot = FlyRoiPlot(['Cr'],
 #                     channels=[1, 2, 3],
 #                     )
 
-pt_plot = FlyRoiPlot(['Cu'],
+pt_plot = FlyRoiPlot(line_plot_elem,
                      channels=[1, 2, 3],
                     )
 
+'''
+pt_plot = FlyRoiPlot(['Fe'],
+                     channels=[1, 2, 3],
+                    )
+'''
 # NOTE: indicate which detectors can be used in fly scans.
 # fly_scannable_detectors = [xspress3, zebra, sclr1, dexela1]
 fly_scannable_detectors = [xspress3, zebra, sclr1]
-fly1d = FlyPlan1D(usable_detectors=fly_scannable_detectors,
+_fly1d = FlyPlan1D(usable_detectors=fly_scannable_detectors,
                   scaler_channels=range(1,17))
 
-fly1d.sub_factories = [maybe_a_table]
-fly1d.subs = [pt_plot, ]
+_fly1d.sub_factories = [maybe_a_table]
+_fly1d.subs = [pt_plot, ]
+fly1d = _fly1d.__call__
 
-fly2d = FlyPlan2D(usable_detectors=fly_scannable_detectors,
+_fly2d = FlyPlan2D(usable_detectors=fly_scannable_detectors,
                   scaler_channels=range(1,17))
-fly2d.sub_factories = [maybe_a_table]
-fly2d.subs = [pt_plot, live_im_plot, ]
+_fly2d.sub_factories = [maybe_a_table]
+_fly2d.subs = [pt_plot, live_im_plot, ]
 
 flystep = FlyStep1D(usable_detectors=fly_scannable_detectors,
                     scaler_channels=[1, 2, 3, 4, 5, 6, 7, 8])
 flystep.sub_factories = [maybe_a_table]
 flystep.subs = [pt_plot, live_im_plot, ]
+
+def fly2d(dets,
+          motor1, scan_start1, scan_end1, num1,
+          motor2, scan_start2, scan_end2, num2,
+          exposure_time,
+          *,
+          dead_time=0.003, fly_type=None,
+          return_speed=None, max_points=None, md=None, pulse_dur = 1):
+
+      for det in dets:
+            if det.name in ['eiger1']:
+                  det.hdf5.frame_per_point = num1*num2
+                  yield from bps.abs_set(det.cam.num_triggers, num1*num2, wait=True)
+      zebra.stage_sigs.update([(zebra.pulse[1].width,exposure_time*pulse_dur)])
+      yield from _fly2d(
+        dets=dets,
+        motor1=motor1, scan_start1=scan_start1, scan_end1=scan_end1, num1=num1,
+        motor2=motor2, scan_start2=scan_start2, scan_end2=scan_end2, num2=num2,
+        exposure_time=exposure_time,
+        dead_time=dead_time, fly_type=fly_type,
+        return_speed=return_speed, max_points=max_points, md=md
+  )
