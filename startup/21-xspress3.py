@@ -39,6 +39,8 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
                          read_attrs=read_attrs, **kwargs)
         self._dispatch_cid = None
         self._spec_saved = threading.Event()
+        self.hdf5.stage_sigs.update([(self.hdf5.blocking_callbacks,'No')])
+        self.hdf5.stage_sigs.update([(self.hdf5.compression,'szip')])
 
 
     def stage(self, *args, **kwargs):
@@ -179,7 +181,7 @@ energy_L_list = np.array([1012,1098,1186,1282,1379,1481,1585,1692,1806,1924,2044
 elem_M_list = np.array(['Hf_M','Ta_M','W_M','Re_M','Os_M','Ir_M','Pt_M','Au_M','Hg_M','Tl_M',
                         'Pb_M','Bi_M','Po_M','At_M','Rn_M','Fr_M','Ra_M','Ac_M','Ce_M','Pr_M',
                         'Nd_M','Pm_M','Sm_M','Eu_M','Gd_M','Tb_M','Dy_M','Ho_M','Er_M','Tm_M',
-                        'Yb_M','Lu_M','Th_M','Pa_M','U_M','Np_M','Pu_M','Am_M','Cm_M','Bk_M','Cf_M']) 
+                        'Yb_M','Lu_M','Th_M','Pa_M','U_M','Np_M','Pu_M','Am_M','Cm_M','Bk_M','Cf_M'])
 
 energy_M_list = np.array([1646,1712,1775,1840,1907,1976,2048,2118,2191,2267,2342,2418,2499,2577,
                           2654,2732,2806,2900,884,927,979,1023,1078,1122,1181,1233,1284,1342,1404,

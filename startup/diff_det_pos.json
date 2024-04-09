@@ -1,15 +1,15 @@
 {
       "merlin_pos": {
-            "diff_x": -8.02,
+            "diff_x": -3.52,
             "diff_y1": -14.23,
-            "diff_y2": -14.23,
+            "diff_y2": -14.22,
             "diff_z": -50.0,
             "diff_cz": -24.7
       },
       "cam11_pos": {
-            "diff_x": 216.77,
-            "diff_y1": 19.36,
-            "diff_y2": 19.35,
+            "diff_x": 216.66,
+            "diff_y1": 19.27,
+            "diff_y2": 19.25,
             "diff_z": -50.0,
             "diff_cz": -24.7
       },
@@ -39,5 +39,12 @@
       "xray_eye": {
             "bl_y": 0,
             "bl_x": 0
+      },
+      "eiger_pos2": {
+            "diff_x": 220.53,
+            "diff_y1": 137.31,
+            "diff_y2": 137.3,
+            "diff_z": -50.0,
+            "diff_cz": -24.7
       }
 }

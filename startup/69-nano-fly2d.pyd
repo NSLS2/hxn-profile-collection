@@ -5,7 +5,7 @@ import bluesky.suspenders as sps
 # should abstract this method to use fast and slow axes, rather than x and y
 def scan_and_fly_2d(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwell, *,
                       flying_zebra_2d, xmotor, ymotor,
-                      delta=None, shutter=False, align=False, plot=False,
+                      delta=None, pulse_dur = 0.8, shutter=False, align=False, plot=False,
                       md=None, snake=False, verbose=False):
     """Read IO from SIS3820.
     Zebra buffers x(t) points as a flyer.
@@ -99,8 +99,8 @@ def scan_and_fly_2d(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwell
                 acquire_time = 0.9 * dwell
                 acquire_period = acquire_time
             elif det_name == "eiger_mobile":
-                acquire_time = 0.75 * dwell
-                acquire_period = acquire_time
+                acquire_time = pulse_dur * dwell
+                acquire_period = dwell
             else:
                 raise ValueError(f"Unsupported detector: {det_name!r}")
             if verbose:
@@ -127,6 +127,7 @@ def scan_and_fly_2d(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwell
             dpc.cam.stage_sigs['acquire_time'] = acquire_time
             dpc.cam.stage_sigs['acquire_period'] = acquire_period
             dpc.cam.stage_sigs['num_images'] = 1
+            dpc.cam.stage_sigs['wait_for_plugins'] = 'No'
             dpc.stage_sigs['total_points'] = num_total
             dpc.hdf5.stage_sigs['num_capture'] = num_total
             dpc.hdf5.frame_per_point = num_total
@@ -161,13 +162,20 @@ def scan_and_fly_2d(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwell
     if not FIP_TESTING:
         yield Msg('hxn_next_scan_id')
 
+    yield from bps.pause()
     if "scan" not in md:
         md["scan"] = {}
     # Scan metadata
     md['scan']['type'] = 'FIP_2D_FLY'
-    md['scan']['scan_input'] = [float(0),float(xrange),xnum,ystart,ystop,ynum,dwell]
+    md['scan']['scan_input'] = [float(xcenter),float(xrange),xnum,ystart,ystop,ynum,dwell]
     md['scan']['sample_name'] = ''
+    try:
+        md['scan']['theta'] = pt_tomo.th.position
+        md['scan']['picoy'] = pt_tomo.p1_pos1.get()/1e6
+    except:
+        pass
     md['scan']['detectors'] = [d.name for d in detectors]
+    md['scan']['detector_distance'] = 1.055
     md['scan']['dwell'] = dwell
     md['scan']['fast_axis'] = {'motor_name' : xmotor.name,
                                'units' : xmotor.motor_egu.get()}
@@ -177,10 +185,12 @@ def scan_and_fly_2d(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwell
     #                        'units' : pt_tomo.th.motor_egu.get()}
     md['scan']['delta'] = {'val' : delta,
                            'units' : xmotor.motor_egu.get()}
+    md['scan']['pulse_dur'] = pulse_dur
     md['scan']['snake'] = snake
     md['scan']['shape'] = (xnum, ynum)
 
     time_start_scan = time.time()
+
 
     # Synchronize encoders
     # flying_zebra._encoder.pc.enc_pos1_sync.put(1)
@@ -344,7 +354,7 @@ def scan_and_fly_2d(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwell
         v = (np.abs(scan_stop - scan_start) / num_total) / dwell  # compute "stage speed"
         if verbose:
             print(f"FORWARD SPEED FOR SCAN AXIS: {v} (num={num_total} dwell={dwell})")
-        if v<1:
+        if v<5:
             yield from mv(ymotor.velocity, v)
         else:
             raise RuntimeError(f"Ymotor speed too fast, check your input")
@@ -399,7 +409,7 @@ def scan_and_fly_2d(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwell
             # start_zebra, stop_zebra = xstart * 1000000, xstop * 1000000
             start_zebra, stop_zebra = scan_start, scan_stop
             yield from kickoff(flying_zebra_2d,
-                                ystart=start_zebra, ystop=stop_zebra, num=num_total, dwell=dwell, delta=np.abs(delta),
+                                ystart=start_zebra, ystop=stop_zebra, num=num_total, dwell=dwell, delta=np.abs(delta), pulse_dur = pulse_dur,
                                 wait=True)
         yield from zebra_kickoff()
 
@@ -426,26 +436,26 @@ def scan_and_fly_2d(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwell
             st.add_callback(lambda x: toc(t_startfly, str=f"  DETECTOR  {datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S.%f')}"))
 
             # if (d.name == 'merlin2'):
-            if (d.name == 'eiger2'):
-                t_wait_detector = tic()
-                # while d.cam.num_images_counter.get() != 0:
-                # while (d.cam.detector_state.get(as_string=True) != "Acquire"):
-                # while not d.cam.acquire.get():
-                    # print("Waiting for detector state")
-                    # yield from bps.sleep(0.001)
-                yield from bps.sleep(0.2)
-                if verbose:
-                    toc(t_wait_detector, str=f'  waiting for detector {d.name!r}')
-            if (d.name == 'eiger_mobile'):
-                t_wait_detector = tic()
-                # while d.cam.num_images_counter.get() != 0:
-                # while (d.cam.detector_state.get(as_string=True) != "Acquire"):
-                # while not d.cam.acquire.get():
-                    # print("Waiting for detector state")
-                    # yield from bps.sleep(0.001)
-                yield from bps.sleep(0.2)
-                if verbose:
-                    toc(t_wait_detector, str=f'  waiting for detector {d.name!r}')
+            # if (d.name == 'eiger2'):
+            #     t_wait_detector = tic()
+            #     # while d.cam.num_images_counter.get() != 0:
+            #     # while (d.cam.detector_state.get(as_string=True) != "Acquire"):
+            #     # while not d.cam.acquire.get():
+            #         # print("Waiting for detector state")
+            #         # yield from bps.sleep(0.001)
+            #     yield from bps.sleep(0.2)
+            #     if verbose:
+            #         toc(t_wait_detector, str=f'  waiting for detector {d.name!r}')
+            # if (d.name == 'eiger_mobile'):
+            #     t_wait_detector = tic()
+            #     # while d.cam.num_images_counter.get() != 0:
+            #     # while (d.cam.detector_state.get(as_string=True) != "Acquire"):
+            #     # while not d.cam.acquire.get():
+            #         # print("Waiting for detector state")
+            #         # yield from bps.sleep(0.001)
+            #     yield from bps.sleep(0.2)
+            #     if verbose:
+            #         toc(t_wait_detector, str=f'  waiting for detector {d.name!r}')
 
         if roi_pv_force_update:
             yield from bps.mv(roi_pv_force_update, 1)
@@ -804,7 +814,7 @@ class SRXFlyer2D(Device):
 
         return {"primary": desc}
 
-    def kickoff(self, *, ystart, ystop, num, dwell, delta = 0.1, pulse_dur = 0.3):
+    def kickoff(self, *, ystart, ystop, num, dwell, delta = 0.1, pulse_dur):
         # print(f"Kickoff: xstart={xstart} xtop={xstop} dwell={dwell}")
 
         self._data_exporter.set_fixed_positions()
@@ -837,6 +847,7 @@ class SRXFlyer2D(Device):
         self._encoder.pc.pulse_max.put(num)
         self._encoder.pc.pulse_width.put(dwell*pulse_dur)
         self._encoder.pc.pulse_step.put(dwell)
+        self._encoder.pc.pulse_delay.put(dwell*pulse_dur*0.5)
         # self._encoder.pc.pulse_width.put(pxsize * 0.2)
 
         # # self._encoder.pc.pulse_width.put(pxsize - decrement)
@@ -1037,7 +1048,7 @@ def pt_fly2dcont(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2
     m2_pos = motor2.position
     print(f"Initial positions: m1_pos={m1_pos}  m2_pos={m2_pos}")
     try:
-        center1, range1 = m1_pos + (scan_start1+scan_end1)/2, np.abs(scan_end1-scan_start1)
+        center1, range1 =(scan_start1+scan_end1)/2, np.abs(scan_end1-scan_start1)
         start2, end2 = m2_pos + scan_start2, m2_pos + scan_end2
         range_min, range_max = -30, 30
         for v in [center1-range1/2, center1+range1/2, start2, end2]:
@@ -1051,36 +1062,40 @@ def pt_fly2dcont(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2
         kwargs.setdefault('xmotor', motor1)  # Fast motor
         kwargs.setdefault('ymotor', motor2)  # Slow motor
         kwargs.setdefault('flying_zebra_2d', nano_flying_zebra_2d)
+
+        nano_flying_zebra_2d._encoder.pc.enc_pos2_sync.put(1)
         #args = [center1, range1, num1, scan_start2, scan_end2, num2, exposure_time]
 
         # print(kwargs['xmotor'].name)
         # print(kwargs['ymotor'].name)
         # print(kwargs['flying_zebra'].name)
 
-        if motor1 == pt_tomo.ssx and motor2 == pt_tomo.ssy:
-            yield from abs_set(nano_flying_zebra.fast_axis, 'NANO2D')
-            yield from abs_set(nano_flying_zebra.slow_axis, 'NANO2D')
+        #if motor1 == pt_tomo.ssx and motor2 == pt_tomo.ssy:
+        yield from abs_set(nano_flying_zebra.fast_axis, 'NANO2D')
+        yield from abs_set(nano_flying_zebra.slow_axis, 'NANO2D')
         # elif motor1 == pt_tomo.ssy and motor2 == pt_tomo.ssx:
         #     yield from abs_set(nano_flying_zebra.fast_axis, 'NANO2D')
         #     yield from abs_set(nano_flying_zebra.slow_axis, 'NANO2D')
-        else:
-            raise RuntimeError(f"Unsupported set of motors: motor1={motor1} motor2={motor2}")
+        #else:
+        #    raise RuntimeError(f"Unsupported set of motors: motor1={motor1} motor2={motor2}")
 
-        yield from abs_set(motor1,center1,wait=True)
+        #yield from abs_set(motor1,center1,wait=True)
         #yield from bps.stage(motor1)
         #yield from bps.unstage(motor1)
 
         fg_volt = range1/6.0
+        fg_offset = -center1/6.0
         fg_freq = 1/(2.0*num1*exposure_time)
 
-        if fg_volt < 3 and fg_freq < 10:
+        if fg_volt < 5 and fg_offset < 1 and fg_freq < 10:
+            yield from abs_set(pt_fg.func,"RAMP")
             yield from abs_set(pt_fg.volt,f"{fg_volt:.{4}f}")
+            yield from abs_set(pt_fg.offset,f"{fg_offset:.{4}f}")
             yield from abs_set(pt_fg.freq,f"{fg_freq:.{4}f}")
             yield from pt_fg.on()
         else:
             raise RuntimeError(f"Xmotor voltage or frequency too high, check your input")
         # print(f"dets={dets} args={args} kwargs={kwargs}")
-        print('#1')
 
         # _xs = kwargs.pop('xs', xs)
         # if extra_dets is None:
@@ -1091,7 +1106,7 @@ def pt_fly2dcont(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2
         # yield from mv(pt_tomo.ssx, 0, pt_tomo.ssy, 0, pt_tomo.ssz, 0)
         # yield from bps.sleep(2)
         yield from scan_and_fly_2d(dets, center1, range1, num1, start2, end2, num2, exposure_time, **kwargs)
-        print('Scan finished. Centering the scanner...')
+        print('Scan finished.')
         # yield from bps.sleep(1)
         #yield from set_scanner_velocity(5)
     finally:
@@ -1101,27 +1116,3 @@ def pt_fly2dcont(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2
             yield from abs_set(motor1,m1_pos,group=mv_back)
             yield from abs_set(motor2,m2_pos,group=mv_back)
             yield from bps.wait(group=mv_back)
-
-def test_2dfly():
-        #RE(mv(pt_tomo.ssx,0))
-        #RE(bps.sleep(1))
-        def t2dfly():
-            yield from mv(pt_tomo.ssx,0)
-            yield from bps.sleep(1)
-            yield from pt_fg.on()
-            yield from bps.sleep(10)
-            #yield from scan_and_fly_2d([eiger2],0, 1, 50, 0, 0.2, 10, 0.01,flying_zebra_2d=nano_flying_zebra_2d,xmotor=pt_tomo.ssx,ymotor=pt_tomo.ssy,verbose=True)
-            yield from pt_fg.off()
-        RE(t2dfly())
-
-def test_2dfly2():
-        RE(mv(pt_tomo.ssx,0))
-        RE(bps.sleep(1))
-        def t2dfly():
-            #yield from mv(pt_tomo.ssx,0)
-            #yield from bps.sleep(1)
-            yield from pt_fg.on()
-            yield from bps.sleep(10)
-            #yield from scan_and_fly_2d([eiger2],0, 1, 50, 0, 0.2, 10, 0.01,flying_zebra_2d=nano_flying_zebra_2d,xmotor=pt_tomo.ssx,ymotor=pt_tomo.ssy,verbose=True)
-            yield from pt_fg.off()
-        RE(t2dfly())

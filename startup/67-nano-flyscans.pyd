@@ -625,7 +625,7 @@ def pt_fly2d(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sc
         start2, end2 = m2_pos + scan_start2, m2_pos + scan_end2
         yield from pt_fly2d_abs(
             dets, motor1, start1, end1, num1, motor2, start2, end2, num2, exposure_time, **kwargs
-            )    
+            )
     finally:
         motor1.set(m1_pos).wait()
         motor2.set(m2_pos).wait()
@@ -763,3 +763,33 @@ def nano_z_scan_and_fly(*args, extra_dets=None, **kwargs):
     print('Scan finished. Centering the scanner...')
     yield from mv(pt_tomo.ssx, 0, pt_tomo.ssy, 0, pt_tomo.ssz, 0)
     # yield from mv(pt_tomo.ssx, 0, pt_tomo.ssy, 0, pt_tomo.ssz, 0)
+
+def capture_tif(exp_time=1,name='proj'):
+    yield from abs_set(eiger_mobile.cam.acquire_time,exp_time,wait=True)
+    yield from abs_set(eiger_mobile.cam.acquire_period,exp_time,wait=True)
+    yield from abs_set(eiger_mobile.cam.num_triggers,1,wait=True)
+    yield from abs_set(eiger_mobile.cam.trigger_mode,0,wait=True)
+    eiger_mobile.tif_filename.put("%s_%.2fs"%(name,exp_time))
+    yield from abs_set(eiger_mobile.tif_capture,1,wait=True)
+    yield from abs_set(eiger_mobile.cam.acquire,1,wait=True)
+    yield from bps.sleep(exp_time+0.5)
+    fname = ""
+    farray = eiger_mobile.tif_lastfile.get()
+    for i in farray:
+        fname = fname + chr(i)
+    print("Saved tif %s"%fname)
+    pass
+
+def capture_tif_dmesh(motorx,startx,endx,stepx,motory,starty,endy,stepy,exp_time=1,name='proj'):
+    mx_pos = motorx.position
+    my_pos = motory.position
+    mx_list = np.linspace(mx_pos+startx,mx_pos+endx,stepx)
+    my_list = np.linspace(my_pos+starty,my_pos+endy,stepy)
+    for y_pos in my_list:
+        for x_pos in mx_list:
+            yield from abs_set(motorx,x_pos,wait=True)
+            yield from abs_set(motory,y_pos,wait=True)
+            yield from capture_tif(exp_time,name=name)
+    yield from abs_set(motorx,mx_pos,wait=True)
+    yield from abs_set(motory,my_pos,wait=True)
+

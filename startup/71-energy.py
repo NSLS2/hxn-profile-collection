@@ -51,7 +51,7 @@ class HXNEnergy():
 
 
 
-    def calcGap(self,E,harmonics = 5, offset = 4):
+    def calcGap(self,E,harmonics = 5, offset = -15):
         E1 = E/harmonics
         calc_gap =  np.polyval(self.ugap_coeffs, E1) + offset
         return (np.around(calc_gap,1))
@@ -67,7 +67,7 @@ class HXNEnergy():
             if targetE>4.99 and targetE<25:     # if dialed a wrong number
                 
                 opt = np.array([self.calcGap(targetE, harmonics = hm) for hm in harmonics])
-                idx = np.where(np.logical_and(opt>=6000, opt<=10000)) #6000 beacuse of the ugap scan limit
+                idx = np.where(np.logical_and(opt>=5400, opt<=10000)) #6000 beacuse of the ugap scan limit
                 gap =  opt[idx][-1] #last one has lowest gap in the list
                 logger.info(f" estimated gap = {gap}")
                 
@@ -125,7 +125,7 @@ class HXNEnergy():
 
         adj_E = en/self.df["harmonic"].to_numpy()
         ugaps = self.df["ugap"].to_numpy()
-        self.ugap_coeffs = np.polyfit(adj_E, ugaps, 3)
+        self.ugap_coeffs = np.polyfit(adj_E, ugaps, 1)
 
         dcm_p = self.df["dcmPitch"].to_numpy()
         self.dcm_p_coeffs = np.polyfit(en, dcm_p, 3)
@@ -181,7 +181,8 @@ class HXNEnergy():
         calc_m2p =  np.polyval(self.m2p_coeffs, targetE)
         return (np.around(calc_m2p+offset,4))
 
-    def move(self,targetE, harmChoice = -1, moveMonoPitch = True, moveMirror = "auto") :
+    def move(self,targetE, harmChoice = -1, moveMonoPitch = True, moveMirror = "auto",
+             move_hfm_pitch = True, move_dcm_roll = True) :
         
         bbpm_auto = "XF:03ID{XBPM:17}AutoFbEn-Cmd"
         bbpm_x = "XF:03ID-BI{EM:BPM1}fast_pidX.FBON"
@@ -214,15 +215,17 @@ class HXNEnergy():
             logger.info("Energy reached")
 
             if moveMonoPitch:
-
                     
                 logger.info(f"Moving {dcm_p_target = :4f}")
                 if abs(dcm_p_target)>2 or abs(dcm_r_target)>2 or abs(hfm_p_target)>2:
                     raise ValueError("Incorrect calculation of dcm_p, dcm_r ot hfm_p positions; aborting")
                 else:
                     yield from bps.mov(dcm.p,dcm_p_target)
+
+                if move_dcm_roll:
                     logger.info(f"Moving {dcm_r_target = :4f}")
                     yield from bps.mov(dcm.r,dcm_r_target)
+                if move_hfm_pitch:
                     logger.info(f"Moving {hfm_p_target = :4f}")
                     yield from bps.mov(m2.p, hfm_p_target)
 
@@ -244,7 +247,7 @@ class HXNEnergy():
 
 
     
-    def autoUGapCalibration(self,EStart = 8.5, EEnd = 9.5, EStep = 5):
+    def autoUGapCalibration(self,EStart = 8.5, EEnd = 9.5, EStep = 5, ssa_close_pos = (1,1), save_suffix='20240117'):
 
         #Make sure strating energy is at optimized conditions and you have a  good beam at ssa2
 
@@ -252,6 +255,11 @@ class HXNEnergy():
         #not that we are just caput the position of the value
 
                             #move out,FS if in 
+                            
+        #ssa_close_pos smaller means more precise mirror positions, takes longer to open and close
+        
+        if os.path.exists(wd+f"ugap_calib{save_suffix}.csv"):
+            raise OSError ("Calibration file with the same  filename exists; choose a different name")
 
         if caget('XF:03IDA-OP{FS:1-Ax:Y}Mtr.VAL')<-50:
 
@@ -261,7 +269,7 @@ class HXNEnergy():
 
 
 
-        caput("XF:03IDC-CT{SR570:1}sens_num.VAL",2)
+        caput("XF:03IDC-CT{SR570:1}sens_num.VAL",3)
         caput("XF:03IDC-CT{SR570:1}sens_unit.VAL",2)
 
         #open ssa2        
@@ -303,7 +311,7 @@ class HXNEnergy():
 
             gap_, hrm = Energy.gap(target_e)
 
-            if abs(gap_-ugap.position)>2000 and gap_<5800 and gap_>10000:
+            if abs(gap_-ugap.position)>2000 and gap_<5500 and gap_>10000:
                 raise ValueError ("Incorrect gap calculation")
             else:
                 logger.info(f"Moving gap = {gap_}")
@@ -324,10 +332,10 @@ class HXNEnergy():
             #yield from bps.mov(dcm.p,dcm_p_target)
             
             logger.info("performing m2_p course centering")
-            yield from bps.mov(ssa2.hgap,1, ssa2.vgap,2)
+            yield from bps.mov(ssa2.hgap,ssa_close_pos[0], ssa2.vgap,2)
             yield from Energy.fluxOptimizerScan(m2.p,-0.005, 0.005, 10, ic = sclr2_ch2, moveToMax = True)
             yield from Energy.fluxOptimizerScan(dcm.p,-0.01, 0.01, 10, ic = sclr2_ch2, moveToMax = True)
-            yield from bps.mov(ssa2.hgap,2, ssa2.vgap,1)
+            yield from bps.mov(ssa2.hgap,2, ssa2.vgap,ssa_close_pos[1])
             yield from Energy.fluxOptimizerScan(dcm.r,-0.01, 0.01, 10, ic = sclr2_ch2, moveToMax = True)
 
            
@@ -346,7 +354,7 @@ class HXNEnergy():
             df['dcmRoll'].at[i] = dcm.r.position
             df['hfmPitch'].at[i] = m2.p.position
             df['IC1'].at[i] = sclr2_ch2.get()
-            df.to_csv(wd+"ugap_calib_09122023.csv",float_format= '%.5f')
+            df.to_csv(wd+f"ugap_calib{save_suffix}.csv",float_format= '%.5f')
             plt.close('all')
 
             ugap_offset = ugap.position - gap_
@@ -366,9 +374,6 @@ class HXNEnergy():
         plt.show()
 
 
-
-
-
     @staticmethod
     def fluxOptimizerScan(motor,rel_start, rel_end, steps, ic = sclr2_ch2, moveToMax = True):
         #TODO replace with a step scan
@@ -377,33 +382,40 @@ class HXNEnergy():
 
 
         x = np.linspace(MtrPos+rel_start, MtrPos+rel_end, steps+1)
-        y = np.arange(steps+1)
+        y = []
+        real_x = []
+        
 
         
-        for i in tqdm.tqdm(y,desc = "peaking "+str(motor.name)):
+        for i, pos in enumerate(tqdm.tqdm(x,desc = "peaking "+str(motor.name))):
 
-            yield from bps.mov(motor, x[i])
+            yield from bps.mov(motor, pos)
             
             if motor == m2.p:
                 yield from bps.sleep(4)
 
             else:
-
-                yield from bps.sleep(2)
+                yield from bps.sleep(1)
+                
+            real_x.append(motor.position)
             
             if ic==xbpm:
-                y[i] = caget("XF:03ID-BI{EM:BPM1}SumAll:MeanValue_RBV")
+                y.append(caget("XF:03ID-BI{EM:BPM1}SumAll:MeanValue_RBV"))
 
             else:
-            
-                y[i] = ic.get()
+                y.append(ic.get())
+
+            if i>4:
+                change = np.gradient(y)
+                if change[-1]<0 and change[-2]<0 and change[-3]<0:
+                    break
 
 
-        peakPos = x[y == np.max(y)][-1]
+        peakPos = real_x[np.argmax(y)]
 
         plt.figure()
         plt.title(motor.name)
-        plt.plot(x,y)
+        plt.plot(real_x,y)
 
 
         if moveToMax:
@@ -416,7 +428,7 @@ class HXNEnergy():
             return peakPos
             
             
-    def fluxOptimizerScan2(motor,rel_start, rel_end, steps, ic = sclr2_ch2, moveToMax = True):
+    def fluxOptimizerScan_dummy(motor,rel_start, rel_end, steps, ic = sclr2_ch2, moveToMax = True):
         #TODO replace with a step scan
   
   
@@ -479,9 +491,9 @@ def plot_calib_results(csv_file):
     plt.title(f"Undulator Calib_{pd.Timestamp.now().month}_{pd.Timestamp.now().year}")
     plt.show()
 
-def foil_calib_scan(startE, endE,saveLogFolder):
+def foil_calib_scan_no_dscan(startE, endE,saveLogFolder):
 
-    """absolute energy"""
+    """absolute energy, patch for dscan issue"""
     
     energies = np.arange(startE,endE,0.0005)
     
@@ -524,50 +536,48 @@ def foil_calib_scan(startE, endE,saveLogFolder):
 
 
 
-def foil_calib_d2_scan(startE, endE,saveLogFolder = "/data/users/current_user"):
+def foil_calib_scan(startE, endE,saveLogFolder = "/data/users/current_user", save_as = "ta_Foil_calib_Mar11_2024"):
 
     """absolute start and end E"""
 
     dE = endE-startE
+    num_steps = int(dE/0.0005)
     dUgap = Energy.calcGap(endE)-Energy.calcGap(startE)
     
-    yield from Energy.move(startE, moveMonoPitch=False)
-    yield from d2scan(dets_fs,100, e, 0, dE, ugap, 0, dUgap, 1)
+    yield from Energy.move(startE, moveMonoPitch=False,moveMirror = "ignore")
+    yield from d2scan(dets_fs,num_steps, e, 0, dE, ugap, 0, dUgap, 0.5)
+    plot_foil_calib(sid=-1, saveLogFolder = saveLogFolder, save_as = save_as)
 
-    h = db[-1]
-    sd = h.start["scan_id"]
 
-    df = h.table()
-    plt.figure()
-
-    en_ = np.array(df['energy'],dtype=np.float32) 
-    I = np.array(df['sclr1_ch4'],dtype=np.float32) 
-    Io = np.array(df['sclr1_ch2'],dtype=np.float32) 
-    spec = -1*np.log(I/Io)
-    plt.plot(en_, spec, label = "xanes")
-    plt.plot(en_, np.gradient(spec),label = "derivative")
-    plt.savefig(os.path.join(saveLogFolder, f'HXN_nanoXANES_calib_{sd}.png'))
-    #bps.sleep(2)
-    plt.legend()
-    plt.show()
     
-def plot_foil_calib(sid=-1, saveLogFolder = "/data/users/current_user"):
+def plot_foil_calib(sid=-1, saveLogFolder = "/data/users/current_user",save_as = "Au_Foil_calib_Jan2024"):
+
+    calib_data = pd.DataFrame()
     
     h = db[int(sid)]
     sd = h.start["scan_id"]
 
     df = h.table()
-    plt.figure()
+    fig,ax = plt.subplots(1,1)
 
     en_ = np.array(df['energy'],dtype=np.float32) 
     I = np.array(df['sclr1_ch4'],dtype=np.float32) 
     Io = np.array(df['sclr1_ch2'],dtype=np.float32) 
     spec = -1*np.log(I/Io)
-    plt.plot(en_, spec, label = "xanes")
-    plt.plot(en_, np.gradient(spec),label = "derivative")
-    plt.savefig(os.path.join(saveLogFolder, f'HXN_nanoXANES_calib_{sd}.png'))
+
+    calib_data["energy"] = en_
+    calib_data["absorbance"] = spec
+    calib_data["derivative"] = np.gradient(spec)
+
+    ax.plot(en_, spec, label = "xanes")
+    ax.plot(en_, np.gradient(spec),label = "derivative")
+    edge_pos = en_[np.argmax(np.gradient(spec))]
+    ax.axvline(x = edge_pos)
+    ax.text(edge_pos,np.max(spec)*0.1,f"{edge_pos = :.4f}")
     #bps.sleep(2)
     plt.legend()
+    plt.savefig(os.path.join(saveLogFolder, f'{save_as}_{sd}.png'))
+    calib_data.to_csv(os.path.join(saveLogFolder, f'{save_as}_{sd}.csv'))
     plt.show()
 
 
@@ -584,6 +594,11 @@ def peak_dcm_roll(tweak_range = 0.005):
     yield from Energy.fluxOptimizerScan(dcm.r,-1*tweak_range,tweak_range,10)
 
 
-Energy = HXNEnergy(ugap,e,dcm.p, "ic3", wd+"ugap_calib_09122023.csv")
+Energy = HXNEnergy(ugap,e,dcm.p, "ic3", wd+"ugap_calib_01162024_2.csv")
+
+def peak_ugap():
+
+    yield from Energy.fluxOptimizerScan(ugap,-40, 40, 40, ic = sclr2_ch2, moveToMax = True)
+#Energy = HXNEnergy(ugap,e,dcm.p, "ic3", wd+"ugap_calib.csv")
 
 #/home/xf03id/.ipython/profile_collection/startup/ugap_calib_06152023.csv

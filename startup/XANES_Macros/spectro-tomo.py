@@ -8,7 +8,7 @@ ReadMe:
 
 EXAMPLE OF USAGE:
 
-<zp_spectro_tomo_scan(CoXANES,path_to_json,pdfElem = ['Co','Mn'],pdfLog = True, peakBeam = True,saveLogFolder = '/nsls2/data/hxn/legacy/users/current_user/spectro-tomo/cycled_nmc811/co-spectro-tomo')
+<zp_spectro_tomo_scan(MnXANES,path_to_json,pdfElem = ['Mn'],pdfLog = True, peakBeam = True,saveLogFolder = '/data/users/current_user/cycled_nmc_mn_spectro-tomo/)
 
 
 """
@@ -17,15 +17,20 @@ EXAMPLE OF USAGE:
 import numpy as np
 import pandas as pd
 import time,json
+import scipy
 from datetime import datetime
 import scipy.constants as consts
+from scipy.sparse.linalg import gmres, lgmres, LinearOperator
+
+#from phantominator import shepp_logan
+import tifffile as tf
 
 
 #Paramer list from previous runs in the order of atomic number of the element
             
 FeXANES = {'high_e':7.2, 'high_e_zpz1':6.41, 'zpz1_slope':-5.04}
 CoXANES = {'high_e':7.8, 'high_e_zpz1':3.2725, 'zpz1_slope':-5.04}
-
+MnXANES = {'high_e':6.6, 'high_e_zpz1':1.975, 'zpz1_slope':-5.04}
 
 As_MLL_XANES = {'high_e':11.94, 
                 'low_e':11.84,
@@ -55,6 +60,113 @@ As_MLL_XANES_minE = {'high_e':11.94,
                                 ######################################
                                 ######### FUNCTIONS BELOW ############
                                 ######################################
+def rand_list(input_list):
+    n = len(input_list)
+    output_list = []
+    for i in range(n):
+        ind = int(np.floor(np.random.rand()*(n-i)))
+        output_list.append(input_list[ind])
+        input_list = np.delete(input_list,ind)
+    return output_list
+
+
+multiplicity = 3
+
+def generate_plan(ref,angle_rng,num_angle,option):
+    num_energy, num_state = np.shape(ref)
+    #num_angle = num_energy*multiplicity
+    spectra_list = []    
+    ind = []
+    if option == 'uniform-uniform': 
+        angle_list = np.linspace(angle_rng[0],angle_rng[1],num_angle)
+        for i in range(multiplicity):
+            if len(spectra_list) == 0:
+                spectra_list = ref
+            else:
+                spectra_list = np.concatenate((spectra_list,ref),axis = 0)    
+    elif option == 'golden-ratio-uniform':
+        rng = angle_rng[1]-angle_rng[0]
+        angle_list = angle_rng[0] + np.mod(rng*np.linspace(0,num_angle,num_angle)/1.618,rng)
+        angle_list = np.sort(angle_list)
+        for i in range(multiplicity):
+            if len(spectra_list) == 0:
+                spectra_list = ref
+            else:
+                spectra_list = np.concatenate((spectra_list,ref),axis = 0)    
+    elif option == 'random-random':
+        angle_list = np.random.rand(num_angle)*(angle_rng[1]-angle_rng[0])+angle_rng[0]
+        angle_list = np.sort(angle_list)
+        ind = np.array(np.floor(np.random.rand(num_angle)*num_energy),dtype='int')
+        spectra_list = ref[ind,:]
+    elif option == 'uniform-random':
+        angle_list = np.linspace(angle_rng[0],angle_rng[1],num_angle)
+        ind = np.array(np.floor(np.random.rand(num_angle)*num_energy),dtype='int')
+        spectra_list = ref[ind,:]
+    elif option == 'random-uniform':
+        angle_list = np.random.rand(num_angle)*(angle_rng[1]-angle_rng[0])+angle_rng[0]
+        angle_list = np.sort(angle_list)
+        for i in range(multiplicity):
+            if len(spectra_list) == 0:
+                spectra_list = ref
+            else:
+                spectra_list = np.concatenate((spectra_list,ref),axis = 0) 
+    elif option == 'golden-ratio-random':
+        rng = angle_rng[1]-angle_rng[0]
+        angle_list = angle_rng[0] + np.mod(rng*np.linspace(0,num_angle,num_angle)/1.618,rng)
+        angle_list = np.sort(angle_list)
+        ind = np.array(np.floor(np.random.rand(num_angle)*num_energy),dtype='int')
+        spectra_list = ref[ind,:]
+    elif option == 'uniform-random2':
+        angle_list = np.linspace(angle_rng[0],angle_rng[1],num_angle)
+        
+        for i in range(multiplicity):
+            ind = rand_list(np.linspace(0,num_energy-1,num_energy,dtype='int'))
+            if len(spectra_list) == 0:
+                spectra_list = ref[ind,:]
+            else:
+                spectra_list = np.concatenate((spectra_list,ref[ind,:]),axis = 0)
+    elif option == 'random-random2':
+        angle_list = np.random.rand(num_angle)*(angle_rng[1]-angle_rng[0])+angle_rng[0]
+        angle_list = np.sort(angle_list)
+        for i in range(multiplicity):
+            ind = rand_list(np.linspace(0,num_energy-1,num_energy,dtype='int'))
+            if len(spectra_list) == 0:
+                spectra_list = ref[ind,:]
+            else:
+                spectra_list = np.concatenate((spectra_list,ref[ind,:]),axis = 0)
+    elif option == 'special':
+        n = 10
+        angle_list = np.random.rand(n)*(angle_rng[1]-angle_rng[0])+angle_rng[0]
+        spectra_list = np.reshape(ref[num_energy//2,:],(1,-1))
+        print(np.shape(spectra_list))
+        for i in range(n-1):
+            spectra_list = np.concatenate((spectra_list,np.reshape(ref[num_energy//2,:],(1,-1))),axis = 0)
+        angle_list = np.concatenate((angle_list,np.random.rand(num_angle-n)*(angle_rng[1]-angle_rng[0])+angle_rng[0]),axis=0)
+        angle_list = np.sort(angle_list)
+        ind = np.array(np.floor(np.random.rand(num_angle-n)*num_energy),dtype='int')
+        tmp = ref[ind,:]
+        print(np.shape(tmp))
+        spectra_list = np.concatenate((spectra_list,ref[ind,:]),axis=0)
+    else:
+        angle_list = np.linspace(angle_rng[0],angle_rng[1],num_angle)
+        for i in range(multiplicity):
+            if len(spectra_list) == 0:
+                spectra_list = ref
+            else:
+                spectra_list = np.concatenate((spectra_list,ref),axis = 0)
+    
+    plan = np.column_stack((angle_list, spectra_list, ind))
+    return plan
+    #return angle_list, spectra_list, ind
+
+
+
+# used_spect = np.reshape(np.loadtxt('Co_energy_list_reduced.txt'),(-1,1))
+# angle, ref, ind = generate_plan(used_spect,[-90,90],181,'uniform-random')
+# plan = np.concatenate([np.reshape(angle,(-1,1)),np.reshape(ref,(-1,1)),np.reshape(ind,(-1,1))],axis=1)
+# np.savetxt('plan_cobalt_better.txt',plan,fmt=['%3.2f','%4.3f','%d'])
+
+
 
 
 def cbpm_on(action = True):
@@ -108,8 +220,8 @@ def create_energy_angle_df(filename, XANESParam = FeXANES):
     e_list = pd.DataFrame()
     
     enegy_and_angle = np.loadtxt(filename)
-    e_points = enegy_and_angle[:,1]/1000
-    angles = enegy_and_angle[:,0]
+    e_points = enegy_and_angle[:,0]
+    angles = enegy_and_angle[:,1]
 
     #add list of energy as first column to DF
     e_list['energy'] = e_points
@@ -127,7 +239,7 @@ def create_energy_angle_df(filename, XANESParam = FeXANES):
     #return the dataframe
     return e_list
 
-def alignment_scan(mtr, start,end,num,exp,elem_, align_with="line_center", threshold = 0.5, move_coarse = True):
+def alignment_scan(mtr, start,end,num,exp,elem_, align_with="line_center", threshold = 0.5, move_coarse = True, cutoff_e = 6.42):
 
     """
     scan to align samples to field of view using using fly1d scan 
@@ -139,31 +251,35 @@ def alignment_scan(mtr, start,end,num,exp,elem_, align_with="line_center", thres
     threshold --> threshold for line centering
     
     """
+    if e.position>cutoff_e:
     
-    fly_to_coarse = {"zpssx":"smarx","zpssy":"smary","zpssz":"smarz"}
+        fly_to_coarse = {"zpssx":"smarx","zpssy":"smary","zpssz":"smarz"}
 
-    yield from fly1d(dets_fs,
-                    mtr, 
-                    start, 
-                    end, 
-                    num,
-                    exp
-                    )
-    if align_with == "line_center":
-        xc = return_line_center(-1,elem_,threshold)
+        yield from fly1d(dets_fs,
+                        mtr, 
+                        start, 
+                        end, 
+                        num,
+                        exp
+                        )
+        if align_with == "line_center":
+            xc = return_line_center(-1,elem_,threshold)
 
-    elif align_with == "edge":
-        xc,_ = erf_fit(-1,elem_,linear_flag=False)
+        elif align_with == "edge":
+            xc,_ = erf_fit(-1,elem_,linear_flag=False)
 
-    else:
-        raise KeyError(f"{align_with}  is not defined")
-    print(f"{mtr.name} centered to {xc :.2f}")
-    
-    if move_coarse:
-        yield from bps.movr(eval(fly_to_coarse[mtr.name]),xc/1000)
+        else:
+            raise KeyError(f"{align_with}  is not defined")
+        print(f"{mtr.name} centered to {xc :.2f}")
         
+        if move_coarse:
+            yield from bps.movr(eval(fly_to_coarse[mtr.name]),xc/1000)
+            
+        else:
+            yield from bps.mov(mtr,xc)
+            
     else:
-        yield from bps.mov(mtr,xc)
+        pass
 
 def zp_tomo_2d_scan(angle,dets_,x_start,x_end,x_num,y_start,y_end,y_num,exp):
     print("zp tomo 2d scan")
@@ -311,6 +427,7 @@ def zp_spectro_tomo_scan(elemParam,path_to_json,pdfElem = ['Fe','Cr'],
             #if beam dump occur turn the marker on
             if sclr2_ch2.get()<1000:
                 beamDumpOccured = True
+                yield from recover_from_beamdump() #patch for low energy e change issues
 
             #wait if beam dump occured beamdump
             yield from check_for_beam_dump(threshold=5000)
@@ -341,7 +458,9 @@ def zp_spectro_tomo_scan(elemParam,path_to_json,pdfElem = ['Fe','Cr'],
             # if ic3 value is below the threshold, peak the beam
             if ic3_ < ic_3_init*0.8:
                 
-                if peakBeam: yield from peak_the_flux()
+                if peakBeam: 
+                    yield from peak_the_flux()
+                    
                 fluxPeaked = True # for df record
             else:
                 fluxPeaked = False
@@ -371,7 +490,7 @@ def zp_spectro_tomo_scan(elemParam,path_to_json,pdfElem = ['Fe','Cr'],
                 else:
                     mtr = zpssz
                 
-                if alignX["do_align"]:
+                if alignX["do_align"] and if e.position>6.42:
                     yield from alignment_scan(  mtr, 
                                                 alignX["start"],
                                                 alignX["end"],
@@ -381,7 +500,7 @@ def zp_spectro_tomo_scan(elemParam,path_to_json,pdfElem = ['Fe','Cr'],
                                                 align_with=alignX["center_with"], 
                                                 threshold = alignX["threshold"])                
 
-                if alignY["do_align"]:
+                if alignY["do_align"] and if e.position>6.42:
                     yield from alignment_scan(  zpssy, 
                                                 alignY["start"],
                                                 alignY["end"],

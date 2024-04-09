@@ -1,7 +1,7 @@
 {
       
       "fly2d_scan": {
-            "det": "dets_fs",
+            "det": "dets1",
             "x_start": -3,
             "x_end": 3,
             "x_num": 100,
@@ -34,7 +34,7 @@
       "stop_iter": false,
       "pause_scan": false,
       "pdf_log":true,
-      "pdf_elems:["Co"],
+      "pdf_elems:["Cu"],
       "peak_flux":true,
       "save_log_to":"/data/users/current_user"
       

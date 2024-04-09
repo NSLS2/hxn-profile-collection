@@ -96,9 +96,15 @@ def fly2d(dets,
           motor2, scan_start2, scan_end2, num2,
           exposure_time,
           *,
-          dead_time=None, fly_type=None,
-          return_speed=None, max_points=None, md=None):
-  yield from _fly2d(
+          dead_time=0.003, fly_type=None,
+          return_speed=None, max_points=None, md=None, pulse_dur = 1):
+
+      for det in dets:
+            if det.name in ['eiger1']:
+                  det.hdf5.frame_per_point = num1*num2
+                  yield from bps.abs_set(det.cam.num_triggers, num1*num2, wait=True)
+      zebra.stage_sigs.update([(zebra.pulse[1].width,exposure_time*pulse_dur)])
+      yield from _fly2d(
         dets=dets,
         motor1=motor1, scan_start1=scan_start1, scan_end1=scan_end1, num1=num1,
         motor2=motor2, scan_start2=scan_start2, scan_end2=scan_end2, num2=num2,

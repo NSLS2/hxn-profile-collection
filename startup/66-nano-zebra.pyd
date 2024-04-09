@@ -121,6 +121,7 @@ class ZebraPositionCapture(Device):
     pulse_start = Cpt(EpicsSignalWithRBV, "PC_PULSE_START")
     pulse_width = Cpt(EpicsSignalWithRBV, "PC_PULSE_WID")
     pulse_step = Cpt(EpicsSignalWithRBV, "PC_PULSE_STEP")
+    pulse_delay = Cpt(EpicsSignalWithRBV, "PC_PULSE_DLY")
     pulse_max = Cpt(EpicsSignalWithRBV, "PC_PULSE_MAX")
     pulse = Cpt(EpicsSignalRO, "PC_PULSE_OUT")
     enc_pos1_sync = Cpt(EpicsSignal, "M1:SETPOS.PROC")

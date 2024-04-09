@@ -170,7 +170,7 @@ class BlankPage:
         f.addFromList(story,self.c)
 
 
-def setup_pdf_function(sample_name = "Precious", 
+def setup_pdf_function(sample_name = "Precious", file_name = "elog",
                        experimenters = "HX,NU,SER", img_to_add = "/data/users/hxn_logo.png"):
 #def setup_pdf():
     global G_INFO
@@ -184,7 +184,7 @@ def setup_pdf_function(sample_name = "Precious",
         new_info = exp_info()
     #print('Create a pdf eLog file and record experiment information. Press ENTER to accept existing values.')
     #tmp_file = input('Please enter file name '+'('+new_info.fname+')'+':')
-    tmp_file = "/data/users/current_user/elog.pdf"
+    tmp_file = f"/data/users/current_user/{file_name}.pdf"
     if tmp_file != '':
         new_info.fname = tmp_file
     if os.path.isfile(new_info.fname):
@@ -213,6 +213,8 @@ def setup_pdf_function(sample_name = "Precious",
     infoFile = open(PDF_FILE,'wb')
     pickle.dump(new_info,infoFile)
     G_INFO = new_info
+    
+    insertTitle()
 
 
 #def setup_pdf(sample_name = "Precious", experimenters = "HX,NU,SER")

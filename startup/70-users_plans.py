@@ -1040,6 +1040,138 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
     save_page()
     #yield from bps.mov(dsth, 0)
 
+def zp_tomo_scan_gdratio(angle_step, x_start, x_end, x_num, y_start, y_end, y_num, exposure, elem, save_file, start_offset = 0):
+    offset = start_offset
+    gdratio = (np.sqrt(5.)-1)/2
+    while True:
+        if zpsth.position<0:
+            angle_start = -90+offset
+            angle_end = 90+offset
+        else:
+            angle_start = 90+offset
+            angle_end = -90+offset
+        yield from zp_tomo_scan_aligned(angle_start,angle_end,angle_step,x_start,x_end,x_num,y_start,y_end,y_num,exposure,elem,save_file,sclr2_ch2.get())
+        offset = offset + gdratio*angle_step
+        if offset > angle_step:
+            offset = offset - angle_step
+
+def zp_get_y_drift(angle):
+    ydrift = np.zeros((9,2))
+    ydrift[:,0]=np.linspace(-120,120,num=9)
+    ydrift[:,1]=[ 0.   ,  0.   , -0.21 , -0.393, -0.526, -0.661, -0.861, -0.761, -0.761]
+    #ydrift[:,1]=[-2.472, -2.472, -2.472, -2.472, -2.266, -2.266, -2.266, -2.06 , -1.854, -1.648, -1.648, -1.236, -1.236, -1.03 , -0.824, -0.618, -0.412, -0.246, -0.246,  0.   ,  0.   ]
+    for i in range(len(ydrift)-1):
+        if ydrift[i,0]<=angle and ydrift[i+1,0]>=angle:
+            return (ydrift[i+1,1]*(angle-ydrift[i,0])+ydrift[i,1]*(ydrift[i+1,0]-angle))/(ydrift[i+1,0]-ydrift[i,0])
+    return 0
+
+
+def zp_tomo_scan_aligned(angle_start, angle_end, angle_step, x_start, x_end, x_num,
+              y_start, y_end, y_num, exposure, elem,save_file,ic_0=None):
+    #if os.path.isfile('rotCali'):
+    #    caliFile = open('rotCali','rb')
+    #    y = pickle.load(caliFile)
+    angle_start = float(angle_start)
+    angle_end = float(angle_end)
+    angle_step = float(angle_step)
+    x_start = float(x_start)
+    x_end = float(x_end)
+    x_num = int(x_num)
+    y_start = float(y_start)
+    y_end = float(y_end)
+    y_num = int(y_num)
+    exposure = float(exposure)
+    #caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0)
+    angle_num = int(np.ceil(np.abs((angle_end-angle_start)/angle_step)))
+    if ic_0 is None:
+        ic_0 = sclr2_ch2.get()
+    for i in range(angle_num + 1):
+        yield from bps.mov(zpssx,0)
+        yield from bps.mov(zpssy,0)
+        yield from bps.mov(zpssz,0)
+
+        angle = angle_start + i * angle_step * np.sign(angle_end-angle_start)
+        yield from bps.mov(zps.zpsth, angle)
+
+        #yield from bps.mov(zpssx,0)
+        #yield from bps.mov(zpssy,0)
+        #yield from bps.mov(zpssz,0)
+
+        while (sclr2_ch2.get() < 10000):
+            yield from bps.sleep(60)
+            print('IC1 is lower than 1000, waiting...')
+        #caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',1)
+        #yield from bps.sleep(3)
+        #caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0)
+        #yield from bps.sleep(3)
+        if np.abs(angle-4.1) <= 45.:
+            #yield from bps.movr(zpssy,-1)
+            yield from fly1d([fs, zebra, sclr1, xspress3], zpssx, -6, 6, 30, 0.02)
+            yield from bps.sleep(1)
+            xc = return_line_center(-1,elem[0],0.2)
+            #yield from bps.movr(zpssy,1)
+            #if abs(xc)<2.5:
+            if not np.isnan(xc):
+                yield from bps.mov(zpssx,xc)
+                #yield from bps.movr(zps.smarx,xc/1000)
+        else:
+            #yield from bps.mov(zpssz,0)
+            yield from fly1d([fs, zebra, sclr1, xspress3],zpssz, -6, 6, 30, 0.02)
+            yield from bps.sleep(1)
+            xc = return_line_center(-1,elem[0],0.2)
+            #if abs(xc)<2.5:
+            if not np.isnan(xc):
+                yield from bps.mov(zpssz,xc)
+                #yield from bps.movr(zps.smarz,xc/1000)
+
+
+
+        if np.abs(angle-4.1) <= 45.0:
+            # yield from fly2d(dets1,zpssx,-6.5,7,18,zpssy,-5,5.5,14,0.05,return_speed=40)
+            # yield from mov_to_image_cen_dsx(-1)
+
+            x_start_real = x_start / np.cos((angle-4.1) * np.pi / 180.)
+            x_end_real = x_end / np.cos((angle-4.1) * np.pi / 180.)
+            y_start_real = y_start + zp_get_y_drift(angle)
+            y_end_real = y_end + zp_get_y_drift(angle)
+            #yield from fly2d([fs, zebra, sclr1, xspress3], zpssy, y_start, y_end, y_num,
+            #                 zpssx, x_start_real, x_end_real, x_num, exposure, return_speed=40)
+            #RE(fly2d(zpssx, x_start_real, x_end_real, x_num, zpssy,
+            #         y_start, y_end, y_num, exposure, return_speed=40))
+            yield from fly2d(dets1, zps.zpssx,x_start_real, x_end_real, x_num,zps.zpssy,y_start_real,y_end_real,y_num,exposure, dead_time=0.002,return_speed=100)
+
+        else:
+            # yield from fly2d(dets1,zpssz,-6.5,7,18,zpssy,-5,5.5,14,0.05,return_speed=40)
+            # yield from mov_to_image_cen_dsx(-1)
+
+            x_start_real = x_start / np.abs(np.sin((angle-4.1) * np.pi / 180.))
+            x_end_real = x_end / np.abs(np.sin((angle-4.1) * np.pi / 180.))
+            y_start_real = y_start + zp_get_y_drift(angle)
+            y_end_real = y_end + zp_get_y_drift(angle)
+            #yield from fly2d([fs, zebra, sclr1, xspress3],zpssy, y_start, y_end, y_num,
+            #                 zpssz, x_start_real, x_end_real, x_num, exposure, return_speed=40)
+            #RE(fly2d(zpssz, x_start_real, x_end_real, x_num, zpssy,
+            #         y_start, y_end, y_num, exposure, return_speed=40))
+            yield from fly2d(dets1, zps.zpssz,x_start_real, x_end_real, x_num,zps.zpssy,y_start_real,y_end_real,y_num,exposure, dead_time=0.002,return_speed = 100)
+
+        #mov_to_image_cen_smar(-1)
+        #yield from mov_to_image_cen_dsx(-1)
+        #plot2dfly(-1,elem,'sclr1_ch4')
+        #insertFig(note='zpsth = {}'.format(check_baseline(-1,'zpsth')))
+        #plt.close()
+        #merlin2.unstage()
+        xspress3.unstage()
+        #yield from bps.sleep(5)
+        insert_xrf_map_to_pdf(-1, elem, title_=['zpsth'])
+        flog = open(save_file,'a')
+        flog.write('%d %.2f\n'%(db[-1].start['scan_id'],zpsth.position))
+        flog.close()
+        if (sclr2_ch2.get() < (0.85*ic_0)):
+            yield from peak_the_flux()
+        #if np.remainder(i+1,5)==0:
+        #    yield from peak_bpm_x(-20, 20, 10)
+        #    yield from peak_bpm_y(-10, 10, 10)
+    save_page()
 
 
 def zp_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
@@ -1239,29 +1371,29 @@ def zp_tomo_scan_scale(angle_start, angle_end, angle_num, x_start, x_end, x_num,
         if np.abs(angle) <= 45.:
 
             #yield from bps.movr(zpssy,-1)
-            yield from fly1d(dets_fs, zpssx, -10, 10, 100, 0.03)
+            yield from fly1d(dets_fs, zpssx, -4, 4, 100, 0.02)
             yield from bps.sleep(0.5)
-            xc = return_line_center(-1,'Cu',0.2)
+            xc = return_line_center(-1,'Ni',0.2)
             #yield from bps.movr(zpssy,1)
             #if abs(xc)<2.5:
             if not np.isnan(xc):
-                #yield from bps.mov(zpssx,xc)
-                yield from bps.movr(smarx,xc/1000)
+                yield from bps.mov(zpssx,xc)
+                #yield from bps.movr(smarx,xc/1000)
         else:
             #yield from bps.movr(smarz,5/1000)
             #yield from bps.movr(smary,5/1000)
             #yield from bps.mov(zpssz,0)
-            yield from fly1d(dets_fs,zpssz, -10, 10, 100, 0.03)
+            yield from fly1d(dets_fs,zpssz, -4, 4, 100, 0.02)
             yield from bps.sleep(0.5)
-            xc = return_line_center(-1,'Cu',0.2)
+            xc = return_line_center(-1,'Ni',0.2)
             #if abs(xc)<2.5:
             if not np.isnan(xc):
-                #yield from bps.mov(zpssz,xc)
-                yield from bps.movr(smarz,xc/1000)
+                yield from bps.mov(zpssz,xc)
+                #yield from bps.movr(smarz,xc/1000)
         #'''
         #yield from bps.movr(zpssy,0)
-        yield from fly1d(dets_fs, zpssy, -4,4, 100, 0.03)
-        yc = return_line_center(-1,'Ni',0.4)
+        yield from fly1d(dets_fs, zpssy, -2,2, 100, 0.02)
+        yc = return_line_center(-1,'Ni',0.2)
         #if not np.isnan(yc):
         #    yield from bps.mov(zpssy,yc)
         #edge,fwhm = erf_fit(-1,elem)
@@ -1459,24 +1591,31 @@ def move_fly_center(elem):
     #i_max = np.where(roi_data == np.max(roi_data))
     #mov(eval(scanned_axis),x[i_max[0]][0])
 
-def mll_th_fly2d(th_start, th_end, num, mot1, x_start, x_end, x_num, mot2,y_start, y_end, y_num, sec):
+def mll_th_fly2d(dets,th_start, th_end, num, mot1, x_start, x_end, x_num, mot2,y_start, y_end, y_num, sec):
 
-    """relative theta"""
+    """Usage:<mll_th_fly2d(dets3,-0.4, 0.6, 20, dssx, -2.5, 2.5, 50, dssy,-2.5, 2.5, 50, 0.03)"""
 
-    #yield from shutter('open')
+    beamDumpOccured = False
+
     init_th = dsth.position
     th_step = (th_end - th_start) / num
     th_pos = np.linspace(init_th + th_start,init_th + th_end, num+1)
-    #yield from bps.movr(dsth, th_start)
-    #yield from bps.movr(dssx, th_start)
-    #fs.stage()
-    #yield from bps.sleep(2)
     ic_0 = sclr2_ch4.get()
-    #fs.unstage()
+
+    for i in tqdm.tqdm(range(num+1),desc = 'Theta Scan'):
+
+        if sclr2_ch2.get()<1000:
+            beamDumpOccured = True
+            yield from check_for_beam_dump()
 
 
-    for i in range(num + 1):
+        if beamDumpOccured:
+            yield from bps.sleep(60)
+            yield from recover_from_beamdump()
+            beamDumpOccured = False
+
         yield from bps.mov(dsth,th_pos[i])
+
         '''
         while (sclr2_ch2.get() < 10000):
             yield from bps.sleep(60)
@@ -1500,63 +1639,52 @@ def mll_th_fly2d(th_start, th_end, num, mot1, x_start, x_end, x_num, mot2,y_star
         cy = return_line_center(-1,'Co',0.3)
         yield from bps.mov(dssy,cy)
         yield from bps.sleep(1)
-        '''
+
         yield from fly1d(dets1,dssx,-2.5,2.5,200,0.03)
         cx =  return_line_center(-1,'W_L',threshold=0.6)
         yield from bps.mov(dssx,cx)
 
         plt.close()
-
-        yield from fly1d(dets1,dssy, -2.5, 2.5, 200,0.03)
-        #edge,fwhm = erf_fit(-1,'Ge')
-        cy = return_line_center(-1,'W_L',0.3)
-        yield from bps.mov(dssy,cy)
+        '''
+        #yield from bps.mov(dssy,-2)
+        yield from fly1d(dets1,dssx, -25, -15, 100,0.03)
+        edge,fwhm = erf_fit(-1,'Ge')
+        #cy = return_line_center(-1,'W_L',0.3)
+        yield from bps.mov(dssx,edge+20)
+        #yield from bps.mov(dssy,-3.9)
         plt.close()
 
         #plt.close()
         yield from bps.sleep(1)
 
 
-        yield from fly2d(dets1, mot1, x_start, x_end, x_num, mot2, y_start, y_end, y_num, sec, return_speed=40)
+        yield from fly2d(dets3, mot1, x_start, x_end, x_num, mot2, y_start, y_end, y_num, sec, return_speed=40)
 
-        #yield from bps.movr(dssx,0.15)
-        #yield from bps.movr(dssy,-0.09)
         print('2d scan done')
         bps.sleep(1)
-        merlin2.unstage()
+        merlin1.unstage()
         xspress3.unstage()
         print('unstage detectors')
-        bps.sleep(1)
-        #plot_data(-1,'Ge')
-        #yield from bps.sleep(2)
-        #insertFig(note = 'dsth = {}'.format(check_baseline(-1,'dsth')))
-        #yield from bps.sleep(2)
-
-        #plt.close()
+        yield from bps.sleep(1)
         print('executing image saving ...')
         try:
-            #plot_img_sum(-1,threshold=[0,2000])
-            #insertFig(note = f'dsth = {dsth.position :.3f}')
-            #plt.close()
+            insert_xrf_map_to_pdf(-1, ["Fe","Ge"],title_=['dsth', 'dsy'], note = "mid_sample_near_edge_ring")
 
-            plot_data(-1,'Ge')
-            insertFig(note = f'substrate dsth = {dsth.position :.3f}')
-            plt.close()
         except:
             pass
         print('image saved')
+        #yield from bps.sleep(1)
+        #x,y = return_center_of_mass(-1,'Ge',th=0.8)
+        #yield from bps.mov(dssx,x)
+        #yield from bps.mov(dssy,y)
         plt.close()
-        #plot2dfly(-1,'Au_L')
-
-        #yield from bps.movr(dsth, th_step)
-        #yield from bps.movr(dssx,th_step)
+        yield from bps.sleep(1)
     yield from bps.mov(dsth, init_th)
-    #yield from bps.mov(dssx,init_x)
     save_page()
-    #yield from shutter('close')
 
 
-def zp_th_fly2d(th_start, th_end, num, mot1, x_start, x_end, x_num, mot2, y_start, y_end, y_num, sec,elem = 'Cu',do_align = True, xy_offset = (0,0),line_scan = False):
+
+def zp_th_fly2d(th_start, th_end, num, mot1, x_start, x_end, x_num, mot2, y_start, y_end, y_num, sec,elem = 'Ni',do_align = True, xy_offset = (0,0),line_scan = False):
 
     '''move theta position relative and collect 2D scans'''
 
@@ -1579,7 +1707,7 @@ def zp_th_fly2d(th_start, th_end, num, mot1, x_start, x_end, x_num, mot2, y_star
 
             #Move to the fiducial from scan start point
             #yield from bps.movr(smary,-45*0.001)
-            yield from fly1d(dets_fs,mot1,-10,10,100,0.03)
+            yield from fly1d(dets_fs,mot1,-3.5,3.5,50,0.03)
             #xc,fwhm=erf_fit(-1,elem,linear_flag=True)
             xc = return_line_center(-1,elem,threshold=0.3)
             yield from bps.mov(mot1,xc)
@@ -1588,15 +1716,15 @@ def zp_th_fly2d(th_start, th_end, num, mot1, x_start, x_end, x_num, mot2, y_star
             yield from fly1d(dets_fs,mot2,-5,5,100,0.03)
             yc = return_line_center(-1,elem,threshold=0.3)
 
-            yield from bps.mov(mot2,yc)
+            #yield from bps.mov(mot2,yc)
 
 
 
 
         if line_scan:
-            yield from fly1d(dets1,mot1, x_start, x_end, x_num, sec)
+            yield from fly1d(dets3,mot1, x_start, x_end, x_num, sec)
         else:
-            yield from fly2d(dets1, mot1, x_start, x_end, x_num, mot2, y_start, y_end, y_num, sec)
+            yield from fly2d(dets3, mot1, x_start, x_end, x_num, mot2, y_start, y_end, y_num, sec)
 
         #yield from bps.movr(mot2,+0.5)
         yield from bps.sleep(1)
@@ -1626,7 +1754,73 @@ def zp_th_fly2d(th_start, th_end, num, mot1, x_start, x_end, x_num, mot2, y_star
 
     #yield from shutter('close'
     #<zp_th_fly2d(-1,1,40,zpssx, -10,10,30,zpssy,-10,10,30,0.03,elem ='Cu', do_align = False, xy_offset = (0,0))
+def zp_th_fly2d_abs(th_start, th_end, num, mot1, x_start, x_end, x_num, mot2, y_start, y_end, y_num, sec,elem = 'Ni',do_align = True, xy_offset = (0,0),line_scan = False):
 
+    '''move theta position relative and collect 2D scans'''
+
+    init_th = th_start
+    th_step = (th_end - th_start) / num
+    yield from bps.mov(zpsth, th_start)
+    ic_0 = sclr2_ch2.get()
+
+
+    for i in tqdm.tqdm(range(num+1),desc = 'Theta Scan'):
+
+        yield from check_for_beam_dump(5000)
+
+        while (sclr2_ch2.get() < (0.85*ic_0)):
+            yield from peak_the_flux()
+
+        #yield from bps.movr(zpssy, 0)
+        #yield from bps.movr(zpssz, 0)
+        if do_align:
+
+            #Move to the fiducial from scan start point
+            #yield from bps.movr(smary,-45*0.001)
+            yield from fly1d(dets_fs,mot1,-3,3,50,0.02)
+            #xc,fwhm=erf_fit(-1,elem,linear_flag=True)
+            xc = return_line_center(-1,elem,threshold=0.3)
+            yield from bps.mov(mot1,xc)
+
+            #yield from bps.movr(zpssx,-12)
+            yield from fly1d(dets_fs,mot2,-3,3,50,0.02)
+            yc = return_line_center(-1,elem,threshold=0.3)
+
+            #yield from bps.mov(mot2,yc)
+
+
+
+
+        if line_scan:
+            yield from fly1d(dets3,mot1, x_start, x_end, x_num, sec)
+        else:
+            yield from fly2d(dets3, mot1, x_start, x_end, x_num, mot2, y_start, y_end, y_num, sec)
+
+        #yield from bps.movr(mot2,+0.5)
+        yield from bps.sleep(1)
+        xspress3.unstage()
+        merlin1.unstage()
+        #yield from bps.movr(smarx,(10/1000))
+
+
+        try:
+            #insert_diffSum_to_pdf(-1)
+
+            insert_xrf_map_to_pdf(-1,elements = [elem],title_= ['zpsth', 'energy'])
+
+        except:
+            pass
+
+        yield from bps.movr(zpsth, th_step)
+        yield from bps.sleep(1)
+
+        #if do_align:
+
+            #yield from bps.movr(smarx,xy_offset[0]*-0.001)
+            #yield from bps.movr(smary,xy_offset[1]*-0.001)
+
+    yield from bps.mov(zpsth, init_th)
+    save_page()
 def zp_single_th_fly2d( mot1, x_start, x_end, x_num, mot2, y_start, y_end, y_num, sec,elem = 'Au_L',do_align = False):
 
     'collect 2D scans at current theta with alignment'
@@ -3430,7 +3624,8 @@ def recover_and_scan(sid, dets, mot1, mot1_s, mot1_e, mot1_n, mot2, mot2_s, mot2
 
 def insert_xrf_map_to_pdf(scan_id = -1, elements = ["Cr", "Fe"],
                           title_ = ['energy','zpsth'],
-                          norm = 'sclr1_ch4'):
+                          norm = 'sclr1_ch4',
+                          note = ''):
 
     """
         insert 2D-XRF maps to the pdf log from a single scan
@@ -3444,14 +3639,17 @@ def insert_xrf_map_to_pdf(scan_id = -1, elements = ["Cr", "Fe"],
 
     """
 
-    with suppress(Exception):
+    #with suppress(Exception):
 
-        x=None
-        y=None
+    x=None
+    y=None
 
-        h = db[int(scan_id)]
-        hdr = db[scan_id]['start']
-        df = h.table()
+    h = db[int(scan_id)]
+    hdr = db[scan_id]['start']
+    mots = h.start['motors']
+    df = h.table()
+
+    if len(mots) == 2:
         dim1,dim2 = h.start['num1'], h.start['num2']
 
         if x is None:
@@ -3465,76 +3663,95 @@ def insert_xrf_map_to_pdf(scan_id = -1, elements = ["Cr", "Fe"],
         y_data = np.asarray(df[y])
 
         extent = (np.nanmin(x_data), np.nanmax(x_data),
-          np.nanmax(y_data), np.nanmin(y_data))
+            np.nanmax(y_data), np.nanmin(y_data))
 
+    elif len(mots) == 1:
+        #dim1 = h.start['num1']
 
+        if x is None:
+            x = hdr['motor']
+            #x = hdr['motors'][0]
+        x_data = np.asarray(df[x])
+        #extent = (np.nanmin(x_data), np.nanmax(x_data))
 
-        tot = len(elements)
+    tot = len(elements)
+    if tot ==1:
+        cols = 1
+    else:
+        cols = 2
+    Rows = tot // cols
 
-        if tot ==1:
-            cols = 1
+    if tot % cols != 0:
+        Rows += 1
+    Position = range(1,tot + 1)
+
+    fig = plt.figure()
+    fig.suptitle("scan_id = "+ str(h.start["scan_id"]), size = 'xx-large')
+
+    for n, elem in enumerate(elements):
+
+        if elem in df:
+            det = df[elem]
+        else:
+            det = ( df[f'Det1_{elem}'] +
+                    df[f'Det1_{elem}'] +
+                    df[f'Det1_{elem}'] ). to_numpy()
+
+        if norm == None:
+            mon = np.ones_like(det)
 
         else:
-            cols = 2
 
+            mon = df[norm].to_numpy()
+            mon[mon == 0] = mon.mean()
 
-        Rows = tot // cols
+        norm_data = np.float32(det/mon)
 
-
-        if tot % cols != 0:
-            Rows += 1
-
-
-        Position = range(1,tot + 1)
-
-        fig = plt.figure()
-        fig.suptitle("scan_id = "+ str(h.start["scan_id"]), size = 'xx-large')
-
-        for n, elem in enumerate(elements):
-
-            if elem in df:
-                det = df[elem]
-            else:
-                det = ( df[f'Det1_{elem}'] +
-                        df[f'Det1_{elem}'] +
-                        df[f'Det1_{elem}'] ). to_numpy()
-
-            if norm == None:
-                mon = np.ones_like(det)
-
-            else:
-
-                mon = df[norm].to_numpy()
-                mon[mon == 0] = mon.mean()
-
-            norm_data = np.float32(det/mon)
-
-            ax = fig.add_subplot(Rows,cols,Position[n])
+        ax = fig.add_subplot(Rows,cols,Position[n])
+        if len(mots) == 2:
             im = ax.imshow(np.float32(norm_data.reshape(dim2,dim1)), extent = extent)
-            ax.set_title(elem)
             divider = make_axes_locatable(ax)
             cax = divider.append_axes('right', size='5%', pad=0.05)
             fig.colorbar(im, cax=cax, orientation='vertical')
-            fig.tight_layout()
+
+        elif len(mots) == 1:
+            im = ax.plot(x_data,np.float32(norm_data))
+
+        ax.set_title(elem)
+        fig.tight_layout()
+
+    #if note is None:
+    note += f"scan date & time = {df['time'].iloc[-1].strftime('%Y-%m-%d %X')} \n" 
+    note+= f"{scan_command(int(scan_id))} \n"
+
+    title_str = ''
+
+    for title in title_:
+        titleValue = (h.table("baseline")[title].values)[0]
+
+        title_str += f"{title} = {titleValue:.4f}, "
+
+    #titleValue1 = (h.table("baseline")[title_[0]].values)[0]
+    #titleValue2 = (h.table("baseline")[title_[1]].values)[0]
+
+    #title_str = f"{title_[0]} = {titleValue1:.4f} , {title_[1]} = {titleValue2:.4f}"
+
+    #insertFig(note = time_str, title = '= {:.4f}'.format(check_baseline(scan,title_)) )
+    print(note)
+    insertFig(note = note, title = title_str)
+
+    plt.close()
 
 
-        time_str = "scan date & time = " + df["time"].iloc[-1].strftime('%Y-%m-%d %X')
-
-        titleValue1 = (h.table("baseline")[title_[0]].values)[0]
-        titleValue2 = (h.table("baseline")[title_[1]].values)[0]
-
-        title_str = f"{title_[0]} = {titleValue1:.4f} , {title_[1]} = {titleValue2:.4f}"
-
-        #insertFig(note = time_str, title = '= {:.4f}'.format(check_baseline(scan,title_)) )
-        insertFig(note = time_str, title = title_str)
-
-        plt.close()
-
-
-def insert_xrf_series_to_pdf(startSid,endSid, elements = ["Cr", "Ti"], figTitle = ["energy","zpsth"],
+def insert_xrf_series_to_pdf(startSid,endSid, elements = ["Cr", "Ti"], figTitle = ["dsth"],
                              mon = 'sclr1_ch4', diffSum = False):
 
-    """ insert 2D-XRF maps to the pdf log from a series of scan.
+    """
+        usage : insert_xrf_series_to_pdf(-10,-1, elements = ["Cr", "Ti"], figTitle = ["energy","zpsth"],
+                             mon = 'sclr1_ch4', diffSum = False)
+
+
+          insert 2D-XRF maps to the pdf log from a series of scan.
         - elements has to be in the list. eg:["Cr", "Ti"]
         - a title can be added to the figure. Commonly: "enegry", "zpsth", "dsth"
         - a time stamp will be added to the bottom of the figure
@@ -3543,13 +3760,17 @@ def insert_xrf_series_to_pdf(startSid,endSid, elements = ["Cr", "Ti"], figTitle 
 
     scan_nums = np.arange(startSid,endSid+1)
     for i in scan_nums:
+
         if len(db[int(i)].start['motors']) == 2:
             print(f"{i} = 2D scan")
 
             if diffSum:
                 insert_diffSum_to_pdf(scan = int(i),det = "merlin2", thMotor = "zpsth")
             else:
-                insert_xrf_map_to_pdf(int(i),elements,figTitle, norm=mon)
+                insert_xrf_map_to_pdf(int(i),elements,figTitle, norm=mon, note = None)
+            plt.close()
+
+
 
     save_page()
 
@@ -3611,6 +3832,9 @@ def mosaic_overlap_scan(dets = None, ylen = 100, xlen = 100, overlap_per = 15, d
     #print(X_position)
     #print(Y_position)
 
+    print(f"{xlen_updated = }")
+    print(f"{ylen_updated = }")
+
     num_steps = round(max_travel*1000/step_size)
 
     unit = "minutes"
@@ -3638,6 +3862,8 @@ def mosaic_overlap_scan(dets = None, ylen = 100, xlen = 100, overlap_per = 15, d
 
             yield from bps.movr(dsy, ylen_updated/-2)
             yield from bps.movr(dsx, xlen_updated/-2)
+            X_position_abs = dsx.position+(X_position)
+            Y_position_abs = dsy.position+(Y_position)
 
 
         else:
@@ -3718,8 +3944,8 @@ def plot_mosiac_overlap(grid_shape = (4,4), first_scan_num = -8,
             det = df[elem]
         else:
             det = ( df[f'Det1_{elem}'] +
-                    df[f'Det1_{elem}'] +
-                    df[f'Det1_{elem}'] ). to_numpy()
+                    df[f'Det2_{elem}'] +
+                    df[f'Det3_{elem}'] ). to_numpy()
 
         mon = df["sclr1_ch4"].to_numpy()
         mon[mon == 0] = mon.mean()
@@ -3861,6 +4087,20 @@ def plot_scalrs(sid, elem = ["Au_L", "Cs_L", "Ti"], scaler = "sclr1_ch9", norm =
         axs[idx].set_xlabel(mot1_name)
         axs[idx].set_ylabel(mot2_name)
         fig.colorbar(img)
+
+def calc_exposure_time(snum):
+    h = db[snum].start
+    snum = h['scan_id']
+    tb = db.get_table(db[snum],stream_name='primary')
+    nx = h['num1']
+    ny = h['num2']
+    time = np.zeros((nx-1)*ny)
+    for y in range(ny):
+        for x in range(nx-1):
+            time[y*(nx-1)+x] = tb['time'][y*nx+x+2].timestamp() - tb['time'][y*nx+x+1].timestamp()
+    time_exp = np.mean(time) - h['dead_time']
+    print('Scan %d actual exposure time %.5f ms'%(snum,time_exp*1000))
+    return time_exp
 
 
 

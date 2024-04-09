@@ -45,18 +45,23 @@ def create_user_symlink(src_dir = "/data/2023Q1/"):
         
         #recreate symlink
         if os.path.exists(dest):
+            #os.rmdir(dest)
             os.unlink(dest)
         os.symlink(src_dir,dest)
         print(f"Successfully created a symlink for {src_dir} as {dest}")
         return 
 
     else:
-        print(f"{src_dir} does not exists; Failed to create a symlink")
+        raise FileExistsError (f"{src_dir} does not exist; Failed to create a symlink")
 
-        return
     
 
-def setup_new_user(name = "Lastname",experimenters = "HX,NU,SER", sample = "Gold", sample_image = "/data/users/hxn_logo.png"):
+def setup_new_user(name = "Lastname",
+                   experimenters = "HX,NU,SER", 
+                   sample = "Gold", 
+                   pdf_file_name = "elog",
+                   sample_image = "/data/users/hxn_logo.png"):
+    
     RE.md["PI"] = name
     RE.md["experimenters"] = experimenters
     RE.md["sample"] = sample
@@ -65,8 +70,12 @@ def setup_new_user(name = "Lastname",experimenters = "HX,NU,SER", sample = "Gold
     udir = create_user_dir(name)
     print(f"User directory is; {udir}")
     create_user_symlink(src_dir = udir)
-    setup_pdf_function(sample_name = sample, experimenters = experimenters, img_to_add = sample_image)
-    insertTitle()
+    setup_pdf_function(sample_name = sample, 
+                       experimenters = experimenters, 
+                       img_to_add = sample_image,
+                       file_name = pdf_file_name)
+    
+    return udir,pdf_file_name
 
 from bluesky_queueserver_api import BPlan
 from bluesky_queueserver_api.zmq import REManagerAPI

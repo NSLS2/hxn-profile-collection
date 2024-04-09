@@ -7,6 +7,7 @@ import numpy as np
 from datetime import datetime
 import h5py
 import matplotlib.pyplot as plt
+from matplotlib.widgets import Slider
 import matplotlib.gridspec as gridspec
 
 # from xray_vision.qt_widgets import CrossSectionMainWindow
@@ -14,6 +15,35 @@ import matplotlib.gridspec as gridspec
 from scipy.interpolate import interp1d, interp2d
 from hxnfly.callbacks.liveplot import add_toolbar_button
 
+
+def plot3D(data,axis=0,index_init=None, *args, **kwargs):
+    fig, ax = plt.subplots()
+    if index_init is None:
+        index_init = int(data.shape[axis]//2)
+    im = ax.imshow(data.take(index_init,axis=axis),*args, **kwargs)
+    fig.subplots_adjust(bottom=0.15)
+    axslide = fig.add_axes([0.1, 0.03, 0.8, 0.03])
+    im_slider = Slider(
+        ax=axslide,
+        label='index',
+        valmin=0,
+        valmax=data.shape[axis] - 1,
+        valstep=1,
+        valinit=index_init,
+    )
+    def update(val):
+        im.set_data(data.take(val,axis=axis))
+        fig.canvas.draw_idle()
+    def keylisten(event):
+        if event.key == 'left':
+            im_slider.set_val(np.maximum(im_slider.val-1,im_slider.valmin))
+        elif event.key == 'right':
+            im_slider.set_val(np.minimum(im_slider.val+1,im_slider.valmax))
+
+    im_slider.on_changed(update)
+    fig.canvas.mpl_connect('key_release_event',keylisten)
+    plt.show()
+    return im,im_slider
 
 @functools.wraps(plt.figure)
 def figure_with_insert_fig_button(*args, **kwargs):
@@ -327,15 +357,17 @@ if 'data_cache' not in globals():
 def _load_scan(scan_id, fill_events=False):
     '''Load scan from databroker by scan id'''
 
-    if scan_id > 0 and scan_id in data_cache:
-        df = data_cache[scan_id]
-    else:
-        hdr = db[scan_id]
-        scan_id = hdr['start']['scan_id']
-        if scan_id not in data_cache:
-            data_cache[scan_id] = db.get_table(hdr, fill=fill_events)
-
-        df = data_cache[scan_id]
+    #if scan_id > 0 and scan_id in data_cache:
+    #    df = data_cache[scan_id]
+    #else:
+    #    hdr = db[scan_id]
+    #    scan_id = hdr['start']['scan_id']
+    #    if scan_id not in data_cache:
+    #        data_cache[scan_id] = db.get_table(hdr, fill=fill_events)
+    #    df = data_cache[scan_id]
+    hdr = db[scan_id]
+    scan_id = hdr['start']['scan_id']
+    df = db.get_table(hdr,fill=fill_events)
 
     return scan_id, df
 
@@ -486,7 +518,7 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
                 raise KeyError('ROI %s not found' % (key, ))
 
         spectrum = np.sum([getattr(df, roi) for roi in roi_keys], axis=0)
-        
+
         #if spectrum[0] == 0:
             #spectrum[0] = spectrum[1]
 
@@ -607,7 +639,7 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
 def export(sid_start, sid_end, interval=1,
            export_folder='/data/users/2023Q1/Cao_2023Q1/diff_data_all',det='merlin1',
            fields_excluded=['xspress3_ch1', 'xspress3_ch2','xspress3_ch3', 'merlin1']):
-    
+
     for sid in range(sid_start,sid_end+1,interval):
         try:
             #sid, df = _load_scan(sid, fill_events=False)
@@ -697,7 +729,7 @@ def th_fly1d_diff_sum(sid_start,sid_end,det = 'merlin1',threshold = [0,10000]):
     x = np.array(df[mots[0]])
 
     img2d_array = np.zeros((len(sid_list),len(x)))
-    
+
     for i, sid in enumerate(sid_list):
         h = db[int(sid)]
         df = h.table()
@@ -707,7 +739,7 @@ def th_fly1d_diff_sum(sid_start,sid_end,det = 'merlin1',threshold = [0,10000]):
         imgs = np.array(np.squeeze(imgs))
         imgs[imgs>threshold[1]]=0
         imgs[imgs<threshold[0]]=0
-        mon = np.array(df['sclr1_ch4'],dtype=float32) 
+        mon = np.array(df['sclr1_ch4'],dtype=float32)
         img_sum = np.sum(imgs,axis=(1,2))/mon
         tot = np.sum(imgs,2)
         tot = np.array(np.sum(tot,1), dtype=float32)
@@ -720,7 +752,7 @@ def th_fly1d_diff_sum(sid_start,sid_end,det = 'merlin1',threshold = [0,10000]):
         dff["sam_theta"].iat[i] = theta
 
         img2d_array[i] = img_sum
-    
+
     plt.figure()
     plt.plot(dff["sam_theta"],dff["diff_sum"])
 
@@ -777,7 +809,7 @@ def plot_img_sum2(sid, det = 'merlin1', roi_flag=False,x_cen=0,y_cen=0,size=0):
         plt.imshow(image,extent=extent)
         plt.title('sid={} ROI SUM'.format(sid))
 
-def plot_img_sum(sid, det = 'merlin1',norm ='sclr1_ch4', 
+def plot_img_sum(sid, det = 'merlin1',norm ='sclr1_ch4',
                  roi_flag=False,x_cen=0,y_cen=0,size=0,threshold=[0,1e6]):
     h = db[int(sid)]
     sid = h.start['scan_id']
@@ -852,7 +884,7 @@ def plot_img_sum(sid, det = 'merlin1',norm ='sclr1_ch4',
 
 
 def display_eiger_image(sid,frame_num = -1, roi_flag=False,x_cen=110,y_cen=135,size=128,threshold=[0,1e4]):
-     
+
     det = 'eiger2_image'
     h = db[int(sid)]
     sid = h.start['scan_id']
@@ -891,11 +923,11 @@ def display_eiger_image(sid,frame_num = -1, roi_flag=False,x_cen=110,y_cen=135,s
     plt.title(f"{sid}_{frame_num}")
     plt.show()
 
-        
 
 
 
-def plot_img_sum_fip(sid, det = 'merlin2_image',norm ='sclr1_ch4', 
+
+def plot_img_sum_fip(sid, det = 'merlin2_image',norm ='sclr1_ch4',
                  roi_flag=False,x_cen=130,y_cen=110,size=160,threshold=[0,1e4], normalize=True):
     h = db[int(sid)]
     sid = h.start['scan_id']
@@ -998,7 +1030,7 @@ def plot_img_sum_fip(sid, det = 'merlin2_image',norm ='sclr1_ch4',
             print(tot.shape, mon.shape)
             tot =np.divide(tot, mon)
 
-        print(f"tot.shape={tot.shape}")        
+        print(f"tot.shape={tot.shape}")
         # image = tot.reshape(dim2,dim1)
         image = tot
         print(f"image.shape={image.shape}")
@@ -1009,16 +1041,16 @@ def plot_img_sum_fip(sid, det = 'merlin2_image',norm ='sclr1_ch4',
         plt.imshow(imgs[-1, -1, :,:])
         plt.colorbar()
         plt.title(f'{sid} last frame:after crop')
-        
 
-        plt.subplot(2,2,3)       
+
+        plt.subplot(2,2,3)
         plt.imshow(image[:,1:])
         plt.title("")
         plt.colorbar()
         plt.title(f'{sid} normalized ,ROI SUM')
 
 
-        plt.subplot(2,2,4)       
+        plt.subplot(2,2,4)
         plt.imshow(mon[:,1:],extent=extent)
         plt.title("")
         plt.colorbar()
@@ -1026,7 +1058,7 @@ def plot_img_sum_fip(sid, det = 'merlin2_image',norm ='sclr1_ch4',
 
         plt.show()
 
-def get_diff_sum(sid, det = 'merlin1',mon ='sclr1_ch4', 
+def get_diff_sum(sid, det = 'merlin1',mon ='sclr1_ch4',
                  roi_flag=False,x_cen=0,y_cen=0,size=0,threshold=[0,1e5]):
 
     h = db[sid]
@@ -1067,7 +1099,7 @@ def get_diff_sum(sid, det = 'merlin1',mon ='sclr1_ch4',
         image = tot.reshape(dim2,dim1)
 
         return np.float32(image)
-    
+
 
 def plot_xanes(sid, ref_sid=0,overlay=0):
     h = db[sid]

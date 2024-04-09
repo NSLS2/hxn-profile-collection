@@ -9,7 +9,7 @@ from collections import OrderedDict
 
 
 # class HxnEigerModalTrigger(HxnModalTrigger):
-    
+
 #     def mode_internal(self):
 #         super().mode_internal()
 
@@ -24,7 +24,7 @@ from collections import OrderedDict
 
 #         cam = self.cam
 #         cam.stage_sigs[cam.num_images] = 1
-#         cam.stage_sigs[cam.num_triggers] = total_points        
+#         cam.stage_sigs[cam.num_triggers] = total_points
 #         cam.stage_sigs[cam.image_mode] = 0  # 'Multiple'
 #         cam.stage_sigs[cam.trigger_mode] = 3  # 'External Enable'
 
@@ -38,6 +38,15 @@ class EigerDetectorCam(CamBase):
     photon_energy = ADComponent(EpicsSignalWithRBV, 'PhotonEnergy')
     manual_trigger = ADComponent(EpicsSignalWithRBV, 'ManualTrigger')  # the checkbox
     special_trigger_button = ADComponent(EpicsSignal, 'Trigger')  # the button next to 'Start' and 'Stop'
+    auto_summation = ADComponent(EpicsSignal, 'AutoSummation')  # the button next to 'Start' and 'Stop'
+
+    def ensure_nonblocking(self):
+        for c in self.parent.component_names:
+            cpt = getattr(self.parent, c)
+            if cpt is self:
+                continue
+            if hasattr(cpt, 'ensure_nonblocking'):
+                cpt.ensure_nonblocking()
 
 
 class EigerDetector(AreaDetector):
@@ -50,6 +59,10 @@ class EigerDetector(AreaDetector):
 class HDF5PluginWithFileStoreEiger(HDF5PluginWithFileStore):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.stage_sigs.update([(self.compression,'szip'),
+                                (self.queue_size,10000)])
+
 
         # 'swmr_mode' must be set first. Rearrange 'stage_sigs'.
         # self.stage_sigs[self.swmr_mode] = 1
@@ -103,7 +116,7 @@ class HDF5PluginWithFileStoreEiger(HDF5PluginWithFileStore):
                 # (self.file_write_mode, "Capture"),
                 # (self.file_write_mode, "Single"),
                 (self.parent.roi1.enable, 1),
-                (self.parent.cam.array_callbacks, 1),
+                (self.parent.cam.array_callbacks, 0),
                 (self.parent.cam.image_mode, "Single"),
                 (self.parent.cam.trigger_mode, "Internal Series"),
                 (self.parent.cam.manual_trigger, "Disable"),
@@ -161,6 +174,8 @@ class HxnEigerDetector(HxnModalTrigger, EigerDetector):
         super().__init__(prefix, configuration_attrs=configuration_attrs,
                          read_attrs=read_attrs, **kwargs)
 
+        self.cam.ensure_nonblocking()
+
     def mode_internal(self):
         super().mode_internal()
 
@@ -181,15 +196,15 @@ class HxnEigerDetector(HxnModalTrigger, EigerDetector):
 
         cam = self.cam
         cam.stage_sigs[cam.num_images] = 1
-        cam.stage_sigs[cam.num_triggers] = total_points        
+        cam.stage_sigs[cam.num_triggers] = total_points
         cam.stage_sigs[cam.image_mode] = 'Multiple'
         cam.stage_sigs[cam.trigger_mode] = 'External Enable'
 
         # When Eiger is in 'external enable' mode, the exposure time is used to
         # set the bit depth of the detector. It is recommended that the exposure
         # is set to the minimum expected exposure, so it should be set using plan
-        # parameters. 
-        expected_exposure = 0.5  
+        # parameters.
+        expected_exposure = 0.03
         self.stage_sigs[self.cam.acquire_time] = expected_exposure
         self.stage_sigs[self.cam.acquire_period] = expected_exposure
 
@@ -223,7 +238,7 @@ class HxnEigerDetector(HxnModalTrigger, EigerDetector):
 
 #         cam = self.cam
 #         cam.stage_sigs[cam.num_images] = 1
-#         cam.stage_sigs[cam.num_triggers] = total_points        
+#         cam.stage_sigs[cam.num_triggers] = total_points
 #         cam.stage_sigs[cam.image_mode] = 0  # 'Multiple'
 #         cam.stage_sigs[cam.trigger_mode] = 3  # 'External Enable'
 
@@ -232,4 +247,5 @@ eiger1 = HxnEigerDetector('XF:03IDC-ES{Det:Eiger1M}', name='eiger1',
                             image_name='eiger1',
                             read_attrs=['hdf5', 'cam', 'stats1'])
 eiger1.hdf5.read_attrs = []
+eiger1.cam.auto_summation.set('Enable')
 
