@@ -9,6 +9,8 @@ from collections import deque
 from datetime import datetime, timedelta, tzinfo
 from pathlib import Path
 
+
+
 # The following code allows to call Matplotlib API from threads (experimental)
 # Requires https://github.com/tacaswell/mpl-qtthread (not packaged yet)
 import matplotlib
@@ -89,8 +91,8 @@ kafka_publisher = Publisher(
 
 # DB1
 db1_name = 'rs'
-db1_addr = 'mongodb://xf03id1-mdb01:27017,xf03id1-mdb02:27017,xf03id1-mdb03:27017'
-
+#db1_addr = 'mongodb://xf03id1-mdb01:27017,xf03id1-mdb02:27017,xf03id1-mdb03:27017'
+db1_addr = 'mongodb://xf03id1-mdb02:27017,xf03id1-mdb03:27017'
 _mds_config_db1 = {'host': db1_addr,
                    'port': 27017,
                    'database': 'datastore-2',
@@ -647,4 +649,4 @@ def reload_bsui():
     """Restarts the current bsui and updates live elements info."""
     os.execl(sys.executable, sys.executable, * sys.argv)
 
-# del one_1d_step, one_nd_step, one_shot    
+# del one_1d_step, one_nd_step, one_shot

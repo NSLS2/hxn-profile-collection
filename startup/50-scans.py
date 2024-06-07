@@ -59,8 +59,8 @@ dets6 = [zebra, sclr1, xspress3]
 dets2 = [fs,zebra, sclr1, eiger1]
 #dets2 = [zebra, sclr1, xspress3, lakeshore2]
 #dets3 = [zebra, sclr1,xspress3]
-dets3 = [fs,zebra, sclr1,merlin1,xspress3]
-dets4 = [zebra, sclr1, merlin1, lakeshore2]
+dets3 = [fs,zebra,sclr1,merlin1,xspress3,eiger1]
+dets4 = [fs,zebra, sclr1, merlin1, xspress3]
 dets7 = [fs, zebra, sclr1, xspress3]
 #dets5 = [zebra, sclr1, xspress3, dexela1]
 #dets9 = [fs, zebra, sclr1, xspress3, eiger1m_single]
@@ -119,3 +119,4 @@ for d in dev_list_pseudo:
 #                              bu.separate_devices(
 #                                  ophyd.utils.instances_from_namespace(
 #                                      (ophyd.EpicsMotor, ophyd.PseudoSingle)))]
+

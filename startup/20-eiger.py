@@ -181,6 +181,7 @@ class HxnEigerDetector(HxnModalTrigger, EigerDetector):
 
         cam = self.cam
         cam.stage_sigs[cam.num_images] = 1
+        cam.stage_sigs[cam.num_triggers] = 1
         cam.stage_sigs[cam.image_mode] = 'Single'
         cam.stage_sigs[cam.trigger_mode] = 'Internal Series'
 

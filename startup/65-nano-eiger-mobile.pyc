@@ -71,8 +71,8 @@ class EigerFileStoreHDF5(FileStoreBase):
     def make_filename(self):
         filename = new_short_uid()
         formatter = datetime.now().strftime
-        write_path = formatter(self.write_path_template)
-        read_path = formatter(self.read_path_template)
+        write_path = formatter(os.path.realpath(self.write_path_template))
+        read_path = formatter(os.path.realpath(self.read_path_template))
 
         fn, read_path, write_path = filename, read_path, write_path
         return fn, read_path, write_path
@@ -270,7 +270,7 @@ class SRXEiger(EigerSingleTriggerV33, EigerDetector):
     fly_next = Cpt(Signal,
                    value=False,
                    doc="latch to put the detector in 'fly' mode")
-    use_panda = Cpt(Signal,
+    internal_trigger = Cpt(Signal,
                    value=False,
                    doc="Flag whether panda box is used")
 
@@ -335,7 +335,7 @@ class SRXEiger(EigerSingleTriggerV33, EigerDetector):
             self.stage_sigs[self.cam.data_source] = 2    # Data source - stream
             self.stage_sigs[self.cam.fw_enable] = 0      # Disable file writer
 
-            if self.use_panda.get():
+            if self.internal_trigger.get():
                 self.stage_sigs[self.cam.image_mode] = 1    # 0 -single, 1 - multiple
                 self.stage_sigs[self.cam.trigger_mode] = 0  # 0 - internal, 2 - external series, 3 - external enable
                 #   NOTE: 'external enable' is sensitive to noise in the triggering line

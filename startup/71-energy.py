@@ -491,48 +491,48 @@ def plot_calib_results(csv_file):
     plt.title(f"Undulator Calib_{pd.Timestamp.now().month}_{pd.Timestamp.now().year}")
     plt.show()
 
-def foil_calib_scan(startE, endE,saveLogFolder):
+# def foil_calib_scan(startE, endE,saveLogFolder):
 
-    """absolute energy"""
+#     """absolute energy"""
     
-    energies = np.arange(startE,endE,0.0005)
+#     energies = np.arange(startE,endE,0.0005)
     
-    print(len(energies))
+#     print(len(energies))
     
-    e_list = pd.DataFrame()
-    e_list['TimeStamp'] = pd.Timestamp.now()
-    e_list['energy'] = energies
-    e_list['E Readback'] = energies
-    e_list['IC3'] = sclr2_ch4.get()
-    e_list['IC0'] = sclr2_ch2.get()
+#     e_list = pd.DataFrame()
+#     e_list['TimeStamp'] = pd.Timestamp.now()
+#     e_list['energy'] = energies
+#     e_list['E Readback'] = energies
+#     e_list['IC3'] = sclr2_ch4.get()
+#     e_list['IC0'] = sclr2_ch2.get()
 
-    print(e_list.head())
+#     print(e_list.head())
     
-    time_ = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+#     time_ = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
-    for i,en in tqdm.tqdm(enumerate(energies)):
-        print (i/len(energies))
+#     for i,en in tqdm.tqdm(enumerate(energies)):
+#         print (i/len(energies))
 
-        yield from Energy.move(en, moveMonoPitch=False, moveMirror = "ignore")
-        yield from bps.sleep(2)
-        e_list['TimeStamp'].at[i] = pd.Timestamp.now()
-        e_list['IC3'].at[i] = sclr2_ch4.get() 
-        e_list['IC0'].at[i] = sclr2_ch2.get()
-        e_list['E Readback'].at[i] = e.position #add real energy to the dataframe
+#         yield from Energy.move(en, moveMonoPitch=False, moveMirror = "ignore")
+#         yield from bps.sleep(2)
+#         e_list['TimeStamp'].at[i] = pd.Timestamp.now()
+#         e_list['IC3'].at[i] = sclr2_ch4.get() 
+#         e_list['IC0'].at[i] = sclr2_ch2.get()
+#         e_list['E Readback'].at[i] = e.position #add real energy to the dataframe
 
-        filename = f'HXN_nanoXANES_calib_{time_}.csv'
-        #filename = f'HXN_nanoXANES_calib.csv'
-        e_list.to_csv(os.path.join(saveLogFolder, filename), float_format= '%.5f')
+#         filename = f'HXN_nanoXANES_calib_{time_}.csv'
+#         #filename = f'HXN_nanoXANES_calib.csv'
+#         e_list.to_csv(os.path.join(saveLogFolder, filename), float_format= '%.5f')
 
         
 
-    plt.figure()
-    spec = -1*np.log(e_list['IC3'].to_numpy()/e_list['IC0'].to_numpy())
-    plt.plot(e_list['E Readback'], spec)
-    plt.plot(e_list['E Readback'], np.gradient(spec))
-    plt.savefig(os.path.join(saveLogFolder, f'HXN_nanoXANES_calib_{time_}.png'))
-    plt.show()
+#     plt.figure()
+#     spec = -1*np.log(e_list['IC3'].to_numpy()/e_list['IC0'].to_numpy())
+#     plt.plot(e_list['E Readback'], spec)
+#     plt.plot(e_list['E Readback'], np.gradient(spec))
+#     plt.savefig(os.path.join(saveLogFolder, f'HXN_nanoXANES_calib_{time_}.png'))
+#     plt.show()
 
 
 
@@ -557,10 +557,18 @@ def plot_foil_calib(sid=-1, saveLogFolder = "/data/users/current_user",save_as =
     df = h.table()
     fig,ax = plt.subplots(1,1)
 
+    dff = pd.DataFrame()
+
     en_ = np.array(df['energy'],dtype=np.float32) 
     I = np.array(df['sclr1_ch4'],dtype=np.float32) 
     Io = np.array(df['sclr1_ch2'],dtype=np.float32) 
     spec = -1*np.log(I/Io)
+
+    dff["energy"] = en_
+    dff['I'] = I
+    dff['Io'] = Io
+    dff['absorbance'] = spec
+
     ax.plot(en_, spec, label = "xanes")
     ax.plot(en_, np.gradient(spec),label = "derivative")
     edge_pos = en_[np.argmax(np.gradient(spec))]
@@ -569,6 +577,7 @@ def plot_foil_calib(sid=-1, saveLogFolder = "/data/users/current_user",save_as =
     #bps.sleep(2)
     plt.legend()
     plt.savefig(os.path.join(saveLogFolder, f'{save_as}_{sd}.png'))
+    dff.to_csv(os.path.join(saveLogFolder, f'{save_as}_{sd}.csv'))
     plt.show()
 
 

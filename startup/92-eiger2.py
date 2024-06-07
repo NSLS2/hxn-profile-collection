@@ -238,7 +238,7 @@ class HDF5PluginWithFileStoreEiger(HDF5Plugin_V33, EigerFileStoreHDF5):
             ttime.sleep(0.1)  # abundance of caution
             sig.set(val).wait()
 
-        ttime.sleep(acquire_time + 1)  # wait for acquisition
+        ttime.sleep(acquire_time + 0.2)  # wait for acquisition
 
         for sig, val in reversed(list(original_vals.items())):
             ttime.sleep(0.1)
@@ -260,6 +260,7 @@ class EigerDetectorCam(AreaDetectorCam, CamV33Mixin):
     Compress_alg = ADComponent(EpicsSignal, "CompressionAlgo")
     Array_callbacks = ADComponent(EpicsSignal, "ArrayCallbacks")
     Data_source = ADComponent(EpicsSignal, "DataSource")
+    Bitdepth_image = ADComponent(EpicsSignalRO, "BitDepthImage_RBV")
 
 
 class EigerDetector(AreaDetector):
@@ -288,9 +289,9 @@ class SRXEiger(EigerSingleTriggerV33, EigerDetector):
     fly_next = Cpt(Signal,
                    value=False,
                    doc="latch to put the detector in 'fly' mode")
-    use_panda = Cpt(Signal,
+    internal_trigger = Cpt(Signal,
                    value=False,
-                   doc="Flag whether panda box is used")
+                   doc="Flag whether set to internal trigger")
 
     hdf5 = Cpt(HDF5PluginWithFileStoreEiger, 'HDF1:',
                read_attrs=[],
@@ -353,7 +354,7 @@ class SRXEiger(EigerSingleTriggerV33, EigerDetector):
             self.stage_sigs[self.cam.data_source] = 2    # Data source - stream
             self.stage_sigs[self.cam.fw_enable] = 0      # Disable file writer
 
-            if self.use_panda.get():
+            if self.internal_trigger.get():
                 self.stage_sigs[self.cam.image_mode] = 1    # 0 -single, 1 - multiple
                 self.stage_sigs[self.cam.trigger_mode] = 0  # 0 - internal, 2 - external series, 3 - external enable
                 #   NOTE: 'external enable' is sensitive to noise in the triggering line
@@ -417,7 +418,7 @@ try:
     def Eiger_setup():
         camset = short_uid('Eiger_setup')
         yield from bps.abs_set(eiger2.cam.ROI_mode,'Disable',group=camset)
-        yield from bps.abs_set(eiger2.cam.Flatfield_corr,'Disable',group=camset)
+        yield from bps.abs_set(eiger2.cam.Flatfield_corr,'Enable',group=camset)
         yield from bps.abs_set(eiger2.cam.FW_compress,'Disable',group=camset)
         yield from bps.abs_set(eiger2.cam.Compress_alg,'LZ4',group=camset)
         yield from bps.abs_set(eiger2.cam.Array_callbacks,'Enable',group=camset)

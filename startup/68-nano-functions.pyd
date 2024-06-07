@@ -1,6 +1,6 @@
 print(f"Loading {__file__!r} ...")
 
-class HXN_FuncGen(Device):
+class HXN_FuncGen1(Device):
     freq = Cpt(EpicsSignal, '{FG:1}OUTPUT1:FREQ:SP') #freq.set('#.##'){.wait()}
     freq_readout = Cpt(EpicsSignal, '{FG:1}OUTPUT1:FREQ') #freq.set('#.##'){.wait()}
     volt = Cpt(EpicsSignal, '{FG:1}OUTPUT1:VOLT:SP')
@@ -22,11 +22,35 @@ class HXN_FuncGen(Device):
         yield from abs_set(self.output,"OFF",wait=True)
         yield from bps.sleep(0.5)
 
-pt_fg = HXN_FuncGen('XF:03IDC-ES', name='pt_fg')
+class HXN_FuncGen2(Device):
+    freq = Cpt(EpicsSignal, '{FG:1}OUTPUT2:FREQ:SP') #freq.set('#.##'){.wait()}
+    freq_readout = Cpt(EpicsSignal, '{FG:1}OUTPUT2:FREQ') #freq.set('#.##'){.wait()}
+    volt = Cpt(EpicsSignal, '{FG:1}OUTPUT2:VOLT:SP')
+    volt_readout = Cpt(EpicsSignal, '{FG:1}OUTPUT2:VOLT')
+    offset = Cpt(EpicsSignal, '{FG:1}OUTPUT2:VOLT:OFFSET:SP')
+    sym = Cpt(EpicsSignal, '{FG:1}OUTPUT2:RAMP:SYMM:SP')
+    func = Cpt(EpicsSignal, '{FG:1}OUTPUT2:FUNC:SP')
+    burst_count = Cpt(EpicsSignal, '{FG:1}OUTPUT2:BURST_NCYCLES:SP')
+    burst = Cpt(EpicsSignal, '{FG:1}OUTPUT2:BURST_STATUS:SP')
+    output = Cpt(EpicsSignal, '{FG:1}OUTPUT2:STATUS:SP') #output.set('ON'){.wait()}
+    output_readout = Cpt(EpicsSignal, '{FG:1}OUTPUT2:STATUS') #output.set('ON'){.wait()}
+    #slt_hcen = Cpt(EpicsMotor, '{Slt:4-Ax:Top}Mtr')
+
+    def on(self):
+        yield from abs_set(self.output,"ON",wait=True)
+        yield from bps.sleep(0.5)
+
+    def off(self):
+        yield from abs_set(self.output,"OFF",wait=True)
+        yield from bps.sleep(0.5)
+
+pt_fg = HXN_FuncGen1('XF:03IDC-ES', name='pt_fg')
+pt_fg_ch1 = HXN_FuncGen1('XF:03IDC-ES', name='pt_fg_ch1')
+pt_fg_ch2 = HXN_FuncGen2('XF:03IDC-ES', name='pt_fg_ch2')
 # pt_fg.output._put_complete = True
 # pt_fg.burst._put_complete = True
 
-RASMI_align_drift = np.load('/nsls2/data1/hxn/shared/config/bluesky/profile_collection/startup/68-RASMI-align-drift.npy')
+RASMI_align_drift = np.load('/nsls2/data/hxn/shared/config/bluesky/profile_collection/startup/68-RASMI-align-drift.npy')
 
 def get_tomo_drift(angle):
     if angle < RASMI_align_drift[0,0] or angle>RASMI_align_drift[-1,0]:
@@ -75,3 +99,6 @@ def golden_tomo(samplename,interv,offset = 0):
          offset = offset+interv*gdratio
          if offset>interv:
              offset -= interv
+def get_masscenter(x, y, I):
+    return np.array([-np.sum(x*I), np.sum(y*I)])/np.sum(I)
+

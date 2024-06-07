@@ -3,6 +3,7 @@ from collections import OrderedDict
 
 from epics import caput, caget
 import os
+import tqdm
 import threading
 import h5py
 import numpy as np
@@ -18,7 +19,9 @@ xs = None  # No Xspress3
 # use_sclr = False  # Set this False to run zebra without 'sclr'
 use_sclr = True
 
-
+## PPMAC
+from ppmac.pp_comm import PPComm
+ppmac = PPComm(host='xf03idc-ppmac1',fast_gather=True)
 
 import time as ttime
 from datetime import datetime
@@ -91,6 +94,10 @@ class PULSE(Device):
     delay = Cpt(EpicsSignal, "DELAY")
     width_units = Cpt(EpicsSignal, "WIDTH:UNITS", string=True)
     width = Cpt(EpicsSignal, "WIDTH")
+    pulses = Cpt(EpicsSignal, "PULSES")
+    step_units = Cpt(EpicsSignal, "STEP:UNITS", string=True)
+    step = Cpt(EpicsSignal, "STEP")
+    trig_edge = Cpt(EpicsSignal, "TRIG_EDGE", string=True)
 
 
 class BITS(Device):
@@ -178,11 +185,11 @@ class ExportSISDataPanda:
 
         j = 0
         while self._panda.data.capture.get() == 1:
-            print("Waiting for zebra...")
+            print("Waiting for pandabox data...")
             ttime.sleep(0.1)
             j += 1
             if j > 10:
-                print("THE ZEBRA IS BEHAVING BADLY CARRYING ON")
+                print("PANDABOX IS BEHAVING BADLY CARRYING ON")
                 break
 
         def add_data(ds_name, data):
@@ -252,6 +259,8 @@ class HXNFlyerPanda(Device):
         if self._sis is not None:
             self._data_sis_exporter = ExportSISDataPanda()
 
+        self._xsp_roi_exporter = None
+
         type_map = {"int32": "<i4", "float32": "<f4", "float64": "<f8"}
 
         self.fields = {
@@ -290,9 +299,11 @@ class HXNFlyerPanda(Device):
         self._point_counter = None
         if self._sis is not None:
             self._data_sis_exporter.close()
+        if self._xsp_roi_exporter is not None:
+            self._xsp_roi_exporter.close()
         super().unstage()
 
-    def kickoff(self, *, num, dwell):
+    def kickoff(self, *, num):
         """Kickoff the acquisition process."""
         # Prepare parameters:
         self._document_cache = deque()
@@ -324,15 +335,13 @@ class HXNFlyerPanda(Device):
             self._document_cache.append(("datum", datum_document))
             self._datum_docs[key] = datum_document
 
+
+        ## Scaler
         if self._sis is not None:
-            # Put SIS3820 into single count (not autocount) mode
-            self.stage_sigs[self._sis.count_mode] = 0
-            self.stage_sigs[self._sis.count_on_start] = 1
             # Stop the SIS3820
             self._sis.stop_all.put(1)
 
         self.__filename_sis = "{}.h5".format(uuid.uuid4())
-        print(self.__filename_sis)
         self.__read_filepath_sis = os.path.join(
             self.LARGE_FILE_DIRECTORY_READ_PATH, self.__filename_sis
         )
@@ -349,8 +358,42 @@ class HXNFlyerPanda(Device):
         )
 
         resources = [self.__filestore_resource_sis]
-        if self._sis:
-            resources.append(self.__filestore_resource_sis)
+
+        self._xsp_roi_exporter = None
+        ## Xspress3 ROIs
+        for d in self._dets:
+            if d.name == 'xspress3' or d.name == 'xspress3_det2':
+
+                self.xsp = d
+
+                self.__filename_xsp_roi = "ROI0_{}.h5".format(uuid.uuid4())
+                self.__read_filepath_xsp_roi = os.path.join(
+                    self.LARGE_FILE_DIRECTORY_READ_PATH, self.__filename_xsp_roi
+                )
+                self.__write_filepath_xsp_roi = os.path.join(
+                    self.LARGE_FILE_DIRECTORY_WRITE_PATH, self.__filename_xsp_roi
+                )
+
+                self._xsp_roi_exporter = ExportXpsROI()
+                print(self. __write_filepath_xsp_roi)
+                self._xsp_roi_exporter.open(
+                    self. __write_filepath_xsp_roi, d
+                )
+
+                self.__filestore_resource_xsp_roi, self._datum_factory_xsp_roi = resource_factory(
+                    ROIHDF5Handler.HANDLER_NAME,
+                    root=self.LARGE_FILE_DIRECTORY_ROOT,
+                    resource_path=self.__read_filepath_xsp_roi,
+                    resource_kwargs={},
+                    path_semantics="posix",
+                )
+
+
+                resources.append(self.__filestore_resource_xsp_roi)
+
+        # if self._sis:
+        #     resources.append(self.__filestore_resource_sis)
+
         self._document_cache.extend(("resource", _) for _ in resources)
 
         if self._sis is not None:
@@ -358,6 +401,7 @@ class HXNFlyerPanda(Device):
             self._data_sis_exporter.open(
                 self.__write_filepath_sis, mca_names=sis_mca_names, ion=self._sis, panda=self.panda
             )
+
 
         # Kickoff panda process:
         print(f"[Panda]Starting acquisition ...")
@@ -387,20 +431,25 @@ class HXNFlyerPanda(Device):
         for d in self._dets:
             d.stop(success=True)
 
+        now = ttime.time()  # TODO: figure out how to get it from PandABox (maybe?)
+
+        data_dict = {
+            key: datum_doc["datum_id"] for key, datum_doc in self._datum_docs.items()
+        }
+
+        self._last_bulk = {
+            "data": data_dict,
+            "timestamps": {key: now for key in self._datum_docs},
+            "time": now,
+            "filled": {key: False for key in self._datum_docs},
+        }
 
         if self._sis:
             sis_mca_names = self._sis_mca_names()
             sis_datum = []
             for name in sis_mca_names:
                 sis_datum.append(self._datum_factory_sis({"column": name, "point_number": self._point_counter}))
-
-
-        if self._sis:
             self._document_cache.extend(("datum", d) for d in sis_datum)
-
-        for d in self._dets:
-            if d.name == 'eiger2' or d.name == 'eiger_mobile':
-                self._document_cache.extend(d.collect_asset_docs())
 
         # @timer_wrapper
         def get_sis_data():
@@ -410,32 +459,60 @@ class HXNFlyerPanda(Device):
 
         get_sis_data()
 
+        if self._xsp_roi_exporter is not None:
+            self._xsp_roi_exporter.export(self.frame_per_point)
+
+            panda_live_plot.update_plot(True)
+
+            roi_datum = []
+            for roi in self.xsp.enabled_rois:
+                roi_datum.append(self._datum_factory_xsp_roi({"det_elem": roi.name}))
+            self._last_bulk["data"].update({k: v["datum_id"] for k, v in zip([roi.name for roi in self.xsp.enabled_rois], roi_datum)})
+            self._last_bulk["timestamps"].update({k: v["datum_id"] for k, v in zip([roi.name for roi in self.xsp.enabled_rois], roi_datum)})
+            self._document_cache.extend(("datum", d) for d in roi_datum)
+
+        for d in self._dets:
+            if d.name != 'fs' and d.name != 'xspress3':
+                self._document_cache.extend(d.collect_asset_docs())
+            if d.name == 'xspress3':
+                doc_cnt = 0
+                for doc in d.collect_asset_docs():
+                    self._document_cache.append(doc)
+                    doc_cnt += 1
+                    if doc_cnt == 4:
+                        break
+
         print("[Panda]collect data")
-
-        data_dict = {
-            key: datum_doc["datum_id"] for key, datum_doc in self._datum_docs.items()
-        }
-
-        now = ttime.time()  # TODO: figure out how to get it from PandABox (maybe?)
-        self._last_bulk = {
-            "data": data_dict,
-            "timestamps": {key: now for key in self._datum_docs},
-            "time": now,
-            "filled": {key: False for key in self._datum_docs},
-        }
 
         if self._sis:
             self._last_bulk["data"].update({k: v["datum_id"] for k, v in zip(sis_mca_names, sis_datum)})
             self._last_bulk["timestamps"].update({k: v["datum_id"] for k, v in zip(sis_mca_names, sis_datum)})
 
         for d in self._dets:
-            reading = d.read()
-            self._last_bulk["data"].update(
-                {k: v["value"] for k, v in reading.items()}
+            if d.name == 'eiger2' or d.name == 'eiger_mobile':
+                reading = d.read()
+                self._last_bulk["data"].update(
+                    {k: v["value"] for k, v in reading.items()}
+                    )
+                self._last_bulk["timestamps"].update(
+                    {k: v["timestamp"] for k, v in reading.items()}
                 )
-            self._last_bulk["timestamps"].update(
-                {k: v["timestamp"] for k, v in reading.items()}
-            )
+            if d.name == 'xspress3':
+                reading = d.read()
+                self._last_bulk["data"].update(
+                    {k: v["value"] for k, v in reading.items() if k.startswith('xspress3')}
+                )
+                self._last_bulk["timestamps"].update(
+                    {k: v["timestamp"] for k, v in reading.items() if k.startswith('xspress3')}
+                )
+            if d.name == 'xspress3_det2':
+                reading = d.read()
+                self._last_bulk["data"].update(
+                    {k: v["value"] for k, v in reading.items()}
+                )
+                self._last_bulk["timestamps"].update(
+                    {k: time.time() for k, v in reading.items()}
+                )
 
         return NullStatus()
 
@@ -469,13 +546,27 @@ class HXNFlyerPanda(Device):
             )
 
         for d in self._dets:
-            desc.update(d.describe())
+            if d.name == 'eiger2' or d.name == 'eiger_mobile':
+                desc.update(d.describe())
+            if d.name == 'xspress3':
+                desc.update([(k, v) for k,v in d.describe().items() if k.startswith('xspress3')])
+            if d.name == 'xspress3_det2':
+                desc.update(d.describe())
 
         if self._sis is not None:
             sis_mca_names = self._sis_mca_names()
             for n, name in enumerate(sis_mca_names):
                 desc[name] = spec
                 desc[name]["source"] = self._sis.mca_by_index[n + 1].spectrum.pvname
+
+        if self._xsp_roi_exporter is not None:
+            for roi in self.xsp.enabled_rois:
+                desc[roi.name] = spec
+                if hasattr(roi,'settings'):
+                    desc[roi.name]["source"] = roi.settings.array_data.pvname
+                else:
+                    desc[roi.name]["source"] = roi.ts_total.pvname
+
 
         return return_dict
 
@@ -493,7 +584,7 @@ class HXNFlyerPanda(Device):
         n_mcas = n_scaler_mca
         return [getattr(self._sis.channels, f"chan{_}").name for _ in range(1, n_mcas + 1)]
 
-panda_flyer = HXNFlyerPanda(panda1,[],sclr3,name="PandaFlyer")
+panda_flyer = HXNFlyerPanda(panda1,[],sclr1,name="PandaFlyer")
 
 class PandAHandlerHDF5(HandlerBase):
     """The handler to read HDF5 files produced by PandABox."""
@@ -511,9 +602,9 @@ class PandAHandlerHDF5(HandlerBase):
 
 db.reg.register_handler("PANDA", PandAHandlerHDF5, overwrite=True)
 
-def fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwell, *,
+def flyscan_pd(detectors, start_signal, total_points, dwell, *,
                       panda_flyer, xmotor, ymotor,
-                      delta=None, shutter=False, align=False, plot=False,
+                      delta=None, shutter=False, align=False, plot=False, dead_time = 0, scan_dim = None,
                       md=None, snake=False, verbose=False, wait_before_scan=None):
     """Read IO from SIS3820.
     Zebra buffers x(t) points as a flyer.
@@ -546,23 +637,10 @@ def fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwell, *,
        dwell + pixel size
     align : bool, optional, kwarg only
        If True, try to align the beamline
-    shutter : bool, optional, kwarg only
-       If True, try to open the shutter
     """
 
     # t_setup = tic()
 
-    # Check for negative number of points
-    if xnum < 1 or ynum < 1:
-        print('Error: Number of points is negative.')
-        return
-
-    num_total = int(xnum*ynum)
-
-    # Set metadata
-    if md is None:
-        md = {}
-    # md = get_stock_md(md)
     if wait_before_scan is None:
        wait_before_scan = short_uid('before_scan')
 
@@ -572,20 +650,18 @@ def fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwell, *,
     detectors = (panda_flyer.panda, panda_flyer.sclr) + panda_flyer.detectors
     detectors = [_ for _ in detectors if _ is not None]
 
-    names_stage_once = ("merlin2", "eiger2", "eiger_mobile")
-
     # print(f"detectors_stage_once={detectors_stage_once}")
     # print(f"detectors_stage_every_row={detectors_stage_every_row}")
 
     dets_by_name = {d.name : d for d in detectors}
 
-    panda_flyer.frame_per_point = num_total
+    panda_flyer.frame_per_point = total_points
 
     if verbose:
         print("Set up detectors")
         t_detset = tic()
 
-    # Set up the merlin
+    # Set up the detectors
     for det_name in ("merlin2", "eiger2", "eiger_mobile"):
         if det_name in dets_by_name:
             dpc = dets_by_name[det_name]
@@ -599,15 +675,15 @@ def fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwell, *,
                 #     raise ValueError("Acquistion period is too small. Increase dwell time")
 
                 # Settings for 'Trigger enable' mode
-                acquire_time = 0.0001
-                acquire_period = acquire_time
+                acquire_time = dwell - dead_time
+                acquire_period = dwell
                 # acquire_period = acquire_time + 0.0016392
 
             elif det_name == "eiger2":
-                acquire_time = dwell
+                acquire_time = dwell - dead_time
                 acquire_period = dwell
             elif det_name == "eiger_mobile":
-                acquire_time = dwell
+                acquire_time = dwell - dead_time
                 acquire_period = dwell
             else:
                 raise ValueError(f"Unsupported detector: {det_name!r}")
@@ -620,6 +696,14 @@ def fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwell, *,
                 #  'autosummation' for longer exposure times, which may result in different
                 #  data representation for short and long exposures (just an assumption).
                 # dpc.hdf5.warmup(acquire_time=acquire_time)
+                if acquire_time < 0.006666:
+                    image_bitdepth = 16
+                else:
+                    image_bitdepth = 32
+                if 'UInt'+str(image_bitdepth) != dpc.hdf5.data_type.get():
+                    print("Adjusting eiger output bitdepth")
+                    dpc.cam.acquire.set(0)
+                    dpc.hdf5.warmup(acquire_time)
                 pass
 
             if det_name == "eiger_mobile":
@@ -629,6 +713,8 @@ def fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwell, *,
                 #  data representation for short and long exposures (just an assumption).
                 #dpc.hdf5.warmup(acquire_time=acquire_time)
                 pass
+
+
             if verbose:
                 toc(t_detset,'hdf5 warmup')
 
@@ -636,67 +722,41 @@ def fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwell, *,
             dpc.stage_sigs[dpc.cam.acquire_period] = acquire_period
             #dpc.stage_sigs[dpc.cam.num_images] = num_total
             #dpc.stage_sigs[dpc.cam.wait_for_plugins] = 'No'
-            dpc.stage_sigs['total_points'] = num_total
-            dpc.hdf5.stage_sigs['num_capture'] = num_total
-            dpc.hdf5.frame_per_point = num_total
+            dpc.stage_sigs['total_points'] = total_points
+            dpc.hdf5.stage_sigs['num_capture'] = total_points
+            dpc.hdf5.frame_per_point = total_points
             del dpc
+    if "xspress3" in dets_by_name:
+        dpc = dets_by_name["xspress3"]
+        dpc.total_points.set(total_points)
+        dpc.mode_settings.total_points.set(total_points)
+        dpc.mode_settings.mode.set('external')
+        del dpc
+
+    if "xspress3_det2" in dets_by_name:
+        dpc = dets_by_name["xspress3_det2"]
+        dpc.total_points.set(total_points)
+        del dpc
 
     if verbose:
         toc(t_detset,'Detectors initialized')
     print('[Panda]Detectors initialized')
 
+    if panda_flyer._sis is not None:
+        # Put SIS3820 into single count (not autocount) mode
+        panda_flyer.stage_sigs[panda_flyer._sis.count_mode] = 0
+        panda_flyer.stage_sigs[panda_flyer._sis.count_on_start] = 1
+
     # If delta is None, set delta based on time for acceleration
-    if delta is None:
-        # MIN_DELTA = 0.5  # old default value
-        # v = (ystop - ystart) / num_total / dwell  # compute "stage speed"
-        # t_acc = 0.5
-        # # t_acc = xmotor.acceleration.get()  # acceleration time
-        # delta = t_acc * v  # distance the stage will travel in t_acc
-        # # delta = np.amax((delta, MIN_DELTA))
-        # delta = min(0.5, delta + 0.1)
-        delta = 1
-    delta = delta * np.sign(ystop - ystart)
-
-
-    scan_start, scan_stop = ystart, ystop
-
-    # row_start, row_stop = xstart - 0.3, xstop + 0.3
-
-    # Run a peakup before the map?
-    if (align):
-        yield from peakup_fine(shutter=shutter)
-
-    # This is added for consistency with existing HXN plans. Requires custom
-    #   setup of RE:   hxntools.scans.setup(RE=RE)
 
     yield Msg('hxn_next_scan_id')
 
-    if "scan" not in md:
-        md["scan"] = {}
-    # Scan metadata
-    md['scan']['type'] = 'FIP_2D_FLY'
-    md['scan']['scan_input'] = [float(xcenter),float(xrange),xnum,ystart,ystop,ynum,dwell]
-    md['scan']['sample_name'] = ''
     try:
-        md['scan']['theta'] = pt_tomo.th.position
-        md['scan']['picoy'] = pt_tomo.p1_pos1.get()/1e6
+        panda_live_plot.scan_id = RE.md['scan_id'] + 1
     except:
         pass
-    md['scan']['detectors'] = [d.name for d in detectors]
-    md['scan']['detector_distance'] = 2.05
-    md['scan']['dwell'] = dwell
-    md['scan']['fast_axis'] = {'motor_name' : xmotor.name,
-                               'units' : xmotor.motor_egu.get()}
-    md['scan']['slow_axis'] = {'motor_name' : ymotor.name,
-                               'units' : ymotor.motor_egu.get()}
-    # md['scan']['theta'] = {'val' : pt_tomo.th.user_readback.get(),
-    #                        'units' : pt_tomo.th.motor_egu.get()}
-    md['scan']['delta'] = {'val' : delta,
-                           'units' : ymotor.motor_egu.get()}
-    md['scan']['snake'] = snake
-    md['scan']['shape'] = (xnum, ynum)
 
-    time_start_scan = time.time()
+
 
     # Synchronize encoders
     # flying_zebra._encoder.pc.enc_pos1_sync.put(1)
@@ -709,24 +769,6 @@ def fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwell, *,
     # yield from bps.mv(flying_zebra_2d._encoder.pc.enc_pos3_sync, 1)
     # yield from bps.sleep(1)
 
-    yield from bps.mov(ymotor.velocity,500)
-
-    # Select PV for monitoring
-    d_names = [_.name for _ in detectors]
-    ts_monitor_dec = ts_monitor_during_decorator
-    if "merlin2" in d_names:
-        roi_pv = merlin2.stats1.ts_total
-        roi_pv_force_update = merlin2.stats1.ts.ts_read_proc
-    elif "eiger2" in d_names:
-        roi_pv = eiger2.stats1.ts_total
-        roi_pv_force_update = eiger2.stats1.ts.ts_read_proc
-    #elif "eiger_mobile" in d_names:
-    #    roi_pv = eiger_mobile.stats1.ts_total
-    #    roi_pv_force_update = eiger_mobile.stats1.ts.ts_read_proc
-    else:
-        roi_pv = None
-        roi_pv_force_update = None
-        ts_monitor_dec = ts_monitor_during_decorator_disabled
 
     # print(f"Ready to start the scan !!!")  ##
 
@@ -768,15 +810,11 @@ def fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwell, *,
     for d in panda_flyer.detectors:
         if d.name == 'eiger2' or d.name == 'eiger_mobile':
             yield from bps.mov(d.fly_next, True)
-            yield from bps.mov(d.use_panda, True)
-
-
-
+            yield from bps.mov(d.internal_trigger, False)
 
     #@subs_decorator(livepopup)
     @subs_decorator({'start': at_scan})
     @subs_decorator({'stop': finalize_scan})
-    @ts_monitor_dec([roi_pv])
     # @monitor_during_decorator([xs.channel1.rois.roi01.value])  ## Uncomment this
     # @monitor_during_decorator([xs.channel1.rois.roi01.value, xs.array_counter])
     @stage_decorator([panda_flyer])  # Below, 'scan' stage ymotor.
@@ -793,125 +831,36 @@ def fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwell, *,
         # TODO move this to stage sigs
         for d in panda_flyer.detectors:
             if d.name == "eiger2" or d.name == "eiger_mobile":
-                yield from bps.mov(d.total_points, num_total)
+                yield from bps.mov(d.total_points, total_points)
 
-        ystep = 0
-        print(f"Scanning 2D fly")
-        # yield from bps.sleep(10)
-
-        direction = np.sign(scan_stop - scan_start)
-        start = scan_start
-        stop = scan_stop
-
-
-        if verbose:
-            print(f'Direction = {direction}')
-            print(f'Start = {start}')
-            print(f'Stop  = {stop}')
-        v = (np.abs(scan_stop - scan_start) / num_total) / dwell  # compute "stage speed"
-
-
-        def move_to_start_fly():
-            "See http://nsls-ii.github.io/bluesky/plans.html#the-per-step-hook"
-
-            # print(f"Start moving to beginning of the row")
-            row_mv_to_start = short_uid('row')
-            yield from bps.checkpoint()
-            yield from bps.abs_set(ymotor, scan_start-delta/2.0*v, group=wait_before_scan)
-            # yield from bps.trigger_and_read([temp_nanoKB, motor])  ## Uncomment this
-            # print(f"Finished moving to the beginning of the row")
-            # print(f"Fast axis: {xmotor.read()} Slow axis: {motor.read()}")
-
-        if verbose:
-            t_startfly = tic()
-            toc(t_startfly, "TIMER (STEP) - STARTING TIMER")
-
-        yield from move_to_start_fly()
-
-        if verbose:
-            toc(t_startfly, "TIMER (STEP) - MOTOR IS MOVED TO STARTING POINT")
-
-        # x_set = row_start
-        # x_dial = xmotor.user_readbac k.get()
-
-        # Get retry deadband value and check against that
-        # i = 0
-        # DEADBAND = 0.050  # retry deadband of nPoint scanner
-        # while (np.abs(x_set - x_dial) > DEADBAND):
-        #     if (i == 0):
-        #         print('Waiting for motor to reach starting position...',
-        #               end='', flush=True)
-        #     i = i + 1
-        #     yield from mv(xmotor, row_start)
-        #     yield from bps.sleep(0.1)
-        #     x_dial = xmotor.user_readback.get()
-        # if (i != 0):
-        #     print('done')
-
-        if verbose:
-            toc(t_startfly, str='TIMER (STEP) - MOTOR POSITION IS CHECKED')
-
-        # Set the scan speed
-        if verbose:
-            print(f"FORWARD SPEED FOR SCAN AXIS: {v} (num={num_total} dwell={dwell})")
-        if v<5:
-            yield from mv(ymotor.velocity, v)
-        else:
-            raise RuntimeError(f"Ymotor speed too fast, check your input")
-
-        if verbose:
-            toc(t_startfly, str='TIMER (STEP) - FORWARD VELOCITY IS SET')
-
-        # set up all of the detectors
-        # TODO we should be able to move this out of the per-line call?!
-        # if ('xs' in dets_by_name):
-        #     xs = dets_by_name['xs']
-        #     yield from abs_set(xs.hdf5.num_capture, xnum, group='set')
-        #     yield from abs_set(xs.settings.num_images, xnum, group='set')
-        #     yield from bps.wait(group='set')
-        #     # yield from mv(xs.hdf5.num_capture, xnum,
-        #     #               xs.settings.num_images, xnum)
-        #     # xs.hdf5.num_capture.put(xnum)
-        #     # xs.settings.num_images.put(xnum)
-
-        # if ('xs2' in dets_by_name):
-        #     xs2 = dets_by_name['xs2']
-        #     # yield from abs_set(xs2.hdf5.num_capture, xnum, wait=True)
-        #     # yield from abs_set(xs2.settings.num_images, xnum, wait=True)
-        #     yield from mv(xs2.hdf5.num_capture, xnum,
-        #                   xs2.settings.num_images, xnum)
+        print(f"Scanning fly")
 
         # # Merlin code from the original SRX plan
         if "merlin2" in dets_by_name:
             # print(f"Configuring 'merlin2' ...")
             dpc = dets_by_name["merlin2"]
-            yield from abs_set(dpc.cam.num_images, num_total, wait=True)
+            yield from abs_set(dpc.cam.num_images, total_points, wait=True)
         if "eiger2" in dets_by_name:
             # print(f"Configuring 'eiger2' ...")
             dpc = dets_by_name["eiger2"]
-            yield from abs_set(dpc.cam.num_triggers, 1, wait=True)
-            yield from abs_set(dpc.cam.num_images, num_total+10, wait=True)
+            yield from abs_set(dpc.cam.num_triggers, total_points, wait=True)
+            yield from abs_set(dpc.cam.num_images, 1, wait=True)
             yield from abs_set(dpc.cam.wait_for_plugins, 'No', wait=True)
         if "eiger_mobile" in dets_by_name:
             # print(f"Configuring 'eiger_mobile' ...")
             dpc = dets_by_name["eiger_mobile"]
-            yield from abs_set(dpc.cam.num_triggers, 1, group=wait_before_scan)
-            yield from abs_set(dpc.cam.num_images, num_total+10, group=wait_before_scan)
+            yield from abs_set(dpc.cam.num_triggers, total_points, group=wait_before_scan)
+            yield from abs_set(dpc.cam.num_images, 1, group=wait_before_scan)
             yield from abs_set(dpc.cam.wait_for_plugins, 'No', group=wait_before_scan)
 
         ion = panda_flyer.sclr
         if ion:
-            yield from abs_set(ion.nuse_all, num_total, wait=True)
+            yield from abs_set(ion.nuse_all, total_points, wait=True)
             #yield from abs_set(ion.nuse_all, 2*xnum, wait=True)
 
-        if verbose:
-            toc(t_startfly, str='TIMER (STEP) - DETECTORS ARE CONFIGURED')
-
         def panda_kickoff():
-            # start_zebra, stop_zebra = xstart * 1000000, xstop * 1000000
-            start_zebra, stop_zebra = scan_start, scan_stop
             yield from kickoff(panda_flyer,
-                                num=num_total, dwell=dwell,
+                                num=total_points,
                                 wait=True)
         yield from panda_kickoff()
 
@@ -937,87 +886,62 @@ def fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwell, *,
         if verbose:
             toc(t_startfly, str='TIMER (STEP) - DETECTORS TRIGGERED')
 
-        # start the 'fly'
-        def print_watch(*args, **kwargs):
-            with open('~/bluesky_output.txt', 'a') as f:
-                f.write(datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S.%f\n'))
-                # print(args)
-                f.write(json.dumps(kwargs))
-                f.write('\n')
         yield from bps.wait(group=wait_before_scan)
-        st = yield from abs_set(ymotor, scan_stop+delta/2.0*v,group=row_scan)
-        if verbose:
-            st.add_callback(lambda x: toc(t_startfly, str=f"  MOTOR  {datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S.%f')}"))
 
-        yield from bps.sleep(np.abs(delta/2))
+
         for d in panda_flyer.detectors:
             print(f'  triggering {d.name}')
             st = yield from bps.trigger(d)
-            st.add_callback(lambda x: toc(t_startfly, str=f"  DETECTOR  {datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S.%f')}"))
+            #st.add_callback(lambda x: toc(t_startfly, str=f"  DETECTOR  {datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S.%f')}"))
 
+        ## Wait a bit for detectors
+        yield from bps.sleep(0.5)
         # st = yield from abs_set(xmotor, row_stop)
-        # st.watch(print_watch)
+        progress_bar = tqdm.tqdm(total = total_points,unit='points')
 
-        if verbose:
-            toc(t_startfly, str='TIMER (STEP) - MOTOR STARTED')
+        # Scan!!!
+        ppmac.gpascii.send_line(start_signal)
 
-        # print("Waiting for motor to stop")
-        # st.wait()
-        # if verbose:
-        #     toc(t_startfly, str='Total time: Motor stopped')
-
-        # wait for the motor and detectors to all agree they are done
-        if verbose:
-            print("Waiting for the row scan to complete ...")
-        yield from bps.wait(group=row_scan)
-        if verbose:
-            print("Row scan is completed")
         counter = 0
-        while dpc.cam.num_images_counter.get()<num_total:
+        while dpc.cam.num_images_counter.get()<total_points:
+            progress_bar.update(dpc.cam.num_images_counter.get() - progress_bar.n)
             counter +=1
-            print("Eiger processing not finished, waiting")
             yield from bps.sleep(0.5)
-            if counter>6:
-                break
+            if 'xspress3' in dets_by_name or 'xspress3_det2' in dets_by_name:
+                panda_live_plot.update_plot()
+
+            # if counter>3600:
+            #     break
+
+        progress_bar.close()
         yield from abs_set(dpc._acquisition_signal,0,wait=True)
+        del dpc
 
         # yield from bps.sleep(1)
-
-        if verbose:
-            toc(t_startfly, str='TIMER (STEP) - MOTOR STOPPED. ACQUISITION_COMPLETED.')
-
         # we still know about ion from above
         if ion:
             yield from abs_set(ion.stop_all, 1)  # stop acquiring scaler
-
-        # print(f"Resetting scanner velocity")
-        # set speed back
-        yield from bps.mov(ymotor.velocity,500)
-        # print(f"Completed resetting scanner velocity")
 
         # @timer_wrapper
         def panda_complete():
             yield from complete(panda_flyer)  # tell the Zebra we are done
         if verbose:
             t_pdcomplete = tic()
+
         yield from panda_complete()
-        if verbose:
-            toc(t_pdcomplete, str='Panda complete')
 
         if verbose:
-            toc(t_startfly, str='TIMER (STEP) - ZEBRA ACQUISITION COMPLETED.')
+            toc(t_pdcomplete, str='Panda complete')
 
         # @timer_wrapper
         def panda_collect():
             yield from collect(panda_flyer)  # extract data from Zebra
         if verbose:
             t_pdcollect = tic()
+
         yield from panda_collect()
         if verbose:
-            toc(t_pdcollect, str='Zebra collect')
-
-        if verbose:
-            toc(t_startfly, str='TIMER (STEP) - ZEBRA COLLECTION COMPLETED.')
+            toc(t_pdcollect, str='Panda collect')
 
         # Force update of the respective PV so that all collected monitoring data for the row
         #   is loaded before the plugin is reset. Otherwise data in monitoring stream will not
@@ -1026,76 +950,149 @@ def fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwell, *,
         #    yield from bps.mv(roi_pv_force_update, 1)
 
         if verbose:
-            toc(t_startfly, str='TIMER (STEP) - STEP COMPLETED.')
-
-        if verbose:
             print(f"Step is completed")
 
-    # Setup the final scan plan
-    if shutter:
-        final_plan = finalize_wrapper(plan(), check_shutters(shutter, 'Close'))
-    else:
-        final_plan = plan()
-
-    # Open the shutter
-    if verbose:
-        t_open = tic()
-    # yield from check_shutters(shutter, 'Open')  ## Uncomment this
-    if verbose:
-        toc(t_open, str='Open shutter (dt)')
 
     # print(f"Before plan start (enc1): {flying_zebra._encoder.pc.data.cap_enc1_bool.get()}")
     # print(f"Before plan start (enc2): {flying_zebra._encoder.pc.data.cap_enc2_bool.get()}")
-
-    # Run the scan
+    final_plan = plan()
     uid = yield from final_plan
-
-    print(f"SCAN TOTAL TIME: {time.time() - time_start_scan}")
+    # Run the scan
 
     return uid
 
 
-def fly2dcontpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, scan_end2, num2, exposure_time, pos_return = True, apply_tomo_drift = False, tomo_angle = None, auto_rescan = True, **kwargs):
+def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, scan_end2, num2, exposure_time, pos_return = True, apply_tomo_drift = False,
+                tomo_angle = None, auto_rescan = False, dead_time = 0.0002, line_overhead = [0.01,0.01], line_dwell = 0.1, return_speed = 100.0,
+                md = None, **kwargs):
     """
     Relative scan
     """
+
+    # PPMAC control signal
+    sl = ppmac.gpascii.send_line
+
+    # Motor numbers
+    motor_numbers = {'ssx':3,
+                     'ssy':4,
+                     'ssz':5,
+                     'zpssx':6,
+                     'zpssy':7,
+                     'zpssz':8,
+                     'dssx':9,
+                     'dssy':10,
+                     'dssz':11}
+
     do_scan = True
     while do_scan:
-        #m1_pos = motor1.position
-        m1_pos = 0
+        try:
+            m1_num = motor_numbers[motor1.name]
+            m2_num = motor_numbers[motor2.name]
+        except:
+            raise ValueError('Undefined motor for fly scan')
+        m1_pos = motor1.position
         m2_pos = motor2.position
         print(f"Initial positions: m1_pos={m1_pos}  m2_pos={m2_pos}")
         do_scan = False
         try:
-            center1, range1 =(scan_start1+scan_end1)/2, np.abs(scan_end1-scan_start1)
-            if apply_tomo_drift:
-                if tomo_angle is None:
-                    tomo_angle = pt_tomo.th.user_setpoint.get()
-                center1 = center1 + get_tomo_drift(tomo_angle)
-            start2, end2 = m2_pos + scan_start2, m2_pos + scan_end2
-            range_min, range_max = -30, 30
-            for v in [center1-range1/2, center1+range1/2, start2, end2]:
-                if v < range_min or v > range_max:
+            start1, range1 = m1_pos + scan_start1, scan_end1 - scan_start1
+            start2, range2 = m2_pos + scan_start2, scan_end2 - scan_start2
+
+            vx = range1/(exposure_time*num1)
+
+            if np.abs(vx)>200:
+                raise ValueError('Stage scan speed too fast, check your input')
+
+            return_speed = np.abs(return_speed)
+
+            if return_speed>200:
+                raise ValueError('Stage return speed too fast, check your input')
+
+            start1_scan = float(start1) - vx*line_overhead[0]
+            range1_scan = float(range1) + vx*(line_overhead[0] + line_overhead[1])
+            step2 = float(range2)/num2
+
+            # if apply_tomo_drift:
+            #     if tomo_angle is None:
+            #         tomo_angle = pt_tomo.th.user_setpoint.get()
+            #     center1 = center1 + get_tomo_drift(tomo_angle)
+
+
+            range_min, range_max = -16, 16
+            for pos in [start1_scan, start1_scan + range1_scan, start2, start2 + range2]:
+                if pos < range_min or pos > range_max:
                     raise ValueError(
                         f"Scan range exceed limits for the motors: "
                         f"start1={scan_start1} end1={scan_end1} start2={scan_start2} end2={scan_end2}"
                     )
+            scan_input = [float(x) for x in [start1, start1+range1, num1, start2, start2+range2, num2]]
+            # Metadata
+            if md is None:
+                md = {}
+            if "scan" not in md:
+                md["scan"] = {}
+            # Scan metadata
+            md['scan']['type'] = '2D_FLY_PANDA'
+            md['scan']['scan_input'] = scan_input
+            md['scan']['sample_name'] = ''
 
-            # RE(pt_fly2d([eiger2], pt_tomo.ssx, -10, 10, 101, pt_tomo.ssy, -1, 1, 5, 0.01, plot=True))
+            md['scan']['detectors'] = [d.name for d in dets] + [panda_flyer.panda.name, panda_flyer.sclr.name]
+            md['scan']['detector_distance'] = 2.05
+            md['scan']['dwell'] = exposure_time
+            md['scan']['fast_axis'] = {'motor_name' : motor1.name,
+                                    'units' : motor1.motor_egu.get()}
+            md['scan']['slow_axis'] = {'motor_name' : motor2.name,
+                                    'units' : motor2.motor_egu.get()}
+            md['scan']['shape'] = (num1, num2)
+
             kwargs.setdefault('xmotor', motor1)  # Fast motor
             kwargs.setdefault('ymotor', motor2)  # Slow motor
             kwargs.setdefault('panda_flyer', panda_flyer)
 
+            ## Zebra is used to copy trigger pulses from panda to detectors and scaler
+            yield from bps.abs_set(zebra.output[1].ttl.addr,4)
+            yield from bps.abs_set(zebra.output[2].ttl.addr,43)
+            yield from bps.abs_set(zebra.output[3].ttl.addr,4)
+            yield from bps.abs_set(zebra.output[4].ttl.addr,4)
 
-            fg_volt = range1/6.8
-            fg_freq = 1/(2.0*num1*exposure_time)
+            # Wait for Zebra
+            yield from bps.sleep(0.1)
 
-            if fg_volt < 1 and fg_freq < 10:
-                yield from bps.mov(pt_fg.func,3)
-                yield from abs_set(pt_fg.volt,f"{fg_volt:.{4}f}")
-                yield from abs_set(pt_fg.freq,f"{fg_freq:.{4}f}")
-            else:
-                raise RuntimeError(f"Xmotor voltage or frequency too high, check your input")
+            ## Setup panda
+            yield from bps.abs_set(panda1.pulse2.delay,line_overhead[0])
+            yield from bps.abs_set(panda1.pulse2.delay_units,'s')
+            yield from bps.abs_set(panda1.pulse2.width,exposure_time-dead_time)
+            yield from bps.abs_set(panda1.pulse2.width_units,'s')
+            yield from bps.abs_set(panda1.pulse2.step,exposure_time)
+            yield from bps.abs_set(panda1.pulse2.step_units,'s')
+            yield from bps.abs_set(panda1.pulse2.pulses,num1)
+
+            yield from bps.abs_set(panda1.pulse3.width,exposure_time-dead_time)
+            yield from bps.abs_set(panda1.pulse3.width_units,'s')
+            yield from bps.abs_set(panda1.pulse3.step,exposure_time-dead_time)
+            yield from bps.abs_set(panda1.pulse3.step_units,'s')
+            yield from bps.abs_set(panda1.pulse3.pulses,1)
+
+            ## Move to start
+            sl('#%djog=%f'%(m1_num,start1_scan))
+            sl('#%djog=%f'%(m2_num,start2))
+
+            ## Trigger to low
+            sl('M100=0')
+
+            ## Wait for stages in bluesky
+            while np.abs(motor1.position-start1_scan) + np.abs(motor2.position-start2) > 0.02:
+                yield from bps.sleep(0.2)
+
+            ## Setup scanning program
+            sl('open prog 41;inc;linear;L1=0;')
+            sl('while (L1<%d) {'%(num2-1))
+            sl('M100=1;F(%.5f);x(%.5f);dwell 0;M100=0;F(%.5f);x(%.5f)y(%.5f);L1=L1+1;dwell %.2f;}'%(np.abs(vx),range1_scan,return_speed,-range1_scan,step2,line_dwell*1000))
+            sl('M100=1;F(%.5f);x(%.5f);dwell 0;M100=0;'%(np.abs(vx),range1_scan))
+            sl('dwell 0; close;')
+
+            ## Define motors
+            sl('&6abort;undefine;#%d->x;#%d->y;'%(m1_num,m2_num))
 
             # print(f"dets={dets} args={args} kwargs={kwargs}")
 
@@ -1107,13 +1104,178 @@ def fly2dcontpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2,
             # print(f"dets={dets}")
             # yield from mv(pt_tomo.ssx, 0, pt_tomo.ssy, 0, pt_tomo.ssz, 0)
             # yield from bps.sleep(2)
-            yield from fly_2dpd(dets, center1, range1, num1, start2, end2, num2, exposure_time, **kwargs)
+            for d in dets:
+                if d.name == 'xspress3' or d.name == 'xspress3_det2':
+                    panda_live_plot.setup_plot(scan_input,d)
+            yield from flyscan_pd(dets, '&6begin41r', num1*num2, exposure_time, dead_time = dead_time, md=md, scan_dim = [num1,num2], **kwargs)
+
+
             # yield from bps.sleep(1)
             #yield from set_scanner_velocity(5)
         finally:
-            yield from bps.mov(pt_fg.func,5)
+            # Undefine motors
+            sl('&6abort;undefine;')
             if pos_return:
                 mv_back = short_uid('back')
-                #yield from abs_set(motor1,m1_pos,group=mv_back)
+                yield from abs_set(motor1,m1_pos,group=mv_back)
                 yield from abs_set(motor2,m2_pos,group=mv_back)
                 yield from bps.wait(group=mv_back)
+def fly2dcontpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, scan_end2, num2, exposure_time, pos_return = True, apply_tomo_drift = False,
+                tomo_angle = None, auto_rescan = False, dead_time = 0.0002, scan_overhead = [0.1,0.05],
+                md = None, **kwargs):
+    """
+    Relative scan
+    """
+
+    # PPMAC control signal
+    sl = ppmac.gpascii.send_line
+
+    # Motor numbers
+    motor_numbers = {'ssx':3,
+                     'ssy':4,
+                     'ssz':5,
+                     'zpssx':6,
+                     'zpssy':7,
+                     'zpssz':8,
+                     'dssx':9,
+                     'dssy':10,
+                     'dssz':11}
+
+    do_scan = True
+    while do_scan:
+        try:
+            m1_num = motor_numbers[motor1.name]
+            m2_num = motor_numbers[motor2.name]
+        except:
+            raise ValueError('Undefined motor for fly scan')
+        m1_pos = motor1.position
+        m2_pos = motor2.position
+        print(f"Initial positions: m1_pos={m1_pos}  m2_pos={m2_pos}")
+        do_scan = False
+        try:
+            start1, range1 = m1_pos + scan_start1, scan_end1 - scan_start1
+            start2, range2 = m2_pos + scan_start2, scan_end2 - scan_start2
+
+            vx = range1/(exposure_time*num1)
+            vy = range2/(exposure_time*num1*num2)
+
+            if np.abs(vx)>200:
+                raise ValueError('Stage scan speed too fast, check your input')
+
+            start1_scan = float(start1)
+            range1_scan = float(range1)
+            start2_scan = float(start2) - vy*scan_overhead[0]
+            range2_scan = float(range2) + vy*(scan_overhead[0] + scan_overhead[1])
+
+            # if apply_tomo_drift:
+            #     if tomo_angle is None:
+            #         tomo_angle = pt_tomo.th.user_setpoint.get()
+            #     center1 = center1 + get_tomo_drift(tomo_angle)
+
+
+            range_min, range_max = -16, 16
+            for pos in [start1_scan, start1_scan + range1_scan, start2_scan, start2_scan + range2_scan]:
+                if pos < range_min or pos > range_max:
+                    raise ValueError(
+                        f"Scan range exceed limits for the motors: "
+                        f"start1={scan_start1} end1={scan_end1} start2={scan_start2} end2={scan_end2}"
+                    )
+            scan_input = [float(x) for x in [start1, start1+range1, num1, start2, start2+range2, num2]]
+            # Metadata
+            if md is None:
+                md = {}
+            if "scan" not in md:
+                md["scan"] = {}
+            # Scan metadata
+            md['scan']['type'] = '2D_FLY_PANDA'
+            md['scan']['scan_input'] = scan_input
+            md['scan']['sample_name'] = ''
+
+            md['scan']['detectors'] = [d.name for d in dets] + [panda_flyer.panda.name, panda_flyer.sclr.name]
+            md['scan']['detector_distance'] = 2.05
+            md['scan']['dwell'] = exposure_time
+            md['scan']['fast_axis'] = {'motor_name' : motor1.name,
+                                    'units' : motor1.motor_egu.get()}
+            md['scan']['slow_axis'] = {'motor_name' : motor2.name,
+                                    'units' : motor2.motor_egu.get()}
+            md['scan']['shape'] = (num1, num2)
+
+            kwargs.setdefault('xmotor', motor1)  # Fast motor
+            kwargs.setdefault('ymotor', motor2)  # Slow motor
+            kwargs.setdefault('panda_flyer', panda_flyer)
+
+            ## Zebra is used to copy trigger pulses from panda to detectors and scaler
+            yield from bps.abs_set(zebra.output[1].ttl.addr,4)
+            yield from bps.abs_set(zebra.output[2].ttl.addr,43)
+            yield from bps.abs_set(zebra.output[3].ttl.addr,4)
+            yield from bps.abs_set(zebra.output[4].ttl.addr,4)
+
+            # Wait for Zebra
+            yield from bps.sleep(0.1)
+
+            ## Setup panda
+            yield from bps.abs_set(panda1.pulse2.delay,scan_overhead[0])
+            yield from bps.abs_set(panda1.pulse2.delay_units,'s')
+            yield from bps.abs_set(panda1.pulse2.width,exposure_time-dead_time)
+            yield from bps.abs_set(panda1.pulse2.width_units,'s')
+            yield from bps.abs_set(panda1.pulse2.step,exposure_time)
+            yield from bps.abs_set(panda1.pulse2.step_units,'s')
+            yield from bps.abs_set(panda1.pulse2.pulses,num1*num2)
+
+            yield from bps.abs_set(panda1.pulse3.width,exposure_time-dead_time)
+            yield from bps.abs_set(panda1.pulse3.width_units,'s')
+            yield from bps.abs_set(panda1.pulse3.step,exposure_time-dead_time)
+            yield from bps.abs_set(panda1.pulse3.step_units,'s')
+            yield from bps.abs_set(panda1.pulse3.pulses,1)
+
+            ## Move to start
+            sl('#%djog=%f'%(m1_num,start1_scan))
+            sl('#%djog=%f'%(m2_num,start2))
+
+            ## Trigger to low
+            sl('M100=0')
+
+            ## Wait for stages in bluesky
+            while np.abs(motor1.position-start1_scan) + np.abs(motor2.position-start2) > 0.02:
+                yield from bps.sleep(0.2)
+
+            ## Setup scanning program
+            sl('open prog 41;inc;linear;L1=0;M100=1;F(%.5f);'%(np.abs(vx)))
+            sl('while (L1<%d) {'%(num2+2))
+            sl('x(%.5f);dwell 0;x(%.5f);L1=L1+1;dwell 0;}'%(range1_scan,-range1_scan))
+            sl('dwell 0; close;')
+            sl('open prog 42;inc;linear;')
+            sl('F(%.5f);y(%.5f);dwell 0;close;'%(np.abs(vy),range2_scan))
+
+            ## Define motors
+            sl('&6abort;undefine;#%d->x;&7abort;undefine;#%d->y;'%(m1_num,m2_num))
+
+            start_signal = '&6begin41r&7begin42r'
+
+            # print(f"dets={dets} args={args} kwargs={kwargs}")
+
+            # _xs = kwargs.pop('xs', xs)
+            # if extra_dets is None:
+            #     extra_dets = []
+            # dets = [] if  _xs is None else [_xs]
+            # dets = dets + extra_dets
+            # print(f"dets={dets}")
+            # yield from mv(pt_tomo.ssx, 0, pt_tomo.ssy, 0, pt_tomo.ssz, 0)
+            # yield from bps.sleep(2)
+            #if xspress3 in dets:
+            #    panda_live_plot.setup_plot(scan_input)
+            yield from flyscan_pd(dets, start_signal, num1*num2, exposure_time, dead_time = dead_time, md=md, scan_dim = [num1,num2], **kwargs)
+
+
+            # yield from bps.sleep(1)
+            #yield from set_scanner_velocity(5)
+        finally:
+            # Undefine motors
+            sl('&6abort;undefine;&7abort;undefine;')
+            if pos_return:
+                mv_back = short_uid('back')
+                yield from abs_set(motor1,m1_pos,group=mv_back)
+                yield from abs_set(motor2,m2_pos,group=mv_back)
+                yield from bps.wait(group=mv_back)
+
+

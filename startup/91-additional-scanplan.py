@@ -574,7 +574,7 @@ def time_scan(detectors, num, dwell, *,
     for d in flyer.detectors:
         if d.name == "eiger2":
             yield from bps.mov(d.fly_next, True)
-            yield from bps.mov(d.use_panda, True)
+            yield from bps.mov(d.internal_trigger, True)
 
     #@subs_decorator(livepopup)
     @subs_decorator({'start': at_scan})

@@ -221,7 +221,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
         #t[index] = 0
         #t[mask == 1] = 0
         #t[164,107] = 0
-        diff_array[:,:,i] = t * mask
+        diff_array[:,:,i] = t #* mask
 
 
 
@@ -363,7 +363,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
 
     #"""
 
-    fn = '/data/users/2024Q1/Liu_2024Q1/NFM_4p0_diff/'
+    fn = '/data/users/2024Q2/Kawasaki_2024Q2/Z231009a/'
     
     if not os.path.exists(fn):
         os.makedirs(fn)

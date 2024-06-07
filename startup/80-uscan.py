@@ -569,7 +569,12 @@ def night_mosaic_mp(nx,ny):
 
 
 import epics
-def theta_dexela(motorName,angle_start,angle_end,angle_step,exposure_time):
+def theta_dexela(motorName,angle_start,angle_end,angle_step,exposure_time, filename):
+
+    pv_filename = epics.PV("XF:03IDC-ES{Dexela:1}TIFF1:FileName")
+    pv_filename.put(filename)
+    caput("XF:03IDC-ES{Dexela:1}TIFF1:FileNumber", 0)
+    
     theta_zero = motorName.position
     angle_step_num = int((angle_end - angle_start) / angle_step)
     print('number of steps:', angle_step_num)

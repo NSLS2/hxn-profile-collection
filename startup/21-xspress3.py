@@ -21,6 +21,13 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
     # channel7 = C(Xspress3Channel, 'C7_', channel_num=7)
     # channel8 = C(Xspress3Channel, 'C8_', channel_num=8)
 
+    #hdf5 = Cpt(Xspress3FileStore, 'HDF1:',
+    #           write_path_template='/data/%Y/%m/%d/',
+    #           mds_key_format='xspress3_ch{chan}',
+    #           reg=db.reg,
+    #           root='/data',
+    #           )
+
     hdf5 = Cpt(Xspress3FileStore, 'HDF5:',
                write_path_template='/data/%Y/%m/%d/',
                mds_key_format='xspress3_ch{chan}',
@@ -140,6 +147,7 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
 
 
 xspress3 = HxnXspress3Detector('XF:03IDC-ES{Xsp:1}:', name='xspress3')
+# xspress3 = HxnXspress3Detector('XF:03IDC-ES{Xsp:3}:', name='xspress3')
 
 
 # Create directories on the xspress3 server, otherwise scans can fail:

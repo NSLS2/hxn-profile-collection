@@ -328,6 +328,13 @@ def mov_zpz1(pos):
 
 def z_focus_alignment(mot_name,z_start, z_end, z_num, mot, start, end, num, acq_time, elem='Pt_L',linFlag = True,mon='sclr1_ch4'):
 
+
+    """
+    generic plan for all z focusing, z motor shound be in microns for all (zp or mlll)
+    """
+
+    
+    
     print(f"{mot_name.name} moves relatively and find the focus with a knife-edge at each position")
 
     z_pos=np.linspace(z_start, z_end,z_num+1)
@@ -384,13 +391,14 @@ def z_focus_alignment(mot_name,z_start, z_end, z_num, mot, start, end, num, acq_
     plt.xlabel(mot_name.name+" (um)")
     plt.show()
     return
-
+    
 
 
 def zp_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem='Cr',linFlag = True,mon='sclr1_ch4'):
 
     if abs(z_start)<1 or abs(z_end)<1:
-        raise ValueError("Expected Z values in microns")
+        z_start =*1000
+        z_end =*1000
 
     else:
 
@@ -713,7 +721,10 @@ def zp_rot_alignment_edge(a_start, a_end, a_num, start, end, num, acq_time, elem
 
     return x,y
 
-def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt_L', threshold = 0.5, neg_flag = 0, move_flag=0):
+def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, 
+                     elem='Pt_L', threshold = 0.5, neg_flag = 0, move_flag=0):
+    
+
     a_step = (a_end - a_start)/a_num
     x = np.zeros(a_num+1)
     y = np.zeros(a_num+1)
@@ -749,8 +760,8 @@ def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt_
 
 
     return x,y
-    
-    
+
+
 def calc_rot_alignment(first_sid = -10, last_sid =-1, elem = "Cr"):
 
     pass
@@ -1144,7 +1155,7 @@ def mov_diff(gamma, delta, r=500, calc=0, check_for_dexela = True):
         print('Make sure all motors are zeroed properly, '
             'otherwise calculation will be wrong.')
         if x_yaw > 825 or x_yaw < -200:
-        
+
             raise ValueError(f"diff_x =  -{x_yaw :.2}, out of range, move diff_z upstream and try again")
             #print('diff_x = ', -x_yaw,
                 #' out of range, move diff_z upstream and try again')
@@ -1179,13 +1190,22 @@ def mov_diff(gamma, delta, r=500, calc=0, check_for_dexela = True):
                 print('Calculation mode; no motor will be moved')
 
 
-def wh_diff():
-    diff_z = diff.z.position
-    diff_yaw = diff.yaw.position * np.pi / 180.0
-    diff_cz = diff.cz.position
-    diff_x = diff.x.position
-    diff_y1 = diff.y1.position
-    diff_y2 = diff.y2.position
+def wh_diff(scanid = None):
+    if scanid is None:
+        diff_z = diff.z.position
+        diff_yaw = diff.yaw.position * np.pi / 180.0
+        diff_cz = diff.cz.position
+        diff_x = diff.x.position
+        diff_y1 = diff.y1.position
+        diff_y2 = diff.y2.position
+    else:
+        baseline = db[scanid].table('baseline')
+        diff_z = baseline['diff_z'][1]
+        diff_yaw = baseline['diff_yaw'][1] * np.pi / 180
+        diff_cz = baseline['diff_cz'][1]
+        diff_x = baseline['diff_x'][1]
+        diff_y1 = baseline['diff_y1'][1]
+        diff_y2 = baseline['diff_y2'][1]
 
     gamma = diff_yaw
     beta = 89.337 * np.pi / 180
@@ -1211,10 +1231,11 @@ def wh_diff():
         delta = np.arctan(diff_y1 / R1)
         R_det = R1 / np.cos(delta) - d + diff_cz
 
-        Gamma = gamma * 180 / np.pi
-        Delta = delta * 180 / np.pi
-        print(f'{Gamma = :.2f}, {Delta  = :.2f} , r = {R_det :.2f}')
-        return Gamma, Delta, R_det
+
+    Gamma = gamma * 180 / np.pi
+    Delta = delta * 180 / np.pi
+    print(f'{Gamma = :.2f}, {Delta  = :.2f} , r = {R_det :.2f}')
+    return Gamma, Delta, R_det
 
 
 def diff_status():
@@ -1228,7 +1249,7 @@ def diff_status():
 
         elif (int(gma) == 0 and int(delt) == 0) or (diff.x.position>10 and not diff.y1.position>23):
             return "safe"
-        
+
     else:
         return "safe"
 
@@ -1267,38 +1288,38 @@ def diff_to_home(move_out_later = False):
         else:
             yield from mov_diff(0,0,500)
 
-    elif move_out_later:
+    if move_out_later:
         yield from go_det('out')
 
     else:
         yield from go_det("merlin") #same as 0,0,500
-        
-        
-        
+
+
+
 def do_motor_position_checks(check_list_dict, rel_tol_per = 25,abs_tol = 20, message_string = " "):
 
 
-    """ 
+    """
     check list: motor_name:high_limit
     example: check_list = {ssa2.hgap:0.5, ssa2.vgap:0.5, s5.hgap:0.5,s5.vgap:0.5,zposa.zposay:10,mllosa.osax:10}
              do_motor_position_checks(check_list,"this could damage the detector. "
                         "Move optics/slits to nanobeam positions and try again")
-    
+
     """
-    
+
     assert isinstance(check_list_dict, dict), "Failed; checklist must be a python dictionary"
     assert isinstance(message_string, str), "Failed; message must be a string"
-    
+
     for mtr, target_pos in check_list_dict.items():
-    
+
         #case when taget is zero, use 2um absolute tolerence
         if target_pos==0:
             if not math.isclose(mtr.position, target_pos, rel_tol=0, abs_tol = abs_tol):
                 raise ValueError(f"{mtr.name} is not close to the required position\n"
                                      f"{message_string}")
-                                     
+
         else:
-            
+
             if not math.isclose(mtr.position, target_pos, rel_tol=rel_tol_per*0.01):
                 raise ValueError(f"{mtr.name} is not close to the required position\n"
                                          f"{message_string}")
@@ -1330,19 +1351,19 @@ def go_det(det, disable_checks = False):
         fip_merlin2 = diff_pos["fip_merlin2"]
         xray_eye = diff_pos["xray_eye"]
         eiger_pos2 = diff_pos["eiger_pos2"]
-        
+
         #close c shutter for safety
         caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0", 0)
 
         if det == 'merlin':
             #while zposa.zposax.position<20:
             #yield from bps.mov(diff.x, -1.5, diff.y1,-12.9, diff.y2,-12.9, diff.z, -50, diff.cz, -24.7)
-            
+
             if not disable_checks:
                 do_motor_position_checks(check_list,rel_tol_per = 50,message_string = "this could damage the detector. "
                         "Move optics/slits to nanobeam positions and try again")
-                
-            
+
+
             yield from bps.mov(diff.x, merlin_pos['diff_x'],
                             diff.y1,merlin_pos['diff_y1'],
                             diff.y2,merlin_pos['diff_y2'],
@@ -1378,28 +1399,28 @@ def go_det(det, disable_checks = False):
 
 
         elif det=='out':
-        
+
             yield from bps.mov(diff.x, out_pos['diff_x'],
                             diff.y1,out_pos['diff_y1'],
                             diff.y2,out_pos['diff_y2'],
                             diff.z, out_pos['diff_z'],
                             diff.cz,out_pos['diff_cz']
                             )
-                            
-                            
+
+
         elif det=="eiger":
             if not disable_checks:
                 do_motor_position_checks(check_list,rel_tol_per = 50,message_string = "this could damage the detector. "
                         "Move optics/slits to nanobeam positions and try again")
-                    
-                    
+
+
             yield from bps.mov(diff.x, out_pos['diff_x']+150,
                 diff.y1,out_pos['diff_y1'],
                 diff.y2,out_pos['diff_y2'],
                 diff.z, out_pos['diff_z'],
                 diff.cz,out_pos['diff_cz']
                 )
-            
+
 
         elif det == "fip_merlin2":
             caput("XF:03IDC-ES{MC:10-Ax:5}Mtr.VAL",fip_merlin2["bl_y"])
@@ -1408,7 +1429,7 @@ def go_det(det, disable_checks = False):
         elif det == "xray_eye":
             caput("XF:03IDC-ES{MC:10-Ax:5}Mtr.VAL",xray_eye["bl_y"])
             caput("XF:03IDC-ES{MC:10-Ax:6}Mtr.VAL",xray_eye["bl_x"])
-            
+
         elif det == "eiger_pos2":
             yield from bps.mov(diff.x, eiger_pos2['diff_x'],
                 diff.y1,eiger_pos2['diff_y1'],
@@ -1416,14 +1437,14 @@ def go_det(det, disable_checks = False):
                 diff.z, eiger_pos2['diff_z'],
                 diff.cz,eiger_pos2['diff_cz']
                 )
-            
+
 
 
         else:
             print('Input det is not defined. '
                 'Available ones are merlin, cam11, telescope, eiger and tpx')
-                
-        
+
+
 
 
 def update_det_pos(det = "merlin"):
@@ -1473,7 +1494,7 @@ def update_det_pos(det = "merlin"):
 
         diff_pos["xray_eye"]['bl_y'] = caget("XF:03IDC-ES{MC:10-Ax:5}Mtr.VAL")
         diff_pos["xray_eye"]['bl_x'] = caget("XF:03IDC-ES{MC:10-Ax:6}Mtr.VAL")
-        
+
     elif det == "eiger_pos2":
         diff_pos["eiger_pos2"]['diff_x'] = np.round(diff.x.position,2)
         diff_pos["eiger_pos2"]['diff_y1'] = np.round(diff.y1.position,2)
@@ -1504,11 +1525,11 @@ def find_45_degree(th_mtr,start_angle,end_angle,num, x_start, x_end, x_num, exp_
 
 
     ''' Usage: find_45_degree(dsth,40,50,25,-5, 5,100, exp_time=0.02,elem="Au_L") '''
-    
-    
+
+
     if th_mtr == dsth:
         x_mtr, z_mtr = dssx, dssz
-        
+
     elif th_mtr == zpsth:
         x_mtr, z_mtr = zpssx, zpssz
 
@@ -1529,15 +1550,15 @@ def find_45_degree(th_mtr,start_angle,end_angle,num, x_start, x_end, x_num, exp_
         th[i]=th_mtr.position
         yield from bps.sleep(1)
         yield from bps.movr(th_mtr,step)
-        
+
         np.savetxt("/nsls2/data/hxn/legacy/users/Beamline_Performance/45deg_calib.txt",np.column_stack([th,w_x,w_z]))
     plt.figure()
     plt.plot(th,w_x,'r+',th,w_z,'g-')
     return th,w_x,w_z
-    
-    
+
+
 def plot_45_degree_calib():
-    
+
     data = np.loadtxt("/nsls2/data/hxn/legacy/users/Beamline_Performance/45deg_calib.txt")
     print(data.shape)
     th = data[:,0]
@@ -1732,14 +1753,14 @@ def mll_move_sample_out(move_lens_upstream = True):
             yield from bps.movr(sbx,-4000)
         else:
             raise ValueError("Sbz Motion Failed. Move it out and try again")
-            
-            
+
+
     if move_lens_upstream:
         yield from move_mlls_upstream()
-        
-            
-            
-     
+
+
+
+
 
 def mll_move_sample_in(move_sbz = False, move_lens_downstream = True):
 
@@ -1747,19 +1768,19 @@ def mll_move_sample_in(move_sbz = False, move_lens_downstream = True):
             yield from bps.movr(sbx,4000)
         else:
             raise ValueError("Sbz is not close to 5000. Move it out and try again")
-            
-            
+
+
         if move_sbz:
             if sbz.position<100:
                 yield from bps.movr(sbz,-5000)
-                
+
             else:
                 raise ValueError("Sbx is not close to 0. Move it in and try again")
-                
-                
+
+
         if move_lens_downstream:
             yield from move_mlls_downstream()
-            
+
 
 def move_mlls_upstream():
 
@@ -1792,11 +1813,11 @@ def move_mlls_upstream():
 
 
 def move_mlls_downstream():
-    
+
     if abs(hmll.hz.position)>4980 and not mllosa.osax.position>100:
         print("hmll.hz moving to 0")
         yield from bps.movr(hmll.hz, 5000)
-        
+
     else:
         raise ValueError("HMLL motion failed bacasue hz is not OUT or OSA Z is not close to zero; try manually vz=0 if hz~0")
 
@@ -1846,7 +1867,7 @@ def mlls_optics_out_for_cam11():
 def zero_child_components(parent_ = mllosa, tolerance =10):
 
 
-    
+
 
     for comps in parent_.component_names:
         if tolerance is None:
@@ -1894,7 +1915,7 @@ def mll_to_cam11_view(move_cam11 = True):
     check_list_before = {mllbs.bsx:0,mllbs.bsy:0,mllosa.osax:0,vmll.vy:0,hmll.hx:0}
     rel_target_positions = {mllbs.bsx:500,mllbs.bsy:-500,mllosa.osax:2600,vmll.vy:500,hmll.hx:-500}
     slit_positions =  {ssa2.hgap:2,ssa2.vgap:2,s5.hgap:3.5,s5.vgap:3.5}
-    
+
     do_motor_position_checks(check_list_before,
                              abs_tol = 20,
                              message_string = "This script works only when the optics are in IN position for safety")
@@ -1905,12 +1926,12 @@ def mll_to_cam11_view(move_cam11 = True):
     if abs(fdet1.x.position)<12:
         yield from bps.movr(fdet1.x, -6)
         yield from bps.sleep(2)
-        
+
     #close c shutter
     caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0", 0)
 
     if abs(fdet1.x.position)>11.9:
-    
+
         for mtr, pos in rel_target_positions.items():
             if not math.isclose(mtr.position,pos,rel_tol = 0.2):
                 yield from bps.movr(mtr,pos)
@@ -1919,26 +1940,26 @@ def mll_to_cam11_view(move_cam11 = True):
     else:
         raise ValueError("Fluorescence detector motion failed")
         return
-        
+
     yield from bps.movr(ssa2.hgap,2,ssa2.vgap,2,s5.hgap,3.5,s5.vgap,3.5)
-    
+
     do_motor_position_checks(rel_target_positions,message_string ="Failed to go to cam11 position")
-        
+
     if move_cam11:
         yield from go_det("cam11")
 
 
 def mll_to_nanobeam():
-    
+
     check_list_before  = {mllbs.bsx:500,mllbs.bsy:-500,mllosa.osax:2600,vmll.vy:500,hmll.hx:-500,
                             ssa2.hgap:2,ssa2.vgap:2,s5.hgap:3.5,s5.vgap:3.5}
 
     rel_target_positions = {mllbs.bsx:-500,mllbs.bsy:500,mllosa.osax:-2600,vmll.vy:-500,hmll.hx:500}
     slits = {ssa2.hgap:-2,ssa2.vgap:-2,s5.hgap:-3.5,s5.vgap:-3.5}
-                        
+
     check_list_after = {mllbs.bsx:-0,mllbs.bsy:0,mllosa.osax:-0,vmll.vy:0,hmll.hx:0,
                             ssa2.hgap:0.05,ssa2.vgap:0.03,s5.hgap:0.08,s5.vgap:0.08}
-                        
+
     do_motor_position_checks(check_list_before,
                          abs_tol = 10,
                          message_string = "This script works only when the optics are in IN position for safety")
@@ -1949,13 +1970,13 @@ def mll_to_nanobeam():
         if not math.isclose(mtr.position,pos,rel_tol = 0.3):
             yield from bps.movr(mtr,pos)
             yield from bps.sleep(5)
-    
+
     if abs(hmll.hx.position)<20 and not abs(fdet1.x.position)>20:
         yield from bps.movr(fdet1.x, 6)
 
     else:
         raise ValueError("HMLL HX motion failed")
-        
+
     yield from bps.movr(ssa2.hgap,-2,ssa2.vgap,-2,s5.hgap,-3.5,s5.vgap,-3.5)
 
     do_motor_position_checks(check_list_after,message_string ="Failed to go to nanobeam position")
@@ -2020,8 +2041,8 @@ def zp_to_cam11_view():
     if zp_bsx_pos<20:
 
         caput("XF:03IDC-ES{ANC350:8-Ax:1}Mtr.VAL", zp_bsx_pos+100)
-        
-        
+
+
 def stop_all_mll_motion():
     hmll.stop()
     vmll.stop()
@@ -2296,9 +2317,9 @@ def peak_the_flux():
 
     #open c
     caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0",1)
-    
+
     if abs(caget("XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.RBV")) <10:
-        raise ValueError ("CAM06 is IN, move it out and try again") 
+        raise ValueError ("CAM06 is IN, move it out and try again")
 
     print("Peaking the flux.")
     yield from bps.sleep(2)
@@ -2336,7 +2357,7 @@ def recover_from_beamdump(peak_after = True):
     for i in range(2):
 
         if caget("XF:03ID-BI{EM:BPM1}fast_pidX.FBON") or caget("XF:03ID-BI{EM:BPM1}fast_pidY.FBON"):
-        
+
             #turn_off_b_feedbacks
             caput("XF:03ID{XBPM:17}AutoFbEn-Cmd",0)
             caput("XF:03ID-BI{EM:BPM1}fast_pidX.FBON",0)
@@ -2344,10 +2365,10 @@ def recover_from_beamdump(peak_after = True):
 
         dcm_pitch_set = caget("XF:03IDA-OP{Mon:1-Ax:P}Mtr.VAL")
         dcm_roll_set = caget("XF:03IDA-OP{Mon:1-Ax:R}Mtr.VAL")
-        
+
         mon_pf_V = caget("XF:03ID-BI{EM:BPM1}DAC0")
         mon_rf_V = caget("XF:03ID-BI{EM:BPM1}DAC1")
-        
+
         caput("XF:03ID-BI{EM:BPM1}DAC0",mon_pf_V)
         yield from bps.sleep(5)
         caput("XF:03ID-BI{EM:BPM1}DAC1", mon_rf_V)
@@ -2360,41 +2381,41 @@ def recover_from_beamdump(peak_after = True):
         if not math.isclose(dcm.p.position, dcm_pitch_set, rel_tol=0.05) or \
         not math.isclose(dcm.r.position, dcm_roll_set, rel_tol=0.05):
             raise ValueError("Failed! DCM positions not within 5% of the set values")
-        
-        
-            
+
+
+
     caput("XF:03ID{XBPM:17}AutoFbEn-Cmd",1)
 
     if peak_after:
-    
+
         yield from peak_the_flux()
-        
-        
+
+
 
 def move_zpz_with_energy(energy=9, move_zpz1 = False):
 
     ref_energy = 8.33
     ref_zpz1 = -6.83
     per_ev_corr = 5.04
-    
+
     calc_zpz1 = ref_zpz1 +((ref_energy-energy)* per_ev_corr)
-    
-    
+
+
     print(f"Estimated ZPZ1 position = {calc_zpz1 :.3f}")
-    
+
     if move_zpz1:
-    
-        if np.logical_and(calc_zpz1>-50,calc_zpz1<8):     
+
+        if np.logical_and(calc_zpz1>-50,calc_zpz1<8):
             yield from mov_zpz1(calc_zpz1)
-            
+
         else: raise ValueError(f"{calc_zpz1} is out of safe range. Try manual override")
-        
-        
+
+
     return calc_zpz1
-    
-    
+
+
 plt.close()
-        
+
 close_he_valve = lambda: caput('XF:03IDC-ES{IO:1}DO:4-Cmd', 0)
 open_he_valve = lambda: caput('XF:03IDC-ES{IO:1}DO:4-Cmd', 1)
 
@@ -2402,17 +2423,17 @@ open_he_valve = lambda: caput('XF:03IDC-ES{IO:1}DO:4-Cmd', 1)
 def get_component_state(parent_ = dcm):
 
     return {f"{parent_.name}.{comp}.position":eval(f"parent_.{comp}.position") for comp in parent_.component_names}
-    
-    
+
+
 
 def get_microscope_state():
 
     optics_included = [ugap,hcm,dcm,hfm,vms,ssa2,s5]
-    
+
     state_dict = {}
-    
-    
-    
+
+
+
 
 
 

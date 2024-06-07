@@ -336,9 +336,9 @@ class HXNFlyerPanda(Device):
         self.__read_filepath_sis = os.path.join(
             self.LARGE_FILE_DIRECTORY_READ_PATH, self.__filename_sis
         )
-        self.__write_filepath_sis = os.path.join(
+        self.__write_filepath_sis = os.path.realpath(os.path.join(
             self.LARGE_FILE_DIRECTORY_WRITE_PATH, self.__filename_sis
-        )
+        ))
 
         self.__filestore_resource_sis, self._datum_factory_sis = resource_factory(
             SISHDF5Handler.HANDLER_NAME,
@@ -767,7 +767,7 @@ def scan_and_fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwe
     for d in panda_flyer.detectors:
         if d.name == 'eiger2' or d.name == 'eiger_mobile':
             yield from bps.mov(d.fly_next, True)
-            yield from bps.mov(d.use_panda, True)
+            yield from bps.mov(d.internal_trigger, True)
     #@subs_decorator(livepopup)
     @subs_decorator({'start': at_scan})
     @subs_decorator({'stop': finalize_scan})
