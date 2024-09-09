@@ -1,18 +1,110 @@
 print(f"Loading {__file__!r} ...")
 
 from ophyd.device import (Component as Cpt)
+from ophyd import (Signal, EpicsSignal, EpicsSignalRO, DerivedSignal)
 
 from nslsii.detectors.xspress3 import (Xspress3FileStore,
                                        Xspress3Channel)
 from hxntools.detectors.hxn_xspress3 import HxnXspress3DetectorBase
 import threading
 from ophyd import DeviceStatus
+from ophyd.device import Staged
+from ophyd.areadetector.filestore_mixins import FileStorePluginBase
+
+from ophyd.areadetector.plugins import HDF5Plugin
+
+
+class Xspress3FileStoreHXN(Xspress3FileStore):
+    def read(self):
+        self._locked_key_list = self._staged == Staged.yes
+        res = super().read()
+        for k, v in self._datum_uids.items():
+            res[k] = v[0]
+        return res
+    
+    def stage(self):
+                # if should external trigger
+        ext_trig = self.parent.external_trig.get()
+
+        logger.debug('Stopping xspress3 acquisition')
+        # really force it to stop acquiring
+        self.settings.acquire.put(0, wait=True)
+
+        total_points = self.parent.total_points.get()
+        if total_points < 1:
+            raise RuntimeError("You must set the total points")
+        spec_per_point = self.parent.spectra_per_point.get()
+        total_capture = total_points * spec_per_point
+
+        # stop previous acquisition
+        self.stage_sigs[self.settings.acquire] = 0
+
+        # re-order the stage signals and disable the calc record which is
+        # interfering with the capture count
+        self.stage_sigs.pop(self.num_capture, None)
+        self.stage_sigs.pop(self.settings.num_images, None)
+        self.stage_sigs[self.num_capture_calc_disable] = 1
+
+        if ext_trig:
+            logger.debug('Setting up external triggering')
+            self.stage_sigs[self.settings.trigger_mode] = 'TTL Both'
+            self.stage_sigs[self.settings.num_images] = total_capture
+        else:
+            logger.debug('Setting up internal triggering')
+            # self.settings.trigger_mode.put('Internal')
+            # self.settings.num_images.put(1)
+            self.stage_sigs[self.settings.trigger_mode] = 'Internal'
+            self.stage_sigs[self.settings.num_images] = spec_per_point
+
+        self.stage_sigs[self.auto_save] = 'No'
+        logger.debug('Configuring other filestore stuff')
+
+        logger.debug('Making the filename')
+        filename, read_path, write_path = self.make_filename()
+
+        logger.debug('Setting up hdf5 plugin: ioc path: %s filename: %s',
+                     write_path, filename)
+
+        logger.debug('Erasing old spectra')
+        self.settings.erase.put(1, wait=True)
+
+        # this must be set after self.settings.num_images because at the Epics
+        # layer  there is a helpful link that sets this equal to that (but
+        # not the other way)
+        self.stage_sigs[self.num_capture] = total_capture
+
+        # actually apply the stage_sigs
+        ret = FileStorePluginBase.stage(self)
+        #ret = super(Xspress3FileStore,self).stage()
+
+        self._fn = self.file_template.get() % (self._fp,
+                                               self.file_name.get(),
+                                               self.file_number.get())
+
+        if not self.file_path_exists.get():
+            raise IOError("Path {} does not exits on IOC!! Please Check"
+                          .format(self.file_path.get()))
+
+        logger.debug('Inserting the filestore resource: %s', self._fn)
+        self._generate_resource({})
+        self._filestore_res = self._asset_docs_cache[-1][-1]
+
+        # this gets auto turned off at the end
+        self.capture.put(1)
+
+        # Xspress3 needs a bit of time to configure itself...
+        # this does not play nice with the event loop :/
+        time.sleep(self._config_time)
+
+        return ret
+
 
 
 class HxnXspress3Detector(HxnXspress3DetectorBase):
     channel1 = Cpt(Xspress3Channel, 'C1_', channel_num=1)
     channel2 = Cpt(Xspress3Channel, 'C2_', channel_num=2)
     channel3 = Cpt(Xspress3Channel, 'C3_', channel_num=3)
+
     # Currently only using three channels. Uncomment these to enable more
     # channels:
     # channel4 = C(Xspress3Channel, 'C4_', channel_num=4)
@@ -28,7 +120,8 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
     #           root='/data',
     #           )
 
-    hdf5 = Cpt(Xspress3FileStore, 'HDF5:',
+    array_counter = Cpt(EpicsSignal,'ArrayCounter_RBV')
+    hdf5 = Cpt(Xspress3FileStoreHXN, 'HDF5:',
                write_path_template='/data/%Y/%m/%d/',
                mds_key_format='xspress3_ch{chan}',
                reg=db.reg,
@@ -49,6 +142,11 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
         self.hdf5.stage_sigs.update([(self.hdf5.blocking_callbacks,'No')])
         self.hdf5.stage_sigs.update([(self.hdf5.compression,'szip')])
 
+        # Disable stage of channels which doesn't do anything
+        self.channel1.stage = lambda: []
+        self.channel2.stage = lambda: []
+        self.channel3.stage = lambda: []
+
 
     def stage(self, *args, **kwargs):
         for j in itertools.count():
@@ -64,12 +162,10 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
             else:
                 break
 
-
         # clear any existing callback
         if self._dispatch_cid is not None:
             self.hdf5.num_captured.unsubscribe(self._dispatch_cid)
             self._dispatch_cid = None
-
 
         # always install the callback
         def _handle_spectrum_capture(old_value, value, timestamp, **kwargs):
@@ -349,3 +445,7 @@ def configure_xspress3(sclr):
                 attr.kind = 'config'
 
 configure_xspress3(xspress3)
+
+xspress3.hdf5.nd_array_port.put('XSP3')
+xspress3.roi_data.enable.put(0)
+xspress3.roi_data.stage_sigs = OrderedDict()

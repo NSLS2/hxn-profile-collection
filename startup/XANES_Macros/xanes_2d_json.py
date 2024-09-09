@@ -24,35 +24,35 @@ import scipy.constants as consts
 
 #Paramer list from previous runs in the order of atomic number of the element
 
-CrXANES = {'high_e':6.0, 'high_e_zpz1':10.48, 'zpz1_slope':-5.04,
+CrXANES = {'high_e':6.0, 'high_e_zpz1':10.48, 'zpz1_slope':-5.9,
           'energy':[(5.97,5.98,0.005),(5.981,6.03,0.001), (6.032,6.046,0.005)] }
           
-MnXANES = {'high_e':6.6, 'high_e_zpz1':9.31, 'zpz1_slope':-5.04,
+MnXANES = {'high_e':6.6, 'high_e_zpz1':9.31, 'zpz1_slope':-5.9,
           'energy':[(6.510,6.530,0.005),(6.531,6.570,0.001),(6.575,6.600,0.0075)]}
                
-FeXANES = {'high_e':7.2, 'high_e_zpz1':6.41, 'zpz1_slope':-5.04,
+FeXANES = {'high_e':7.2, 'high_e_zpz1':0.24, 'zpz1_slope':-5.9,
           'energy':[(7.09,7.105,0.005),(7.106,7.141,0.001),(7.14,7.18,0.005)],}
           
-CoXANES = {'high_e':7.8, 'high_e_zpz1':3.197, 'zpz1_slope':-5.04,          
+CoXANES = {'high_e':7.8, 'high_e_zpz1':3.197, 'zpz1_slope':-5.9,          
             'energy':[(7.690,7.705,0.005),(7.706,7.760,0.001),(7.765,7.800,0.005)],}
 
 #CoXANES = {'high_e':7.8, 'high_e_zpz1':3.2725, 'zpz1_slope':-5.04,
 #          'energy':[(7.736,7.760,0.001),(7.765,7.800,0.005)],}
 
 
-NiXANES = {'high_e':8.300, 'high_e_zpz1':0.98, 'zpz1_slope':-5.04,
+NiXANES = {'high_e':8.300, 'high_e_zpz1':0.98, 'zpz1_slope':-5.9,
           'energy':[(8.30,8.325,0.005),(8.326,8.360,0.001),(8.360,8.430,0.006)],}
 
-CuXANES = {'high_e':9.05,  'high_e_zpz1':-2.735, 'zpz1_slope':-5.04,
+CuXANES = {'high_e':9.05,  'high_e_zpz1':-2.735, 'zpz1_slope':-5.9,
           'energy':[(8.950,8.975,0.005),(8.976,9.005,0.001),(9.009,9.033,0.004)],}
 
-ZnXANES =  {'high_e':9.7, 'high_e_zpz1':-6.25, 'zpz1_slope':-5.04,
+ZnXANES =  {'high_e':9.7, 'high_e_zpz1':-6.25, 'zpz1_slope':-5.9,
           'energy':[(9.620,9.650,0.005),(9.651,9.700,.001),(9.705,9.725,0.005)]}
           
-HfXANES =  {'high_e':9.6, 'high_e_zpz1':-7.775, 'zpz1_slope':-5.04,
+HfXANES =  {'high_e':9.6, 'high_e_zpz1':-7.775, 'zpz1_slope':-5.9,
           'energy':[(9.500,9.540,0.005),(9.541,9.6,0.001)]}
 
-LuL3XANES =  {'high_e':9.3, 'high_e_zpz1':-5.4246, 'zpz1_slope':-5.04,
+LuL3XANES =  {'high_e':9.3, 'high_e_zpz1':-5.4246, 'zpz1_slope':-5.9,
           'energy':[(9.150,9.200,0.005),(9.201,9.350,0.001),(9.352,9.400,0.002)]}
           
           

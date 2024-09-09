@@ -79,6 +79,13 @@ def setup_new_user(name = "Lastname",
 
     return udir,pdf_file_name
 
+def tic():
+    return time.monotonic()
+
+def toc(t0, str=''):
+    dt = time.monotonic() - t0
+    print('%s: dt = %f second' % (str, dt))
+
 from bluesky_queueserver_api import BPlan
 from bluesky_queueserver_api.zmq import REManagerAPI
 RM = REManagerAPI()

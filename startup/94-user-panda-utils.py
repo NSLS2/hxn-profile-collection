@@ -147,3 +147,69 @@ def zp_tomo_scan_rapid(angle_start, angle_end, angle_step, x_start, x_end, x_num
         #    yield from peak_bpm_y(-10, 10, 10)
     save_page()
 
+
+class PandaLivePlot():
+    def __init__(self):
+        self.do_plot = False
+        self.fig, self.ax = plt.subplots()
+        self.ntotal = len(live_plot_elems)
+        self.nrow = int(np.sqrt(self.ntotal))
+        self.ncol = int(np.ceil(self.ntotal/self.nrow))
+        self.scan_id = 0
+
+    def setup_plot(self,scan_input,det):
+        self.xsp = det
+        self.fig.clear()
+        self.axs = []
+        self.axs_names = []
+        self.elems = []
+
+        for i in range(self.ntotal):
+            self.axs.append(self.fig.add_subplot(self.nrow,self.ncol,i+1))
+            self.elems.append([])
+            self.axs_names.append(live_plot_elems[i])
+
+        for r in self.xsp.enabled_rois:
+            for i in range(self.ntotal):
+                if r.name.endswith(live_plot_elems[i]) and not r.name in [roi.name for roi in self.elems[i]]:
+                    self.elems[i].append(r)
+
+        self.scan_input = scan_input.copy()
+        self.total_points = int(scan_input[2] * scan_input[5])
+        self.do_plot = True
+
+    def update_plot(self, finished = False):
+        if not self.do_plot:
+            return
+        #Live plot
+        for i in range(self.ntotal):
+            fluo_data = np.zeros(self.total_points)
+            for roi in self.elems[i]:
+                fluo_tmp = roi.settings.array_data.get()
+                if len(fluo_tmp) > self.total_points:
+                    return
+                fluo_data[:len(fluo_tmp)] += fluo_tmp
+            if finished:
+                fluo_data[len(fluo_tmp):] = fluo_data[len(fluo_tmp)-1]
+                self.do_plot = False
+            #    if hasattr(roi,'settings'):
+            #        fluo_data = roi.settings.array_data.get()
+            #    else:
+            #        fluo_data = roi.ts_total.get()
+            self.axs[i].clear()
+            self.axs[i].set_title(self.axs_names[i])
+            if self.scan_input[5]>1:
+                self.axs[i].imshow(fluo_data.reshape((int(self.scan_input[5]),int(self.scan_input[2]))),extent = [self.scan_input[0],self.scan_input[1],self.scan_input[4],self.scan_input[3]])
+                self.axs[i].set_aspect('equal','box')
+            else:
+                coordx = np.linspace(self.scan_input[0],self.scan_input[1],int(self.scan_input[2]))
+                self.axs[i].plot(coordx[:len(fluo_tmp)],fluo_data[:len(fluo_tmp)])
+        self.fig.canvas.manager.set_window_title('Scan %d'%(self.scan_id))
+        self.fig.canvas.manager.show()
+        self.fig.canvas.draw()
+        self.fig.canvas.flush_events()
+
+panda_live_plot = PandaLivePlot()
+
+plt.close(panda_live_plot.fig)
+

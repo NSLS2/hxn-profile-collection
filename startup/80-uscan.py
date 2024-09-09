@@ -1,7 +1,7 @@
 
 print(f"Loading {__file__!r} ...")
 
-from epics import caput,caget
+from epics import caput,caget,cainfo
 
 
 def save_scan_info(sid):#,export_folder):

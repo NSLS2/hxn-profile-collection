@@ -34,6 +34,7 @@ from ophyd.areadetector.filestore_mixins import (FileStoreIterativeWrite,
 
 from nslsii.ad33 import CamV33Mixin, SingleTriggerV33
 from ophyd.areadetector.plugins import PluginBase, HDF5Plugin_V33, TimeSeriesPlugin_V33
+from enum import Enum
 
 import logging
 logger = logging.getLogger('bluesky')

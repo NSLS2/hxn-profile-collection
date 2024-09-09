@@ -7,16 +7,16 @@
             "diff_cz": -24.7
       },
       "cam11_pos": {
-            "diff_x": 216.66,
-            "diff_y1": 19.07,
-            "diff_y2": 19.07,
+            "diff_x": 216.56,
+            "diff_y1": 19.12,
+            "diff_y2": 19.12,
             "diff_z": -50.0,
             "diff_cz": -24.7
       },
       "diode_pos": {
-            "diff_x": -86.520,
-            "diff_y1": -4.230,
-            "diff_y2": -4.220,
+            "diff_x": -86.52,
+            "diff_y1": -4.23,
+            "diff_y2": -4.22,
             "diff_z": -50.0,
             "diff_cz": -24.7
       },

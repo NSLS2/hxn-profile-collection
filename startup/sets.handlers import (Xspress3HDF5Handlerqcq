@@ -1,0 +1,104 @@
+[0;31mSignature:[0m [0mxspress3[0m[0;34m.[0m[0mhdf5[0m[0;34m.[0m[0mstage[0m[0;34m([0m[0;34m)[0m[0;34m[0m[0;34m[0m[0m
+[0;31mDocstring:[0m
+Stage the device for data collection.
+
+This method is expected to put the device into a state where
+repeated calls to :meth:`~BlueskyInterface.trigger` and
+:meth:`~BlueskyInterface.read` will 'do the right thing'.
+
+Staging not idempotent and should raise
+:obj:`RedundantStaging` if staged twice without an
+intermediate :meth:`~BlueskyInterface.unstage`.
+
+This method should be as fast as is feasible as it does not return
+a status object.
+
+The return value of this is a list of all of the (sub) devices
+stage, including it's self.  This is used to ensure devices
+are not staged twice by the :obj:`~bluesky.run_engine.RunEngine`.
+
+This is an optional method, if the device does not need
+staging behavior it should not implement `stage` (or
+`unstage`).
+
+Returns
+-------
+devices : list
+    list including self and all child devices staged
+[0;31mSource:[0m   
+    [0;32mdef[0m [0mstage[0m[0;34m([0m[0mself[0m[0;34m)[0m[0;34m:[0m[0;34m[0m
+[0;34m[0m        [0;31m# if should external trigger[0m[0;34m[0m
+[0;34m[0m        [0mext_trig[0m [0;34m=[0m [0mself[0m[0;34m.[0m[0mparent[0m[0;34m.[0m[0mexternal_trig[0m[0;34m.[0m[0mget[0m[0;34m([0m[0;34m)[0m[0;34m[0m
+[0;34m[0m[0;34m[0m
+[0;34m[0m        [0mlogger[0m[0;34m.[0m[0mdebug[0m[0;34m([0m[0;34m'Stopping xspress3 acquisition'[0m[0;34m)[0m[0;34m[0m
+[0;34m[0m        [0;31m# really force it to stop acquiring[0m[0;34m[0m
+[0;34m[0m        [0mself[0m[0;34m.[0m[0msettings[0m[0;34m.[0m[0macquire[0m[0;34m.[0m[0mput[0m[0;34m([0m[0;36m0[0m[0;34m,[0m [0mwait[0m[0;34m=[0m[0;32mTrue[0m[0;34m)[0m[0;34m[0m
+[0;34m[0m[0;34m[0m
+[0;34m[0m        [0mtotal_points[0m [0;34m=[0m [0mself[0m[0;34m.[0m[0mparent[0m[0;34m.[0m[0mtotal_points[0m[0;34m.[0m[0mget[0m[0;34m([0m[0;34m)[0m[0;34m[0m
+[0;34m[0m        [0;32mif[0m [0mtotal_points[0m [0;34m<[0m [0;36m1[0m[0;34m:[0m[0;34m[0m
+[0;34m[0m            [0;32mraise[0m [0mRuntimeError[0m[0;34m([0m[0;34m"You must set the total points"[0m[0;34m)[0m[0;34m[0m
+[0;34m[0m        [0mspec_per_point[0m [0;34m=[0m [0mself[0m[0;34m.[0m[0mparent[0m[0;34m.[0m[0mspectra_per_point[0m[0;34m.[0m[0mget[0m[0;34m([0m[0;34m)[0m[0;34m[0m
+[0;34m[0m        [0mtotal_capture[0m [0;34m=[0m [0mtotal_points[0m [0;34m*[0m [0mspec_per_point[0m[0;34m[0m
+[0;34m[0m[0;34m[0m
+[0;34m[0m        [0;31m# stop previous acquisition[0m[0;34m[0m
+[0;34m[0m        [0mself[0m[0;34m.[0m[0mstage_sigs[0m[0;34m[[0m[0mself[0m[0;34m.[0m[0msettings[0m[0;34m.[0m[0macquire[0m[0;34m][0m [0;34m=[0m [0;36m0[0m[0;34m[0m
+[0;34m[0m[0;34m[0m
+[0;34m[0m        [0;31m# re-order the stage signals and disable the calc record which is[0m[0;34m[0m
+[0;34m[0m        [0;31m# interfering with the capture count[0m[0;34m[0m
+[0;34m[0m        [0mself[0m[0;34m.[0m[0mstage_sigs[0m[0;34m.[0m[0mpop[0m[0;34m([0m[0mself[0m[0;34m.[0m[0mnum_capture[0m[0;34m,[0m [0;32mNone[0m[0;34m)[0m[0;34m[0m
+[0;34m[0m        [0mself[0m[0;34m.[0m[0mstage_sigs[0m[0;34m.[0m[0mpop[0m[0;34m([0m[0mself[0m[0;34m.[0m[0msettings[0m[0;34m.[0m[0mnum_images[0m[0;34m,[0m [0;32mNone[0m[0;34m)[0m[0;34m[0m
+[0;34m[0m        [0mself[0m[0;34m.[0m[0mstage_sigs[0m[0;34m[[0m[0mself[0m[0;34m.[0m[0mnum_capture_calc_disable[0m[0;34m][0m [0;34m=[0m [0;36m1[0m[0;34m[0m
+[0;34m[0m[0;34m[0m
+[0;34m[0m        [0;32mif[0m [0mext_trig[0m[0;34m:[0m[0;34m[0m
+[0;34m[0m            [0mlogger[0m[0;34m.[0m[0mdebug[0m[0;34m([0m[0;34m'Setting up external triggering'[0m[0;34m)[0m[0;34m[0m
+[0;34m[0m            [0mself[0m[0;34m.[0m[0mstage_sigs[0m[0;34m[[0m[0mself[0m[0;34m.[0m[0msettings[0m[0;34m.[0m[0mtrigger_mode[0m[0;34m][0m [0;34m=[0m [0;34m'TTL Veto Only'[0m[0;34m[0m
+[0;34m[0m            [0mself[0m[0;34m.[0m[0mstage_sigs[0m[0;34m[[0m[0mself[0m[0;34m.[0m[0msettings[0m[0;34m.[0m[0mnum_images[0m[0;34m][0m [0;34m=[0m [0mtotal_capture[0m[0;34m[0m
+[0;34m[0m        [0;32melse[0m[0;34m:[0m[0;34m[0m
+[0;34m[0m            [0mlogger[0m[0;34m.[0m[0mdebug[0m[0;34m([0m[0;34m'Setting up internal triggering'[0m[0;34m)[0m[0;34m[0m
+[0;34m[0m            [0;31m# self.settings.trigger_mode.put('Internal')[0m[0;34m[0m
+[0;34m[0m            [0;31m# self.settings.num_images.put(1)[0m[0;34m[0m
+[0;34m[0m            [0mself[0m[0;34m.[0m[0mstage_sigs[0m[0;34m[[0m[0mself[0m[0;34m.[0m[0msettings[0m[0;34m.[0m[0mtrigger_mode[0m[0;34m][0m [0;34m=[0m [0;34m'Internal'[0m[0;34m[0m
+[0;34m[0m            [0mself[0m[0;34m.[0m[0mstage_sigs[0m[0;34m[[0m[0mself[0m[0;34m.[0m[0msettings[0m[0;34m.[0m[0mnum_images[0m[0;34m][0m [0;34m=[0m [0mspec_per_point[0m[0;34m[0m
+[0;34m[0m[0;34m[0m
+[0;34m[0m        [0mself[0m[0;34m.[0m[0mstage_sigs[0m[0;34m[[0m[0mself[0m[0;34m.[0m[0mauto_save[0m[0;34m][0m [0;34m=[0m [0;34m'No'[0m[0;34m[0m
+[0;34m[0m        [0mlogger[0m[0;34m.[0m[0mdebug[0m[0;34m([0m[0;34m'Configuring other filestore stuff'[0m[0;34m)[0m[0;34m[0m
+[0;34m[0m[0;34m[0m
+[0;34m[0m        [0mlogger[0m[0;34m.[0m[0mdebug[0m[0;34m([0m[0;34m'Making the filename'[0m[0;34m)[0m[0;34m[0m
+[0;34m[0m        [0mfilename[0m[0;34m,[0m [0mread_path[0m[0;34m,[0m [0mwrite_path[0m [0;34m=[0m [0mself[0m[0;34m.[0m[0mmake_filename[0m[0;34m([0m[0;34m)[0m[0;34m[0m
+[0;34m[0m[0;34m[0m
+[0;34m[0m        [0mlogger[0m[0;34m.[0m[0mdebug[0m[0;34m([0m[0;34m'Setting up hdf5 plugin: ioc path: %s filename: %s'[0m[0;34m,[0m[0;34m[0m
+[0;34m[0m                     [0mwrite_path[0m[0;34m,[0m [0mfilename[0m[0;34m)[0m[0;34m[0m
+[0;34m[0m[0;34m[0m
+[0;34m[0m        [0mlogger[0m[0;34m.[0m[0mdebug[0m[0;34m([0m[0;34m'Erasing old spectra'[0m[0;34m)[0m[0;34m[0m
+[0;34m[0m        [0mself[0m[0;34m.[0m[0msettings[0m[0;34m.[0m[0merase[0m[0;34m.[0m[0mput[0m[0;34m([0m[0;36m1[0m[0;34m,[0m [0mwait[0m[0;34m=[0m[0;32mTrue[0m[0;34m)[0m[0;34m[0m
+[0;34m[0m[0;34m[0m
+[0;34m[0m        [0;31m# this must be set after self.settings.num_images because at the Epics[0m[0;34m[0m
+[0;34m[0m        [0;31m# layer  there is a helpful link that sets this equal to that (but[0m[0;34m[0m
+[0;34m[0m        [0;31m# not the other way)[0m[0;34m[0m
+[0;34m[0m        [0mself[0m[0;34m.[0m[0mstage_sigs[0m[0;34m[[0m[0mself[0m[0;34m.[0m[0mnum_capture[0m[0;34m][0m [0;34m=[0m [0mtotal_capture[0m[0;34m[0m
+[0;34m[0m[0;34m[0m
+[0;34m[0m        [0;31m# actually apply the stage_sigs[0m[0;34m[0m
+[0;34m[0m        [0mret[0m [0;34m=[0m [0msuper[0m[0;34m([0m[0;34m)[0m[0;34m.[0m[0mstage[0m[0;34m([0m[0;34m)[0m[0;34m[0m
+[0;34m[0m[0;34m[0m
+[0;34m[0m        [0mself[0m[0;34m.[0m[0m_fn[0m [0;34m=[0m [0mself[0m[0;34m.[0m[0mfile_template[0m[0;34m.[0m[0mget[0m[0;34m([0m[0;34m)[0m [0;34m%[0m [0;34m([0m[0mself[0m[0;34m.[0m[0m_fp[0m[0;34m,[0m[0;34m[0m
+[0;34m[0m                                               [0mself[0m[0;34m.[0m[0mfile_name[0m[0;34m.[0m[0mget[0m[0;34m([0m[0;34m)[0m[0;34m,[0m[0;34m[0m
+[0;34m[0m                                               [0mself[0m[0;34m.[0m[0mfile_number[0m[0;34m.[0m[0mget[0m[0;34m([0m[0;34m)[0m[0;34m)[0m[0;34m[0m
+[0;34m[0m[0;34m[0m
+[0;34m[0m        [0;32mif[0m [0;32mnot[0m [0mself[0m[0;34m.[0m[0mfile_path_exists[0m[0;34m.[0m[0mget[0m[0;34m([0m[0;34m)[0m[0;34m:[0m[0;34m[0m
+[0;34m[0m            [0;32mraise[0m [0mIOError[0m[0;34m([0m[0;34m"Path {} does not exits on IOC!! Please Check"[0m[0;34m[0m
+[0;34m[0m                          [0;34m.[0m[0mformat[0m[0;34m([0m[0mself[0m[0;34m.[0m[0mfile_path[0m[0;34m.[0m[0mget[0m[0;34m([0m[0;34m)[0m[0;34m)[0m[0;34m)[0m[0;34m[0m
+[0;34m[0m[0;34m[0m
+[0;34m[0m        [0mlogger[0m[0;34m.[0m[0mdebug[0m[0;34m([0m[0;34m'Inserting the filestore resource: %s'[0m[0;34m,[0m [0mself[0m[0;34m.[0m[0m_fn[0m[0;34m)[0m[0;34m[0m
+[0;34m[0m        [0mself[0m[0;34m.[0m[0m_generate_resource[0m[0;34m([0m[0;34m{[0m[0;34m}[0m[0;34m)[0m[0;34m[0m
+[0;34m[0m        [0mself[0m[0;34m.[0m[0m_filestore_res[0m [0;34m=[0m [0mself[0m[0;34m.[0m[0m_asset_docs_cache[0m[0;34m[[0m[0;34m-[0m[0;36m1[0m[0;34m][0m[0;34m[[0m[0;34m-[0m[0;36m1[0m[0;34m][0m[0;34m[0m
+[0;34m[0m[0;34m[0m
+[0;34m[0m        [0;31m# this gets auto turned off at the end[0m[0;34m[0m
+[0;34m[0m        [0mself[0m[0;34m.[0m[0mcapture[0m[0;34m.[0m[0mput[0m[0;34m([0m[0;36m1[0m[0;34m)[0m[0;34m[0m
+[0;34m[0m[0;34m[0m
+[0;34m[0m        [0;31m# Xspress3 needs a bit of time to configure itself...[0m[0;34m[0m
+[0;34m[0m        [0;31m# this does not play nice with the event loop :/[0m[0;34m[0m
+[0;34m[0m        [0mtime[0m[0;34m.[0m[0msleep[0m[0;34m([0m[0mself[0m[0;34m.[0m[0m_config_time[0m[0;34m)[0m[0;34m[0m
+[0;34m[0m[0;34m[0m
+[0;34m[0m        [0;32mreturn[0m [0mret[0m[0;34m[0m[0;34m[0m[0m
+[0;31mFile:[0m      /nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/nslsii/detectors/xspress3.py
+[0;31mType:[0m      method

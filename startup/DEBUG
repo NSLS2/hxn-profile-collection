@@ -1,0 +1,501 @@
+[31m[E 13:40:15.703      run_engine: 1662](B[m Run aborted
+    Traceback (most recent call last):
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/run_engine.py", line 1523, in _run
+        msg = self._plan_stack[-1].send(resp)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 1307, in __call__
+        return (yield from plan)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 1162, in baseline_wrapper
+        return (yield from plan_mutator(plan, insert_baseline))
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 170, in plan_mutator
+        raise ex
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 123, in plan_mutator
+        msg = plan_stack[-1].send(ret)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 803, in monitor_during_wrapper
+        return (yield from plan2)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 170, in plan_mutator
+        raise ex
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 123, in plan_mutator
+        msg = plan_stack[-1].send(ret)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 170, in plan_mutator
+        raise ex
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 123, in plan_mutator
+        msg = plan_stack[-1].send(ret)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 861, in fly_during_wrapper
+        return (yield from plan2)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 170, in plan_mutator
+        raise ex
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 123, in plan_mutator
+        msg = plan_stack[-1].send(ret)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 170, in plan_mutator
+        raise ex
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 123, in plan_mutator
+        msg = plan_stack[-1].send(ret)
+      File "/nsls2/data2/hxn/shared/config/bluesky/profile_collection/startup/93-scanplan-panda.py", line 1181, in fly2dpd
+        yield from flyscan_pd(dets, '&6begin41r', num1*num2, exposure_time, dead_time = dead_time, md=md, scan_dim = [num1,num2], position_supersample = position_supersample, **kwargs)
+      File "/nsls2/data2/hxn/shared/config/bluesky/profile_collection/startup/93-scanplan-panda.py", line 1019, in flyscan_pd
+        uid = yield from final_plan
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/utils/__init__.py", line 1147, in dec_inner
+        return (yield from plan)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 382, in subs_wrapper
+        return (yield from finalize_wrapper(_inner_plan(),
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 509, in finalize_wrapper
+        ret = yield from plan
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 380, in _inner_plan
+        return (yield from plan)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/utils/__init__.py", line 1147, in dec_inner
+        return (yield from plan)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 382, in subs_wrapper
+        return (yield from finalize_wrapper(_inner_plan(),
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 509, in finalize_wrapper
+        ret = yield from plan
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 380, in _inner_plan
+        return (yield from plan)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/utils/__init__.py", line 1147, in dec_inner
+        return (yield from plan)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 952, in stage_wrapper
+        return (yield from finalize_wrapper(inner(), unstage_devices()))
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 509, in finalize_wrapper
+        ret = yield from plan
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 950, in inner
+        return (yield from plan)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/utils/__init__.py", line 1147, in dec_inner
+        return (yield from plan)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 952, in stage_wrapper
+        return (yield from finalize_wrapper(inner(), unstage_devices()))
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 509, in finalize_wrapper
+        ret = yield from plan
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 950, in inner
+        return (yield from plan)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/utils/__init__.py", line 1147, in dec_inner
+        return (yield from plan)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 325, in run_wrapper
+        yield from contingency_wrapper(plan,
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 575, in contingency_wrapper
+        ret = yield from plan
+      File "/nsls2/data2/hxn/shared/config/bluesky/profile_collection/startup/93-scanplan-panda.py", line 950, in plan
+        st = yield from bps.trigger(d)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/plan_stubs.py", line 428, in trigger
+        ret = yield Msg('trigger', obj, group=group)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 195, in plan_mutator
+        inner_ret = yield msg
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 195, in plan_mutator
+        inner_ret = yield msg
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 195, in plan_mutator
+        inner_ret = yield msg
+      [Previous line repeated 2 more times]
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/run_engine.py", line 1583, in _run
+        new_response = await coro(msg)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/run_engine.py", line 2120, in _trigger
+        ret = obj.trigger(*msg.args, **kwargs)
+      File "/nsls2/data2/hxn/shared/config/bluesky/profile_collection/startup/21-xspress3.py", line 205, in trigger
+        s = self.trigger_internal()  # IS IT CORRECT WAY TO TRIGGER ACQUISITION?
+      File "/nsls2/data/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages/hxntools/detectors/hxn_xspress3.py", line 78, in trigger_internal
+        self._dispatch_channels(trigger_time=time.time())
+      File "/nsls2/data/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages/hxntools/detectors/hxn_xspress3.py", line 65, in _dispatch_channels
+        self._abs_trigger_count += 1
+    TypeError: unsupported operand type(s) for +=: 'object' and 'int'
+[31m[E 12:25:58.213      run_engine: 1662](B[m Run aborted
+    Traceback (most recent call last):
+      File "/nsls2/data2/hxn/shared/config/bluesky/profile_collection/startup/00-startup.py", line 157, in _register_resource
+        col.insert_one(resource_object)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/pymongo/collection.py", line 628, in insert_one
+        self._insert_one(
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/pymongo/collection.py", line 569, in _insert_one
+        self.__database.client._retryable_write(acknowledged, _insert_command, session)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/pymongo/mongo_client.py", line 1476, in _retryable_write
+        return self._retry_with_session(retryable, func, s, None)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/pymongo/mongo_client.py", line 1349, in _retry_with_session
+        return self._retry_internal(retryable, func, session, bulk)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/pymongo/_csot.py", line 105, in csot_wrapper
+        return func(self, *args, **kwargs)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/pymongo/mongo_client.py", line 1390, in _retry_internal
+        return func(session, sock_info, retryable)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/pymongo/collection.py", line 567, in _insert_command
+        _check_write_command_response(result)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/pymongo/helpers.py", line 221, in _check_write_command_response
+        _raise_write_concern_error(wce)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/pymongo/helpers.py", line 197, in _raise_write_concern_error
+        raise WriteConcernError(error.get("errmsg"), error.get("code"), error)
+    pymongo.errors.WriteConcernError: waiting for replication timed out; Error details: { wtimeout: true, writeConcern: { w: "majority", j: true, wtimeout: 60000, provenance: "customDefault" } } at myShard_1, full error: {'code': 64, 'codeName': 'WriteConcernFailed', 'errmsg': 'waiting for replication timed out; Error details: { wtimeout: true, writeConcern: { w: "majority", j: true, wtimeout: 60000, provenance: "customDefault" } } at myShard_1', 'errInfo': {}}
+    
+    During handling of the above exception, another exception occurred:
+    
+    Traceback (most recent call last):
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/run_engine.py", line 1523, in _run
+        msg = self._plan_stack[-1].send(resp)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 1307, in __call__
+        return (yield from plan)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 1162, in baseline_wrapper
+        return (yield from plan_mutator(plan, insert_baseline))
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 170, in plan_mutator
+        raise ex
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 123, in plan_mutator
+        msg = plan_stack[-1].send(ret)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 803, in monitor_during_wrapper
+        return (yield from plan2)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 170, in plan_mutator
+        raise ex
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 123, in plan_mutator
+        msg = plan_stack[-1].send(ret)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 170, in plan_mutator
+        raise ex
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 123, in plan_mutator
+        msg = plan_stack[-1].send(ret)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 861, in fly_during_wrapper
+        return (yield from plan2)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 170, in plan_mutator
+        raise ex
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 123, in plan_mutator
+        msg = plan_stack[-1].send(ret)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 170, in plan_mutator
+        raise ex
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 123, in plan_mutator
+        msg = plan_stack[-1].send(ret)
+      File "/nsls2/data2/hxn/shared/config/bluesky/profile_collection/startup/93-scanplan-panda.py", line 1181, in fly2dpd
+        yield from flyscan_pd(dets, '&6begin41r', num1*num2, exposure_time, dead_time = dead_time, md=md, scan_dim = [num1,num2], position_supersample = position_supersample, **kwargs)
+      File "/nsls2/data2/hxn/shared/config/bluesky/profile_collection/startup/93-scanplan-panda.py", line 1019, in flyscan_pd
+        uid = yield from final_plan
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/utils/__init__.py", line 1147, in dec_inner
+        return (yield from plan)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 382, in subs_wrapper
+        return (yield from finalize_wrapper(_inner_plan(),
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 509, in finalize_wrapper
+        ret = yield from plan
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 380, in _inner_plan
+        return (yield from plan)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/utils/__init__.py", line 1147, in dec_inner
+        return (yield from plan)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 382, in subs_wrapper
+        return (yield from finalize_wrapper(_inner_plan(),
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 509, in finalize_wrapper
+        ret = yield from plan
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 380, in _inner_plan
+        return (yield from plan)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/utils/__init__.py", line 1147, in dec_inner
+        return (yield from plan)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 952, in stage_wrapper
+        return (yield from finalize_wrapper(inner(), unstage_devices()))
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 509, in finalize_wrapper
+        ret = yield from plan
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 950, in inner
+        return (yield from plan)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/utils/__init__.py", line 1147, in dec_inner
+        return (yield from plan)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 952, in stage_wrapper
+        return (yield from finalize_wrapper(inner(), unstage_devices()))
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 509, in finalize_wrapper
+        ret = yield from plan
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 949, in inner
+        yield from stage_devices()
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 942, in stage_devices
+        yield Msg('stage', d)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 195, in plan_mutator
+        inner_ret = yield msg
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 195, in plan_mutator
+        inner_ret = yield msg
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 195, in plan_mutator
+        inner_ret = yield msg
+      [Previous line repeated 2 more times]
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/run_engine.py", line 1583, in _run
+        new_response = await coro(msg)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/run_engine.py", line 2336, in _stage
+        result = obj.stage()
+      File "/nsls2/data2/hxn/shared/config/bluesky/profile_collection/startup/21-xspress3.py", line 154, in stage
+        ret = super().stage(*args, **kwargs)
+      File "/nsls2/data/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages/hxntools/detectors/hxn_xspress3.py", line 94, in stage
+        staged = super().stage()
+      File "/nsls2/data/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages/hxntools/detectors/trigger_mixins.py", line 71, in stage
+        return super().stage()
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/ophyd/areadetector/base.py", line 332, in stage
+        ret = super().stage(*args, **kwargs)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/ophyd/device.py", line 682, in stage
+        device.stage()
+      File "/nsls2/data2/hxn/shared/config/bluesky/profile_collection/startup/21-xspress3.py", line 89, in stage
+        self._generate_resource({})
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/ophyd/areadetector/filestore_mixins.py", line 324, in _generate_resource
+        self._resource_uid = self._reg.register_resource(
+      File "/nsls2/data2/hxn/shared/config/bluesky/profile_collection/startup/00-startup.py", line 181, in register_resource
+        ret = self._register_resource(col, uid, spec, root, rpath,
+      File "/nsls2/data2/hxn/shared/config/bluesky/profile_collection/startup/00-startup.py", line 158, in _register_resource
+        except duplicate_exc:
+    TypeError: catching classes that do not inherit from BaseException is not allowed
+[31m[E 12:28:31.917      run_engine: 1662](B[m Run aborted
+    Traceback (most recent call last):
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/run_engine.py", line 1523, in _run
+        msg = self._plan_stack[-1].send(resp)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 1307, in __call__
+        return (yield from plan)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 1162, in baseline_wrapper
+        return (yield from plan_mutator(plan, insert_baseline))
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 170, in plan_mutator
+        raise ex
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 123, in plan_mutator
+        msg = plan_stack[-1].send(ret)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 803, in monitor_during_wrapper
+        return (yield from plan2)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 170, in plan_mutator
+        raise ex
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 123, in plan_mutator
+        msg = plan_stack[-1].send(ret)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 170, in plan_mutator
+        raise ex
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 123, in plan_mutator
+        msg = plan_stack[-1].send(ret)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 861, in fly_during_wrapper
+        return (yield from plan2)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 170, in plan_mutator
+        raise ex
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 123, in plan_mutator
+        msg = plan_stack[-1].send(ret)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 170, in plan_mutator
+        raise ex
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 123, in plan_mutator
+        msg = plan_stack[-1].send(ret)
+      File "/nsls2/data2/hxn/shared/config/bluesky/profile_collection/startup/51-flyscan.py", line 109, in fly2d
+        yield from _fly2d(
+      File "/nsls2/data/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages/hxnfly/bs.py", line 326, in __call__
+        yield from super().__call__()
+      File "/nsls2/data/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages/hxnfly/bs.py", line 133, in __call__
+        yield from super().__call__()
+      File "/nsls2/data/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages/hxnfly/object_plans.py", line 68, in cls_plan
+        return (yield from plan)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 861, in fly_during_wrapper
+        return (yield from plan2)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 170, in plan_mutator
+        raise ex
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 123, in plan_mutator
+        msg = plan_stack[-1].send(ret)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 170, in plan_mutator
+        raise ex
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 123, in plan_mutator
+        msg = plan_stack[-1].send(ret)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 952, in stage_wrapper
+        return (yield from finalize_wrapper(inner(), unstage_devices()))
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 509, in finalize_wrapper
+        ret = yield from plan
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 950, in inner
+        return (yield from plan)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 382, in subs_wrapper
+        return (yield from finalize_wrapper(_inner_plan(),
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 509, in finalize_wrapper
+        ret = yield from plan
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 380, in _inner_plan
+        return (yield from plan)
+      File "/nsls2/data/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages/hxnfly/bs.py", line 139, in _gen
+        yield Msg('open_run', **self.md)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 78, in plan_mutator
+        msg = plan_stack[-1].throw(exception)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/utils/__init__.py", line 161, in single_gen
+        return (yield msg)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 195, in plan_mutator
+        inner_ret = yield msg
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 195, in plan_mutator
+        inner_ret = yield msg
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 78, in plan_mutator
+        msg = plan_stack[-1].throw(exception)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/utils/__init__.py", line 161, in single_gen
+        return (yield msg)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 195, in plan_mutator
+        inner_ret = yield msg
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 195, in plan_mutator
+        inner_ret = yield msg
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 78, in plan_mutator
+        msg = plan_stack[-1].throw(exception)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/utils/__init__.py", line 161, in single_gen
+        return (yield msg)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 195, in plan_mutator
+        inner_ret = yield msg
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 195, in plan_mutator
+        inner_ret = yield msg
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 78, in plan_mutator
+        msg = plan_stack[-1].throw(exception)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/utils/__init__.py", line 161, in single_gen
+        return (yield msg)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 195, in plan_mutator
+        inner_ret = yield msg
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/run_engine.py", line 1583, in _run
+        new_response = await coro(msg)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/run_engine.py", line 1774, in _open_run
+        new_uid = await current_run.open_run(msg)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/bundlers.py", line 64, in open_run
+        await self.emit(DocumentNames.start, doc)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/run_engine.py", line 2441, in emit
+        self.emit_sync(name, doc)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/run_engine.py", line 2438, in emit_sync
+        self.dispatcher.process(name, doc)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/run_engine.py", line 2461, in process
+        exceptions = self.cb_registry.process(name, name.name, doc)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/utils/__init__.py", line 384, in process
+        func(*args, **kwargs)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/utils/__init__.py", line 473, in __call__
+        return mtd(*args, **kwargs)
+      File "/nsls2/data2/hxn/shared/config/bluesky/profile_collection/startup/00-startup.py", line 370, in insert
+        ret2 = db1.insert(name, doc)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/databroker/_core.py", line 977, in insert
+        return self.hs.insert(name, doc)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/databroker/headersource/shim.py", line 41, in insert
+        return self.mds.insert(name, doc)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/databroker/headersource/base.py", line 530, in insert
+        getattr(self, self._INS_METHODS[name])(**doc)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/databroker/headersource/mongo.py", line 191, in insert_run_start
+        self._create_runstart_index()
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/databroker/headersource/mongo.py", line 53, in _create_runstart_index
+        self._runstart_col.create_index([('uid', pymongo.DESCENDING)],
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/pymongo/collection.py", line 2055, in create_index
+        return self.__create_indexes([index], session, **cmd_options)[0]
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/pymongo/_csot.py", line 105, in csot_wrapper
+        return func(self, *args, **kwargs)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/pymongo/collection.py", line 1932, in __create_indexes
+        self._command(
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/pymongo/collection.py", line 292, in _command
+        return sock_info.command(
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/pymongo/pool.py", line 767, in command
+        return command(
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/pymongo/network.py", line 166, in command
+        helpers._check_command_response(
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/pymongo/helpers.py", line 138, in _check_command_response
+        _raise_write_concern_error(_error)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/pymongo/helpers.py", line 196, in _raise_write_concern_error
+        raise WTimeoutError(error.get("errmsg"), error.get("code"), error)
+    pymongo.errors.WTimeoutError: waiting for replication timed out; Error details: { wtimeout: true, writeConcern: { w: "majority", j: true, wtimeout: 60000, provenance: "customDefault" } } at myShard_1, full error: {'code': 64, 'codeName': 'WriteConcernFailed', 'errmsg': 'waiting for replication timed out; Error details: { wtimeout: true, writeConcern: { w: "majority", j: true, wtimeout: 60000, provenance: "customDefault" } } at myShard_1', 'errInfo': {'wtimeout': True, 'writeConcern': {'w': 'majority', 'j': True, 'wtimeout': 60000, 'provenance': 'customDefault'}}}
+[31m[E 12:29:32.029      run_engine: 1698](B[m Failed to close run <bluesky.bundlers.RunBundler object at 0x7fb93728cb50>.
+[31m[E 13:43:29.127      run_engine: 1662](B[m Run aborted
+    Traceback (most recent call last):
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/run_engine.py", line 1523, in _run
+        msg = self._plan_stack[-1].send(resp)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 1307, in __call__
+        return (yield from plan)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 1162, in baseline_wrapper
+        return (yield from plan_mutator(plan, insert_baseline))
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 170, in plan_mutator
+        raise ex
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 123, in plan_mutator
+        msg = plan_stack[-1].send(ret)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 803, in monitor_during_wrapper
+        return (yield from plan2)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 170, in plan_mutator
+        raise ex
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 123, in plan_mutator
+        msg = plan_stack[-1].send(ret)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 170, in plan_mutator
+        raise ex
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 123, in plan_mutator
+        msg = plan_stack[-1].send(ret)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 861, in fly_during_wrapper
+        return (yield from plan2)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 170, in plan_mutator
+        raise ex
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 123, in plan_mutator
+        msg = plan_stack[-1].send(ret)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 170, in plan_mutator
+        raise ex
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 123, in plan_mutator
+        msg = plan_stack[-1].send(ret)
+      File "/nsls2/data2/hxn/shared/config/bluesky/profile_collection/startup/51-flyscan.py", line 109, in fly2d
+        yield from _fly2d(
+      File "/nsls2/data/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages/hxnfly/bs.py", line 326, in __call__
+        yield from super().__call__()
+      File "/nsls2/data/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages/hxnfly/bs.py", line 133, in __call__
+        yield from super().__call__()
+      File "/nsls2/data/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages/hxnfly/object_plans.py", line 68, in cls_plan
+        return (yield from plan)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 861, in fly_during_wrapper
+        return (yield from plan2)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 170, in plan_mutator
+        raise ex
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 123, in plan_mutator
+        msg = plan_stack[-1].send(ret)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 170, in plan_mutator
+        raise ex
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 123, in plan_mutator
+        msg = plan_stack[-1].send(ret)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 952, in stage_wrapper
+        return (yield from finalize_wrapper(inner(), unstage_devices()))
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 509, in finalize_wrapper
+        ret = yield from plan
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 950, in inner
+        return (yield from plan)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 382, in subs_wrapper
+        return (yield from finalize_wrapper(_inner_plan(),
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 509, in finalize_wrapper
+        ret = yield from plan
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 380, in _inner_plan
+        return (yield from plan)
+      File "/nsls2/data/hxn/shared/config/bluesky_overlay/2023-1.0-py310-tiled/lib/python3.10/site-packages/hxnfly/bs.py", line 139, in _gen
+        yield Msg('open_run', **self.md)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 78, in plan_mutator
+        msg = plan_stack[-1].throw(exception)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/utils/__init__.py", line 161, in single_gen
+        return (yield msg)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 195, in plan_mutator
+        inner_ret = yield msg
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 195, in plan_mutator
+        inner_ret = yield msg
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 78, in plan_mutator
+        msg = plan_stack[-1].throw(exception)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/utils/__init__.py", line 161, in single_gen
+        return (yield msg)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 195, in plan_mutator
+        inner_ret = yield msg
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 195, in plan_mutator
+        inner_ret = yield msg
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 78, in plan_mutator
+        msg = plan_stack[-1].throw(exception)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/utils/__init__.py", line 161, in single_gen
+        return (yield msg)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 195, in plan_mutator
+        inner_ret = yield msg
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 195, in plan_mutator
+        inner_ret = yield msg
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 78, in plan_mutator
+        msg = plan_stack[-1].throw(exception)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/utils/__init__.py", line 161, in single_gen
+        return (yield msg)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/preprocessors.py", line 195, in plan_mutator
+        inner_ret = yield msg
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/run_engine.py", line 1583, in _run
+        new_response = await coro(msg)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/run_engine.py", line 1774, in _open_run
+        new_uid = await current_run.open_run(msg)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/bundlers.py", line 64, in open_run
+        await self.emit(DocumentNames.start, doc)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/run_engine.py", line 2441, in emit
+        self.emit_sync(name, doc)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/run_engine.py", line 2438, in emit_sync
+        self.dispatcher.process(name, doc)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/run_engine.py", line 2461, in process
+        exceptions = self.cb_registry.process(name, name.name, doc)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/utils/__init__.py", line 384, in process
+        func(*args, **kwargs)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/bluesky/utils/__init__.py", line 473, in __call__
+        return mtd(*args, **kwargs)
+      File "/nsls2/data2/hxn/shared/config/bluesky/profile_collection/startup/00-startup.py", line 370, in insert
+        ret2 = db1.insert(name, doc)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/databroker/_core.py", line 977, in insert
+        return self.hs.insert(name, doc)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/databroker/headersource/shim.py", line 41, in insert
+        return self.mds.insert(name, doc)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/databroker/headersource/base.py", line 530, in insert
+        getattr(self, self._INS_METHODS[name])(**doc)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/databroker/headersource/mongo.py", line 191, in insert_run_start
+        self._create_runstart_index()
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/databroker/headersource/mongo.py", line 53, in _create_runstart_index
+        self._runstart_col.create_index([('uid', pymongo.DESCENDING)],
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/pymongo/collection.py", line 2055, in create_index
+        return self.__create_indexes([index], session, **cmd_options)[0]
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/pymongo/_csot.py", line 105, in csot_wrapper
+        return func(self, *args, **kwargs)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/pymongo/collection.py", line 1932, in __create_indexes
+        self._command(
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/pymongo/collection.py", line 292, in _command
+        return sock_info.command(
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/pymongo/pool.py", line 767, in command
+        return command(
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/pymongo/network.py", line 166, in command
+        helpers._check_command_response(
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/pymongo/helpers.py", line 138, in _check_command_response
+        _raise_write_concern_error(_error)
+      File "/nsls2/conda/envs/2023-1.0-py310-tiled/lib/python3.10/site-packages/pymongo/helpers.py", line 196, in _raise_write_concern_error
+        raise WTimeoutError(error.get("errmsg"), error.get("code"), error)
+    pymongo.errors.WTimeoutError: waiting for replication timed out; Error details: { wtimeout: true, writeConcern: { w: "majority", j: true, wtimeout: 60000, provenance: "customDefault" } } at myShard_1, full error: {'code': 64, 'codeName': 'WriteConcernFailed', 'errmsg': 'waiting for replication timed out; Error details: { wtimeout: true, writeConcern: { w: "majority", j: true, wtimeout: 60000, provenance: "customDefault" } } at myShard_1', 'errInfo': {'wtimeout': True, 'writeConcern': {'w': 'majority', 'j': True, 'wtimeout': 60000, 'provenance': 'customDefault'}}}
+[31m[E 13:44:29.178      run_engine: 1698](B[m Failed to close run <bluesky.bundlers.RunBundler object at 0x7fb937273760>.

@@ -55,6 +55,10 @@ class HxnMerlinDetector(_HMD):
                root='/data',
                reg=db.reg)
 
+    total_points = Cpt(Signal,
+                       value=1,
+                       doc="The total number of points to be taken")
+
     def ensure_nonblocking(self):
         for c in self.component_names:
             cpt = getattr(self, c)
@@ -71,6 +75,7 @@ merlin1.hdf5.read_attrs = []
 merlin1.ensure_nonblocking()
 
 merlin1.hdf5.stage_sigs.update([(merlin1.hdf5.compression,'szip')])
+merlin1.cam.acquire_period.put_complete = True
 
 
 merlin2 = HxnMerlinDetector('XF:03IDC-ES{Merlin:2}', name='merlin2',

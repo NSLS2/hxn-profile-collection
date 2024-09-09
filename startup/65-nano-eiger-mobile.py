@@ -21,6 +21,7 @@ from ophyd.areadetector.cam import AreaDetectorCam
 from ophyd.device import BlueskyInterface
 from ophyd.utils.epics_pvs import set_and_wait
 from ophyd.areadetector.trigger_mixins import SingleTrigger, ADTriggerStatus
+from ophyd.areadetector.plugins import PluginBase, HDF5Plugin_V33, TimeSeriesPlugin_V33
 from ophyd.areadetector.filestore_mixins import (FileStoreIterativeWrite,
                                                  FileStoreHDF5IterativeWrite,
                                                  FileStoreTIFFSquashing,
@@ -42,6 +43,22 @@ try:
 except ImportError:
     from databroker.assets.handlers import Xspress3HDF5Handler, HandlerBase
 
+class SRXMode(Enum):
+    step = 1
+    fly = 2
+class TimeSeriesPluginHXN(TimeSeriesPlugin_V33):
+    ts_read_scan = ADComponent(EpicsSignal, "TSRead.SCAN")
+    ts_read_proc = ADComponent(EpicsSignal, "TSRead.PROC")
+
+class StatsPluginHXN(StatsPlugin):
+    ts = ADComponent(TimeSeriesPluginHXN, "TS:")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.stage_sigs[self.queue_size] = 2000
+        self.stage_sigs[self.ts.queue_size] = 2000
+        self.stage_sigs[self.ts.ts_acquire_mode] = "Fixed length"
 
 class EigerFileStoreHDF5(FileStoreBase):
 
@@ -60,6 +77,7 @@ class EigerFileStoreHDF5(FileStoreBase):
                                 (self.capture, 1),
                                 (self.queue_size, 10000),  # Make the queue large enough
                                 ])
+        self.reg_root = '/'
 
         self._point_counter = None
         self.frame_per_point = None
@@ -71,8 +89,8 @@ class EigerFileStoreHDF5(FileStoreBase):
     def make_filename(self):
         filename = new_short_uid()
         formatter = datetime.now().strftime
-        write_path = formatter(os.path.realpath(self.write_path_template))
-        read_path = formatter(os.path.realpath(self.read_path_template))
+        write_path = formatter(os.path.realpath(self.write_path_template)) + '/'
+        read_path = formatter(os.path.realpath(self.read_path_template)) + '/'
 
         fn, read_path, write_path = filename, read_path, write_path
         return fn, read_path, write_path
@@ -80,7 +98,7 @@ class EigerFileStoreHDF5(FileStoreBase):
     @property
     def filestore_spec(self):
         if self.parent._mode == SRXMode.fly:
-            return BulkMerlin.HANDLER_NAME
+            return 'MERLIN_FLY_STREAM_V2'
         return 'TPX_HDF5'
 
     def generate_datum(self, key, timestamp, datum_kwargs):
@@ -216,15 +234,15 @@ class HDF5PluginWithFileStoreEiger(HDF5Plugin_V33, EigerFileStoreHDF5):
 
         original_vals = {sig: sig.get() for sig in sigs}
 
-        for sig, val in sigs.items():
-            ttime.sleep(0.1)  # abundance of caution
-            sig.set(val).wait()
+       # for sig, val in sigs.items():
+       #     ttime.sleep(0.1)  # abundance of caution
+       #     sig.set(val).wait()
 
-        ttime.sleep(acquire_time + 1)  # wait for acquisition
+       # ttime.sleep(acquire_time + 1)  # wait for acquisition
 
-        for sig, val in reversed(list(original_vals.items())):
-            ttime.sleep(0.1)
-            sig.set(val).wait()
+       # for sig, val in reversed(list(original_vals.items())):
+       #     ttime.sleep(0.1)
+       #     sig.set(val).wait()
 
 
 
@@ -276,17 +294,17 @@ class SRXEiger(EigerSingleTriggerV33, EigerDetector):
 
     hdf5 = Cpt(HDF5PluginWithFileStoreEiger, 'HDF1:',
                read_attrs=[],
-               # read_path_template='/nsls2/xf05id1/XF05ID1/MERLIN/%Y/%m/%d/',
+               # read_path_template='/nsls2/data2/hxn/legacy/%Y/%m/%d/',
                # read_path_template='/nsls2/xf05id1/XF05ID1/MERLIN/2021/02/11/',
                # read_path_template='/nsls2/data/srx/assets/merlin/%Y/%m/%d/',
                # read_path_template = LARGE_FILE_DIRECTORY_ROOT + '/%Y/%m/%d/',
-               read_path_template = LARGE_FILE_DIRECTORY_PATH,
+               read_path_template = LARGE_FILE_DIRECTORY_PATH + '/',
                configuration_attrs=[],
-               # write_path_template='/epicsdata/merlin/%Y/%m/%d/',
+               # write_path_template='/nsls2/data2/hxn/legacy/%Y/%m/%d/',
                # write_path_template='/epicsdata/merlin/2021/02/11/',
                # write_path_template='/nsls2/data/srx/assets/merlin/%Y/%m/%d/',
                # write_path_template=LARGE_FILE_DIRECTORY_ROOT + '/%Y/%m/%d/',
-               write_path_template = LARGE_FILE_DIRECTORY_PATH,
+               write_path_template = LARGE_FILE_DIRECTORY_PATH + '/',
 
                root=LARGE_FILE_DIRECTORY_ROOT)
 
@@ -400,7 +418,7 @@ try:
     def Eiger_setup():
         camset = short_uid('Eiger_setup')
         yield from bps.abs_set(eiger_mobile.cam.ROI_mode,'Disable',group=camset)
-        yield from bps.abs_set(eiger_mobile.cam.Flatfield_corr,'Disable',group=camset)
+        yield from bps.abs_set(eiger_mobile.cam.Flatfield_corr,'Enable',group=camset)
         yield from bps.abs_set(eiger_mobile.cam.FW_compress,'Disable',group=camset)
         yield from bps.abs_set(eiger_mobile.cam.Compress_alg,'LZ4',group=camset)
         yield from bps.abs_set(eiger_mobile.cam.Array_callbacks,'Enable',group=camset)

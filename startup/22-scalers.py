@@ -16,6 +16,7 @@ sclr1.read_attrs = ['channels', 'calculations']
 sclr1.mcas.kind = 'omitted'
 sclr1.channels.read_attrs = [f'chan{j}' for j in range(1, 17)]
 sclr1.calculations.read_attrs = ['calc5']
+sclr1.count_on_start.put('Yes')
 # sclr1.hints = {'fields': [f'sclr1_ch{j}' for j in (1, 2, 3)]}
 
 
@@ -45,6 +46,7 @@ sclr2.read_attrs = ['channels', 'calculations']
 sclr2.mcas.kind = 'omitted'
 sclr2.channels.read_attrs = [f'chan{j}' for j in range(1, 17)]
 sclr2.calculations.read_attrs = ['calc5']
+sclr2.count_on_start.put('Yes')
 # sclr2.hints = {'fields': [f'sclr2_ch{j}' for j in (2, 3, 4)]}
 
 sclr2_ch1 = sclr2.channels.chan1
@@ -67,6 +69,7 @@ sclr3.read_attrs = ['channels', 'calculations']
 sclr3.mcas.kind = 'omitted'
 sclr3.channels.read_attrs = [f'chan{j}' for j in range(1, 17)]
 sclr3.calculations.read_attrs = ['calc5']
+sclr3.count_on_start.put('Yes')
 # sclr3.hints = {'fields': [f'sclr1_ch{j}' for j in (1, 2, 3)]}
 
 

@@ -1,14 +1,14 @@
 {
       
       "fly2d_scan": {
-            "det": "dets_fs",
+            "det": "dets1",
             "x_start": -3,
             "x_end": 3,
             "x_num": 100,
             "y_start": -3,
             "y_end": 3,
             "y_num": 100,
-            "exposure": 0.02
+            "exposure": 0.03
       },
       "xalign": {
             "do_align": false,
@@ -34,7 +34,7 @@
       "stop_iter": false,
       "pause_scan": false,
       "pdf_log":true,
-      "pdf_elems:["Co"],
+      "pdf_elems:["Fe"],
       "peak_flux":true,
       "save_log_to":"/data/users/current_user"
       

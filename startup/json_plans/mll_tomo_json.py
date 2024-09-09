@@ -168,7 +168,8 @@ def mll_tomo_json(path_to_json):
         if not angle in np.array(tomo_params["remove_angles"]):
             yield from bps.mov(dsth, angle)
 
-            # precalculated y offset, mll only 
+            # precalculated y 
+            # , mll only 
             #y_offset1 = sin_func(angle, 0.110, -0.586, 7.85,1.96)
             #y_offset2 = sin_func(th_init, 0.110, -0.586, 7.85,1.96)
             #yield from bps.mov(dssy,y_init+y_offset1-y_offset2)

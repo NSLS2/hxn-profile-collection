@@ -10,11 +10,17 @@ from datetime import datetime, timedelta, tzinfo
 from pathlib import Path
 
 
-
 # The following code allows to call Matplotlib API from threads (experimental)
 # Requires https://github.com/tacaswell/mpl-qtthread (not packaged yet)
 import matplotlib
 import matplotlib.backends.backend_qt
+
+# The following code is expected to fix the issue with MPL windows 'freezing'
+#   after completion of a plan.
+from IPython import get_ipython
+ipython = get_ipython()
+ipython.run_line_magic("matplotlib", "")
+
 import mpl_qtthread
 # set up the teleporter
 mpl_qtthread.backend.initialize_qt_teleporter()
@@ -23,11 +29,8 @@ matplotlib.use("module://mpl_qtthread.backend_agg")
 # suppress (now) spurious warnings for mpl3.3+
 mpl_qtthread.monkeypatch_pyplot()
 
-# The following code is expected to fix the issue with MPL windows 'freezing'
-#   after completion of a plan.
-from IPython import get_ipython
-ipython = get_ipython()
-ipython.run_line_magic("matplotlib", "")
+plt.ion()
+
 
 import certifi
 import ophyd
@@ -56,6 +59,8 @@ from jsonschema import validate as js_validate
 from pymongo import MongoClient
 
 os.environ["PPMAC_HOST"] = "xf03idc-ppmac1"
+
+os.chdir('/nsls2/data2/hxn/shared/config/bluesky/profile_collection/startup')
 
 bootstrap_servers = os.getenv("BLUESKY_KAFKA_BOOTSTRAP_SERVERS", None)
 if bootstrap_servers is None:
@@ -648,5 +653,9 @@ FIP_TESTING = False  # Remove after FIP testing is complete
 def reload_bsui():
     """Restarts the current bsui and updates live elements info."""
     os.execl(sys.executable, sys.executable, * sys.argv)
+
+def bluesky_debug_mode(level='DEBUG'):
+    from bluesky.log import config_bluesky_logging
+    config_bluesky_logging(level)
 
 # del one_1d_step, one_nd_step, one_shot

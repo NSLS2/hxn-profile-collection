@@ -1,3 +1,4 @@
+
 print(f"Loading {__file__!r} ...")
 
 import functools
@@ -14,6 +15,7 @@ import matplotlib.gridspec as gridspec
 # from xray_vision.backend.mpl.cross_section_2d import CrossSection
 from scipy.interpolate import interp1d, interp2d
 from hxnfly.callbacks.liveplot import add_toolbar_button
+from hxntools.scan_info import get_scan_positions
 
 
 def plot3D(data,axis=0,index_init=None, *args, **kwargs):
@@ -504,43 +506,54 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
     if channels is None:
         channels = [1, 2, 3]
 
-    scan_id, df = _load_scan(scan_id, fill_events=fill_events)
+    hdr = db[scan_id]
+    scan_id = hdr.start['scan_id']
+    #scan_id, df = _load_scan(scan_id, fill_events=fill_events)
 
     title = 'Scan id %s. ' % scan_id + elem
-    if elem in df:
-        spectrum = np.asarray(df[elem], dtype=np.float32)
-
+    if elem.startswith('Det'):
+        spectrum = np.array(list(hdr.data(elem)),dtype=np.float32).squeeze()
     else:
         roi_keys = ['Det%d_%s' % (chan, elem) for chan in channels]
 
-        for key in roi_keys:
-            if key not in df:
-                raise KeyError('ROI %s not found' % (key, ))
+        spectrum = np.sum([np.array(list(hdr.data(roi)),dtype=np.float32).squeeze() for roi in roi_keys], axis=0)
+    #if elem in df:
+    #    spectrum = np.asarray(df[elem], dtype=np.float32)
 
-        spectrum = np.sum([getattr(df, roi) for roi in roi_keys], axis=0)
+    #else:
+    #    roi_keys = ['Det%d_%s' % (chan, elem) for chan in channels]
+
+    #    for key in roi_keys:
+    #        if key not in df:
+    #            raise KeyError('ROI %s not found' % (key, ))
+
+    #    spectrum = np.sum([getattr(df, roi) for roi in roi_keys], axis=0)
 
         #if spectrum[0] == 0:
             #spectrum[0] = spectrum[1]
 
 
-    hdr = db[scan_id]['start']
-    if x is None:
-        x = hdr['motor1']
-        #x = hdr['motors'][0]
-    x_data = np.asarray(df[x])
+    #hdr = db[scan_id]['start']
+    md = hdr.start
+    #if x is None:
+    #    x = hdr['motor1']
+    #    #x = hdr['motors'][0]
+    #x_data = np.asarray(df[x])
 
-    if y is None:
-        y = hdr['motor2']
-        #y = hdr['motors'][1]
-    y_data = np.asarray(df[y])
+    #if y is None:
+    #    y = hdr['motor2']
+    #    #y = hdr['motors'][1]
+    #y_data = np.asarray(df[y])
+
+    x_data,y_data = get_scan_positions(hdr)
 
     if norm is not None:
-        monitor = np.asarray(df[norm], dtype=np.float32)
+        monitor = np.asarray(list(hdr.data(norm)), dtype=np.float32).squeeze()
         monitor = np.where(monitor == 0, np.nanmean(monitor),monitor) #patch for dropping first data point
         spectrum = spectrum/(monitor)
 
 
-    nx, ny = get_flyscan_dimensions(hdr)
+    nx, ny = get_flyscan_dimensions(md)
     total_points = nx * ny
 
     if clim is None:
@@ -573,16 +586,16 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
     if interp2d is not None:
         print('\tUsing 2D %s interpolation...' % (interp2d, ), end=' ')
         sys.stdout.flush()
-        spectrum = interp2d_scan(hdr, x_data, y_data, spectrum,
+        spectrum = interp2d_scan(md, x_data, y_data, spectrum,
                                  kind=interp2d)
         print('done')
 
-    spectrum2 = fly2d_reshape(hdr, spectrum)
+    spectrum2 = fly2d_reshape(md, spectrum)
 
     if interp is not None:
         print('\tUsing 1D %s interpolation...' % (interp, ), end=' ')
         sys.stdout.flush()
-        spectrum2 = interp1d_scan(hdr, x_data, y_data, spectrum2, kind=interp)
+        spectrum2 = interp1d_scan(md, x_data, y_data, spectrum2, kind=interp)
         print('done')
 
     fig = None
@@ -829,29 +842,32 @@ def plot_img_sum(sid, det = 'merlin1',norm ='sclr1_ch4',
     print("thrshold set")
     df = h.table()
     #print(df.head())
-    #mon = np.array(df[mon],dtype=float32)
-    mon = np.stack(h.table(fill=True)[norm])
+    #mon = np.array(df[mon],dtype=float32)np.nanmax(y),
+    if norm is None:
+        mon = 1
+    else:
+        mon = np.stack(h.table(fill=True)[norm])
     print("mono_read")
     #figure_with_insert_fig_button()
     #plt.imshow(imgs[0],clim=[0,50])
     if roi_flag:
         imgs = imgs[:,x_cen-size//2:x_cen+size//2,y_cen-size//2:y_cen+size//2]
     mots = h.start['motors']
+    print(f"{mots = }")
     num_mots = len(mots)
     #num_mots = 1
     #df = h.table()
     if num_mots == 1:
         x = df[mots[0]]
         x = np.array(x)
-        tot = np.sum(imgs,2)
-        tot = np.array(np.sum(tot,1), dtype=float32)
+        tot = np.mean(imgs,2)
+        tot = np.array(np.mean(tot,1), dtype=float32)
         tot = np.divide(tot,mon)
         #hlim = np.percentile(tot,99.99)
         #tot[tot > hlim] = 0
         #idx = np.where(abs(tot - np.mean(tot)) >3*np.std(tot))
         #tot[idx[0]] = np.mean(tot)
-        #tot = tot[abs(tot - np.mean(tot)) < 3 * np.std(tot)]
-
+        #tot = tot[abs(tot - nplist(h.data(det))
         figure_with_insert_fig_button()
 
         plt.subplot(1,2,1)
@@ -863,22 +879,24 @@ def plot_img_sum(sid, det = 'merlin1',norm ='sclr1_ch4',
         #data_erf_fit(sid, x,tot,linear_flag=True)
 
     elif num_mots == 2:
-        tot = np.sum(imgs,2)
-        tot = np.array(np.sum(tot,1),dtype=np.float32)
-        dim1 = h.start['num1']
-        dim2 = h.start['num2']
+        tot = np.mean(imgs,2)
+        tot = np.array(np.mean(tot,1),dtype=np.float32)
+        start_doc = h.start 
+        if 'num1' and 'num2' in start_doc:
+            dim1,dim2 = start_doc['num1'],start_doc['num2']
+        elif 'shape' in start_doc:
+            dim1,dim2 = start_doc.shape
         x = np.array(df[mots[0]])
         y = np.array(df[mots[1]])
-        extent = (np.nanmin(x), np.nanmax(x),np.nanmax(y), np.nanmin(y))
+        extent = (np.nanmin(x), np.nanmax(x), np.nanmax(y),np.nanmin(y))
+        print(extent)
         figure_with_insert_fig_button()
         tot =np.divide(tot, mon)
-        #hlim = np.percentile(tot,99.99)
-        #tot[tot > hlim] = 0
-        #idx = np.where(abs(tot - np.mean(tot)) >3*np.std(tot))
-        #tot[idx[0]] = np.mean(tot)
-        #tot = tot[abs(tot - np.mean(tot)) < 3 * np.std(tot)]
-        image = tot.reshape(dim2,dim1)
+        plot_frame = np.zeros([dim2*dim1])
+        plot_frame[:len(tot)] = tot
+        image = plot_frame.reshape(dim2,dim1)
         plt.imshow(image,extent=extent)
+        #plt.imshow(image)
         plt.colorbar()
         plt.title('sid={} ROI SUM'.format(sid))
 
@@ -1120,6 +1138,19 @@ def plot_xanes(sid, ref_sid=0,overlay=0):
 
     plt.plot(energy,absorb)
     plt.title('sid={}'.format(sid))
+    
+    
+def plot_det_frame(sid,det = 'eiger1', frame_num = 0):
+    
+    h = db[int(sid)]
+    sid = h.start['scan_id']
+    imgs = np.squeeze(np.stack(db[int(sid)].table(fill=True)[det]))
+    plt.figure()
+    plt.imshow(imgs[int(frame_num),:,:])
+    plt.title(sid)
+    plt.show()
+
+
 
 '''
 def show_width():

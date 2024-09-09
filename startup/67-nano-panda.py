@@ -34,484 +34,484 @@ from ophyd import Device, EpicsMotor, EpicsPathSignal, EpicsSignal, EpicsSignalW
 
 from event_model import compose_resource
 
-class DATA(Device):
-    hdf_directory = Cpt(EpicsSignal, "HDFDirectory", string=True)
-    hdf_file_name = Cpt(EpicsSignal, "HDFFileName", string=True)
-    num_capture = Cpt(EpicsSignal, "NumCapture")
-    num_captured = Cpt(EpicsSignal, "NumCaptured")
-    flush_period = Cpt(EpicsSignal, "FlushPeriod")
-    capture = Cpt(EpicsSignal, "Capture")
-    capture_mode = Cpt(EpicsSignal, "CaptureMode", string=True)
-    status = Cpt(EpicsSignal, "Status", string=True)
-
-
-class PCOMP(Device):
-    pre_start = Cpt(EpicsSignal, "PRE_START")
-    start = Cpt(EpicsSignal, "START")
-    width = Cpt(EpicsSignal, "WIDTH")
-    step = Cpt(EpicsSignal, "STEP")
-    pulses = Cpt(EpicsSignal, "PULSES")
-
-
-class PCAP(Device):
-    arm = Cpt(EpicsSignal, "ARM")
-    active = Cpt(EpicsSignal, "ACTIVE")
-
-
-class CLOCK(Device):
-    period = Cpt(EpicsSignal, "PERIOD")
-    period_units = Cpt(EpicsSignal, "PERIOD:UNITS")
-
-
-class COUNTER(Device):
-    start = Cpt(EpicsSignal, "START")
-    step = Cpt(EpicsSignal, "STEP")
-    max = Cpt(EpicsSignal, "MAX")
-    min = Cpt(EpicsSignal, "MIN")
-
-
-class INENC(Device):
-    val = Cpt(EpicsSignal, "VAL")
-    setp = Cpt(EpicsSignal, "SETP")
-
-
-class POSITION(Device):
-    units = Cpt(EpicsSignal, "UNITS", string=True)
-    scale = Cpt(EpicsSignal, "SCALE")
-    offset = Cpt(EpicsSignal, "OFFSET")
-
-
-class POSITIONS(Device):
-    inenc1 = Cpt(POSITION, "12:")
-    inenc2 = Cpt(POSITION, "13:")
-
-
-class PULSE(Device):
-    delay_units = Cpt(EpicsSignal, "DELAY:UNITS", string=True)
-    delay = Cpt(EpicsSignal, "DELAY")
-    width_units = Cpt(EpicsSignal, "WIDTH:UNITS", string=True)
-    width = Cpt(EpicsSignal, "WIDTH")
-
-
-class BITS(Device):
-    A = Cpt(EpicsSignal, "A")
-    B = Cpt(EpicsSignal, "B")
-    C = Cpt(EpicsSignal, "C")
-    D = Cpt(EpicsSignal, "D")
-
-
-class PandA_Ophyd1(Device):
-    pcap = Cpt(PCAP, "PCAP:")
-    data = Cpt(DATA, "DATA:")
-    pcomp1 = Cpt(PCOMP, "PCOMP1:")
-    pcomp2 = Cpt(PCOMP, "PCOMP2:")
-    clock1 = Cpt(CLOCK, "CLOCK1:")
-    clock2 = Cpt(CLOCK, "CLOCK2:")
-    counter1 = Cpt(COUNTER, "COUNTER1:")
-    counter2 = Cpt(COUNTER, "COUNTER2:")
-    counter3 = Cpt(COUNTER, "COUNTER3:")
-    inenc1 = Cpt(INENC, "INENC1:")
-    inenc2 = Cpt(INENC, "INENC2:")
-    pulse2 = Cpt(PULSE, "PULSE2:")
-    pulse3 = Cpt(PULSE, "PULSE3:")
-    positions = Cpt(POSITIONS, "POSITIONS:")
-    bits = Cpt(BITS, "BITS:")
-
-
-panda1 = PandA_Ophyd1("XF03IDC-ES-PANDA-1:", name="panda1")
-
-
-class ExportSISDataPanda:
-    def __init__(self):
-        self._fp = None
-        self._filepath = None
-
-    def open(self, filepath, mca_names, ion, panda):
-        self.close()
-        self._filepath = filepath
-        self._fp = h5py.File(filepath, "w", libver="latest")
-
-        self._fp.swmr_mode = True
-
-        self._ion = ion
-        self._panda = panda
-        self._mca_names = mca_names
-
-        def create_ds(ds_name):
-            ds = self._fp.create_dataset(ds_name, data=np.array([], dtype="f"), maxshape=(None,), dtype="f")
-
-        for ds_name in self._mca_names:
-            create_ds(ds_name)
-
-        self._fp.flush()
-
-    def close(self):
-        if self._fp:
-            self._fp.close()
-            self._fp = None
-
-    def __del__(self):
-        self.close()
-
-    def export(self):
-
-        n_mcas = len(self._mca_names)
-
-        mca_data = []
-        for n in range(1, n_mcas + 1):
-            mca = self._ion.mca_by_index[n].spectrum.get(timeout=5.0)
-            mca_data.append(mca)
-
-        correct_length = int(self._panda.data.num_captured.get())
-
-        for n in range(len(mca_data)):
-            mca = mca_data[n]
-            # print(f"Number of mca points: {len(mca)}")
-            # mca = mca[1::2]
-            if len(mca) != correct_length:
-                print(f"Incorrect number of points ({len(mca)}) loaded from MCA{n + 1}: {correct_length} points are expected")
-                if len(mca > correct_length):
-                    mca = mca[:correct_length]
-                else:
-                    mca = np.append(mca, [1e10] * (correct_length - len(mca)))
-            mca_data[n] = mca
-
-        j = 0
-        while self._panda.data.capture.get() == 1:
-            print("Waiting for zebra...")
-            ttime.sleep(0.1)
-            j += 1
-            if j > 10:
-                print("THE ZEBRA IS BEHAVING BADLY CARRYING ON")
-                break
-
-        def add_data(ds_name, data):
-            ds = self._fp[ds_name]
-            n_ds = ds.shape[0]
-            ds.resize((n_ds + len(data),))
-            ds[n_ds:] = np.array(data)
-
-        for n, name in enumerate(self._mca_names):
-            add_data(name, np.asarray(mca_data[n]))
-
-        self._fp.flush()
-
-class HXNFlyerPanda(Device):
-    """
-    This is the Panda1.
-    """
-
-    LARGE_FILE_DIRECTORY_WRITE_PATH = LARGE_FILE_DIRECTORY_PATH
-    LARGE_FILE_DIRECTORY_READ_PATH = LARGE_FILE_DIRECTORY_PATH
-    LARGE_FILE_DIRECTORY_ROOT = LARGE_FILE_DIRECTORY_ROOT
-
-    KNOWN_DETS = {"eiger_mobile"}
-
-    @property
-    def detectors(self):
-        return tuple(self._dets)
-
-    @detectors.setter
-    def detectors(self, value):
-        dets = tuple(value)
-        if not all(d.name in self.KNOWN_DETS for d in dets):
-            raise ValueError(
-                f"One or more of {[d.name for d in dets]}"
-                f"is not known to the zebra. "
-                f"The known detectors are {self.KNOWN_DETS})"
-            )
-        self._dets = dets
-
-    @property
-    def sclr(self):
-        return self._sis
-
-    def __init__(self, panda,dets,sclr, motor=None, root_dir=None, **kwargs):
-        super().__init__("", parent=None, **kwargs)
-        self.name = "PandaFlyer"
-        if root_dir is None:
-            root_dir = self.LARGE_FILE_DIRECTORY_ROOT
-        self._mode = "idle"
-        self._dets = dets
-        self._sis = sclr
-        self._root_dir = root_dir
-        self._resource_document, self._datum_factory = None, None
-        self._document_cache = deque()
-        self._last_bulk = None
-
-        self._point_counter = None
-        self.frame_per_point = None
-
-        self.panda = panda
-        self.motor = motor
-
-        self._document_cache = []
-        self._resource_document = None
-        self._datum_factory = None
-
-        if self._sis is not None:
-            self._data_sis_exporter = ExportSISDataPanda()
-
-        type_map = {"int32": "<i4", "float32": "<f4", "float64": "<f8"}
-
-        self.fields = {
-            # "counter1_out": {
-            #     "value": "COUNTER1.OUT.Value",
-            #     "dtype_str": type_map["float64"],
-            # },
-            "inenc1_val": {
-                "value": "INENC1.VAL.Value",
-                "dtype_str": type_map["int32"],
-            },
-            "inenc2_val": {
-                "value": "INENC2.VAL.Value",
-                "dtype_str": type_map["int32"],
-            },
-            "inenc3_val": {
-                "value": "INENC3.VAL.Value",
-                "dtype_str": type_map["int32"],
-            },
-            "inenc4_val": {
-                "value": "INENC4.VAL.Value",
-                "dtype_str": type_map["int32"],
-            },
-            "pcap_ts_trig": {
-                "value": "PCAP.TS_TRIG.Value",
-                "dtype_str": type_map["float64"],
-            },
-        }
-        self.panda.data.hdf_directory.put_complete = True
-        self.panda.data.hdf_file_name.put_complete = True
-
-    def stage(self):
-        super().stage()
-
-    def unstage(self):
-        self._point_counter = None
-        if self._sis is not None:
-            self._data_sis_exporter.close()
-        super().unstage()
-
-    def kickoff(self, *, num, dwell):
-        """Kickoff the acquisition process."""
-        # Prepare parameters:
-        self._document_cache = deque()
-        self._datum_docs = {}
-        self._counter = itertools.count()
-        self._point_counter = 0
-
-        self.frame_per_point = int(num)
-        self._npts = int(num)
-        # Prepare 'resource' factory.
-        now = datetime.now()
-        self.fl_path = self.LARGE_FILE_DIRECTORY_WRITE_PATH
-        self.fl_name = f"panda_rbdata_{now.strftime('%Y%m%d_%H%M%S')}_{short_uid()}.h5"
-
-        resource_path = self.fl_name
-        self._resource_document, self._datum_factory, _ = compose_resource(
-            start={"uid": "needed for compose_resource() but will be discarded"},
-            spec="PANDA",
-            root=self.fl_path,
-            resource_path=resource_path,
-            resource_kwargs={},
-        )
-        # now discard the start uid, a real one will be added later
-        self._resource_document.pop("run_start")
-        self._document_cache.append(("resource", self._resource_document))
-
-        for key, value in self.fields.items():
-            datum_document = self._datum_factory(datum_kwargs={"field": value["value"]})
-            self._document_cache.append(("datum", datum_document))
-            self._datum_docs[key] = datum_document
-
-        if self._sis is not None:
-            # Put SIS3820 into single count (not autocount) mode
-            self.stage_sigs[self._sis.count_mode] = 0
-            self.stage_sigs[self._sis.count_on_start] = 1
-            # Stop the SIS3820
-            self._sis.stop_all.put(1)
-
-        self.__filename_sis = "{}.h5".format(uuid.uuid4())
-        print(self.__filename_sis)
-        self.__read_filepath_sis = os.path.join(
-            self.LARGE_FILE_DIRECTORY_READ_PATH, self.__filename_sis
-        )
-        self.__write_filepath_sis = os.path.realpath(os.path.join(
-            self.LARGE_FILE_DIRECTORY_WRITE_PATH, self.__filename_sis
-        ))
-
-        self.__filestore_resource_sis, self._datum_factory_sis = resource_factory(
-            SISHDF5Handler.HANDLER_NAME,
-            root=self.LARGE_FILE_DIRECTORY_ROOT,
-            resource_path=self.__read_filepath_sis,
-            resource_kwargs={"frame_per_point": self.frame_per_point},
-            path_semantics="posix",
-        )
-
-        resources = [self.__filestore_resource_sis]
-        if self._sis:
-            resources.append(self.__filestore_resource_sis)
-        self._document_cache.extend(("resource", _) for _ in resources)
-
-        if self._sis is not None:
-            sis_mca_names = self._sis_mca_names()
-            self._data_sis_exporter.open(
-                self.__write_filepath_sis, mca_names=sis_mca_names, ion=self._sis, panda=self.panda
-            )
-
-        # Kickoff panda process:
-        print(f"[Panda]Starting acquisition ...")
-
-        self.panda.data.hdf_directory.set(self.fl_path).wait()
-        self.panda.data.hdf_file_name.set(self.fl_name).wait()
-        self.panda.data.flush_period.set(1).wait()
-
-        self.panda.data.capture_mode.set("FIRST_N").wait()
-        self.panda.data.num_capture.set(self.frame_per_point).wait()
-
-        self.panda.pcap.arm.set(1).wait()
-
-        self.panda.data.capture.set(1).wait()
-
-        return NullStatus()
-
-    def complete(self):
-        print("[Panda]complete")
-        """Wait for the acquisition process started in kickoff to complete."""
-        # Wait until done
-        while (self.panda.data.capture.get() == 1):
-            time.sleep(0.01)
-
-        self.panda.pcap.arm.set(0).wait()
-
-        for d in self._dets:
-            d.stop(success=True)
-
-
-        if self._sis:
-            sis_mca_names = self._sis_mca_names()
-            sis_datum = []
-            for name in sis_mca_names:
-                sis_datum.append(self._datum_factory_sis({"column": name, "point_number": self._point_counter}))
-
-
-        if self._sis:
-            self._document_cache.extend(("datum", d) for d in sis_datum)
-
-        for d in self._dets:
-            self._document_cache.extend(d.collect_asset_docs())
-
-        # @timer_wrapper
-        def get_sis_data():
-            if self._sis is None:
-                return
-            self._data_sis_exporter.export()
-
-        get_sis_data()
-
-        print("[Panda]collect data")
-
-        data_dict = {
-            key: datum_doc["datum_id"] for key, datum_doc in self._datum_docs.items()
-        }
-
-        now = ttime.time()  # TODO: figure out how to get it from PandABox (maybe?)
-        self._last_bulk = {
-            "data": data_dict,
-            "timestamps": {key: now for key in self._datum_docs},
-            "time": now,
-            "filled": {key: False for key in self._datum_docs},
-        }
-
-        if self._sis:
-            self._last_bulk["data"].update({k: v["datum_id"] for k, v in zip(sis_mca_names, sis_datum)})
-            self._last_bulk["timestamps"].update({k: v["datum_id"] for k, v in zip(sis_mca_names, sis_datum)})
-
-        for d in self._dets:
-            reading = d.read()
-            self._last_bulk["data"].update(
-                {k: v["value"] for k, v in reading.items()}
-                )
-            self._last_bulk["timestamps"].update(
-                {k: v["timestamp"] for k, v in reading.items()}
-            )
-
-        return NullStatus()
-
-    def describe_collect(self):
-        """Describe the data structure."""
-        return_dict = {"primary": OrderedDict()}
-        desc = return_dict["primary"]
-
-        ext_spec = "FileStore:"
-
-        spec = {
-            "external": ext_spec,
-            "dtype": "array",
-            "shape": [self._npts],
-            "source": "",  # make this the PV of the array the det is writing
-        }
-
-        for key, value in self.fields.items():
-            desc.update(
-                {
-                    key: {
-                        "source": "PANDA",
-                        "dtype": "array",
-                        "dtype_str": value["dtype_str"],
-                        "shape": [
-                            self.frame_per_point
-                        ],  # TODO: figure out variable shape
-                        "external": "FILESTORE:",
-                    }
-                }
-            )
-
-        for d in self._dets:
-            desc.update(d.describe())
-
-        if self._sis is not None:
-            sis_mca_names = self._sis_mca_names()
-            for n, name in enumerate(sis_mca_names):
-                desc[name] = spec
-                desc[name]["source"] = self._sis.mca_by_index[n + 1].spectrum.pvname
-
-        return return_dict
-
-    def collect(self):
-        yield self._last_bulk
-        self._point_counter += 1
-
-    def collect_asset_docs(self):
-        """The method to collect resource/datum documents."""
-        items = list(self._document_cache)
-        self._document_cache.clear()
-        yield from items
-
-    def _sis_mca_names(self):
-        n_mcas = n_scaler_mca
-        return [getattr(self._sis.channels, f"chan{_}").name for _ in range(1, n_mcas + 1)]
-
-panda_flyer = HXNFlyerPanda(panda1,[],sclr3,name="PandaFlyer")
-
-class PandAHandlerHDF5(HandlerBase):
-    """The handler to read HDF5 files produced by PandABox."""
-
-    specs = {"PANDA"}
-
-    def __init__(self, filename):
-        self._name = filename
-
-    def __call__(self, field):
-        with h5py.File(self._name, "r") as f:
-            entry = f[f"/{field}"]
-            return entry[:]
-
-
-db.reg.register_handler("PANDA", PandAHandlerHDF5, overwrite=True)
+#class DATA(Device):
+#    hdf_directory = Cpt(EpicsSignal, "HDFDirectory", string=True)
+#    hdf_file_name = Cpt(EpicsSignal, "HDFFileName", string=True)
+#    num_capture = Cpt(EpicsSignal, "NumCapture")
+#    num_captured = Cpt(EpicsSignal, "NumCaptured")
+#    flush_period = Cpt(EpicsSignal, "FlushPeriod")
+#    capture = Cpt(EpicsSignal, "Capture")
+#    capture_mode = Cpt(EpicsSignal, "CaptureMode", string=True)
+#    status = Cpt(EpicsSignal, "Status", string=True)
+#
+#
+#class PCOMP(Device):
+#    pre_start = Cpt(EpicsSignal, "PRE_START")
+#    start = Cpt(EpicsSignal, "START")
+#    width = Cpt(EpicsSignal, "WIDTH")
+#    step = Cpt(EpicsSignal, "STEP")
+#    pulses = Cpt(EpicsSignal, "PULSES")
+#
+#
+#class PCAP(Device):
+#    arm = Cpt(EpicsSignal, "ARM")
+#    active = Cpt(EpicsSignal, "ACTIVE")
+#
+#
+#class CLOCK(Device):
+#    period = Cpt(EpicsSignal, "PERIOD")
+#    period_units = Cpt(EpicsSignal, "PERIOD:UNITS")
+#
+#
+#class COUNTER(Device):
+#    start = Cpt(EpicsSignal, "START")
+#    step = Cpt(EpicsSignal, "STEP")
+#    max = Cpt(EpicsSignal, "MAX")
+#    min = Cpt(EpicsSignal, "MIN")
+#
+#
+#class INENC(Device):
+#    val = Cpt(EpicsSignal, "VAL")
+#    setp = Cpt(EpicsSignal, "SETP")
+#
+#
+#class POSITION(Device):
+#    units = Cpt(EpicsSignal, "UNITS", string=True)
+#    scale = Cpt(EpicsSignal, "SCALE")
+#    offset = Cpt(EpicsSignal, "OFFSET")
+#
+#
+#class POSITIONS(Device):
+#    inenc1 = Cpt(POSITION, "12:")
+#    inenc2 = Cpt(POSITION, "13:")
+#
+#
+#class PULSE(Device):
+#    delay_units = Cpt(EpicsSignal, "DELAY:UNITS", string=True)
+#    delay = Cpt(EpicsSignal, "DELAY")
+#    width_units = Cpt(EpicsSignal, "WIDTH:UNITS", string=True)
+#    width = Cpt(EpicsSignal, "WIDTH")
+#
+#
+#class BITS(Device):
+#    A = Cpt(EpicsSignal, "A")
+#    B = Cpt(EpicsSignal, "B")
+#    C = Cpt(EpicsSignal, "C")
+#    D = Cpt(EpicsSignal, "D")
+#
+#
+#class PandA_Ophyd1(Device):
+#    pcap = Cpt(PCAP, "PCAP:")
+#    data = Cpt(DATA, "DATA:")
+#    pcomp1 = Cpt(PCOMP, "PCOMP1:")
+#    pcomp2 = Cpt(PCOMP, "PCOMP2:")
+#    clock1 = Cpt(CLOCK, "CLOCK1:")
+#    clock2 = Cpt(CLOCK, "CLOCK2:")
+#    counter1 = Cpt(COUNTER, "COUNTER1:")
+#    counter2 = Cpt(COUNTER, "COUNTER2:")
+#    counter3 = Cpt(COUNTER, "COUNTER3:")
+#    inenc1 = Cpt(INENC, "INENC1:")
+#    inenc2 = Cpt(INENC, "INENC2:")
+#    pulse2 = Cpt(PULSE, "PULSE2:")
+#    pulse3 = Cpt(PULSE, "PULSE3:")
+#    positions = Cpt(POSITIONS, "POSITIONS:")
+#    bits = Cpt(BITS, "BITS:")
+#
+#
+#panda1 = PandA_Ophyd1("XF03IDC-ES-PANDA-1:", name="panda1")
+#
+#
+#class ExportSISDataPanda:
+#    def __init__(self):
+#        self._fp = None
+#        self._filepath = None
+#
+#    def open(self, filepath, mca_names, ion, panda):
+#        self.close()
+#        self._filepath = filepath
+#        self._fp = h5py.File(filepath, "w", libver="latest")
+#
+#        self._fp.swmr_mode = True
+#
+#        self._ion = ion
+#        self._panda = panda
+#        self._mca_names = mca_names
+#
+#        def create_ds(ds_name):
+#            ds = self._fp.create_dataset(ds_name, data=np.array([], dtype="f"), maxshape=(None,), dtype="f")
+#
+#        for ds_name in self._mca_names:
+#            create_ds(ds_name)
+#
+#        self._fp.flush()
+#
+#    def close(self):
+#        if self._fp:
+#            self._fp.close()
+#            self._fp = None
+#
+#    def __del__(self):
+#        self.close()
+#
+#    def export(self):
+#
+#        n_mcas = len(self._mca_names)
+#
+#        mca_data = []
+#        for n in range(1, n_mcas + 1):
+#            mca = self._ion.mca_by_index[n].spectrum.get(timeout=5.0)
+#            mca_data.append(mca)
+#
+#        correct_length = int(self._panda.data.num_captured.get())
+#
+#        for n in range(len(mca_data)):
+#            mca = mca_data[n]
+#            # print(f"Number of mca points: {len(mca)}")
+#            # mca = mca[1::2]
+#            if len(mca) != correct_length:
+#                print(f"Incorrect number of points ({len(mca)}) loaded from MCA{n + 1}: {correct_length} points are expected")
+#                if len(mca > correct_length):
+#                    mca = mca[:correct_length]
+#                else:
+#                    mca = np.append(mca, [1e10] * (correct_length - len(mca)))
+#            mca_data[n] = mca
+#
+#        j = 0
+#        while self._panda.data.capture.get() == 1:
+#            print("Waiting for zebra...")
+#            ttime.sleep(0.1)
+#            j += 1
+#            if j > 10:
+#                print("THE ZEBRA IS BEHAVING BADLY CARRYING ON")
+#                break
+#
+#        def add_data(ds_name, data):
+#            ds = self._fp[ds_name]
+#            n_ds = ds.shape[0]
+#            ds.resize((n_ds + len(data),))
+#            ds[n_ds:] = np.array(data)
+#
+#        for n, name in enumerate(self._mca_names):
+#            add_data(name, np.asarray(mca_data[n]))
+#
+#        self._fp.flush()
+#
+#class HXNFlyerPanda(Device):
+#    """
+#    This is the Panda1.
+#    """
+#
+#    LARGE_FILE_DIRECTORY_WRITE_PATH = LARGE_FILE_DIRECTORY_PATH
+#    LARGE_FILE_DIRECTORY_READ_PATH = LARGE_FILE_DIRECTORY_PATH
+#    LARGE_FILE_DIRECTORY_ROOT = LARGE_FILE_DIRECTORY_ROOT
+#
+#    KNOWN_DETS = {"eiger_mobile"}
+#
+#    @property
+#    def detectors(self):
+#        return tuple(self._dets)
+#
+#    @detectors.setter
+#    def detectors(self, value):
+#        dets = tuple(value)
+#        if not all(d.name in self.KNOWN_DETS for d in dets):
+#            raise ValueError(
+#                f"One or more of {[d.name for d in dets]}"
+#                f"is not known to the zebra. "
+#                f"The known detectors are {self.KNOWN_DETS})"
+#            )
+#        self._dets = dets
+#
+#    @property
+#    def sclr(self):
+#        return self._sis
+#
+#    def __init__(self, panda,dets,sclr, motor=None, root_dir=None, **kwargs):
+#        super().__init__("", parent=None, **kwargs)
+#        self.name = "PandaFlyer"
+#        if root_dir is None:
+#            root_dir = self.LARGE_FILE_DIRECTORY_ROOT
+#        self._mode = "idle"
+#        self._dets = dets
+#        self._sis = sclr
+#        self._root_dir = root_dir
+#        self._resource_document, self._datum_factory = None, None
+#        self._document_cache = deque()
+#        self._last_bulk = None
+#
+#        self._point_counter = None
+#        self.frame_per_point = None
+#
+#        self.panda = panda
+#        self.motor = motor
+#
+#        self._document_cache = []
+#        self._resource_document = None
+#        self._datum_factory = None
+#
+#        if self._sis is not None:
+#            self._data_sis_exporter = ExportSISDataPanda()
+#
+#        type_map = {"int32": "<i4", "float32": "<f4", "float64": "<f8"}
+#
+#        self.fields = {
+#            # "counter1_out": {
+#            #     "value": "COUNTER1.OUT.Value",
+#            #     "dtype_str": type_map["float64"],
+#            # },
+#            "inenc1_val": {
+#                "value": "INENC1.VAL.Value",
+#                "dtype_str": type_map["int32"],
+#            },
+#            "inenc2_val": {
+#                "value": "INENC2.VAL.Value",
+#                "dtype_str": type_map["int32"],
+#            },
+#            "inenc3_val": {
+#                "value": "INENC3.VAL.Value",
+#                "dtype_str": type_map["int32"],
+#            },
+#            "inenc4_val": {
+#                "value": "INENC4.VAL.Value",
+#                "dtype_str": type_map["int32"],
+#            },
+#            "pcap_ts_trig": {
+#                "value": "PCAP.TS_TRIG.Value",
+#                "dtype_str": type_map["float64"],
+#            },
+#        }
+#        self.panda.data.hdf_directory.put_complete = True
+#        self.panda.data.hdf_file_name.put_complete = True
+#
+#    def stage(self):
+#        super().stage()
+#
+#    def unstage(self):
+#        self._point_counter = None
+#        if self._sis is not None:
+#            self._data_sis_exporter.close()
+#        super().unstage()
+#
+#    def kickoff(self, *, num, dwell):
+#        """Kickoff the acquisition process."""
+#        # Prepare parameters:
+#        self._document_cache = deque()
+#        self._datum_docs = {}
+#        self._counter = itertools.count()
+#        self._point_counter = 0
+#
+#        self.frame_per_point = int(num)
+#        self._npts = int(num)
+#        # Prepare 'resource' factory.
+#        now = datetime.now()
+#        self.fl_path = self.LARGE_FILE_DIRECTORY_WRITE_PATH
+#        self.fl_name = f"panda_rbdata_{now.strftime('%Y%m%d_%H%M%S')}_{short_uid()}.h5"
+#
+#        resource_path = self.fl_name
+#        self._resource_document, self._datum_factory, _ = compose_resource(
+#            start={"uid": "needed for compose_resource() but will be discarded"},
+#            spec="PANDA",
+#            root=self.fl_path,
+#            resource_path=resource_path,
+#            resource_kwargs={},
+#        )
+#        # now discard the start uid, a real one will be added later
+#        self._resource_document.pop("run_start")
+#        self._document_cache.append(("resource", self._resource_document))
+#
+#        for key, value in self.fields.items():
+#            datum_document = self._datum_factory(datum_kwargs={"field": value["value"]})
+#            self._document_cache.append(("datum", datum_document))
+#            self._datum_docs[key] = datum_document
+#
+#        if self._sis is not None:
+#            # Put SIS3820 into single count (not autocount) mode
+#            self.stage_sigs[self._sis.count_mode] = 0
+#            self.stage_sigs[self._sis.count_on_start] = 1
+#            # Stop the SIS3820
+#            self._sis.stop_all.put(1)
+#
+#        self.__filename_sis = "{}.h5".format(uuid.uuid4())
+#        print(self.__filename_sis)
+#        self.__read_filepath_sis = os.path.join(
+#            self.LARGE_FILE_DIRECTORY_READ_PATH, self.__filename_sis
+#        )
+#        self.__write_filepath_sis = os.path.realpath(os.path.join(
+#            self.LARGE_FILE_DIRECTORY_WRITE_PATH, self.__filename_sis
+#        ))
+#
+#        self.__filestore_resource_sis, self._datum_factory_sis = resource_factory(
+#            SISHDF5Handler.HANDLER_NAME,
+#            root=self.LARGE_FILE_DIRECTORY_ROOT,
+#            resource_path=self.__read_filepath_sis,
+#            resource_kwargs={"frame_per_point": self.frame_per_point},
+#            path_semantics="posix",
+#        )
+#
+#        resources = [self.__filestore_resource_sis]
+#        if self._sis:
+#            resources.append(self.__filestore_resource_sis)
+#        self._document_cache.extend(("resource", _) for _ in resources)
+#
+#        if self._sis is not None:
+#            sis_mca_names = self._sis_mca_names()
+#            self._data_sis_exporter.open(
+#                self.__write_filepath_sis, mca_names=sis_mca_names, ion=self._sis, panda=self.panda
+#            )
+#
+#        # Kickoff panda process:
+#        print(f"[Panda]Starting acquisition ...")
+#
+#        self.panda.data.hdf_directory.set(self.fl_path).wait()
+#        self.panda.data.hdf_file_name.set(self.fl_name).wait()
+#        self.panda.data.flush_period.set(1).wait()
+#
+#        self.panda.data.capture_mode.set("FIRST_N").wait()
+#        self.panda.data.num_capture.set(self.frame_per_point).wait()
+#
+#        self.panda.pcap.arm.set(1).wait()
+#
+#        self.panda.data.capture.set(1).wait()
+#
+#        return NullStatus()
+#
+#    def complete(self):
+#        print("[Panda]complete")
+#        """Wait for the acquisition process started in kickoff to complete."""
+#        # Wait until done
+#        while (self.panda.data.capture.get() == 1):
+#            time.sleep(0.01)
+#
+#        self.panda.pcap.arm.set(0).wait()
+#
+#        for d in self._dets:
+#            d.stop(success=True)
+#
+#
+#        if self._sis:
+#            sis_mca_names = self._sis_mca_names()
+#            sis_datum = []
+#            for name in sis_mca_names:
+#                sis_datum.append(self._datum_factory_sis({"column": name, "point_number": self._point_counter}))
+#
+#
+#        if self._sis:
+#            self._document_cache.extend(("datum", d) for d in sis_datum)
+#
+#        for d in self._dets:
+#            self._document_cache.extend(d.collect_asset_docs())
+#
+#        # @timer_wrapper
+#        def get_sis_data():
+#            if self._sis is None:
+#                return
+#            self._data_sis_exporter.export()
+#
+#        get_sis_data()
+#
+#        print("[Panda]collect data")
+#
+#        data_dict = {
+#            key: datum_doc["datum_id"] for key, datum_doc in self._datum_docs.items()
+#        }
+#
+#        now = ttime.time()  # TODO: figure out how to get it from PandABox (maybe?)
+#        self._last_bulk = {
+#            "data": data_dict,
+#            "timestamps": {key: now for key in self._datum_docs},
+#            "time": now,
+#            "filled": {key: False for key in self._datum_docs},
+#        }
+#
+#        if self._sis:
+#            self._last_bulk["data"].update({k: v["datum_id"] for k, v in zip(sis_mca_names, sis_datum)})
+#            self._last_bulk["timestamps"].update({k: v["datum_id"] for k, v in zip(sis_mca_names, sis_datum)})
+#
+#        for d in self._dets:
+#            reading = d.read()
+#            self._last_bulk["data"].update(
+#                {k: v["value"] for k, v in reading.items()}
+#                )
+#            self._last_bulk["timestamps"].update(
+#                {k: v["timestamp"] for k, v in reading.items()}
+#            )
+#
+#        return NullStatus()
+#
+#    def describe_collect(self):
+#        """Describe the data structure."""
+#        return_dict = {"primary": OrderedDict()}
+#        desc = return_dict["primary"]
+#
+#        ext_spec = "FileStore:"
+#
+#        spec = {
+#            "external": ext_spec,
+#            "dtype": "array",
+#            "shape": [self._npts],
+#            "source": "",  # make this the PV of the array the det is writing
+#        }
+#
+#        for key, value in self.fields.items():
+#            desc.update(
+#                {
+#                    key: {
+#                        "source": "PANDA",
+#                        "dtype": "array",
+#                        "dtype_str": value["dtype_str"],
+#                        "shape": [
+#                            self.frame_per_point
+#                        ],  # TODO: figure out variable shape
+#                        "external": "FILESTORE:",
+#                    }
+#                }
+#            )
+#
+#        for d in self._dets:
+#            desc.update(d.describe())
+#
+#        if self._sis is not None:
+#            sis_mca_names = self._sis_mca_names()
+#            for n, name in enumerate(sis_mca_names):
+#                desc[name] = spec
+#                desc[name]["source"] = self._sis.mca_by_index[n + 1].spectrum.pvname
+#
+#        return return_dict
+#
+#    def collect(self):
+#        yield self._last_bulk
+#        self._point_counter += 1
+#
+#    def collect_asset_docs(self):
+#        """The method to collect resource/datum documents."""
+#        items = list(self._document_cache)
+#        self._document_cache.clear()
+#        yield from items
+#
+#    def _sis_mca_names(self):
+#        n_mcas = n_scaler_mca
+#        return [getattr(self._sis.channels, f"chan{_}").name for _ in range(1, n_mcas + 1)]
+#
+#panda_flyer = HXNFlyerPanda(panda1,[],sclr3,name="PandaFlyer")
+#
+#class PandAHandlerHDF5(HandlerBase):
+#    """The handler to read HDF5 files produced by PandABox."""
+#
+#    specs = {"PANDA"}
+#
+#    def __init__(self, filename):
+#        self._name = filename
+#
+#    def __call__(self, field):
+#        with h5py.File(self._name, "r") as f:
+#            entry = f[f"/{field}"]
+#            return entry[:]
+#
+#
+#db.reg.register_handler("PANDA", PandAHandlerHDF5, overwrite=True)
 
 def scan_and_fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwell, *,
-                      panda_flyer, xmotor, ymotor,
+                      panda_flyer, xmotor, ymotor, dead_time = 0,
                       delta=None, shutter=False, align=False, plot=False,
                       md=None, snake=False, verbose=False, wait_before_scan=None):
     """Read IO from SIS3820.
@@ -567,6 +567,9 @@ def scan_and_fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwe
 
     # Assign detectors to flying_zebra, this may fail
     panda_flyer.detectors = detectors
+    panda_flyer.position_supersample = 10
+    panda_flyer.frame_per_point = num_total * panda_flyer.position_supersample
+
     # Setup detectors, combine the zebra, sclr, and the just set detector list
     detectors = (panda_flyer.panda, panda_flyer.sclr) + panda_flyer.detectors
     detectors = [_ for _ in detectors if _ is not None]
@@ -603,10 +606,10 @@ def scan_and_fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwe
                 # acquire_period = acquire_time + 0.0016392
 
             elif det_name == "eiger2":
-                acquire_time = dwell
+                acquire_time = dwell - dead_time
                 acquire_period = dwell
             elif det_name == "eiger_mobile":
-                acquire_time = dwell
+                acquire_time = dwell - dead_time
                 acquire_period = dwell
             else:
                 raise ValueError(f"Unsupported detector: {det_name!r}")
@@ -673,6 +676,9 @@ def scan_and_fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwe
     if "scan" not in md:
         md["scan"] = {}
     # Scan metadata
+    md['motors'] = [xmotor.name, ymotor.name]
+    md['motor1'] = xmotor.name
+    md['motor2'] = ymotor.name
     md['scan']['type'] = 'FIP_2D_FLY'
     md['scan']['scan_input'] = [float(xcenter),float(xrange),xnum,ystart,ystop,ynum,dwell]
     md['scan']['sample_name'] = ''
@@ -682,7 +688,7 @@ def scan_and_fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwe
     except:
         pass
     md['scan']['detectors'] = [d.name for d in detectors]
-    md['scan']['detector_distance'] = 1.055
+    md['scan']['detector_distance'] = 1.55
     md['scan']['dwell'] = dwell
     md['scan']['fast_axis'] = {'motor_name' : xmotor.name,
                                'units' : xmotor.motor_egu.get()}
@@ -694,6 +700,7 @@ def scan_and_fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwe
                            'units' : ymotor.motor_egu.get()}
     md['scan']['snake'] = snake
     md['scan']['shape'] = (xnum, ynum)
+    md['shape'] = (xnum, ynum)
 
     time_start_scan = time.time()
 
@@ -885,13 +892,13 @@ def scan_and_fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwe
             # print(f"Configuring 'eiger2' ...")
             dpc = dets_by_name["eiger2"]
             yield from abs_set(dpc.cam.num_triggers, 1, wait=True)
-            yield from abs_set(dpc.cam.num_images, num_total+10, wait=True)
+            yield from abs_set(dpc.cam.num_images, num_total, wait=True)
             yield from abs_set(dpc.cam.wait_for_plugins, 'No', wait=True)
         if "eiger_mobile" in dets_by_name:
             # print(f"Configuring 'eiger_mobile' ...")
             dpc = dets_by_name["eiger_mobile"]
             yield from abs_set(dpc.cam.num_triggers, 1, group=wait_before_scan)
-            yield from abs_set(dpc.cam.num_images, num_total+10, group=wait_before_scan)
+            yield from abs_set(dpc.cam.num_images, num_total + 5, group=wait_before_scan)
             yield from abs_set(dpc.cam.wait_for_plugins, 'No', group=wait_before_scan)
 
         ion = panda_flyer.sclr
@@ -906,7 +913,7 @@ def scan_and_fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwe
             # start_zebra, stop_zebra = xstart * 1000000, xstop * 1000000
             start_zebra, stop_zebra = scan_start, scan_stop
             yield from kickoff(panda_flyer,
-                                num=num_total, dwell=dwell,
+                                num=num_total*panda_flyer.position_supersample,
                                 wait=True)
         yield from panda_kickoff()
 
@@ -1050,7 +1057,7 @@ def scan_and_fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwe
     return uid
 
 
-def pt_fly2dcontpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, scan_end2, num2, exposure_time, pos_return = True, apply_tomo_drift = False, tomo_angle = None, auto_rescan = True, **kwargs):
+def pt_fly2dcontpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, scan_end2, num2, exposure_time, pos_return = True, apply_tomo_drift = False, tomo_angle = None, auto_rescan = True,position_supersample= 10, **kwargs):
     """
     Relative scan
     """
@@ -1066,7 +1073,10 @@ def pt_fly2dcontpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_star
                 if tomo_angle is None:
                     tomo_angle = pt_tomo.th.user_setpoint.get()
                 center1 = center1 + get_tomo_drift(tomo_angle)
-            start2, end2 = m2_pos + scan_start2, m2_pos + scan_end2
+                ydrift_tomo = get_tomo_drift_y(tomo_angle)
+            else:
+                ydrift_tomo = 0
+            start2, end2 = m2_pos + scan_start2 + ydrift_tomo, m2_pos + scan_end2 + ydrift_tomo
             range_min, range_max = -30, 30
             for v in [center1-range1/2, center1+range1/2, start2, end2]:
                 if v < range_min or v > range_max:
@@ -1078,7 +1088,7 @@ def pt_fly2dcontpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_star
             # RE(pt_fly2d([eiger2], pt_tomo.ssx, -10, 10, 101, pt_tomo.ssy, -1, 1, 5, 0.01, plot=True))
             kwargs.setdefault('xmotor', motor1)  # Fast motor
             kwargs.setdefault('ymotor', motor2)  # Slow motor
-            kwargs.setdefault('panda_flyer', panda_flyer)
+            kwargs.setdefault('panda_flyer', panda_flyer_fip)
 
             fg_volt = range1/6.0
             fg_offset = -center1/6.0
@@ -1093,12 +1103,40 @@ def pt_fly2dcontpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_star
             else:
                 raise RuntimeError(f"Xmotor voltage or frequency too high, check your input")
 
-            yield from fly_2dpd(dets, center1, range1, num1, start2, end2, num2, exposure_time, **kwargs)
+            if exposure_time < 0.003:
+                dead_time = 3.8e-6
+            else:
+                dead_time = np.maximum(0.001,exposure_time * 0.1)
+
+            yield from bps.abs_set(panda1.pulse1.width,(exposure_time-dead_time)/2.0/position_supersample)
+            yield from bps.abs_set(panda1.pulse1.width_units,'s')
+            yield from bps.abs_set(panda1.pulse1.step,(exposure_time-dead_time)/position_supersample)
+            yield from bps.abs_set(panda1.pulse1.step_units,'s')
+            yield from bps.abs_set(panda1.pulse1.delay,0.005+(exposure_time-dead_time)/2.0/position_supersample)
+            yield from bps.abs_set(panda1.pulse1.delay_units,'s')
+            yield from bps.abs_set(panda1.pulse1.pulses,position_supersample)
+            
+            yield from bps.abs_set(panda1.pulse2.width_units,'s')
+            yield from bps.abs_set(panda1.pulse2.width,exposure_time-dead_time)
+            
+            yield from bps.abs_set(panda1.pulse2.delay,0.0016)
+            yield from bps.abs_set(panda1.pulse2.delay_units,'s')
+            yield from bps.abs_set(panda1.pulse2.pulses,1)
+
+
+            yield from scan_and_fly_2dpd(dets, center1, range1, num1, start2, end2, num2, exposure_time, dead_time = dead_time, **kwargs)
+
+            if auto_rescan and eiger_mobile.cam.num_images_counter.get() < (num1*num2+5):
+                do_scan = True
 
         finally:
             yield from pt_fg.off()
+            if not pos_return and apply_tomo_drift:
+                yield from bps.movr(motor2,-ydrift_tomo)
             if pos_return or do_scan:
                 mv_back = short_uid('back')
+                yield from bps.mov(motor2.velocity,5)
+                yield from bps.mov(motor1.velocity,5)
                 yield from abs_set(motor1,m1_pos,group=mv_back)
                 yield from abs_set(motor2,m2_pos,group=mv_back)
                 yield from bps.wait(group=mv_back)

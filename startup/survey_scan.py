@@ -179,14 +179,36 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     #images = db.get_images(db[sid],name=det_name)
     h = db[sid]
     #print('get h')
-    images = list(h.data(det_name))
-    #print('image size:',np.shape(images))
-    images = np.array(np.squeeze(images))
+    
+    ic = np.asfarray(df['sclr1_ch4'])
+    num_frame = np.size(ic)
+    print(np.shape(ic))
+    
+    img = list(h.data(det_name))
+    
+    for i in range(num_frame):
+        try:
+            tmp = np.array(img[i])
+            #print(i)
+            if i == 0:
+                tt, nnx,nny = np.shape(tmp)
+                print(np.shape(tmp))
+                images = np.zeros((num_frame,nnx,nny))
+            images[i] = tmp
+        except:
+            break
+    if i < num_frame-1:
+        n_missing = num_frame - i
+        images[20+n_missing:num_frame] = images[20:i].copy()
+    
+    #images = np.array(np.squeeze(list(h.data(det_name))))
+
+    print('image size:',np.shape(images))
+    #images = np.array(np.squeeze(images))
     plan_args = db[sid].start['plan_args']
 
 
-    ic = np.asfarray(df['sclr1_ch4'])
-    #print(np.shape(ic))
+    
     index = np.where(ic == 0)
     nn = np.size(index[0])
     for i in range(nn):
@@ -201,14 +223,14 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     num_frame,nnx,nny = np.shape(images)
 
     #mask = np.load('/data/users/2023Q3/Liu_2023Q3/NNCM_3.75V_004/mask.npy')
-    mask = np.load('/data/users/2024Q1/Liu_2024Q1/NFM_4p0_diff/mask.npy')
+    mask = np.load('/data/users/2024Q2/Huang_2024Q2/NaNMC/mask.npy')
 
     for i in range(num_frame):
         if np.mod(i,500) ==0:
             print('load frame ',i, '/', num_frame)
         #t = np.flipud(images.get_frame(i)[0]).T
         t = np.flipud(images[i,:,:]).T
-        t = t # * mask
+        t = t  #* mask
         t = t*ic[0] / ic[i]
        
 
@@ -363,7 +385,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
 
     #"""
 
-    fn = '/data/users/2024Q2/Kawasaki_2024Q2/Z231009a/'
+    fn = '/data/users/2024Q2/Huang_2024Q2/NaNMC/2V/'
     
     if not os.path.exists(fn):
         os.makedirs(fn)

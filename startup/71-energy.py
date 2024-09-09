@@ -51,7 +51,7 @@ class HXNEnergy():
 
 
 
-    def calcGap(self,E,harmonics = 5, offset = -15):
+    def calcGap(self,E,harmonics = 5, offset = -17):
         E1 = E/harmonics
         calc_gap =  np.polyval(self.ugap_coeffs, E1) + offset
         return (np.around(calc_gap,1))
@@ -169,15 +169,15 @@ class HXNEnergy():
             axs[3].set_ylabel("dcm_roll")
         
 
-    def calculatePitch(self,targetE, offset = 0):
+    def calculatePitch(self,targetE, offset = 0.705):
         calc_pitch =  np.polyval(self.dcm_p_coeffs, targetE) + offset
         return np.around(calc_pitch,4) 
 
-    def calculateRoll(self,targetE, offset = 0):
+    def calculateRoll(self,targetE, offset = 0.4715):
         calc_r =  np.polyval(self.dcm_r_coeffs, targetE)
         return (np.around(calc_r+offset,4))
 
-    def calculateHFMPitch(self,targetE, offset = 0):
+    def calculateHFMPitch(self,targetE, offset = 0.1193):
         calc_m2p =  np.polyval(self.m2p_coeffs, targetE)
         return (np.around(calc_m2p+offset,4))
 
@@ -536,16 +536,18 @@ def plot_calib_results(csv_file):
 
 
 
-def foil_calib_d2_scan(startE, endE,saveLogFolder = "/data/users/current_user", save_as = "ta_Foil_calib_Mar11_2024"):
+def foil_calib_d2_scan(startE, endE, step_size_ev = 0.5, exp_time = 0.5,
+                       saveLogFolder = "/data/users/current_user", 
+                       save_as = "Au_Foil_calib_July11_2024"):
 
     """absolute start and end E"""
 
     dE = endE-startE
-    num_steps = int(dE/0.0005)
+    num_steps = int(dE/(step_size_ev*0.001))
     dUgap = Energy.calcGap(endE)-Energy.calcGap(startE)
     
     yield from Energy.move(startE, moveMonoPitch=False,moveMirror = "ignore")
-    yield from d2scan(dets_fs,num_steps, e, 0, dE, ugap, 0, dUgap, 0.5)
+    yield from d2scan(dets_fs,num_steps, e, 0, dE, ugap, 0, dUgap, exp_time)
     plot_foil_calib(sid=-1, saveLogFolder = saveLogFolder, save_as = save_as)
 
     

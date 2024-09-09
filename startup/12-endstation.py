@@ -4,6 +4,8 @@ from ophyd import (EpicsMotor, Component as Cpt,
                    MotorBundle, Device)
 from hxntools.detectors.trigger_mixins import HxnModalBase
 
+import time
+
 class HxnFastShutter(HxnModalBase, Device):
     request_open = Cpt(EpicsSignal, '')
 
@@ -23,6 +25,22 @@ class HxnFastShutter(HxnModalBase, Device):
 
 fs = HxnFastShutter('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0', name='fs')
 
+class HxnSlowShutter(HxnModalBase, Device):
+    opn = Cpt(EpicsSignal, ':Opn-Cmd')
+    cls = Cpt(EpicsSignal, ':Cls-Cmd')
+
+    def __init__(self, prefix, **kwargs):
+        super().__init__(prefix, **kwargs)
+
+    def stage(self):
+        self.opn.put(1)
+        time.sleep(2)
+
+    def unstage(self):
+        self.cls.put(1)
+        time.sleep(2)
+
+bshutter = HxnSlowShutter('XF:03IDB-PPS{PSh}Cmd', name = 'bshutter')
 
 class HxnSSAperture(MotorBundle):
     hgap = Cpt(EpicsMotor, '-Ax:XAp}Mtr')

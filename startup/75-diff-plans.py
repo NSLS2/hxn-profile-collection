@@ -33,7 +33,7 @@ def make_zp_diff_plan(save_as = "/data/users/current_user/zp_diff_params_templat
                                 "end":72, 
                                 "angle_step":0.05}, 
 
-                    "fly2d_scan":{'det':'dets1',
+                    "fly2d_scan":{'det':'dets4',
                                 "x_motor":'zpssx',
                                 "x_start":-1,
                                 "x_end":1,
@@ -101,53 +101,85 @@ def make_zp_diff_plan(save_as = "/data/users/current_user/zp_diff_params_templat
     print(f"{save_as} plan is created")
 
 
-def piezos_to_zero():
-    yield from bps.mov(zpssx,0,zpssy,0,zpssz,0)
+def make_mll_diff_plan(save_as = "/data/users/current_user/mll_diff_params_template.json" ):
+
+    zp_diff_scan = {   
+                    "angle_info":{'th_motor':'dsth',
+                                "start":70, 
+                                "end":72, 
+                                "angle_step":0.05}, 
+
+                    "fly2d_scan":{'det':'dets4',
+                                "x_motor":'dssx',
+                                "x_start":-1,
+                                "x_end":1,
+                                "x_num":100, 
+                                "y_motor":'dssy',
+                                "y_start":-1,
+                                "y_end":1,
+                                "y_num":100,  
+                                "exposure":0.03},
+
+                    "xalign":{"do_align":True,
+                            "start":-2,
+                            "end": 2,
+                            "num": 100,
+                            "exposure": 0.03,
+                            "elem": "Fe",
+                            "center_with":"line_center",
+                            "threshold": 0.5,
+                            "move_coarse":True,
+                            "negative_flag":True},
+                    
+                    "yalign":{"do_align":True,
+                            "start":-2,
+                            "end": 2,
+                            "num": 100,
+                            "exposure": 0.03,
+                            "elem": "Fe",
+                            "center_with":"line_center",
+                            "threshold": 0.5,
+                            "move_coarse":True,
+                            "negative_flag":True},
+
+                    "align_2d_com":{"do_align":False,
+                            "x_start":-2,
+                            "x_end": 2,
+                            "x_num": 100,
+                            "y_start":-2,
+                            "y_end": 2,
+                            "y_num": 100,
+                            "exposure": 0.03,
+                            "elem": "Fe",
+                            "threshold": 0.5,
+                            "move_x":True,
+                            "move_y":True},
+                    
+                    "stop_iter":False,
+                    "add_angles":[],
+                    "remove_angles":[-90,-91],
+                    "stop_pdf":False,
+                    "pdf_elems":["Ni"],
+                    "pause_scan":False,
+                    "test":False,
+                    "ic_threshold":0.9,
+                    "scan_label":"HXN_diff_Scan",
+                    "save_log_to":"/data/users/current_user/"
+
+                }
 
 
-def align_scan(mtr,start,end,num,exp,elem_, align_with="line_center", 
-               threshold = 0.5,move_coarse = True, neg_flag = False):
+    with open(save_as,"w") as fp:
+            json.dump(zp_diff_scan,fp, indent=6)
 
-    """
-    scan to align samples to field of view using using fly1d scan 
-
-    mtr--> scanning motor, dssx, dssy, dssz etc.
-    start,end,num,exp --> flyscan paramters
-    elem_ --> element to use for alignemnt
-    align_with --> choose bettween "edge" or "line_center"
-    threshold --> threshold for line centering
+    fp.close()
     
-    """
-    fly_to_coarse = {"zpssx":"smarx","zpssy":"smary","zpssz":"smarz",
-                     "dssx":"dsx","dssy":"dsy","dssz":"dsz"}
-    uni_conv = 1
+    print(f"{save_as} plan is created")
 
-    yield from fly1d(dets_fs,
-                    mtr, 
-                    start, 
-                    end, 
-                    num,
-                    exp
-                    )
-    if align_with == "line_center":
-        xc = return_line_center(-1,elem_,threshold, neg_flag = neg_flag)
 
-    elif align_with == "edge":
-        xc,_ = erf_fit(-1,elem_,linear_flag=False)
 
-    else:
-        xc = mtr.position
+
         
-    if mtr.name.startswith('zp'):
-        uni_conv = 1000
-
-    if move_coarse:
-        yield from bps.movr(eval(fly_to_coarse[mtr.name]),xc/uni_conv)
-        yield from piezos_to_zero()
-        
-    else:
-        yield from bps.mov(mtr,xc)
-                        
                         
 def zp_diff_scan_to_loop(angle, diff_params, ic_init):
 
@@ -249,8 +281,6 @@ def zp_diff_scan_to_loop(angle, diff_params, ic_init):
 
 
 def run_zp_diff(path_to_json):
-
-      
     beamDumpOccured = False
                     
     #open json file for angle info first
@@ -277,8 +307,8 @@ def run_zp_diff(path_to_json):
     #add real energy to the dataframe
     angle_list['E Readback'] = np.nan 
     
-    #add scan id to the dataframe
-    angle_list['Scan ID'] = np.nan 
+    #add scan_id to the dataframe
+    angle_list['scan_id'] = np.nan 
     
     #recoed time
     angle_list['TimeStamp'] = pd.Timestamp.now()
@@ -383,7 +413,7 @@ def run_zp_diff(path_to_json):
             #Add more info to the dataframe
             angle_list['E Readback'].at[n] = e.position #add real energy to the dataframe
             angle_list["zpsth"].at[n] = zpsth.position
-            angle_list['Scan ID'].at[n] = int(last_sid) #add scan id to the dataframe
+            angle_list['scan_id'].at[n] = int(last_sid) #add scan_id to the dataframe
             angle_list['TimeStamp'].at[n] = pd.Timestamp.now()
             angle_list['IC3'].at[n] = ic_3 #Ic values are useful for calibration
             angle_list['IC0'].at[n] = ic_0 #Ic values are useful for calibration
@@ -392,7 +422,7 @@ def run_zp_diff(path_to_json):
             #fluxPeaked = False #reset
             
             # save the DF in the loop so quitting a scan won't affect
-            filename = f"hxn_zp_diff_{diff_params.get('scan_label','')}_startID{int(angle_list['Scan ID'][0])}.csv"
+            filename = f"hxn_zp_diff_{diff_params.get('scan_label','')}_startID{int(angle_list['scan_id'][0])}.csv"
             angle_list.to_csv(os.path.join(diff_params["save_log_to"], filename), float_format= '%.5f')
             
             
@@ -447,7 +477,7 @@ def run_zp_diff(path_to_json):
             angle_list['angle'] = angle
             angle_list['E Readback'].at[n] = e_pos #add real energy to the dataframe
             angle_list["zpsth"].at[n] = zpsth.position
-            angle_list['Scan ID'].at[n] = int(last_sid) #add scan id to the dataframe
+            angle_list['scan_id'].at[n] = int(last_sid) #add scan_id to the dataframe
             angle_list['TimeStamp'].at[n] = pd.Timestamp.now()
             angle_list['IC3'].at[n] = ic_3 #Ic values are useful for calibration
             angle_list['IC0'].at[n] = ic_0 #Ic values are useful for calibration

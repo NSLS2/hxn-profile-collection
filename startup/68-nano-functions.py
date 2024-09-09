@@ -51,6 +51,7 @@ pt_fg_ch2 = HXN_FuncGen2('XF:03IDC-ES', name='pt_fg_ch2')
 # pt_fg.burst._put_complete = True
 
 RASMI_align_drift = np.load('/nsls2/data/hxn/shared/config/bluesky/profile_collection/startup/68-RASMI-align-drift.npy')
+RASMI_align_drift_y = np.load('/nsls2/data/hxn/shared/config/bluesky/profile_collection/startup/68-RASMI-align-drift_y.npy')
 
 def get_tomo_drift(angle):
     if angle < RASMI_align_drift[0,0] or angle>RASMI_align_drift[-1,0]:
@@ -59,15 +60,23 @@ def get_tomo_drift(angle):
         if RASMI_align_drift[i,0]<=angle and RASMI_align_drift[i+1,0]>=angle:
             return (RASMI_align_drift[i+1,1]*(angle-RASMI_align_drift[i,0])+RASMI_align_drift[i,1]*(RASMI_align_drift[i+1,0]-angle))/(RASMI_align_drift[i+1,0]-RASMI_align_drift[i,0])
 
+def get_tomo_drift_y(angle):
+    if angle < RASMI_align_drift_y[0,0] or angle>RASMI_align_drift_y[-1,0]:
+        return 0
+    for i in range(len(RASMI_align_drift_y)-1):
+        if RASMI_align_drift_y[i,0]<=angle and RASMI_align_drift_y[i+1,0]>=angle:
+            return (RASMI_align_drift_y[i+1,1]*(angle-RASMI_align_drift_y[i,0])+RASMI_align_drift_y[i,1]*(RASMI_align_drift_y[i+1,0]-angle))/(RASMI_align_drift_y[i+1,0]-RASMI_align_drift_y[i,0])
+        
 def hmll_roty(step):
     yield from bps.mvr(pt_tomo.hm_ry,1.*step)
     yield from bps.mvr(pt_tomo.hm_x,-657.*step)
 def vmll_rotx(step):
     yield from bps.mvr(pt_tomo.vm_rx,1.*step)
-    yield from bps.mvr(pt_tomo.vm_y,-25.*step)
+    yield from bps.mvr(pt_tomo.vm_y,-42.*step)
 def vmll_rotz(step):
     yield from bps.mvr(pt_tomo.vm_rz,1.*step)
-    yield from bps.mvr(pt_tomo.vm_y,20.*step)
+    yield from bps.mvr(pt_tomo.vm_y,24.*step)
+    yield from bps.mvr(pt_tomo.vm_x,-20.*step)
 
 def sample_movz(step,use_cx = False,use_sby=False):
     yield from bps.mvr(pt_tomo.cz,1.*step)
@@ -101,4 +110,12 @@ def golden_tomo(samplename,interv,offset = 0):
              offset -= interv
 def get_masscenter(x, y, I):
     return np.array([-np.sum(x*I), np.sum(y*I)])/np.sum(I)
+
+class software_shutter:
+    def stage(self):
+        caput('XF:03IDB-PPS{PSh}Cmd:Opn-Cmd',1)
+        yield from bps.sleep(3)
+    def unstage(self):
+        caput('XF:03IDB-PPS{PSh}Cmd:Cls-Cmd',1)
+        yield from bps.sleep(3)
 

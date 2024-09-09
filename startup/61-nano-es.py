@@ -16,7 +16,7 @@ class HXN_NanoStage(Device):
     hm_x = Cpt(EpicsMotor, '{PT:HM-Ax:X}Mtr')
     hm_y = Cpt(EpicsMotor, '{PT:HM-Ax:Y}Mtr')
     hm_z = Cpt(EpicsMotor, '{PT:HM-Ax:Z}Mtr')
-    hm_ry = Cpt(EpicsMotor, '{PT:HM-Ax:ry}Mtr')
+    #hm_ry = Cpt(EpicsMotor, '{PT:HM-Ax:ry}Mtr')
 
     zp_x = Cpt(EpicsMotor, '{PT:OP-Ax:X}Mtr')
     zp_y = Cpt(EpicsMotor, '{PT:OP-Ax:Y}Mtr')
@@ -72,7 +72,7 @@ sd.baseline.extend([
     pt_tomo.hm_x,
     pt_tomo.hm_y,
     pt_tomo.hm_z,
-    pt_tomo.hm_ry,
+    #pt_tomo.hm_ry,
 
     pt_tomo.zp_x,
     pt_tomo.zp_y,
@@ -99,6 +99,10 @@ sd.baseline.extend([
     pt_tomo.slt_hgap,
     pt_tomo.slt_hcen,
 ])
+
+ptssx = pt_tomo.ssx
+ptssy = pt_tomo.ssy
+ptssz = pt_tomo.ssz
 
 # # Interferometers
 # class SRXNanoInterferometer(Device):
