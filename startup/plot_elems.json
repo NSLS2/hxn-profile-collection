@@ -1,9 +1,9 @@
 {
       "roi_elems": [
-            "Ni",
-            "Al",
+            "Au_L",
             "Fe",
-            "Co",
+            "Pt_L",
+            "W_L",
             "Fe",
             "W_L",
             "Zn",
@@ -18,12 +18,12 @@
             "Cr"
       ],
       "live_plot_elems": [
-            "Ni",
-            "Al",
+            "Au_L",
             "Fe",
-            "Co"
+            "Pt_L",
+            "W_L"
       ],
       "line_plot_elem": [
-            "Ni"
+            "Au_L"
       ]
 }

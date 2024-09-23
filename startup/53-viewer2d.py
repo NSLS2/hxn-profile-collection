@@ -513,6 +513,8 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
     title = 'Scan id %s. ' % scan_id + elem
     if elem.startswith('Det'):
         spectrum = np.array(list(hdr.data(elem)),dtype=np.float32).squeeze()
+    elif elem.startswith('sclr'):
+        spectrum = np.array(list(hdr.data(elem)))[0]
     else:
         roi_keys = ['Det%d_%s' % (chan, elem) for chan in channels]
 
@@ -881,7 +883,7 @@ def plot_img_sum(sid, det = 'merlin1',norm ='sclr1_ch4',
     elif num_mots == 2:
         tot = np.mean(imgs,2)
         tot = np.array(np.mean(tot,1),dtype=np.float32)
-        start_doc = h.start 
+        start_doc = h.start
         if 'num1' and 'num2' in start_doc:
             dim1,dim2 = start_doc['num1'],start_doc['num2']
         elif 'shape' in start_doc:
@@ -1138,10 +1140,10 @@ def plot_xanes(sid, ref_sid=0,overlay=0):
 
     plt.plot(energy,absorb)
     plt.title('sid={}'.format(sid))
-    
-    
+
+
 def plot_det_frame(sid,det = 'eiger1', frame_num = 0):
-    
+
     h = db[int(sid)]
     sid = h.start['scan_id']
     imgs = np.squeeze(np.stack(db[int(sid)].table(fill=True)[det]))

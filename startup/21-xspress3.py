@@ -100,6 +100,7 @@ class Xspress3FileStoreHXN(Xspress3FileStore):
 
 
 
+
 class HxnXspress3Detector(HxnXspress3DetectorBase):
     channel1 = Cpt(Xspress3Channel, 'C1_', channel_num=1)
     channel2 = Cpt(Xspress3Channel, 'C2_', channel_num=2)
@@ -204,7 +205,6 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
             return sts
 
         s = self.trigger_internal()  # IS IT CORRECT WAY TO TRIGGER ACQUISITION?
-
         self._spec_saved.clear()
 
         def monitor():

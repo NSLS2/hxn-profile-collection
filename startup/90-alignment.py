@@ -1041,8 +1041,8 @@ def get_scan_command(sid):
             s1 = h.start['scan_start']
             e1 = h.start['scan_end']
             n1 = h.start['num']
-            print (f"<fly1d({m1},{s1:.3f},{e1:.3f},{n1},{exp_time})")
-            return (f"<fly1d({m1},{s1:.3f},{e1:.3f},{n1},{exp_time})")
+            print (f"fly1d({m1},{s1:.3f},{e1:.3f},{n1},{exp_time})")
+            return (f"fly1d({m1},{s1:.3f},{e1:.3f},{n1},{exp_time})")
         elif num_motors == 2:
             m1 = scan_motors[0]
             s1 = h.start['scan_start1']
@@ -1053,8 +1053,8 @@ def get_scan_command(sid):
             e2 = h.start['scan_end2']
             n2 = h.start['num2']
             
-            print (f"<fly2d({m1},{s1:.3f},{e1:.3f},{n1},{m2},{s2 :.3f},{e2 :.3f},{n2},{exp_time})")
-            return (f"<fly2d({m1},{s1:.3f},{e1:.3f},{n1},{m2},{s2 :.3f},{e2 :.3f},{n2},{exp_time})")
+            print (f"fly2d({m1},{s1:.3f},{e1:.3f},{n1},{m2},{s2 :.3f},{e2 :.3f},{n2},{exp_time})")
+            return (f"fly2d({m1},{s1:.3f},{e1:.3f},{n1},{m2},{s2 :.3f},{e2 :.3f},{n2},{exp_time})")
             
             
             
@@ -1798,7 +1798,7 @@ def update_xrf_elem_list(roi_elems = ['Cr', 'Ge', 'W_L', 'Se', 'Si', 'Cl', 'Ga',
         reload_bsui()
 
 
-def mll_sample_out(move_lens_upstream = False):
+def mll_sample_out(move_lens_upstream = True):
 
     if fdet1.x.position>-50:
         raise ValueError("XRF detector is not in OUT position. Move it out <-50 and try again")
@@ -1839,27 +1839,27 @@ def mll_sample_in(move_sbz = False, move_lens_downstream = True):
 def mlls_to_upstream():
 
     """
-    vmll vz -8000 and confirm movement
-    hmll hz -5000 and confirm movement
+    vmll vz -10000 and confirm movement
+    hmll hz -8000 and confirm movement
 
     """
 
     if abs(vmll.vz.position)<100:
-        print("vmll.vz moving to -8000")
-        yield from bps.movr(vmll.vz, -8000)
-        yield from bps.sleep(5)
+        print("vmll.vz moving to -10000")
+        yield from bps.movr(vmll.vz, -10000)
+        yield from bps.sleep(2)
     else:
         raise ValueError("VZ is maybe already in out position")
         #print("VZ<-2000 um; VZ is maybe already in out position; trying to move hz")
         pass
 
-    if abs(vmll.vz.position)>7900 and abs(hmll.hz.position)<100:
-        print("hmll.hz moving to -5000")
-        yield from bps.movr(hmll.hz, -5000)
+    if abs(vmll.vz.position)>9900 and abs(hmll.hz.position)<100:
+        print("hmll.hz moving to -8000")
+        yield from bps.movr(hmll.hz, -8000)
     else:
         raise ValueError("VMLL is not out or HZ is not close to zero, try manual controls")
 
-    if abs(hmll.hz.position)<4900:
+    if abs(hmll.hz.position)<7900:
         print("HMLL motion failed try manually hz=-5000")
         raise ValueError("HMLL motion failed try manually hz=-5000")
     else:
@@ -1868,16 +1868,16 @@ def mlls_to_upstream():
 
 def mlls_to_downstream():
 
-    if abs(hmll.hz.position)>4980 and not mllosa.osaz.position>100:
+    if abs(hmll.hz.position)>7980 and not mllosa.osaz.position>100:
         print("hmll.hz moving to 0")
-        yield from bps.movr(hmll.hz, 5000)
+        yield from bps.movr(hmll.hz, 8000)
 
     else:
         raise ValueError("HMLL motion failed bacasue hz is not OUT or OSA Z is not close to zero; try manually vz=0 if hz~0")
 
-    if abs(vmll.vz.position)>7990 and abs(hmll.hz.position)<10:
+    if abs(vmll.vz.position)>9990 and abs(hmll.hz.position)<10:
         print("vmll.vz moving to -0")
-        yield from bps.movr(vmll.vz, 8000)
+        yield from bps.movr(vmll.vz, 10000)
     else:
         raise ValueError("VMLL motion failed bacasue hz is not home; try manually vz=0 if hz~0")
 
@@ -2540,6 +2540,22 @@ def piezos_to_zero(zp_flag = True):
         yield from bps.mov(zpssx,0,zpssy,0,zpssz,0)  
     else:
         yield from bps.mov(dssx,0,dssy,0,dssz,0)   
+
+def cam06_in():
+
+    caput('XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.VAL', 0)
+    caput('XF:03IDC-OP{Stg:CAM6-Ax:Y}Mtr.VAL', 0)
+
+def cam06_out():
+
+    caput('XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.VAL', -60)
+    caput('XF:03IDC-OP{Stg:CAM6-Ax:Y}Mtr.VAL', 0)
+
+def cam06_laser_in():
+    yield from bps.sleep(1)
+    caput('XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.VAL', -32.5)
+    caput('XF:03IDC-OP{Stg:CAM6-Ax:Y}Mtr.VAL', 1.5)
+
 
 
 

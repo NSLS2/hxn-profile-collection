@@ -14,6 +14,7 @@ from pathlib import Path
 # Requires https://github.com/tacaswell/mpl-qtthread (not packaged yet)
 import matplotlib
 import matplotlib.backends.backend_qt
+import matplotlib.pyplot as plt
 
 # The following code is expected to fix the issue with MPL windows 'freezing'
 #   after completion of a plan.
@@ -658,4 +659,5 @@ def bluesky_debug_mode(level='DEBUG'):
     from bluesky.log import config_bluesky_logging
     config_bluesky_logging(level)
 
+bluesky_debug_mode(level='DEBUG')
 # del one_1d_step, one_nd_step, one_shot

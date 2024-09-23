@@ -42,8 +42,8 @@
       },
       "eiger_pos2": {
             "diff_x": 220.53,
-            "diff_y1": 137.31,
-            "diff_y2": 137.3,
+            "diff_y1": 80.0,
+            "diff_y2": 80.01,
             "diff_z": -50.0,
             "diff_cz": -24.7
       }

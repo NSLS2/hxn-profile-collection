@@ -874,7 +874,7 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
 
             #'''
             yield from fly1d(dets1,dssx, -10, 10, 200, 0.03)
-            xc = return_line_center(-1,elem,0.05)
+            xc = return_line_center(-1,elem,0.1)
             yield from bps.mov(dssx,xc)
 
             '''
@@ -915,7 +915,7 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
             #yield from bps.mov(dssz,0)
             #yield from bps.mov(dssx,0)
             yield from fly1d(dets1,dssz, -10, 10, 200, 0.03)
-            xc = return_line_center(-1,elem,0.05)
+            xc = return_line_center(-1,elem,0.1)
             yield from bps.mov(dssz,xc)
 
             '''
@@ -941,10 +941,10 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
             #else:
             #    yield from bps.mov(dssy,2)
             '''
-        yield from fly1d(dets1, dssy, -2,2,200,0.03)
-        yc = return_line_center(-1,'Au_L',0.5)
+        #yield from fly1d(dets1, dssy, -2,2,200,0.03)
+        #yc = return_line_center(-1,'Au_L',0.5)
         #yc, yw = erf_fit(-1, elem, linear_flag=False)
-        yield from bps.mov(dssy,yc)
+        #yield from bps.mov(dssy,yc)
 
         # ## for CZ testing
         # yield from fly1d(dets1, dssy, -3,0.25,100,0.03)  #yield from fly1d(dets1, dssy, -7,-3,100,0.03)
@@ -1003,13 +1003,13 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
             yield from fly2d(dets1, smlld.dssz,x_start_real,x_end_real,x_num, smlld.dssy,
                      y_start, y_end, y_num, exposure, return_speed = 40,dead_time=0.003)
 
-        merlin1.unstage()
+        #merlin1.unstage()
         xspress3.unstage()
         #mov_to_image_cen_smar(-1)
         #yield from mov_to_image_cen_dsx(-1)
         #yield from bps.mov(dssy,cy)
         print(f"Preparing the plot of the result ...")
-        yield from bps.sleep(2)
+        yield from bps.sleep(1)
         plot2dfly(-1,elem)
 
         print(f"Inserting the plot into the PDF file ...")

@@ -189,3 +189,56 @@ def send_mosaic_overlap_scan_to_queue(dets, ylen = 100, xlen = 100, overlap_per 
             step_size = step_size, 
             plot_elem = plot_elem,
             using_mll = using_mll)))
+
+
+
+def get_scan_num_label(plan_dict):
+
+    if plan_dict['args']:
+        scan_label = plan_dict['args'][0]
+        scan_plan = plan_dict['args'][3:12]
+
+    else:
+        scan_label = plan_dict['kwargs']["label"]
+        scan_plan = [plan_dict['kwargs']["mot1"],
+                      plan_dict['kwargs']["mot1_s"],
+                      plan_dict['kwargs']["mot1_e"],
+                      plan_dict['kwargs']["mot1_n"],
+                      plan_dict['kwargs']["mot2"],
+                      plan_dict['kwargs']["mot2_s"],
+                      plan_dict['kwargs']["mot2_e"],
+                      plan_dict['kwargs']["mot2_n"],
+                      plan_dict['kwargs']["exp_t"]
+                      ]
+
+    scan_num = plan_dict['result']['scan_ids']
+    status = plan_dict['result']['exit_status']
+    
+    return scan_num, scan_label, scan_plan, status
+    
+def get_complete_log(history_file):
+    
+    with open(history_file, "r") as fp:
+        plans_dict = json.load(fp)
+
+    log_sheet = pd.DataFrame(columns=["scan_num", "scan_label", "scan_plan","exit_status"], 
+                             index=np.arange(len(plans_dict)))
+
+    for n, plan in enumerate(plans_dict):
+        #print(plan)
+        scan_num, scan_label,scan_plan, status = get_scan_num_label(plan)
+        print("additng to log")
+        if scan_num:
+            log_sheet["scan_num"].at[n] = scan_num[0]
+        else:
+            log_sheet["scan_num"].at[n] = None
+        log_sheet["scan_label"].at[n] = scan_label
+        log_sheet["scan_plan"].at[n] = scan_plan
+        log_sheet["exit_status"].at[n] = status
+        
+
+    print(log_sheet)
+    savedir = os.path.dirname(history_file)
+    log_sheet.to_csv(f"{savedir}/scan_log.csv")
+
+

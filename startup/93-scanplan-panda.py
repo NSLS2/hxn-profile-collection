@@ -903,6 +903,7 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
         if "xspress3" in dets_by_name:
             dpc = dets_by_name["xspress3"]
             dpc.hdf5.filestore_spec = dpc.hdf5.filestore_spec_restore
+            dpc.mode_settings.scan_type.put('step')
             scan_counter.append(dpc.hdf5.num_captured)
             del dpc
         if "xspress3_det2" in dets_by_name:
@@ -953,7 +954,7 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
             #st.add_callback(lambda x: toc(t_startfly, str=f"  DETECTOR  {datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S.%f')}"))
 
         ## Wait a bit for detectors
-        yield from bps.sleep(np.minimum(np.maximum(0.5,dwell*50),3))
+        yield from bps.sleep(np.minimum(np.maximum(0.5,dwell*100),3))
         # st = yield from abs_set(xmotor, row_stop)
         progress_bar = tqdm.tqdm(total = total_points,unit='points')
 
@@ -965,7 +966,7 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
             progress_bar.update(scan_counter[0].get() - progress_bar.n)
             counter +=1
             yield from bps.sleep(0.5)
-            if 'xspress3' in dets_by_name or 'xspress3_det2' in dets_by_name:
+            if 'xspress3' in dets_by_name:# or 'xspress3_det2' in dets_by_name:
                 panda_live_plot.update_plot()
 
             # if counter>3600:
@@ -978,7 +979,7 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
         while not all([counter.get() >= total_points for counter in scan_counter]):
             print('Waiting for detector(s) to finish all frames...')
             yield from bps.sleep(1)
-            if 'xspress3' in dets_by_name or 'xspress3_det2' in dets_by_name:
+            if 'xspress3' in dets_by_name:# or 'xspress3_det2' in dets_by_name:
                 panda_live_plot.update_plot()
         # we still know about ion from above
         if ion:

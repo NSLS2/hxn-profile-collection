@@ -39,7 +39,7 @@ def make_mll_tomo_plan(save_as = "/nsls2/data/hxn/legacy/user_macros/HXN_GUI/Sca
                             "threshold": 0.5,
                             "move_coarse":False,
                             "offset":0,
-                            "zero_before_scan":false},
+                            "zero_before_scan":False},
 
                     "yalign":{"do_align":True,
                             "start":-2,
@@ -51,7 +51,7 @@ def make_mll_tomo_plan(save_as = "/nsls2/data/hxn/legacy/user_macros/HXN_GUI/Sca
                             "threshold": 0.5,
                             "move_coarse":False,
                             "offset":0,
-                            "zero_before_scan":false},
+                            "zero_before_scan":False},
 
                     "align_2d_com":{"do_align":False,
                             "x_start":-2,
@@ -67,7 +67,7 @@ def make_mll_tomo_plan(save_as = "/nsls2/data/hxn/legacy/user_macros/HXN_GUI/Sca
                             "move_y":True,
                             "x_offest":0,
                             "y_offset":0,
-                            "zero_before_scan":false
+                            "zero_before_scan":False
                             },
 
                     "stop_iter":False,
@@ -531,6 +531,7 @@ def run_mll_tomo_json(path_to_json,tracking_file = None):
     angle_list['Peak Flux'] = False
     angle_list['IC3'] = ic_3_init
     angle_list['IC0'] = ic_0
+    angle_list['dssy'] = np.nan
     caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0)
 
 
@@ -612,6 +613,7 @@ def run_mll_tomo_json(path_to_json,tracking_file = None):
             angle_list['Peak Flux'].at[n] = fluxPeaked # recoed if peakflux was excecuted
             #angle_list['IC3_before_peak'].at[n] = ic3 #ic3 right after e change, no peaking
             fluxPeaked = False #reset
+            angle_list['dssy'].at[n] = dssy.position
             
             #close c shutter
             caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0)
@@ -666,6 +668,7 @@ def run_mll_tomo_json(path_to_json,tracking_file = None):
                 angle_list['TimeStamp'].at[n+nn] = pd.Timestamp.now()
                 angle_list['IC3'].at[n+nn] = ic_3 #Ic values are useful for calibration
                 angle_list['IC0'].at[n+nn] = ic_0 #Ic values are useful for calibration
+                angle_list['dssy'].at[n] = dssy.position
                 #angle_list['Peak Flux'].at[n] = fluxPeaked # recoed if peakflux was excecuted
                 #angle_list['IC3_before_peak'].at[n] = ic3 #ic3 right after e change, no peaking
                 #fluxPeaked = False #reset

@@ -275,7 +275,7 @@ def insertFig(note='',title ='', *, fig=None):
     global PDF_CTS
     global PDF_C
     if title == '':
-        title = scan_command(-1)
+        title = get_scan_command(-1)
     fi = fig_info(title,note)
     if fig is None:
         fig = plt.gcf()
