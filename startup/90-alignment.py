@@ -36,18 +36,30 @@ def is_close_to_reference(value, reference, rel_tol=0.05):
     if not math.isclose(value, reference, rel_tol=rel_tol):
         raise ValueError(f"{value} is not within 5% of {reference}")
 
+def erf_fit(sid, elem, mon='sclr1_ch4', linear_flag=True):
+    h = db[sid]
+    df2 = h.table()
+    channels = [1,2,3]
+    xrf = None
+    for i in channels:
+        fluo_data = np.array(list(h.data('Det%d_'%i+elem))).squeeze()
+        if xrf is None:
+            xrf = fluo_data.copy()
+        else:
+            xrf = xrf + fluo_data
+    #xrf = np.array(df2['Det2_' + elem]+df2['Det1_' + elem] + df2['Det3_' + elem])
 
-def erf_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
-    h=db[sid]
-    sid=h['start']['scan_id']
-    df=h.table()
-    mots=h.start['motors']
-    xdata=df[mots[0]]
-    xdata=np.array(xdata,dtype=float)
-    ydata=(df['Det1_'+elem]+df['Det2_'+elem]+df['Det3_'+elem])/df[mon]
-    ydata=np.array(ydata,dtype=float)
-    ydata[ydata==np.nan] = np.nanmean(ydata)#patch for ic3 returns zero
-    ydata[ydata==np.inf] = np.nanmean(ydata)#patch for ic3 returns zero
+    xrf[xrf==np.nan] = np.nanmean(xrf)#patch for ic3 returns zero
+    xrf[xrf==np.inf] = np.nanmean(xrf)#patch for ic3 returns zero
+
+    #threshold = np.max(xrf)/10.0
+    x_motor = h.start['motors']
+    try:
+        xdata = np.array(df2[x_motor[0]])
+    except:
+        from hxntools.scan_info import get_scan_positions
+        xdata,_ = get_scan_positions(h)
+    ydata = xrf
     ydata[0] = ydata[1] #patch for drop point issue
     ydata[-1] = ydata[-2]#patch for drop point issue
     y_min=np.min(ydata)
@@ -78,17 +90,37 @@ def erf_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
     return (popt[0],popt[1]*2.3548*1000.0)
 
 
-def erf_fit_no_plot(sid,elem,mon='sclr1_ch4',linear_flag=True):
-    h=db[sid]
-    sid=h['start']['scan_id']
-    df=h.table()
-    mots=h.start['motors']
-    xdata=df[mots[0]]
-    xdata=np.array(xdata,dtype=float)
-    ydata=(df['Det1_'+elem]+df['Det2_'+elem]+df['Det3_'+elem])/df[mon]
-    ydata=np.array(ydata,dtype=float)
-    ydata[ydata==np.nan] = np.nanmean(ydata)#patch for ic3 returns zero
-    ydata[ydata==np.inf] = np.nanmean(ydata)#patch for ic3 returns zero
+def get_knife_edge_data(sid,elem,z_mtr_name, mon='sclr1_ch4',linear_flag=True):
+    
+    """ returns knife edge scan data and fit along with z_motor position """
+
+    h = db[sid]
+    df2 = h.table()
+    bl = h.table('baseline')
+    z_mtr_pos = bl[z_mtr_name]
+
+    channels = [1,2,3]
+    xrf = None
+    for i in channels:
+        fluo_data = np.array(list(h.data('Det%d_'%i+elem))).squeeze()
+        if xrf is None:
+            xrf = fluo_data.copy()
+        else:
+            xrf = xrf + fluo_data
+    #xrf = np.array(df2['Det2_' + elem]+df2['Det1_' + elem] + df2['Det3_' + elem])
+
+    xrf[xrf==np.nan] = np.nanmean(xrf)#patch for ic3 returns zero
+    xrf[xrf==np.inf] = np.nanmean(xrf)#patch for ic3 returns zero
+
+    #threshold = np.max(xrf)/10.0
+    x_motor = h.start['motors']
+    try:
+        xdata = np.array(df2[x_motor[0]])
+    except:
+        from hxntools.scan_info import get_scan_positions
+        xdata,_ = get_scan_positions(h)
+    
+    ydata = xrf
     ydata[0] = ydata[1] #patch for drop point issue
     ydata[-1] = ydata[-2]#patch for drop point issue
     y_min=np.min(ydata)
@@ -113,7 +145,7 @@ def erf_fit_no_plot(sid,elem,mon='sclr1_ch4',linear_flag=True):
             popt,pcov=curve_fit(erfunc4,xdata,ydata,p0=[edge_pos,0.05,0.5,0,0])
             fit_data=erfunc4(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
 
-    return popt[0],popt[1]*2.3548*1000.0,xdata,ydata,fit_data
+    return popt[0],popt[1]*2.3548*1000.0,xdata,ydata,fit_data, z_mtr_pos
 
 
 def sici_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
@@ -357,7 +389,7 @@ def z_focus_alignment(mot_name,z_start, z_end, z_num, mot, start, end, num, acq_
         yield from fly1d(dets_fs, mot, start, end, num, acq_time)
         edge_pos,fwhm=erf_fit(-1,elem,mon,linear_flag=linFlag)
         # sid = int(caget("XF:03IDC-ES{Status}ScanID-I"))
-        # edge_pos,fwhm,x_data,y_data,y_fit = erf_fit_no_plot(sid,elem,mon='sclr1_ch4',linear_flag=True)
+        # edge_pos,fwhm,x_data,y_data,y_fit,z_pos = get_knife_edge_data(sid,elem,mon='sclr1_ch4',linear_flag=True)
         # edge_pos, fwhm = 1,0.5
         # x_data =np.random.rand(num)
         # y_data = np.random.rand(num)
@@ -576,7 +608,8 @@ def vmll_z_alignment(z_start, z_end, z_num, start, end, num, acq_time, elem='Pt_
     plt.show()
 
 
-def zp_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem=' ',linFlag = True,mon='sclr1_ch4'):
+def zp_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, 
+                   elem=' ',linFlag = False,mon='sclr1_ch4'):
 
     print("moves the zone plate relatively and find the focus with a linescan at each position")
 
@@ -590,16 +623,107 @@ def zp_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem='
 
         yield from fly1d(dets_fs, mot, start, end, num, acq_time)
         edge_pos,fwhm=erf_fit(-1,elem,mon,linear_flag=linFlag)
+        yield from bps.sleep(1)
         fit_size[i]= fwhm
         z_pos[i]=zp.zpz1.position
         yield from movr_zpz1(z_step)
         merlin1.unstage()
         xspress3.unstage()
+        
     yield from movr_zpz1(-1*z_end)
-    fig, ax = plt.subplots()
-    ax.plot(z_pos,fit_size,'bo')
-    ax.set_xlabel('zpz1')
+    #fig, ax = plt.subplots()
+    plt.figure()
+    plt.plot(z_pos,fit_size,'bo')
+    #ax.set_xlabel('zpz1')
+    yield from bps.sleep(1)
     plt.show()
+
+
+def zp_z_alignment2(z_start, z_end, z_num, mot, start, end, num, acq_time, 
+                   elem=' ',linFlag = False,mon='sclr1_ch4'):
+
+    print("moves the zone plate relatively and find the focus with a linescan at each position")
+
+    init_sz = zp.zpz1.position
+    z_pos=np.linspace(init_sz+z_start,init_sz+z_end,z_num+1)
+    fit_size=np.zeros(z_num+1)
+        
+    for pos in z_pos:
+        yield from mov_zpz1(pos)
+        yield from fly1d(dets_fs, mot, start, end, num, acq_time)
+        edge_pos,fwhm=erf_fit(-1,elem,mon,linear_flag=linFlag)
+        yield from bps.sleep(1)
+        fit_size[i]= fwhm
+        
+    yield from mov_zpz1(init_sz)
+    #fig, ax = plt.subplots()
+    plt.figure()
+    plt.plot(z_pos,fit_size,'bo')
+    #ax.set_xlabel('zpz1')
+    yield from bps.sleep(1)
+    plt.show()
+
+
+def plot_z_focus_results(first_sid = -11, last_sid = -1, z_mtr ='zpz1',
+                        elem = "Cr",lin_flag = False,mon='sclr1_ch4'):
+    
+    num_scans = abs(first_sid-last_sid)+1
+    sid_list =  np.linspace(first_sid,
+                            last_sid,
+                            num_scans, 
+                            dtype = int)
+    
+    z_pos_list = np.zeros_like(sid_list, dtype = float)
+    fwhm_list = np.zeros_like(sid_list, dtype = float)
+    
+    num_rows = 4
+    num_cols = num_scans//num_rows
+    if num_scans%num_rows != 0:
+        num_cols+=1
+
+    fig, axs = plt.subplots(num_rows, num_cols)
+    axs = axs.ravel()
+
+    for i, sid in enumerate(sid_list):
+        edge_pos,fwhm,x_data,y_data,y_fit,z_pos = get_knife_edge_data(sid,
+                                                                      elem,
+                                                                      z_mtr,
+                                                                      mon='sclr1_ch4',
+                                                                      linear_flag=True)
+        
+        axs[i].plot(x_data,y_data, 'bo')
+        axs[i].plot(x_data, y_fit, 'r-')
+        axs[i].set_xlabel("motor positions")
+        axs[i].set_ylabel("norm. intensity")
+        axs[i].set_title(f"{z_mtr}_pos ={z_pos = :.3f}, {edge_pos = :.3f}, {fwhm = :.2f}")
+        #plt.show()
+        
+        z_pos_list[i] = z_pos
+        fwhm_list = fwhm
+
+    plt.figure()
+    plt.plot(z_pos_list,fwhm_list, 'bo')
+    plt.xlabel(f"{z_mtr}_pos")
+    plt.ylabel("FWHM")
+    plt.show()
+
+
+
+
+
+    
+
+
+
+
+    
+    
+
+
+
+
+
+
 
 def pos2angle(col,row):
 
@@ -738,8 +862,10 @@ def zp_rot_alignment_edge(a_start, a_end, a_num, start, end, num, acq_time, elem
 
 def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, 
                      elem='Pt_L', threshold = 0.5, neg_flag = 0, move_flag=0):
-    
 
+    """
+    <zp_rot_alignment(-30,30,5, -10, 10, 200, 0.03, 'Ni', 0.1)
+    """
     a_step = (a_end - a_start)/a_num
     x = np.zeros(a_num+1)
     y = np.zeros(a_num+1)
@@ -857,7 +983,7 @@ def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt
 
     y = -1*np.array(y)
     x = np.array(x)
-    r0, dr, offset = rot_fit_2(x,y)
+    r0, dr, offset= rot_fit_2(x,y)
     #insertFig(note='dsth: {} {}'.format(a_start,a_end))
 
     yield from bps.mov(smlld.dsth, th_init)
@@ -885,6 +1011,49 @@ def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt
     #caliFIle = open('rotCali','wb')
     #pickle.dump(y,CaliFile)
     return v
+
+
+def refit_rot_align(scan_list, elem, threshold):
+
+    y = np.zeros_like(scan_list, dtype = np.float32)
+    x = np.zeros_like(scan_list, dtype = np.float32)
+    
+    for i, sid in enumerate(scan_list):
+        h = db[int(sid)]
+        cen = return_line_center(int(sid),elem=elem,threshold = 0.6)
+        theta = h.table('baseline')['dsth'][1]
+        x[i] = theta
+
+        #print(f"{theta = :.2f}")
+
+        if np.abs(theta) > 45.01:
+            y[i] = cen*np.sin(x[i]*np.pi/180.0)
+
+        else:
+            y[i] = cen*np.cos(x[i]*np.pi/180.0)
+
+        
+    print(x)
+    print(y)
+    
+    y = -1*np.array(y)
+    x = np.array(x)
+    r0, dr, offset = rot_fit_2(x,y)
+    #insertFig(note='dsth: {} {}'.format(a_start,a_end))
+
+    dx = -dr*np.sin(offset*np.pi/180)
+    dz = -dr*np.cos(offset*np.pi/180)
+
+    #moving back to intial y position
+    print(f'{dx = :.2f}, {dz = :.2f}')
+
+
+
+
+
+        
+
+
 
 def mll_rot_alignment_2D(th_start, th_end, th_num, x_start, x_end, x_num,
                          y_start, y_end, y_num, acq_time, elem='Pt_L', move_flag=0):
@@ -1386,7 +1555,7 @@ def do_motor_position_checks(check_list_dict, rel_tol_per = 25,abs_tol = 20, mes
 
 def go_det(det, disable_checks = False):
 
-    check_list = {ssa2.hgap:0.05, ssa2.vgap:0.03, s5.hgap:0.1,s5.vgap:0.1,zposa.zposay:0,mllosa.osax:0}
+    check_list = {ssa2.hgap:0.05, ssa2.vgap:0.03, s5.hgap:0.3,s5.vgap:0.3,zposa.zposay:0,mllosa.osax:0}
 
     if caget("XF:03IDC-ES{Stg:FPDet-Ax:Y}Mtr.RBV")<380:
 
@@ -1898,11 +2067,40 @@ def mll_osa_in():
     else:
         raise ValueError(f"OSA_X position not close to zero osax = {mllosa.osax.position :.1f}")
 
-def mll_bs_out():
+def mll_bs_out_():
 
     if abs(mllbs.bsx.position)<10 and abs(mllbs.bsy.position)<10:
         yield from bps.movr(mllbs.bsx,500)
         yield from bps.movr(mllbs.bsy,-500)
+    else:
+        raise ValueError(f"bemastop positions are not close to zero."
+                        f"bsx = {mllbs.bsx.position :.1f},bsy = {mllbs.bsy.position :.1f}")
+    
+def mll_bs_out(wait_till_finish = True):
+
+    if abs(mllbs.bsx.position)<10 and abs(mllbs.bsy.position)<10:
+
+        caput(mllbs.bsx.prefix,caget(mllbs.bsx.prefix)+500)
+        caput(mllbs.bsy.prefix,caget(mllbs.bsy.prefix)-500)
+        if wait_till_finish:
+            while mllbs.bsx.moving or mllbs.bsy.moving:
+                time.sleep(0.3)
+        
+    else:
+        raise ValueError(f"bemastop positions are not close to zero."
+                        f"bsx = {mllbs.bsx.position :.1f},bsy = {mllbs.bsy.position :.1f}")
+    
+
+def mll_bs_out_move(wait_till_finish = False):
+
+    if abs(mllbs.bsx.position)<10 and abs(mllbs.bsy.position)<10:
+
+        mllbs.bsx.move(mllbs.bsx.position+500)
+        mllbs.bsy.move(mllbs.bsy.position-500)
+        if wait_till_finish:
+            while mllbs.bsx.moving or mllbs.bsy.moving:
+                time.sleep(0.3)
+        
     else:
         raise ValueError(f"bemastop positions are not close to zero."
                         f"bsx = {mllbs.bsx.position :.1f},bsy = {mllbs.bsy.position :.1f}")
@@ -1933,7 +2131,20 @@ def mll_lens_out():
         pass
 
 
+def move_motor_caput(motor_name_value_dict):
 
+    """move_motor_caput({mllbs.bsx:0, mllbs.bsy:0})
+       put slowest motor last"""
+
+    for key, val in motor_name_value_dict.items():
+        caput(key.prefix,val)
+
+    time.sleep(0.25)
+
+    while key.moving:
+        time.sleep(0.25)
+
+    return 
 
 def mlls_optics_out_for_cam11():
 
@@ -2282,6 +2493,11 @@ def peak_with_voltage(start,end,n_steps, pv_name = "XF:03ID-BI{EM:BPM1}DAC0"):
             else:
                 y[i] = sclr2_ch4.get()
 
+            if i>2:
+                change = np.diff(y)
+            if change[-1]<0 and change[-2]<0:
+                break
+
         peak = x[y == np.max(y)]
 
         yield from bps.sleep(3)
@@ -2293,11 +2509,14 @@ def peak_with_voltage(start,end,n_steps, pv_name = "XF:03ID-BI{EM:BPM1}DAC0"):
         return
 
 
-def peak_xy_volt(iter = 2):
+def peak_xy_volt(iter = 1):
 
     for i in tqdm.tqdm(range(iter)):
-        yield from peak_with_voltage(-0.05,0.05,10, pv_name = "XF:03ID-BI{EM:BPM1}DAC0")
-        yield from peak_with_voltage(-0.05,0.05,10, pv_name = "XF:03ID-BI{EM:BPM1}DAC1")
+        # yield from peak_with_voltage(-0.05,0.05,10, pv_name = "XF:03ID-BI{EM:BPM1}DAC0")
+        # yield from peak_with_voltage(-0.05,0.05,10, pv_name = "XF:03ID-BI{EM:BPM1}DAC1")
+        yield from peak_with_voltage(-0.05,0.05,10, pv_name = "XF:03IDB-BI:{NSLS2_EM:}DAC-Chan1-Sp")
+        yield from peak_with_voltage(-0.05,0.05,10, pv_name = "XF:03IDB-BI:{NSLS2_EM:}DAC-Chan2-Sp")
+
 
 
 def peak_bpm_x(start,end,n_steps):

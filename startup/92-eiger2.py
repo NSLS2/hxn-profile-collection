@@ -447,3 +447,5 @@ except Exception:
           end='\n\n')
     traceback.print_exc()
     print()
+
+dets_fast = [fs,eiger2,xspress3]

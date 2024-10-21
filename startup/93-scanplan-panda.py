@@ -624,7 +624,8 @@ db.reg.register_handler("PANDA", PandAHandlerHDF5, overwrite=True)
 def flyscan_pd(detectors, start_signal, total_points, dwell, *,
                       panda_flyer, xmotor, ymotor,
                       delta=None, shutter=False, align=False, plot=False, dead_time = 0, scan_dim = None,
-                      md=None, snake=False, verbose=False, wait_before_scan=None, position_supersample = 1):
+                      md=None, snake=False, verbose=False, wait_before_scan=None, position_supersample = 1,
+                      merlin_cont_mode=False):
     """Read IO from SIS3820.
     Zebra buffers x(t) points as a flyer.
     Xpress3 is our detector.
@@ -859,9 +860,15 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
         if "merlin1" in dets_by_name:
             # print(f"Configuring 'merlin2' ...")
             dpc = dets_by_name["merlin1"]
-            yield from abs_set(dpc.cam.num_images, total_points, wait=True)
-            yield from abs_set(dpc.cam.acquire_time, 0.001, wait=True)
-            yield from abs_set(dpc.cam.acquire_period, 0.002642, wait=True)
+            if merlin_cont_mode:
+                yield from abs_set(dpc.cam.num_images, total_points, wait=True)
+                yield from abs_set(dpc.cam.acquire_time, dwell, wait=True)
+                yield from abs_set(dpc.cam.num_exposures, scan_dim[0], wait=True)
+                yield from abs_set(dpc.cam.trigger_mode, 2, wait=True)
+            else:
+                yield from abs_set(dpc.cam.num_images, total_points, wait=True)
+                yield from abs_set(dpc.cam.acquire_time, 0.001, wait=True)
+                yield from abs_set(dpc.cam.acquire_period, 0.002642, wait=True)
             dpc._external_acquire_at_stage = True
             dpc.hdf5.filestore_spec = dpc.hdf5.filestore_spec_restore
             scan_counter.append(dpc.cam.num_images_counter)
@@ -1027,8 +1034,8 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
 
 
 def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, scan_end2, num2, exposure_time, pos_return = True, apply_tomo_drift = False,
-                tomo_angle = None, auto_rescan = False, dead_time = 0.0002, line_overhead = [0.01,0.01], line_dwell = 0.1, return_speed = 100.0, position_supersample = 1,
-                md = None, **kwargs):
+                tomo_angle = None, auto_rescan = False, dead_time = 0.0005, line_overhead = [0.01,0.01], line_dwell = 0.1, return_speed = 100.0, position_supersample = 1,
+                md = None, merlin_cont_mode = False, **kwargs):
     """
     Relative scan
     """
@@ -1046,6 +1053,7 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
                      'dssx':9,
                      'dssy':10,
                      'dssz':11}
+
 
     do_scan = True
     while do_scan:
@@ -1123,7 +1131,10 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
             ## Zebra is used to copy trigger pulses from panda to detectors and scaler
             yield from bps.abs_set(zebra.output[1].ttl.addr,4)
             yield from bps.abs_set(zebra.output[2].ttl.addr,4)
-            yield from bps.abs_set(zebra.output[3].ttl.addr,4)
+            if merlin_cont_mode:
+                yield from bps.abs_set(zebra.output[3].ttl.addr,55)
+            else:
+                yield from bps.abs_set(zebra.output[3].ttl.addr,4)
             yield from bps.abs_set(zebra.output[4].ttl.addr,4)
 
             # Wait for Zebra
@@ -1154,7 +1165,13 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
             sl('M100=0')
 
             ## Wait for stages in bluesky
+            count = 0
             while np.abs(motor1.position-start1_scan) + np.abs(motor2.position-start2) > 0.02:
+                count += 1
+                if count % 10 == 0:
+                    print("Motors didn't reach starting position, moving again...")
+                    sl('#%djog=%f'%(m1_num,start1_scan))
+                    sl('#%djog=%f'%(m2_num,start2))
                 yield from bps.sleep(0.2)
 
             ## Setup scanning program
@@ -1181,7 +1198,7 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
             for d in dets:
                 if d.name == 'xspress3' or d.name == 'xspress3_det2':
                     panda_live_plot.setup_plot(scan_input,d)
-            yield from flyscan_pd(dets, '&6begin41r', num1*num2, exposure_time, dead_time = dead_time, md=md, scan_dim = [num1,num2], position_supersample = position_supersample, **kwargs)
+            yield from flyscan_pd(dets, '&6begin41r', num1*num2, exposure_time, dead_time = dead_time, md=md, scan_dim = [num1,num2], position_supersample = position_supersample, merlin_cont_mode=merlin_cont_mode, **kwargs)
 
 
             # yield from bps.sleep(1)
@@ -1196,7 +1213,7 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
                 yield from bps.wait(group=mv_back)
 def fly2dcontpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, scan_end2, num2, exposure_time, pos_return = True, apply_tomo_drift = False,
                 tomo_angle = None, auto_rescan = False, dead_time = 0.0002, scan_overhead = [0.1,0.05],
-                md = None, **kwargs):
+                md = None, merlin_cont_mode = False, **kwargs):
     """
     Relative scan
     """
@@ -1287,9 +1304,13 @@ def fly2dcontpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2,
 
             ## Zebra is used to copy trigger pulses from panda to detectors and scaler
             yield from bps.abs_set(zebra.output[1].ttl.addr,4)
-            yield from bps.abs_set(zebra.output[2].ttl.addr,43)
-            yield from bps.abs_set(zebra.output[3].ttl.addr,4)
+            yield from bps.abs_set(zebra.output[2].ttl.addr,4)
+            if merlin_cont_mode:
+                yield from bps.abs_set(zebra.output[3].ttl.addr,55)
+            else:
+                yield from bps.abs_set(zebra.output[3].ttl.addr,4)
             yield from bps.abs_set(zebra.output[4].ttl.addr,4)
+
 
             # Wait for Zebra
             yield from bps.sleep(0.1)
@@ -1346,7 +1367,7 @@ def fly2dcontpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2,
             # yield from bps.sleep(2)
             #if xspress3 in dets:
             #    panda_live_plot.setup_plot(scan_input)
-            yield from flyscan_pd(dets, start_signal, num1*num2, exposure_time, dead_time = dead_time, md=md, scan_dim = [num1,num2], **kwargs)
+            yield from flyscan_pd(dets, start_signal, num1*num2, exposure_time, dead_time = dead_time, md=md, scan_dim = [num1,num2], merlin_cont_mode = merlin_cont_mode, **kwargs)
 
 
             # yield from bps.sleep(1)

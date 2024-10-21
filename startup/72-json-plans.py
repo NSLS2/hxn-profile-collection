@@ -51,7 +51,9 @@ def make_mll_tomo_plan(save_as = "/nsls2/data/hxn/legacy/user_macros/HXN_GUI/Sca
                             "threshold": 0.5,
                             "move_coarse":False,
                             "offset":0,
-                            "zero_before_scan":False},
+                            "zero_before_scan":False,
+                            "initial_position":0,
+                            "ref_threshold":0},
 
                     "align_2d_com":{"do_align":False,
                             "x_start":-2,
@@ -94,7 +96,7 @@ def make_mll_tomo_plan(save_as = "/nsls2/data/hxn/legacy/user_macros/HXN_GUI/Sca
 
 def align_scan(mtr,start,end,num,exp,elem_, align_with="line_center",
                threshold = 0.5,move_coarse = False, neg_flag = False, offset = 0,
-               tomo_use_panda= False, reset_piezos_to_zero = False):
+               tomo_use_panda= False, reset_piezos_to_zero = False, initial_position=0, align_movement_limit=0):
 
     """
     scan to align samples to field of view using using fly1d scan
@@ -109,9 +111,11 @@ def align_scan(mtr,start,end,num,exp,elem_, align_with="line_center",
     fly_to_coarse = {"zpssx":"smarx","zpssy":"smary","zpssz":"smarz",
                      "dssx":"dsx","dssy":"dsy","dssz":"dsz"}
     zp_flag = False
+    dummy_mtr = 'zpssx'
     
     if mtr.name.startswith('zp'):
         zp_flag = True
+        dummy_mtr = 'dssx'
     
     uni_conv = 1
     if zp_flag:
@@ -131,12 +135,13 @@ def align_scan(mtr,start,end,num,exp,elem_, align_with="line_center",
                         )
     else:
         print("uses panda scan")
+        #TODO swap xmotor programically 
         yield from fly2dpd([fs,xspress3],
                         mtr,
                         start,
                         end,
                         num,
-                        zpssx,
+                        dummy_mtr,
                         0,
                         0,
                         1,
@@ -145,15 +150,16 @@ def align_scan(mtr,start,end,num,exp,elem_, align_with="line_center",
                         )
     if align_with == "line_center":
         xc = return_line_center(-1,elem_,threshold, neg_flag = neg_flag)
-
+        xc = xc+offset
     elif align_with == "edge":
         xc,_ = erf_fit(-1,elem_,linear_flag=False)
-
+        if abs(xc) - abs(initial_position) > align_movement_limit:
+            xc = mtr.position + offset
+        else:
+            xc = xc + offset
+         
     else:
         xc = mtr.position
-    
-    if tomo_use_panda:
-        xc = xc + offset
 
     if move_coarse:
         yield from bps.movr(eval(fly_to_coarse[mtr.name]),xc/uni_conv)
@@ -417,7 +423,10 @@ def mll_tomo_scan_to_loop(angle, tomo_params, ic_init, do_y_offset = True,tracki
                                 yalign["move_coarse"],
                                 xalign["neg_flag"],
                                 yalign["offset"],
-                                tomo_params["flying_panda"]
+                                tomo_params["flying_panda"],
+                                yalign["zero_before_scan"],
+                                tomo_params["y_init"],
+                                yalign["align_movement_limit"]
                 )
 
         else:
@@ -442,7 +451,9 @@ def mll_tomo_scan_to_loop(angle, tomo_params, ic_init, do_y_offset = True,tracki
         if not tomo_params["stop_pdf"]:
 
             try:
-                insert_xrf_map_to_pdf(-1,elems_to_pdf, "dsth", note = tomo_params["scan_label"])
+                insert_xrf_map_to_pdf(-1,
+                                      elements = elems_to_pdf, 
+                                      note = tomo_params["scan_label"])
                 plt.close()
 
             except:
@@ -758,7 +769,6 @@ def make_diff_plan(save_as = "/nsls2/data/hxn/legacy/user_macros/HXN_GUI/Scan/te
 
     fp.close()
 
-
 def diff_scan_to_loop(angle, tomo_params, ic_init):
 
         #caput("XF:03IDC-ES{Merlin:2}HDF1:NDArrayPort","ROI1") #patch for merlin2 issuee
@@ -858,7 +868,6 @@ def diff_scan_to_loop(angle, tomo_params, ic_init):
 
             except:
                 pass
-
 
 def th_fly2d_json(path_to_json):
 
@@ -1004,6 +1013,6 @@ def th_fly2d_json(path_to_json):
                 pass
 
 
-
+###################MLL Diffraction######################
 
 

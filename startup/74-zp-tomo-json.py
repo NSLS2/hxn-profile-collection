@@ -71,15 +71,19 @@ def make_zp_tomo_plan(save_as = "/nsls2/data/hxn/legacy/user_macros/HXN_GUI/Scan
 
     fp.close()
 
-def zp_tomo_2d_scan(angle,dets_,x_start,x_end,x_num,y_start,y_end,y_num,exp):
+def zp_tomo_2d_scan_loop(angle,dets_,x_start,x_end,x_num,y_start,y_end,y_num,exp):
     print("zp tomo 2d scan")
+    print(f"exposure time = {exp}")
+    
+    x_scale_factor = 0.9542
+    z_scale_factor = 1.0309
 
     if np.abs(angle) < 44.99:
                 
-        x_start_real = x_start / np.cos(angle * np.pi / 180.)
-        x_end_real = x_end / np.cos(angle * np.pi / 180.)
+        x_start_real = x_start / np.cos(angle * np.pi / 180.)/ x_scale_factor
+        x_end_real = x_end / np.cos(angle * np.pi / 180.)/ x_scale_factor
 
-        yield from fly2d(dets_, 
+        yield from fly2dpd(dets_, 
                         zpssx,
                         x_start_real,
                         x_end_real,
@@ -93,11 +97,11 @@ def zp_tomo_2d_scan(angle,dets_,x_start,x_end,x_num,y_start,y_end,y_num,exp):
 
     else:
 
-        x_start_real = x_start / np.abs(np.sin(angle * np.pi / 180.))
-        x_end_real = x_end / np.abs(np.sin(angle * np.pi / 180.))
+        x_start_real = x_start / np.abs(np.sin(angle * np.pi / 180.))/ z_scale_factor
+        x_end_real = x_end / np.abs(np.sin(angle * np.pi / 180.))/ z_scale_factor
         print(x_start_real,x_end_real)
 
-        yield from fly2d(dets_, 
+        yield from fly2dpd(dets_, 
                         zpssz,
                         x_start_real,
                         x_end_real,
@@ -109,9 +113,7 @@ def zp_tomo_2d_scan(angle,dets_,x_start,x_end,x_num,y_start,y_end,y_num,exp):
                         exp
                         )
 
-
-
-def zp_tomo_scan_to_loop(angle, tomo_params, ic_init):
+def zp_tomo_scan_to_loop(angle, tomo_params, ic_init,tracking_file = None):
 
         #caput("XF:03IDC-ES{Merlin:2}HDF1:NDArrayPort","ROI1") #patch for merlin2 issuee
         
@@ -140,6 +142,10 @@ def zp_tomo_scan_to_loop(angle, tomo_params, ic_init):
         if np.abs(angle) < 44.99:
 
             if xalign["do_align"]:
+                try:
+                    move_coarse = xalign["move_coarse"]
+                except:
+                    move_coarse = False
                 yield from align_scan(zpssx, 
                                 xalign["start"], 
                                 xalign["end"], 
@@ -148,6 +154,7 @@ def zp_tomo_scan_to_loop(angle, tomo_params, ic_init):
                                 xalign["elem"],
                                 xalign["center_with"],
                                 xalign["threshold"],
+                                move_coarse = move_coarse,
                                 )
 
             #2d alignemnt using center of mass if condition is true
@@ -177,6 +184,10 @@ def zp_tomo_scan_to_loop(angle, tomo_params, ic_init):
         else:
 
             if xalign["do_align"]:
+                try:
+                    move_coarse = xalign["move_coarse"]
+                except:
+                    move_coarse = False
                 yield from align_scan(zpssz, 
                                 xalign["start"], 
                                 xalign["end"], 
@@ -185,6 +196,7 @@ def zp_tomo_scan_to_loop(angle, tomo_params, ic_init):
                                 xalign["elem"],
                                 xalign["center_with"],
                                 xalign["threshold"],
+                                move_coarse = move_coarse,
                                 )
 
             #2d alignemnt using center of mass if condition is true
@@ -211,6 +223,10 @@ def zp_tomo_scan_to_loop(angle, tomo_params, ic_init):
                 pass
         
         #1d y alignemnt scan
+        try:
+            move_coarse = yalign["move_coarse"]
+        except:
+            move_coarse = False
         if yalign["do_align"]:
             yield from align_scan(zpssy, 
                                 yalign["start"], 
@@ -220,13 +236,14 @@ def zp_tomo_scan_to_loop(angle, tomo_params, ic_init):
                                 yalign["elem"],
                                 yalign["center_with"],
                                 yalign["threshold"],
+                                move_coarse = move_coarse,
                 )
             
         else:
             pass
 
         #2d scan sequence, based on angle x or z are scanned
-        yield from zp_tomo_2d_scan(angle,
+        yield from zp_tomo_2d_scan_loop(angle,
                                     dets,
                                     image_scan["x_start"],
                                     image_scan["x_end"],
@@ -243,13 +260,18 @@ def zp_tomo_scan_to_loop(angle, tomo_params, ic_init):
         if not tomo_params["stop_pdf"]:
 
             try:
-                insert_xrf_map_to_pdf(-1,elems_to_pdf, "zpsth", note = tomo_params["scan_label"])
-                plt.close()
-            
+                #insert_xrf_map_to_pdf(-1,elems_to_pdf, "zpsth", note = tomo_params["scan_label"])
+                #plt.close()
+                pass
             except:
                 pass
+
+        if tracking_file is not None:
+            flog = open(tracking_file,'a')
+            flog.write("%d %.3f\n"%(db[-1].start['scan_id'],angle))
+            flog.close()
                 
-def run_zp_tomo_json(path_to_json):
+def run_zp_tomo_json(path_to_json,tracking_file = None):
 
 
     """zp_tomo_scan by taking parameters from a json file,
@@ -272,10 +294,25 @@ def run_zp_tomo_json(path_to_json):
     #                     angle_info["angle_step"]
     #                     )
 
-    angles = np.linspace(angle_info["start"], 
+    angles = np.linspace(angle_info["start"],
                         angle_info["end"],
                         int(1+abs(angle_info["end"] - angle_info["start"])/angle_info["angle_step"])
                         )
+    if "split_tomo" in angle_info:
+        split = int(angle_info["split_tomo"])
+        angles0 = angles.copy()
+        angles = angles0[0::split]
+        for i in range(1,split):
+            if i%2 == 0:
+                angles = np.concatenate((angles,angles0[i::split]))
+            else:
+                angles = np.concatenate((angles,np.flip(angles0[i::split])))
+    if "start_angle" in angle_info:
+        angst = angle_info["start_angle"]
+        for i,ang in enumerate(angles):
+            if np.abs(ang-angst)<1e-3:
+                angles = angles[i:]
+                break
 
     print(angles)
 
@@ -370,7 +407,7 @@ def run_zp_tomo_json(path_to_json):
 
         if not angle in np.array(tomo_params["remove_angles"]):
             #tomo scan at a single angle
-            yield from zp_tomo_scan_to_loop(angle, tomo_params,ic_0)
+            yield from zp_tomo_scan_to_loop(angle, tomo_params,ic_0,tracking_file=tracking_file)
 
         else:
             print(f"{angle} skipped")

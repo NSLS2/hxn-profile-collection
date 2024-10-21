@@ -183,7 +183,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     ic = np.asfarray(df['sclr1_ch4'])
     num_frame = np.size(ic)
     print(np.shape(ic))
-    
+    '''
     img = list(h.data(det_name))
     
     for i in range(num_frame):
@@ -200,8 +200,8 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     if i < num_frame-1:
         n_missing = num_frame - i
         images[20+n_missing:num_frame] = images[20:i].copy()
-    
-    #images = np.array(np.squeeze(list(h.data(det_name))))
+    '''
+    images = np.array(np.squeeze(list(h.data(det_name))))
 
     print('image size:',np.shape(images))
     #images = np.array(np.squeeze(images))
@@ -385,7 +385,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
 
     #"""
 
-    fn = '/data/users/2024Q2/Huang_2024Q2/NaNMC/2V/'
+    fn = '/data/users/2024Q3/Robinson_2024Q3/diff3/'
     
     if not os.path.exists(fn):
         os.makedirs(fn)

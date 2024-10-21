@@ -190,13 +190,26 @@ def alignment_scan(mtr, start,end,num,exp,elem_, align_with="line_center",
 
     try:
 
-        yield from fly1d(dets_fs,
-                        mtr, 
-                        start, 
-                        end, 
-                        num,
-                        exp
-                        )
+        # yield from fly1d(dets_fs,
+        #                 mtr, 
+        #                 start, 
+        #                 end, 
+        #                 num,
+        #                 exp
+        #                 )
+
+        yield from fly2dpd([fs,xspress3],
+                mtr,
+                start,
+                end,
+                num,
+                zpssx,
+                0,
+                0,
+                1,
+                exp,
+                position_supersample = 10
+                )
         if align_with == "line_center":
             xc = return_line_center(-1,elem_,threshold, neg_flag= neg_flag)
 
@@ -629,8 +642,8 @@ def run_zp_xanes(path_to_parameter_file, do_confirm  =True, add_low_res_scan = F
             print(f'Current scan: {i+1}/{len(e_list)}')
             image_scan = scan_params["fly2d_scan"]
 
-            yield from fly2d( 
-                            eval(image_scan["det"]),
+            yield from fly2dpd( 
+                            [fs,xspress3,eiger2],
                             x_motor,
                             image_scan["x_start"],
                             image_scan["x_end"],
@@ -642,11 +655,11 @@ def run_zp_xanes(path_to_parameter_file, do_confirm  =True, add_low_res_scan = F
                             image_scan["exposure"]
                             )
             yield from bps.sleep(1)
-            
+            #eval(image_scan["det"])
             if add_low_res_scan:
             
-                yield from fly2d( 
-                    eval(image_scan["det"]),
+                yield from fly2dpd( 
+                    [fs,xspress3,eiger2],
                     x_motor,
                     image_scan["x_start"],
                     image_scan["x_end"],
@@ -795,6 +808,7 @@ def run_mll_xanes(path_to_parameter_file, do_confirm =True):
     if check == "y":
 
         for i in tqdm.tqdm(range(len(e_list)),desc = 'Energy Scan'):
+            print(f'Current scan: {i+1}/{len(e_list)}')
         #for i in range (len(e_list)):
 
             with open(path_to_parameter_file,"r") as fp:
@@ -851,17 +865,18 @@ def run_mll_xanes(path_to_parameter_file, do_confirm =True):
             alignY = scan_params["yalign"] 
             align_com = scan_params["align_with_com"]   
 
-            print("align_scan step")
+            #print("align_scan step")
 
             if (align_com["do_align"] and e_t>align_com["energy_threshold"] and not i==0): 
             # for special scans if no align elem available
                 
-                #find com
-                cx,cy = return_center_of_mass(-1,
-                                            align_com["elem"],
-                                            align_com["com_threshold"]
-                                            )
                 try:
+                #find com
+                    cx,cy = return_center_of_mass(-1,
+                                                align_com["elem"],
+                                                align_com["com_threshold"]
+                                                )
+                    
 
                     #move if true
                     if align_com["move_x"]:
@@ -899,7 +914,7 @@ def run_mll_xanes(path_to_parameter_file, do_confirm =True):
                                             threshold = alignX["threshold"],
                                             neg_flag =alignX["negative_flag"] )      
 
-            print(f'Current scan: {i+1}/{len(e_list)}')
+            #print(f'Current scan: {i+1}/{len(e_list)}')
 
             # do the fly2d scan
             #cbpm_on(False)
@@ -908,15 +923,15 @@ def run_mll_xanes(path_to_parameter_file, do_confirm =True):
 
             if image_scan["det"] == "dets_fs": #for fast xanes scan, no transmission (merlin) in the list
 
-                yield from fly2d(image_scan["det"], mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t, dead_time=0.002) 
+                yield from fly2dpd([fs,xspress3,eiger2], mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t) 
                 #dead_time = 0.001 for 0.015 dwell
 
             else:
 
                 image_scan = scan_params["fly2d_scan"]
 
-                yield from fly2d( 
-                                eval(image_scan["det"]),
+                yield from fly2dpd( 
+                                [fs,xspress3,eiger2],
                                 x_motor,
                                 image_scan["x_start"],
                                 image_scan["x_end"],
@@ -955,7 +970,7 @@ def run_mll_xanes(path_to_parameter_file, do_confirm =True):
                 except:
                     pass
             # save the DF in the loop so quitting a scan won't affect
-            filename = f"HXN_nanoXANES_StartID{int(e_list['Scan ID'][0])}_{len(e_list)}_e_points.csv"
+            filename = f"HXN_nanoXANES_{scan_params['sample_name']}_StartID{int(e_list['Scan ID'][0])}_{len(e_list)}_e_points.csv"
             e_list.to_csv(os.path.join(scan_params["save_log_to"], filename), float_format= '%.5f')
         '''
         #go back to max energy point if scans done reverese
@@ -979,24 +994,122 @@ def run_mll_xanes(path_to_parameter_file, do_confirm =True):
 
 
 def batch_mll_xanes():
-    yield from recover_mll_scan_pos(282762) 
-    yield from run_mll_xanes("/data/users/current_user/mll_xanes_new_WT-400NP-rinsed-282762.json", 
+    yield from recover_scan_pos_and_find_com(297731, elem = "Hg_L", 
+                                             fly_scan_plan = [dssx,-14,14,100,dssy,-14,14,100,0.01],
+                                             com_threshold = 0.05)
+    yield from run_mll_xanes("/data/users/current_user/mll_xanes_ref3.json", 
                              do_confirm = False)
-    #yield from recover_mll_scan_pos(282276) 
-    #yield from run_mll_xanes(Hg_MLL_XANES_NP,
-    #                          "/data/users/current_user/mll_xanes_NP.json", 
-    #                         do_confirm = False)    
-    #yield from recover_mll_scan_pos(282273) 
-    #yield from run_mll_xanes(Hg_MLL_XANES_cinnabar,
-    #                          "/data/users/current_user/mll_xanes_cinnabar_top.json", 
-    #                         do_confirm = False) 
-    #yield from recover_mll_scan_pos(282279) 
-    #yield from run_mll_xanes(Hg_MLL_XANES_NP,
-    #                          "/data/users/current_user/mll_xanes_NP.json", 
-    #                         do_confirm = False)      
-    #yield from recover_mll_scan_pos(282267) 
-    #yield from run_mll_xanes(Hg_MLL_XANES_metacinnabar,
-    #                          "/data/users/current_user/mll_xanes_metacinnabar.json", 
-    #                         do_confirm = False) 
+    
+
+    yield from recover_scan_pos_and_find_com(297713, 
+                                             elem = "Hg_L", 
+                                             fly_scan_plan = [dssx,-14,14,100,dssy,-14,14,100,0.01],
+                                             com_threshold = 0.05)
+    yield from run_mll_xanes("/data/users/current_user/mll_xanes_ref4.json", do_confirm = False)
+                             
+
+    yield from recover_scan_pos_and_find_com(298242, 
+                                             elem = "Hg_L", 
+                                             fly_scan_plan = [dssx,-5,5,100,dssy,-5,5,100,0.01],
+                                             com_threshold = 0.05)
+    yield from run_mll_xanes("/data/users/current_user/mll_xanes_ref5.json", do_confirm = False)
+
+
+                             
+    yield from recover_scan_pos_and_find_com(297642, 
+                                             elem = "Hg_L", 
+                                             fly_scan_plan = [dssx,-14,14,100,dssy,-14,14,100,0.01],
+                                             com_threshold = 0.05)
+    yield from run_mll_xanes("/data/users/current_user/mll_xanes_ref6.json", do_confirm = False)
+
+
+    yield from recover_scan_pos_and_find_com(297731, elem = "Hg_L", 
+                                             fly_scan_plan = [dssx,-14,14,100,dssy,-14,14,100,0.01],
+                                             com_threshold = 0.05)
+    yield from run_mll_xanes("/data/users/current_user/mll_xanes_ref3.json", 
+                             do_confirm = False)
+    
+
+    yield from recover_scan_pos_and_find_com(297713, 
+                                             elem = "Hg_L", 
+                                             fly_scan_plan = [dssx,-14,14,100,dssy,-14,14,100,0.01],
+                                             com_threshold = 0.05)
+    yield from run_mll_xanes("/data/users/current_user/mll_xanes_ref4.json", do_confirm = False)
+                             
+
+    yield from recover_scan_pos_and_find_com(297694, 
+                                             elem = "Hg_L", 
+                                             fly_scan_plan = [dssx,-14,14,100,dssy,-14,14,100,0.01],
+                                             com_threshold = 0.05)
+    yield from run_mll_xanes("/data/users/current_user/mll_xanes_ref5.json", do_confirm = False)
+
+def batch_xanes2():
+    yield from run_mll_xanes("/data/users/current_user/mll_xanes_sample5_roi2.json", do_confirm = False)
+                             
+    yield from recover_scan_pos_and_find_com(298422, 
+                                             elem = "Hg_L", 
+                                             fly_scan_plan = [dssx,-2,2,50,dssy,-2,2,50,0.1],
+                                             com_threshold = 0.7)
+    yield from run_mll_xanes("/data/users/current_user/mll_xanes_sample5_roi3.json", do_confirm = False)
+
+                                 
+    yield from recover_scan_pos_and_find_com(298423, 
+                                             elem = "Hg_L", 
+                                             fly_scan_plan = [dssx,-1.5,1.5,50,dssy,-1.5,1.5,50,0.1],
+                                             com_threshold = 0.7)
+    yield from run_mll_xanes("/data/users/current_user/mll_xanes_sample6_roi1.json", do_confirm = False)
         
-        
+
+def batch_2d():
+    yield from recover_mll_scan_pos(298767,moveflag=True,base_moveflag=True) #corae scan pos (J)
+    yield from fly2dpd(dets1, dssx,-14.0, 14.0, 280,dssy,-0.5, 0.5, 10, 0.25000)
+
+    yield from recover_mll_scan_pos(298778,moveflag=True,base_moveflag=True) #corae scan pos (K)
+    yield from fly2dpd(dets1, dssx,-14.0, 14.0, 280,dssy,-0.5, 0.5, 10, 0.25000)
+
+    yield from recover_mll_scan_pos(298781,moveflag=True,base_moveflag=True) #corae scan pos (L)
+    yield from fly2dpd(dets1, dssx,-14.0, 14.0, 280,dssy,-0.5, 0.5, 10, 0.25000)
+
+    yield from recover_mll_scan_pos(298781,moveflag=True,base_moveflag=True) #corae scan pos (P)
+    yield from fly2dpd(dets1, dssx,-14.0, 14.0, 280,dssy,-0.5, 0.5, 10, 0.25000)
+
+    yield from recover_mll_scan_pos(298822,moveflag=True,base_moveflag=True) #corae scan pos (Q)
+    yield from fly2dpd(dets1, dssx,-14.0, 14.0, 280,dssy,-0.5, 0.5, 10, 0.25000)
+
+    yield from recover_mll_scan_pos(298824,moveflag=True,base_moveflag=True) #corae scan pos (R)
+    yield from fly2dpd(dets1, dssx,-14.0, 14.0, 280,dssy,-0.5, 0.5, 10, 0.25000)
+
+    yield from recover_mll_scan_pos(298827,moveflag=True,base_moveflag=True) #corae scan pos (U)
+    yield from fly2dpd(dets1, dssx,-14.0, 14.0, 280,dssy,-0.5, 0.5, 10, 0.25000)
+
+    yield from recover_mll_scan_pos(298830,moveflag=True,base_moveflag=True) #corae scan pos (V)
+    yield from fly2dpd(dets1, dssx,-14.0, 14.0, 280,dssy,-0.5, 0.5, 10, 0.25000)
+
+    yield from recover_mll_scan_pos(298818,moveflag=True,base_moveflag=True) #corae scan pos (I)
+    yield from fly2dpd(dets1, dssx,-14.0, 14.0, 280,dssy,-0.5, 0.5, 10, 0.25000)
+
+    yield from recover_mll_scan_pos(298797,moveflag=True,base_moveflag=True) #corae scan pos (G)
+    yield from fly2dpd(dets1, dssx,-14.0, 14.0, 280,dssy,-0.5, 0.5, 10, 0.25000)
+
+    yield from recover_mll_scan_pos(298800,moveflag=True,base_moveflag=True) #corae scan pos (E)
+    yield from fly2dpd(dets1, dssx,-14.0, 14.0, 280,dssy,-0.5, 0.5, 10, 0.25000)
+
+
+
+def batch_xanes3():
+                               
+    yield from recover_scan_pos_and_find_com(298871, 
+                                             elem = "Hg_L", 
+                                             fly_scan_plan = [dssx,-1,1,40,dssy,-1,1,40,0.03],
+                                             com_threshold = 0.05)
+    yield from run_mll_xanes("/data/users/current_user/mll_xanes_ref1.json", 
+                             do_confirm = False)
+    
+
+    
+    yield from recover_scan_pos_and_find_com(298883, 
+                                             elem = "Hg_L", 
+                                             fly_scan_plan = [dssx,-1.0,1.0,40,dssy,-1.5,1.5,60,0.03],
+                                             com_threshold = 0.05)
+    yield from run_mll_xanes("/data/users/current_user/mll_xanes_ref2.json", 
+                             do_confirm = False)

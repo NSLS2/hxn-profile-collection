@@ -540,7 +540,12 @@ def foil_calib_d2_scan(startE, endE, step_size_ev = 0.5, exp_time = 0.5,
                        saveLogFolder = "/data/users/current_user", 
                        save_as = "Au_Foil_calib_July11_2024"):
 
-    """absolute start and end E"""
+    """absolute start and end E
+    
+    Usage:<foil_calib_d2_scan(11.919-0.025,11.919+0.075,step_size_ev=1,exp_time=0.5,saveLogFolder='/data/users/current_user',save_as='Au_Foil_calib_Sep27_2024_12_26pm')
+
+    
+    """
 
     dE = endE-startE
     num_steps = int(dE/(step_size_ev*0.001))
@@ -570,6 +575,8 @@ def plot_foil_calib(sid=-1, saveLogFolder = "/data/users/current_user",save_as =
     dff['I'] = I
     dff['Io'] = Io
     dff['absorbance'] = spec
+
+    dff = dff.dropna()
 
     ax.plot(en_, spec, label = "xanes")
     ax.plot(en_, np.gradient(spec),label = "derivative")
