@@ -9,7 +9,7 @@ def save_scan_info(sid):#,export_folder):
     bl = db[sid].table('baseline')
     sid, df = _load_scan(sid, fill_events=False)
     hd = db[sid].start
-    exp_s = hd['exposure_time']
+    #exp_s = hd['exposure_time']
     #path = os.path.join(export_folder, 'scan_{}_info.txt'.format(sid))
 
     #bl.to_csv(path, float_format='%1.5e', sep='\t')
@@ -66,8 +66,12 @@ def save_scan_info(sid):#,export_folder):
         delta = np.arctan(diff_y1 / R1)
         R_det = R1 / np.cos(delta) - d + diff_cz
 
+    
+
     print('gamma, delta, dist:', gamma*180/np.pi, delta*180/np.pi, R_det)
     print('ROI: ', roi_x0, roi_y0, roi_nx, roi_ny )
+
+    return [gamma*180/np.pi, delta*180/np.pi, R_det],[roi_x0, roi_y0, roi_nx, roi_ny]
     '''
     with open(path, 'a') as file:
         file.write('\n')

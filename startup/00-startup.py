@@ -657,7 +657,7 @@ def reload_bsui():
 
 def bluesky_debug_mode(level='DEBUG'):
     from bluesky.log import config_bluesky_logging
-    config_bluesky_logging(level)
+    config_bluesky_logging(level=level)
 
-bluesky_debug_mode(level='DEBUG')
+# bluesky_debug_mode(level='DEBUG')
 # del one_1d_step, one_nd_step, one_shot

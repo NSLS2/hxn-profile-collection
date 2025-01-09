@@ -58,7 +58,7 @@ def erf_fit(sid, elem, mon='sclr1_ch4', linear_flag=True):
         xdata = np.array(df2[x_motor[0]])
     except:
         from hxntools.scan_info import get_scan_positions
-        xdata,_ = get_scan_positions(h)
+        xdata = get_scan_positions(h)
     ydata = xrf
     ydata[0] = ydata[1] #patch for drop point issue
     ydata[-1] = ydata[-2]#patch for drop point issue
@@ -97,7 +97,7 @@ def get_knife_edge_data(sid,elem,z_mtr_name, mon='sclr1_ch4',linear_flag=True):
     h = db[sid]
     df2 = h.table()
     bl = h.table('baseline')
-    z_mtr_pos = bl[z_mtr_name]
+    z_mtr_pos = bl[z_mtr_name].to_numpy()[0]
 
     channels = [1,2,3]
     xrf = None
@@ -118,7 +118,7 @@ def get_knife_edge_data(sid,elem,z_mtr_name, mon='sclr1_ch4',linear_flag=True):
         xdata = np.array(df2[x_motor[0]])
     except:
         from hxntools.scan_info import get_scan_positions
-        xdata,_ = get_scan_positions(h)
+        xdata = get_scan_positions(h)
     
     ydata = xrf
     ydata[0] = ydata[1] #patch for drop point issue
@@ -621,8 +621,10 @@ def zp_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time,
     yield from movr_zpz1(z_start)
     for i in range(z_num + 1):
 
-        yield from fly1d(dets_fs, mot, start, end, num, acq_time)
+        yield from fly1dpd(dets_fast_fs, mot, start, end, num, acq_time)
+        yield from bps.sleep(2)
         edge_pos,fwhm=erf_fit(-1,elem,mon,linear_flag=linFlag)
+        yield from bps.mov(mot,edge_pos)
         yield from bps.sleep(1)
         fit_size[i]= fwhm
         z_pos[i]=zp.zpz1.position
@@ -673,19 +675,26 @@ def plot_z_focus_results(first_sid = -11, last_sid = -1, z_mtr ='zpz1',
                             num_scans, 
                             dtype = int)
     
+    print(sid_list)
+    
     z_pos_list = np.zeros_like(sid_list, dtype = float)
     fwhm_list = np.zeros_like(sid_list, dtype = float)
+
+    print(sid_list)
+    print(sid_list)
     
     num_rows = 4
     num_cols = num_scans//num_rows
     if num_scans%num_rows != 0:
         num_cols+=1
 
+    print(num_cols)
+
     fig, axs = plt.subplots(num_rows, num_cols)
     axs = axs.ravel()
 
     for i, sid in enumerate(sid_list):
-        edge_pos,fwhm,x_data,y_data,y_fit,z_pos = get_knife_edge_data(sid,
+        edge_pos,fwhm,x_data,y_data,y_fit,z_pos = get_knife_edge_data(int(sid),
                                                                       elem,
                                                                       z_mtr,
                                                                       mon='sclr1_ch4',
@@ -695,34 +704,18 @@ def plot_z_focus_results(first_sid = -11, last_sid = -1, z_mtr ='zpz1',
         axs[i].plot(x_data, y_fit, 'r-')
         axs[i].set_xlabel("motor positions")
         axs[i].set_ylabel("norm. intensity")
-        axs[i].set_title(f"{z_mtr}_pos ={z_pos = :.3f}, {edge_pos = :.3f}, {fwhm = :.2f}")
+        #axs[i].set_title(f"{z_mtr}_pos ={z_pos = :.3f}, {edge_pos = :.3f}, {fwhm = :.2f}")
         #plt.show()
         
+        print(z_pos)
         z_pos_list[i] = z_pos
-        fwhm_list = fwhm
+        fwhm_list[i] = fwhm
 
     plt.figure()
     plt.plot(z_pos_list,fwhm_list, 'bo')
-    plt.xlabel(f"{z_mtr}_pos")
+    #plt.xlabel(f"{z_mtr}_pos")
     plt.ylabel("FWHM")
     plt.show()
-
-
-
-
-
-    
-
-
-
-
-    
-    
-
-
-
-
-
 
 
 def pos2angle(col,row):
@@ -787,11 +780,15 @@ def return_line_center(sid,elem='Cr',threshold=0.2, neg_flag=0):
 
     #threshold = np.max(xrf)/10.0
     x_motor = h.start['motors']
+
+    if len(x_motor)>1:
+        raise ValueError (f"Require a Line Scan: num motors = {len(x_motor)}")
+
     try:
-        x = np.array(df2[x_motor[0]])
+        x = np.array(df2[x_motor])
     except:
         from hxntools.scan_info import get_scan_positions
-        x,_ = get_scan_positions(h)
+        x = get_scan_positions(h)
     if neg_flag == 1:
         xrf = xrf * -1
         xrf = xrf - np.min(xrf)
@@ -873,14 +870,16 @@ def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time,
     for i in range(a_num+1):
         x[i] = a_start + i*a_step
         yield from bps.mov(zps.zpsth, x[i])
+        yield from bps.sleep(2)
         if np.abs(x[i]) > 45.05:
-            yield from fly1d(dets_fs,zpssz,start,end,num,acq_time)
+            yield from fly1dpd(dets_fast_fs,zpssz,start,end,num,acq_time)
+            yield from bps.sleep(2)
             tmp = return_line_center(-1, elem=elem,threshold=threshold,neg_flag=neg_flag)
             #tmp = return_tip_pos(-1, elem=elem)
             #tmp,fwhm = erf_fit(-1,elem = elem,linear_flag=False)
             y[i] = tmp*np.sin(x[i]*np.pi/180.0)
         else:
-            yield from fly1d(dets_fs,zpssx,start,end,num,acq_time)
+            yield from fly1dpd(dets_fast_fs,zpssx,start,end,num,acq_time)
             tmp = return_line_center(-1,elem=elem,threshold=threshold,neg_flag=neg_flag )
             #tmp = return_tip_pos(-1, elem=elem)
             #tmp,fwhm = erf_fit(-1,elem = elem,linear_flag=False)
@@ -1675,6 +1674,10 @@ def go_det(det, disable_checks = False):
 
 def update_det_pos(det = "merlin"):
 
+    print("!!!Do not update position directly from function, edit  ~/.ipython/profile_collection/startup/diff_det_pos.json to modify detector positions.!!!")
+    print("Exiting...")
+    return
+
     json_path = "/nsls2/data/hxn/shared/config/bluesky/profile_collection/startup/diff_det_pos.json"
 
     with open(json_path, "r") as read_file:
@@ -2358,6 +2361,23 @@ def zp_to_cam11_view():
         caput("XF:03IDC-ES{ANC350:8-Ax:1}Mtr.VAL", zp_bsx_pos+100)
 
 
+
+def zp_bs_out(wait_till_finish = True):
+
+    if abs(mllbs.bsx.position)<10 and abs(mllbs.bsy.position)<10:
+
+        caput(mllbs.bsx.prefix,caget(mllbs.bsx.prefix)+500)
+        caput(mllbs.bsy.prefix,caget(mllbs.bsy.prefix)-500)
+        if wait_till_finish:
+            while mllbs.bsx.moving or mllbs.bsy.moving:
+                time.sleep(0.3)
+        
+    else:
+        raise ValueError(f"bemastop positions are not close to zero."
+                        f"bsx = {mllbs.bsx.position :.1f},bsy = {mllbs.bsy.position :.1f}")
+    
+
+
 def stop_all_mll_motion():
     hmll.stop()
     vmll.stop()
@@ -2646,13 +2666,13 @@ def peak_the_flux():
 
     print("Peaking the flux.")
     yield from bps.sleep(2)
+    yield from peak_bpm_y(-15,15,10)
+
+    yield from bps.sleep(1)
+    yield from peak_bpm_x(-15,15,6)
+
+    yield from bps.sleep(1)
     yield from peak_bpm_y(-4,4,10)
-
-    yield from bps.sleep(1)
-    yield from peak_bpm_x(-10,10,6)
-
-    yield from bps.sleep(1)
-    yield from peak_bpm_y(-2,2,10)
 
     #close c
     caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0",0)
@@ -2717,9 +2737,9 @@ def recover_from_beamdump(peak_after = True):
 
 def move_zpz_with_energy(energy=9, move_zpz1 = False):
 
-    ref_energy = 7.2 
-    ref_zpz1 = 0.375
-    per_ev_corr = 5.9
+    ref_energy = 7.8
+    ref_zpz1 = -1.1946
+    per_ev_corr = 6.093
 
     calc_zpz1 = ref_zpz1 +((ref_energy-energy)* per_ev_corr)
 
@@ -2748,7 +2768,7 @@ def get_component_state(parent_ = dcm):
     return {f"{parent_.name}.{comp}.position":eval(f"parent_.{comp}.position") for comp in parent_.component_names}
 
 def get_microscope_state():
-
+    #TODO
     optics_included = [ugap,hcm,dcm,hfm,vms,ssa2,s5]
 
     state_dict = {}
@@ -2776,6 +2796,27 @@ def cam06_laser_in():
     caput('XF:03IDC-OP{Stg:CAM6-Ax:Y}Mtr.VAL', 1.5)
 
 
+# Function to move the motor forward and backward
+def test_motor_motion(motor, move_amount):
+    """
+    Move a motor forward by a specified amount and then backward by the same amount.
+    Handles any errors during the process.
+
+    Args:
+        motor (Motor): The motor object.
+        move_amount (float): The amount to move the motor forward and backward.
+    """
+    try:
+        print(f"Moving motor forward by {move_amount}")
+        yield from bps.movr(motor,move_amount)
+    except Exception as e:
+        print(f"Error during forward move: {e}")
+
+    try:
+        print(f"Moving motor backward by {-move_amount}")
+        yield from bps.movr(motor,-1*move_amount)
+    except Exception as e:
+        print(f"Error during backward move: {e}")
 
 
 

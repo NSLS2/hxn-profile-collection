@@ -162,24 +162,37 @@ def plot(scan_id, elem='Pt', norm=None,
          center_method='com', log=0, e_flag=0):
     figure_with_insert_fig_button()
     scan_id, df = _load_scan(scan_id, fill_events=False)
-    hdr = db[scan_id]['start']
+    h = db[scan_id]
+    hdr = h['start']
     scan_start_time = datetime.isoformat(datetime.fromtimestamp(hdr['time']))
 
-    if elem in df:
-        data = np.asarray(df[elem])
+    if elem.startswith('Det'):
+        spectrum = np.array(list(h.data(elem)),dtype=np.float32).squeeze()
+    elif elem.startswith('sclr'):
+        spectrum = np.array(list(h.data(elem)))[0]
     else:
         channels = [1, 2, 3]
         roi_keys = ['Det%d_%s' % (chan, elem) for chan in channels]
-        for key in roi_keys:
-            if key not in df:
-                raise KeyError('ROI %s not found' % (key, ))
-        data = np.sum([getattr(df, roi) for roi in roi_keys], axis=0)
+
+        spectrum = np.sum([np.array(list(h.data(roi)),dtype=np.float32).squeeze() for roi in roi_keys], axis=0)
+
+    # if elem in df:
+    #     data = np.asarray(df[elem])
+    # else:
+    #     channels = [1, 2, 3]
+    #     roi_keys = ['Det%d_%s' % (chan, elem) for chan in channels]
+    #     for key in roi_keys:
+    #         if key not in df:
+    #             raise KeyError('ROI %s not found' % (key, ))
+    #     data = np.sum([getattr(df, roi) for roi in roi_keys], axis=0)
 
     scanned_axis = hdr['motors'][0]
 
     if scanned_axis == 'ugap':
         scanned_axis = 'ugap_readback'
-    x = df[scanned_axis]
+    
+    from hxntools.scan_info import get_scan_positions
+    x = get_scan_positions(h)
 
     if e_flag:
         x = 12.39842 / (2.*3.1355893*np.sin(np.deg2rad(x)))
@@ -192,11 +205,11 @@ def plot(scan_id, elem='Pt', norm=None,
         data = df[elem]
     '''
     x = np.asarray(x)
-    data = np.asarray(data)
+    data = np.asarray(spectrum)
 
     if norm is not None:
-        norm_v = df[norm]
-        norm_v[norm_v ==0] = norm_v.mean() #patch for first frame drop issue
+        norm_v = np.asarray(list(h.data(norm)), dtype=np.float32).squeeze()
+        norm_v = np.where(norm_v == 0, np.nanmean(norm_v),norm_v) #patch for dropping first data point
         if log:
             plt.plot(x, np.log10(data / (norm_v+1.e-8)))
             plt.plot(x, np.log10(data / (norm_v + 1.e-8)), 'bo')
@@ -888,14 +901,18 @@ def plot_img_sum(sid, det = 'merlin1',norm ='sclr1_ch4',
             dim1,dim2 = start_doc['num1'],start_doc['num2']
         elif 'shape' in start_doc:
             dim1,dim2 = start_doc.shape
-        x = np.array(df[mots[0]])
-        y = np.array(df[mots[1]])
-        extent = (np.nanmin(x), np.nanmax(x), np.nanmax(y),np.nanmin(y))
+        try:
+            x = np.array(df[mots[0]])
+            y = np.array(df[mots[1]])
+            extent = (np.nanmin(x), np.nanmax(x), np.nanmax(y),np.nanmin(y))
+        except:
+            x,y = hxntools.scan_info.get_scan_positions(h)
+            extent = (np.nanmin(x), np.nanmax(x), np.nanmax(y),np.nanmin(y))
         print(extent)
         figure_with_insert_fig_button()
         tot =np.divide(tot, mon)
         plot_frame = np.zeros([dim2*dim1])
-        plot_frame[:len(tot)] = tot
+        plot_frame[:tot.size] = tot
         image = plot_frame.reshape(dim2,dim1)
         plt.imshow(image,extent=extent)
         #plt.imshow(image)

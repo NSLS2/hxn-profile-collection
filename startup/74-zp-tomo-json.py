@@ -71,7 +71,7 @@ def make_zp_tomo_plan(save_as = "/nsls2/data/hxn/legacy/user_macros/HXN_GUI/Scan
 
     fp.close()
 
-def zp_tomo_2d_scan_loop(angle,dets_,x_start,x_end,x_num,y_start,y_end,y_num,exp):
+def zp_tomo_2d_scan_loop(angle,dets_,x_start,x_end,x_num,y_start,y_end,y_num,exp,add_low_res_scan=False):
     print("zp tomo 2d scan")
     print(f"exposure time = {exp}")
     
@@ -94,6 +94,20 @@ def zp_tomo_2d_scan_loop(angle,dets_,x_start,x_end,x_num,y_start,y_end,y_num,exp
                         y_num, 
                         exp
                         )
+        
+        if add_low_res_scan:
+
+            yield from fly2dpd(dets_, 
+                        zpssx,
+                        x_start_real,
+                        x_end_real,
+                        x_num//4,
+                        zpssy,
+                        y_start, 
+                        y_end, 
+                        y_num//4, 
+                        exp
+                        )
 
     else:
 
@@ -112,8 +126,21 @@ def zp_tomo_2d_scan_loop(angle,dets_,x_start,x_end,x_num,y_start,y_end,y_num,exp
                         y_num, 
                         exp
                         )
+        
+        if add_low_res_scan:
+            yield from fly2dpd(dets_, 
+                        zpssz,
+                        x_start_real,
+                        x_end_real,
+                        x_num//4,
+                        zpssy,
+                        y_start, 
+                        y_end, 
+                        y_num//4, 
+                        exp
+                        )
 
-def zp_tomo_scan_to_loop(angle, tomo_params, ic_init,tracking_file = None):
+def zp_tomo_scan_to_loop(angle, tomo_params, ic_init,tracking_file = None,add_low_res_scan=False):
 
         #caput("XF:03IDC-ES{Merlin:2}HDF1:NDArrayPort","ROI1") #patch for merlin2 issuee
         
@@ -251,7 +278,8 @@ def zp_tomo_scan_to_loop(angle, tomo_params, ic_init,tracking_file = None):
                                     image_scan["y_start"],
                                     image_scan["y_end"],
                                     image_scan["y_num"],
-                                    image_scan["exposure"]
+                                    image_scan["exposure"],
+                                    add_low_res_scan
                                     )
 
         xspress3.unstage()
@@ -260,18 +288,24 @@ def zp_tomo_scan_to_loop(angle, tomo_params, ic_init,tracking_file = None):
         if not tomo_params["stop_pdf"]:
 
             try:
-                #insert_xrf_map_to_pdf(-1,elems_to_pdf, "zpsth", note = tomo_params["scan_label"])
-                #plt.close()
-                pass
+                insert_xrf_map_to_pdf(-1,
+                                     elems_to_pdf,
+                                     title =  ["zpsth", "energy"], 
+                                     note = tomo_params["scan_label"])
+                plt.close()
+                
             except:
                 pass
 
         if tracking_file is not None:
             flog = open(tracking_file,'a')
-            flog.write("%d %.3f\n"%(db[-1].start['scan_id'],angle))
+            if not add_low_res_scan:
+                flog.write("%d %.3f\n"%(db[-1].start['scan_id'],angle))
+            else:
+                flog.write("%d %.3f\n"%(db[-2].start['scan_id'],angle))
             flog.close()
                 
-def run_zp_tomo_json(path_to_json,tracking_file = None):
+def run_zp_tomo_json(path_to_json,tracking_file = None,add_low_res_scan = False):
 
 
     """zp_tomo_scan by taking parameters from a json file,
@@ -407,7 +441,7 @@ def run_zp_tomo_json(path_to_json,tracking_file = None):
 
         if not angle in np.array(tomo_params["remove_angles"]):
             #tomo scan at a single angle
-            yield from zp_tomo_scan_to_loop(angle, tomo_params,ic_0,tracking_file=tracking_file)
+            yield from zp_tomo_scan_to_loop(angle, tomo_params,ic_0,tracking_file=tracking_file, add_low_res_scan=add_low_res_scan)
 
         else:
             print(f"{angle} skipped")
@@ -442,7 +476,7 @@ def run_zp_tomo_json(path_to_json,tracking_file = None):
                     break
             
             if not angle in np.array(tomo_params["remove_angles"]):
-                yield from zp_tomo_scan_to_loop(angle, tomo_params,ic_0)
+                yield from zp_tomo_scan_to_loop(angle, tomo_params,ic_0,add_low_res_scan=add_low_res_scan)
 
             else:
                 print(f"{angle} skipped")

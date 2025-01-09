@@ -43,6 +43,7 @@ def create_user_dir(users_name):
 def create_user_symlink(src_dir = "/data/2023Q1/"):
 
     if os.path.exists(src_dir):
+        
         dest = "/data/users/current_user"
 
         #recreate symlink

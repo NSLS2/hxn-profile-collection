@@ -2964,17 +2964,39 @@ def return_center_of_mass(scan_id = -1, elem = 'Cr',threshold=0.5):
     return (x_cen, y_cen)
 
 def return_center_of_mass_blurr(scan_id = -1, elem = 'Cr',blurr_level = 10,bitflag=1):
-    df2 = db.get_table(db[scan_id],fill=False)
-    xrf = np.asfarray(eval('df2.Det2_' + elem)) + np.asfarray(eval('df2.Det1_' + elem)) + np.asfarray(eval('df2.Det3_' + elem))
-    motors = db[scan_id].start['motors']
-    x = np.array(df2[motors[0]])
-    y = np.array(df2[motors[1]])
+    h = db[scan_id]
+    df2 = h.table()
+
+    channels = [1,2,3]
+    xrf = None
+    for i in channels:
+        fluo_data = np.array(list(h.data('Det%d_'%i+elem))).squeeze()
+        if xrf is None:
+            xrf = fluo_data.copy()
+        else:
+            xrf = xrf + fluo_data
+    #df2 = db.get_table(db[scan_id],fill=False)
+    #xrf = np.asfarray(eval('df2.Det2_' + elem)) + np.asfarray(eval('df2.Det1_' + elem)) + np.asfarray(eval('df2.Det3_' + elem))
+    try:
+        motors = h.start['motors']
+        x = np.array(df2[motors[0]])
+        y = np.array(df2[motors[1]])
+    except:
+        from hxntools.scan_info import get_scan_positions
+        x,y = get_scan_positions(h)
     #I0 = np.asfarray(df2.sclr1_ch4)
-    I0 = np.asfarray(df2['sclr1_ch4'])
-    scan_info=db[scan_id]
-    tmp = scan_info['start']
-    nx=tmp['plan_args']['num1']
-    ny=tmp['plan_args']['num2']
+    I0 = np.array(list(h.data('sclr1_ch4'))).squeeze()
+    if I0[0]==0:
+        I0[0]=I0[1]
+
+    if I0[-1]==0:
+        I0[-1]=I0[-2]
+    #scan_info=db[scan_id]
+    #tmp = scan_info['start']
+    #nx=tmp['plan_args']['num1']
+    #ny=tmp['plan_args']['num2']
+    nx = h.start['shape'][0]
+    ny = h.start['shape'][1]
 
     xrf = xrf/I0
     xrf = np.asarray(np.reshape(xrf,(ny,nx)))
@@ -3552,9 +3574,12 @@ def recover_zp_scan_pos(scan_id,zp_move_flag=0,
     smarx = data.smarx[1]
     smary = data.smary[1]
     smarz = data.smarz[1]
-    ssx = data.zpssx[1]
-    ssy = data.zpssy[1]
-    ssz = data.zpssz[1]
+    # ssx = data.zpssx[1]
+    # ssy = data.zpssy[1]
+    # ssz = data.zpssz[1]
+    ssx = 0
+    ssy = 0
+    ssz = 0
     zpsz = data.zpsz[1]
     zpsx = data.zpsx[1]
     #print(ssx,ssy,ssz)
@@ -3926,6 +3951,7 @@ def insert_xrf_map_to_pdf(scan_id = -1, elements = ["Cr", "Fe"],
     mots = hdr['motors']
     df = h.table()
     tot = len(elements)
+    x_data,y_data = get_scan_positions(h)
     if tot ==1:
         cols = 1
     else:
@@ -3944,7 +3970,10 @@ def insert_xrf_map_to_pdf(scan_id = -1, elements = ["Cr", "Fe"],
         spectrum_ = get_xrf_array(scan_id, elem)
         ax = fig.add_subplot(Rows,cols,Position[n])
         if len(mots) == 2:
-            im = ax.imshow(spectrum_)
+            im = ax.imshow(spectrum_, 
+                           extent=(np.nanmin(x_data), np.nanmax(x_data),
+                                              np.nanmax(y_data), np.nanmin(y_data)))
+            
             divider = make_axes_locatable(ax)
             cax = divider.append_axes('right', size='5%', pad=0.05)
             fig.colorbar(im, cax=cax, orientation='vertical')
@@ -3952,7 +3981,9 @@ def insert_xrf_map_to_pdf(scan_id = -1, elements = ["Cr", "Fe"],
         ax.set_title(elem)
         fig.tight_layout()
     
-    note += f"scan date & time = {df['time'].iloc[-1].strftime('%Y-%m-%d %X')} \n"
+    note += f"\n {df['time'].iloc[-1].strftime('%Y-%m-%d %X')}"
+
+    print(note)
 
     title_str = ''
 
@@ -3962,6 +3993,8 @@ def insert_xrf_map_to_pdf(scan_id = -1, elements = ["Cr", "Fe"],
         title_str += f"{title} = {titleValue:.4f}, "
 
     insertFig(note = note, title = title_str)
+
+    plt.close()
 
 def insert_xrf_map_to_pdf_old(scan_id = -1, elements = ["Cr", "Fe"],
                           title_ = ['energy','zpsth'],
@@ -4144,9 +4177,9 @@ def mosaic_overlap_scan(dets = None, ylen = 100, xlen = 100, overlap_per = 15, d
     """ Usage <mosaic_overlap_scan([fs, xspress3, eiger2], dwell=0.01, plot_elem=['Au_L'], mll=True)"""
 
     if dets is None:
-        dets = dets_fs
+        dets = dets_fast
 
-    max_travel = 28
+    max_travel = 25
 
     dsx_i = dsx.position
     dsy_i = dsy.position
@@ -4228,8 +4261,10 @@ def mosaic_overlap_scan(dets = None, ylen = 100, xlen = 100, overlap_per = 15, d
         for i in tqdm.tqdm(Y_position_abs):
                 for j in tqdm.tqdm(X_position_abs):
                     print((i,j))
-                    yield from check_for_beam_dump(threshold=5000)
+                    #yield from check_for_beam_dump(threshold=5000)
                     yield from bps.sleep(1) #cbm catchup time
+
+                    fly_dim = scan_dim/2
 
                     if mll:
 
@@ -4237,7 +4272,7 @@ def mosaic_overlap_scan(dets = None, ylen = 100, xlen = 100, overlap_per = 15, d
 
                         yield from bps.mov(dsy, i)
                         yield from bps.mov(dsx, j)
-                        yield from fly2dpd(dets,dssx,-14,14,num_steps,dssy,-14,14,num_steps,dwell)
+                        yield from fly2dpd(dets,dssx,-1*fly_dim,fly_dim,num_steps,dssy,-1*fly_dim,fly_dim,num_steps,dwell)
                         yield from bps.sleep(3)
                         yield from bps.mov(dssx,0,dssy,0)
                         #insert_xrf_map_to_pdf(-1,plot_elem,'dsx')
@@ -4245,10 +4280,10 @@ def mosaic_overlap_scan(dets = None, ylen = 100, xlen = 100, overlap_per = 15, d
                         yield from bps.mov(dsy,dsy_i)
 
                     else:
-
+                        print(f"{fly_dim = }")
                         yield from bps.mov(smary, i)
                         yield from bps.mov(smarx, j)
-                        yield from fly2dpd(dets, zpssx,-14,14,num_steps,zpssy, -14,14,num_steps,dwell)
+                        yield from fly2dpd(dets, zpssx,-1*fly_dim,fly_dim,num_steps,zpssy, -1*fly_dim,fly_dim,num_steps,dwell)
                         yield from bps.sleep(1)
                         yield from bps.mov(zpssx,0,zpssy,0)
 
@@ -4274,7 +4309,7 @@ def mosaic_overlap_scan(dets = None, ylen = 100, xlen = 100, overlap_per = 15, d
 
 
 def plot_mosaic_overlap(grid_shape = (4,4), first_scan_num = -8,
-                        elem = "Fe", show_scan_num = True):
+                        elem = "Fe", show_scan_num = True, vertical_scan = False, snake_scan = False, start_direction = 1):
 
     fig, axs = plt.subplots(grid_shape[0],grid_shape[1])
     fig.subplots_adjust(hspace = 0, wspace = -0.57)
@@ -4314,24 +4349,45 @@ def plot_mosaic_overlap(grid_shape = (4,4), first_scan_num = -8,
 
         mon = np.asarray(list(hdr.data("sclr1_ch4")), dtype=np.float32).squeeze()
         mon = np.where(mon == 0, np.nanmean(mon),mon)
+        mon = np.pad(mon,[0,len(det)-len(mon)],'edge')
         norm_data = (det/mon)
         print("normed")
-        axs[i].imshow(np.float32(norm_data.reshape(dim1,dim2)))
+        ax_index = np.arange(0,grid_shape[0]*grid_shape[1])
+        if not vertical_scan:
+            ax_index = ax_index.reshape((grid_shape[0],grid_shape[1]))
+        else:
+            ax_index = ax_index.reshape((grid_shape[1],grid_shape[0])).T
+
+        if snake_scan:
+            if not vertical_scan:
+                if start_direction >0:
+                    ax_index[1::2,:] = np.flip(ax_index[1::2,:],1)
+                else:
+                    ax_index[0::2,:] = np.flip(ax_index[0::2,:],1)
+            else:
+                if start_direction >0:
+                    ax_index[:,1::2] = np.flip(ax_index[:,1::2],0)
+                else:
+                    ax_index[:,0::2] = np.flip(ax_index[:,0::2],0)
+
+        ax_index = ax_index.reshape((grid_shape[0]*grid_shape[1]))
+
+        axs[ax_index==i][0].imshow(np.float32(norm_data.reshape(dim1,dim2)))
         if show_scan_num:
-            axs[i].set_title(
+            axs[ax_index==i][0].set_title(
                             str(scan_id), y=1.0, pad=-14,
                             fontdict = {
                                         'color':'r',
                                         'fontsize':8,
                                         }
                             )
-        axs[i].set_xticklabels([])
-        axs[i].set_yticklabels([])
-        axs[i].set_xticks([])
-        axs[i].set_yticks([])
+        axs[ax_index==i][0].set_xticklabels([])
+        axs[ax_index==i][0].set_yticklabels([])
+        axs[ax_index==i][0].set_xticks([])
+        axs[ax_index==i][0].set_yticks([])
 
 
-def plot_diff_roi(sid, det = 'merlin1', x_cen=100,y_cen=200,size=200, plot_log = True):
+def plot_diff_roi(sid, det = 'merlin1', roi=[35,0,120,120], plot_log = True):
 
 
 
@@ -4358,9 +4414,15 @@ def plot_diff_roi(sid, det = 'merlin1', x_cen=100,y_cen=200,size=200, plot_log =
 
     axs[0].imshow(sum_diff_img, cmap = 'jet', norm = norm_)
     axs[0].set_title("sum")
-    axs[1].imshow(sum_diff_img[y_cen-size//2:y_cen+size//2,x_cen-size//2:x_cen+size//2],
+    # axs[1].imshow(sum_diff_img[y_cen-size//2:y_cen+size//2,x_cen-size//2:x_cen+size//2],
+    #               cmap = 'jet',norm = norm_,
+    #               extent = [x_cen-size//2,x_cen+size//2,y_cen+size//2,y_cen-size//2])
+
+    axs[1].imshow(sum_diff_img[roi[0]:roi[0]+roi[2],roi[1]:roi[1]+roi[3]],
                   cmap = 'jet',norm = norm_,
-                  extent = [x_cen-size//2,x_cen+size//2,y_cen+size//2,y_cen-size//2])
+                  extent = [roi[0],roi[0]+roi[2],roi[1],roi[1]+roi[3]])
+
+
     axs[1].set_title("selected roi")
     plt.show()
 

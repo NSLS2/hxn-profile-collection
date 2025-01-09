@@ -31,6 +31,7 @@ import tifffile as tf
 FeXANES = {'high_e':7.2, 'high_e_zpz1':6.41, 'zpz1_slope':-5.04}
 CoXANES = {'high_e':7.8, 'high_e_zpz1':3.2725, 'zpz1_slope':-5.04}
 MnXANES = {'high_e':6.6, 'high_e_zpz1':1.975, 'zpz1_slope':-5.04}
+NiXANES_ST = {'high_e':8.45, 'high_e_zpz1':-5.2, 'zpz1_slope':-6.093}
 
 As_MLL_XANES = {'high_e':11.94, 
                 'low_e':11.84,
@@ -255,7 +256,7 @@ def alignment_scan(mtr, start,end,num,exp,elem_, align_with="line_center", thres
     
         fly_to_coarse = {"zpssx":"smarx","zpssy":"smary","zpssz":"smarz"}
 
-        yield from fly1d(dets_fs,
+        yield from fly1dpd(dets_fast_fs,
                         mtr, 
                         start, 
                         end, 
@@ -292,7 +293,7 @@ def zp_tomo_2d_scan(angle,dets_,x_start,x_end,x_num,y_start,y_end,y_num,exp):
         x_start_real = x_start / np.cos(angle * np.pi / 180.)/ x_scale_factor
         x_end_real = x_end / np.cos(angle * np.pi / 180.)/ x_scale_factor
 
-        yield from fly2d(dets_, 
+        yield from fly2dpd(dets_, 
                         zpssx,
                         x_start_real,
                         x_end_real,
@@ -310,7 +311,7 @@ def zp_tomo_2d_scan(angle,dets_,x_start,x_end,x_num,y_start,y_end,y_num,exp):
         x_end_real = x_end / np.abs(np.sin(angle * np.pi / 180.))/ z_scale_factor
         print(x_start_real,x_end_real)
 
-        yield from fly2d(dets_, 
+        yield from fly2dpd(dets_, 
                         zpssz,
                         x_start_real,
                         x_end_real,
@@ -327,6 +328,15 @@ def zp_spectro_tomo_scan(elemParam,path_to_json,pdfElem = ['Fe','Cr'],
                         saveLogFolder = '/data/users/current_user'):
 
     """ 
+    Usage:
+    path_to_json  = "/data/users/current_user/spectro_tomo_ni_golden.json"
+<zp_spectro_tomo_scan(NiXANES_ST,path_to_json,pdfElem = ['Ni','Mn'],pdfLog = True, 
+                    peakBeam = True,saveLogFolder = '/data/users/current_user')
+
+
+
+
+
     Function to run XANES Scan. 
     
     Arguments:
@@ -490,7 +500,7 @@ def zp_spectro_tomo_scan(elemParam,path_to_json,pdfElem = ['Fe','Cr'],
                 else:
                     mtr = zpssz
                 
-                if alignX["do_align"] and if e.position>6.42:
+                if alignX["do_align"]:
                     yield from alignment_scan(  mtr, 
                                                 alignX["start"],
                                                 alignX["end"],
@@ -500,7 +510,7 @@ def zp_spectro_tomo_scan(elemParam,path_to_json,pdfElem = ['Fe','Cr'],
                                                 align_with=alignX["center_with"], 
                                                 threshold = alignX["threshold"])                
 
-                if alignY["do_align"] and if e.position>6.42:
+                if alignY["do_align"]:
                     yield from alignment_scan(  zpssy, 
                                                 alignY["start"],
                                                 alignY["end"],
@@ -548,6 +558,7 @@ def zp_spectro_tomo_scan(elemParam,path_to_json,pdfElem = ['Fe','Cr'],
             if pdfLog:
                 try:
                     insert_xrf_map_to_pdf(-1,pdfElem,title_=['energy', 'zpsth'])# plot data and add to pdf
+                    plt.close()
                 except:
                     pass
             # save the DF in the loop so quitting a scan won't affect

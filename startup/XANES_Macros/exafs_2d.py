@@ -97,9 +97,11 @@ def ktoe(k):
     return np.around(k*k*KTOE, 1)
 
 
-def generateEPoints(ePointsGen,elem,kmin, kmax,kstep, reversed = True):
+def generateEPoints_EXAFS(ePointsGen,elem,kmin, kmax,kstep, reversed = True):
 
     """
+
+    usage:generateEPoints_EXAFS([(6.97,7.11,0.010)],Fe,2, 12,0.1, reversed = False)
 
     Generates a list of energy values from the given list
 
@@ -142,9 +144,8 @@ def generateEPoints(ePointsGen,elem,kmin, kmax,kstep, reversed = True):
         return np.around(e_points[::-1],5)
     else:
         return np.around(e_points,5)
-
-
-def generateEList(EXAFSParam = FeEXAFS, highEStart = False, startFrom = 0):
+    
+def return_e_points_EXAFS(EXAFSParam = FeEXAFS, startFrom = 0):
 
     """
 
@@ -172,7 +173,48 @@ def generateEList(EXAFSParam = FeEXAFS, highEStart = False, startFrom = 0):
     kmax = EXAFSParam['kmax']
     kstep = EXAFSParam['kstep']
 
-    e_list['energy'] = generateEPoints(EXAFSParam['pre_edge'],elem,kmin, kmax,kstep, reversed = highEStart)
+    e_list['energy'] = generateEPoints_EXAFS(EXAFSParam['pre_edge'],elem,kmin, kmax,kstep, reversed = highEStart)
+
+    #read the paramer dictionary and calculate ugap list
+    high_e, low_e = EXAFSParam['high_e'],EXAFSParam['low_e']
+
+    #zone plate increament is very close to the theorticla value , same step as above for zp focus
+    zpz1_ref, zpz1_slope = EXAFSParam['high_e_zpz1'],EXAFSParam['zpz1_slope']
+    zpz1_list = zpz1_ref + (e_list['energy'] - high_e)*zpz1_slope
+    e_list['ZP focus'] = zpz1_list
+
+    #return the dataframe
+    return e_list[startFrom:]
+
+def generateEList_EXAFS(EXAFSParam = FeEXAFS, highEStart = False, startFrom = 0):
+
+    """
+
+    Generates a pandas dataframe of optics motor positions. Function uses high E and low E values in the dictionary
+    to generate motor positions for all the energy points, assuming linear relationship.
+
+    input: Dictionary conating optics values at 2 positions (high E and low E), option to start from high E or low E
+
+    return : Dataframe looks like below;
+
+       energy    ugap  crl_theta  ZP focus
+    0   7.175  7652.5       1.75   65.6575
+    1   7.170  7648.0       1.30   65.6870
+    2   7.165  7643.5       0.85   65.7165
+    3   7.160  7639.0       0.40   65.7460
+    4   7.155  7634.5      -0.05   65.7755
+
+    """
+    # empty dataframe
+    e_list = pd.DataFrame()
+
+    #add list of energy as first column to DF
+    elem = EXAFSParam['elem']
+    kmin = EXAFSParam['kmin']
+    kmax = EXAFSParam['kmax']
+    kstep = EXAFSParam['kstep']
+
+    e_list['energy'] = generateEPoints_EXAFS(EXAFSParam['pre_edge'],elem,kmin, kmax,kstep, reversed = highEStart)
 
     #read the paramer dictionary and calculate ugap list
     high_e, low_e = EXAFSParam['high_e'],EXAFSParam['low_e']
@@ -257,7 +299,7 @@ def zp_list_exafs2d(elemParam,dets,mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t,
     # marker to track beam dump             
     beamDumpOccured = False
                     
-    e_list = generateEList(elemParam, highEStart =  highEStart, startFrom = startEPoint)
+    e_list = generateEList_EXAFS(elemParam, highEStart =  highEStart, startFrom = startEPoint)
 
     #add real energy to the dataframe
     e_list['E Readback'] = np.nan 

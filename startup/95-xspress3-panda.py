@@ -345,9 +345,10 @@ class ExportXpsROI:
     def export(self, npoints):
         def add_data(det_name, data):
             ds = self._fp[det_name]
-            ds.resize((npoints,))
-            ds[:len(data)] = np.array(data)
-            ds[len(data):] = ds[len(data)-1]
+            if ds.size == 0:
+                ds.resize((npoints,))
+                ds[:len(data)] = np.array(data)
+                ds[len(data):] = ds[len(data)-1]
 
         for roi in self._xsp.enabled_rois:
             if hasattr(roi,'settings'):

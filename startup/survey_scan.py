@@ -180,7 +180,8 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     h = db[sid]
     #print('get h')
     
-    ic = np.asfarray(df['sclr1_ch4'])
+    #ic = np.asarray(df['sclr1_ch4'])
+    ic = np.squeeze(np.asarray(list(hdr.data('sclr1_ch4'))))
     num_frame = np.size(ic)
     print(np.shape(ic))
     '''
@@ -205,7 +206,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
 
     print('image size:',np.shape(images))
     #images = np.array(np.squeeze(images))
-    plan_args = db[sid].start['plan_args']
+    #plan_args = db[sid].start['plan_args']
 
 
     
@@ -223,7 +224,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     num_frame,nnx,nny = np.shape(images)
 
     #mask = np.load('/data/users/2023Q3/Liu_2023Q3/NNCM_3.75V_004/mask.npy')
-    mask = np.load('/data/users/2024Q2/Huang_2024Q2/NaNMC/mask.npy')
+    mask = np.load('/data/users/2024Q3/TongchaoLiu_2024Q3/NaNiMnCo/mask_2.npy')
 
     for i in range(num_frame):
         if np.mod(i,500) ==0:
@@ -243,7 +244,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
         #t[index] = 0
         #t[mask == 1] = 0
         #t[164,107] = 0
-        diff_array[:,:,i] = t #* mask
+        diff_array[:,:,i] = t * mask
 
 
 
@@ -289,7 +290,9 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     if elem in df:
         xrf = np.asarray(df[elem])
     else:
-        xrf = np.asfarray(eval('df.Det1_'+elem)) + np.asarray(eval('df.Det2_'+elem)) + np.asarray(eval('df.Det3_'+elem))
+        xrf = np.squeeze(np.asfarray(list(h.data('Det1_'+elem)))+np.asfarray(list(h.data('Det2_'+elem)))+np.asfarray(list(h.data('Det3_'+elem))))
+
+        #xrf = np.asfarray(eval('df.Det1_'+elem)) + np.asarray(eval('df.Det2_'+elem)) + np.asarray(eval('df.Det3_'+elem))
     xrf = xrf * ic[0] / (ic + 1.e-9)
 
 
@@ -351,14 +354,17 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
                 num_x = hdr.start.shape[0]
                 num_y = hdr.start.shape[1]
             else:
-                x_motor = hdr['motor1']
-                x_data = np.asarray(df[x_motor])
-                y_motor = hdr['motor2']
-                y_data = np.asarray(df[y_motor])
+                #x_motor = hdr['motor1']
+                #x_data = np.asarray(df[x_motor])
+                #y_motor = hdr['motor2']
+                #y_data = np.asarray(df[y_motor])
+                x_data,y_data = hxntools.scan_info.get_scan_positions(hdr)
                 xrf = np.reshape(xrf,(hdr.start.shape[1],hdr.start.shape[0]))
                 roi = np.reshape(roi,(hdr.start.shape[1],hdr.start.shape[0]))
                 #roi2 = np.reshape(roi2,(hdr.start.shape[1],hdr.start.shape[0]))
                 extent = (np.nanmin(x_data), np.nanmax(x_data),np.nanmax(y_data), np.nanmin(y_data))
+                num_x = hdr.start['shape'][0]
+                num_y = hdr.start['shape'][1]
                 #print('no num')
     #"""
     fig=plt.figure(0)
@@ -385,7 +391,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
 
     #"""
 
-    fn = '/data/users/2024Q3/Robinson_2024Q3/diff3/'
+    fn = '/data/users/2024Q3/TongchaoLiu_2024Q3/NaNiMnCo/'
     
     if not os.path.exists(fn):
         os.makedirs(fn)

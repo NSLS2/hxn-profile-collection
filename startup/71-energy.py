@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import pyqtgraph as pg
 import matplotlib.pyplot as plt
+import xraydb
 from epics import caget, caput
 
 logging.basicConfig(level=logging.INFO)
@@ -51,7 +52,7 @@ class HXNEnergy():
 
 
 
-    def calcGap(self,E,harmonics = 5, offset = -7):
+    def calcGap(self,E,harmonics = 5, offset = -6):
         E1 = E/harmonics
         calc_gap =  np.polyval(self.ugap_coeffs, E1) + offset
         return (np.around(calc_gap,1))
@@ -534,6 +535,30 @@ def plot_calib_results(csv_file):
 #     plt.savefig(os.path.join(saveLogFolder, f'HXN_nanoXANES_calib_{time_}.png'))
 #     plt.show()
 
+def foil_calib_scan(elem_line = "Cu_K", step_size_ev = 0.5, exp_time = 0.5,
+                       saveLogFolder = "/data/users/current_user", 
+                       save_as = "Au_Foil_calib_July11_2024"):
+
+    """absolute start and end E
+    
+    Usage:<foil_calib_d2_scan(11.919-0.025,11.919+0.075,step_size_ev=1,exp_time=0.5,saveLogFolder='/data/users/current_user',save_as='Au_Foil_calib_Sep27_2024_12_26pm')
+
+    
+    """
+    edgeE = xraydb.xray_edge(elem_line.split('_')[0],
+                     elem_line.split('_')[1], 
+                     True)/1000
+    endE = np.around(edgeE-0.050,4)
+    startE = np.around(edgeE+0.1,4)
+    dE = endE-startE
+    num_steps = int(dE/(step_size_ev*0.001))
+    dUgap = Energy.calcGap(endE)-Energy.calcGap(startE)
+
+    print(f"{endE=},{startE=},{dUgap=}")
+    
+    # yield from Energy.move(startE, moveMonoPitch=False,moveMirror = "ignore")
+    # yield from d2scan(dets_fs,num_steps, e, 0, dE, ugap, 0, dUgap, exp_time)
+    # plot_foil_calib(sid=-1, saveLogFolder = saveLogFolder, save_as = save_as)
 
 
 def foil_calib_d2_scan(startE, endE, step_size_ev = 0.5, exp_time = 0.5,

@@ -1,6 +1,6 @@
 print(f"Loading {__file__!r} ...")
 
-from datetime import datetime
+import datetime
 import itertools
 import sys
 import numpy as np
@@ -12,7 +12,6 @@ from ophyd.areadetector.base import ADComponent
 from ophyd import Signal
 from ophyd import Component as Cpt
 
-from bluesky.utils import new_uid, short_uid, make_decorator
 from ophyd.areadetector import (AreaDetector, PixiradDetectorCam, ImagePlugin,
                                 TIFFPlugin, StatsPlugin, HDF5Plugin,
                                 ProcessPlugin, ROIPlugin, TransformPlugin,
@@ -22,6 +21,7 @@ from ophyd.areadetector.cam import AreaDetectorCam
 from ophyd.device import BlueskyInterface
 from ophyd.utils.epics_pvs import set_and_wait
 from ophyd.areadetector.trigger_mixins import SingleTrigger, ADTriggerStatus
+from ophyd.areadetector.plugins import PluginBase, HDF5Plugin_V33, TimeSeriesPlugin_V33
 from ophyd.areadetector.filestore_mixins import (FileStoreIterativeWrite,
                                                  FileStoreHDF5IterativeWrite,
                                                  FileStoreTIFFSquashing,
@@ -33,8 +33,6 @@ from ophyd.areadetector.filestore_mixins import (FileStoreIterativeWrite,
                                                  )
 
 from nslsii.ad33 import CamV33Mixin, SingleTriggerV33
-from ophyd.areadetector.plugins import PluginBase, HDF5Plugin_V33, TimeSeriesPlugin_V33
-from enum import Enum
 
 import logging
 logger = logging.getLogger('bluesky')
@@ -79,6 +77,7 @@ class EigerFileStoreHDF5(FileStoreBase):
                                 (self.capture, 1),
                                 (self.queue_size, 10000),  # Make the queue large enough
                                 ])
+        self.reg_root = '/'
 
         self._point_counter = None
         self.frame_per_point = None
@@ -90,8 +89,8 @@ class EigerFileStoreHDF5(FileStoreBase):
     def make_filename(self):
         filename = new_short_uid()
         formatter = datetime.now().strftime
-        write_path = formatter(self.write_path_template)
-        read_path = formatter(self.read_path_template)
+        write_path = formatter(os.path.realpath(self.write_path_template)) + '/'
+        read_path = formatter(os.path.realpath(self.read_path_template)) + '/'
 
         fn, read_path, write_path = filename, read_path, write_path
         return fn, read_path, write_path
@@ -235,15 +234,15 @@ class HDF5PluginWithFileStoreEiger(HDF5Plugin_V33, EigerFileStoreHDF5):
 
         original_vals = {sig: sig.get() for sig in sigs}
 
-        for sig, val in sigs.items():
-            ttime.sleep(0.1)  # abundance of caution
-            sig.set(val).wait()
+       # for sig, val in sigs.items():
+       #     ttime.sleep(0.1)  # abundance of caution
+       #     sig.set(val).wait()
 
-        ttime.sleep(acquire_time + 0.2)  # wait for acquisition
+       # ttime.sleep(acquire_time + 1)  # wait for acquisition
 
-        for sig, val in reversed(list(original_vals.items())):
-            ttime.sleep(0.1)
-            sig.set(val).wait()
+       # for sig, val in reversed(list(original_vals.items())):
+       #     ttime.sleep(0.1)
+       #     sig.set(val).wait()
 
 
 
@@ -261,7 +260,6 @@ class EigerDetectorCam(AreaDetectorCam, CamV33Mixin):
     Compress_alg = ADComponent(EpicsSignal, "CompressionAlgo")
     Array_callbacks = ADComponent(EpicsSignal, "ArrayCallbacks")
     Data_source = ADComponent(EpicsSignal, "DataSource")
-    Bitdepth_image = ADComponent(EpicsSignalRO, "BitDepthImage_RBV")
 
 
 class EigerDetector(AreaDetector):
@@ -292,21 +290,21 @@ class SRXEiger(EigerSingleTriggerV33, EigerDetector):
                    doc="latch to put the detector in 'fly' mode")
     internal_trigger = Cpt(Signal,
                    value=False,
-                   doc="Flag whether set to internal trigger")
+                   doc="Flag whether panda box is used")
 
     hdf5 = Cpt(HDF5PluginWithFileStoreEiger, 'HDF1:',
                read_attrs=[],
-               # read_path_template='/nsls2/xf05id1/XF05ID1/MERLIN/%Y/%m/%d/',
+               # read_path_template='/nsls2/data2/hxn/legacy/%Y/%m/%d/',
                # read_path_template='/nsls2/xf05id1/XF05ID1/MERLIN/2021/02/11/',
                # read_path_template='/nsls2/data/srx/assets/merlin/%Y/%m/%d/',
                # read_path_template = LARGE_FILE_DIRECTORY_ROOT + '/%Y/%m/%d/',
-               read_path_template = LARGE_FILE_DIRECTORY_PATH,
+               read_path_template = LARGE_FILE_DIRECTORY_PATH + '/',
                configuration_attrs=[],
-               # write_path_template='/epicsdata/merlin/%Y/%m/%d/',
+               # write_path_template='/nsls2/data2/hxn/legacy/%Y/%m/%d/',
                # write_path_template='/epicsdata/merlin/2021/02/11/',
                # write_path_template='/nsls2/data/srx/assets/merlin/%Y/%m/%d/',
                # write_path_template=LARGE_FILE_DIRECTORY_ROOT + '/%Y/%m/%d/',
-               write_path_template = LARGE_FILE_DIRECTORY_PATH,
+               write_path_template = LARGE_FILE_DIRECTORY_PATH + '/',
 
                root=LARGE_FILE_DIRECTORY_ROOT)
 
@@ -409,33 +407,34 @@ class SRXEiger(EigerSingleTriggerV33, EigerDetector):
         self._acquisition_signal.put(0).wait()
 
 try:
-    eiger2 = SRXEiger('XF:03IDC-ES{Det:Eiger1M}',
-                       name='eiger2',
+    # raise Exception("'eiger_mobile' is disabled ...")
+    eiger_mobile = SRXEiger('XF:03IDC-ES{Det:Eig1M}',
+                       name='eiger_mobile',
                        # read_attrs=['hdf5', 'cam', 'stats1'])
                        read_attrs=['hdf5', 'cam'])
-    eiger2.hdf5.read_attrs = []
-    eiger2.cam.acquire_period.tolerance = 0.002  # default is 0.001
+    eiger_mobile.hdf5.read_attrs = []
+    eiger_mobile.cam.acquire_period.tolerance = 0.002  # default is 0.001
 
     def Eiger_setup():
         camset = short_uid('Eiger_setup')
-        yield from bps.abs_set(eiger2.cam.ROI_mode,'Disable',group=camset)
-        yield from bps.abs_set(eiger2.cam.Flatfield_corr,'Enable',group=camset)
-        yield from bps.abs_set(eiger2.cam.FW_compress,'Disable',group=camset)
-        yield from bps.abs_set(eiger2.cam.Compress_alg,'LZ4',group=camset)
-        yield from bps.abs_set(eiger2.cam.Array_callbacks,'Enable',group=camset)
-        yield from bps.abs_set(eiger2.cam.Data_source,'Stream',group=camset)
+        yield from bps.abs_set(eiger_mobile.cam.ROI_mode,'Disable',group=camset)
+        yield from bps.abs_set(eiger_mobile.cam.Flatfield_corr,'Enable',group=camset)
+        yield from bps.abs_set(eiger_mobile.cam.FW_compress,'Disable',group=camset)
+        yield from bps.abs_set(eiger_mobile.cam.Compress_alg,'LZ4',group=camset)
+        yield from bps.abs_set(eiger_mobile.cam.Array_callbacks,'Enable',group=camset)
+        yield from bps.abs_set(eiger_mobile.cam.Data_source,'Stream',group=camset)
         yield from bps.wait(group=camset)
     RE(Eiger_setup())
-    eiger2.hdf5.compression.set("szip").wait()  # If 'compression' is None, the plan will not start
+    eiger_mobile.hdf5.compression.set("szip").wait()  # If 'compression' is None, the plan will not start
 
     # source = "EIG"
     source = "ROI1"
 
     # Should be set before warmup
-    eiger2.hdf5.nd_array_port.set(source).wait()
-    eiger2.stats1.nd_array_port.set(source).wait()
+    eiger_mobile.hdf5.nd_array_port.set(source).wait()
+    eiger_mobile.stats1.nd_array_port.set(source).wait()
 
-    #eiger2.hdf5.warmup()
+    eiger_mobile.hdf5.warmup()
 except TimeoutError as ex:
     print('\nCannot connect to Eiger. Continuing without device.\n')
     # print(f"Exception: {ex}")
@@ -447,7 +446,3 @@ except Exception:
           end='\n\n')
     traceback.print_exc()
     print()
-
-dets_fast = [fs,eiger2,xspress3]
-dets_fast_merlin = [fs,xspress3,merlin1]
-dets_fast_fs = [fs,xspress3]

@@ -51,12 +51,12 @@ def recover_pos_and_scan(label,roi_positions, dets, mot1, mot1_s, mot1_e, mot1_n
          pass
     RE.md["scan_name"] = str(label)
     
-    yield from fly2d(dets, mot1, mot1_s, mot1_e, mot1_n, mot2, mot2_s, mot2_e, mot2_n, exp_t)
+    yield from fly2dpd(dets, mot1, mot1_s, mot1_e, mot1_n, mot2, mot2_s, mot2_e, mot2_n, exp_t)
 
 
 def fly2d_qserver_plan(label, dets, mot1, mot1_s, mot1_e, mot1_n, mot2, mot2_s, mot2_e, mot2_n, exp_t):
      RE.md["scan_name"] = str(label)
-     yield from fly2d(dets, mot1, mot1_s, mot1_e, mot1_n, mot2, mot2_s, mot2_e, mot2_n, exp_t)
+     yield from fly2dpd(dets, mot1, mot1_s, mot1_e, mot1_n, mot2, mot2_s, mot2_e, mot2_n, exp_t)
 
 def send_fly2d_to_queue(label, dets, mot1, mot1_s, mot1_e, mot1_n, mot2, mot2_s, mot2_e, mot2_n, exp_t):
     det_names = [d.name for d in eval(dets)]

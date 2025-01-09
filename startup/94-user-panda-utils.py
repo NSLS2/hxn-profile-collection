@@ -175,7 +175,12 @@ class PandaLivePlot():
                     self.elems[i].append(r)
 
         self.scan_input = scan_input.copy()
-        self.total_points = int(scan_input[2] * scan_input[5])
+        if len(self.scan_input)<2:
+            self.total_points = int(scan_input[0])
+        elif len(self.scan_input)<6:
+            self.total_points = int(scan_input[2])
+        else:
+            self.total_points = int(scan_input[2] * scan_input[5])
         self.do_plot = True
 
     def update_plot(self, finished = False):
@@ -198,16 +203,27 @@ class PandaLivePlot():
             #        fluo_data = roi.ts_total.get()
             self.axs[i].clear()
             self.axs[i].set_title(self.axs_names[i])
-            if self.scan_input[5]>1:
+            if len(self.scan_input)>=6 and self.scan_input[5]>1:
                 self.axs[i].imshow(fluo_data.reshape((int(self.scan_input[5]),int(self.scan_input[2]))),extent = [self.scan_input[0],self.scan_input[1],self.scan_input[4],self.scan_input[3]])
                 self.axs[i].set_aspect('equal','box')
-            else:
+            elif len(self.scan_input)>1:
                 coordx = np.linspace(self.scan_input[0],self.scan_input[1],int(self.scan_input[2]))
                 self.axs[i].plot(coordx[:len(fluo_tmp)],fluo_data[:len(fluo_tmp)])
+            else:
+                self.axs[i].plot(fluo_data[:len(fluo_tmp)])
         self.fig.canvas.manager.set_window_title('Scan %d'%(self.scan_id))
+        self.fig.suptitle('Scan %d'%(self.scan_id))
         self.fig.canvas.manager.show()
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
+    
+def panda_zero_all_encoders():
+    print("Make sure to move all piezo motors to zero position when running this command!")
+    panda1.inenc1.setp.put(0)
+    panda1.inenc2.setp.put(0)
+    panda1.inenc3.setp.put(0)
+    panda1.inenc4.setp.put(0)
+    print("All panda encoders set to zero at current piezo position.")
 
 panda_live_plot = PandaLivePlot()
 
