@@ -230,6 +230,8 @@ def alignment_scan(mtr, start,end,num,exp,elem_, align_with="line_center",
     else:
         yield from bps.mov(mtr,xc)
 
+    plt.close()
+
 
 
                         
@@ -520,7 +522,7 @@ def run_zp_xanes(path_to_parameter_file, do_confirm  =True, add_low_res_scan = F
 
     tot_time_ = (image_scan_i["x_num"]*image_scan_i["y_num"]*image_scan_i["exposure"]*len(e_list))
     tot_time = tot_time_/3600
-    overhead = 1.5
+    overhead = 1.25
     end_datetime = time.ctime(time.time()+tot_time_*overhead)
     
     if do_confirm:

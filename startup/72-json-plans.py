@@ -1169,10 +1169,10 @@ def run_diff_json(path_to_json,tracking_file = None,do_confirm =True):
                     )
 
                 
-                insert_xrf_map_to_pdf(-1,
-                                        elements = elems_to_pdf,
-                                        title_=['energy', diff_params["th_motor"]],
-                                        note = diff_params["scan_label"])
+                # insert_xrf_map_to_pdf(-1,
+                #                         elements = elems_to_pdf,
+                #                         title_=['energy', diff_params["th_motor"]],
+                #                         note = diff_params["scan_label"])
                 plt.close()
 
 

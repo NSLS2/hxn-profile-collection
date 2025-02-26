@@ -624,7 +624,7 @@ def zp_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time,
         yield from fly1dpd(dets_fast_fs, mot, start, end, num, acq_time)
         yield from bps.sleep(2)
         edge_pos,fwhm=erf_fit(-1,elem,mon,linear_flag=linFlag)
-        yield from bps.mov(mot,edge_pos)
+        #yield from bps.mov(mot,edge_pos)
         yield from bps.sleep(1)
         fit_size[i]= fwhm
         z_pos[i]=zp.zpz1.position
@@ -675,13 +675,11 @@ def plot_z_focus_results(first_sid = -11, last_sid = -1, z_mtr ='zpz1',
                             num_scans, 
                             dtype = int)
     
-    print(sid_list)
-    
     z_pos_list = np.zeros_like(sid_list, dtype = float)
     fwhm_list = np.zeros_like(sid_list, dtype = float)
-
+    
     print(sid_list)
-    print(sid_list)
+    
     
     num_rows = 4
     num_cols = num_scans//num_rows
@@ -692,6 +690,7 @@ def plot_z_focus_results(first_sid = -11, last_sid = -1, z_mtr ='zpz1',
 
     fig, axs = plt.subplots(num_rows, num_cols)
     axs = axs.ravel()
+
 
     for i, sid in enumerate(sid_list):
         edge_pos,fwhm,x_data,y_data,y_fit,z_pos = get_knife_edge_data(int(sid),
@@ -2679,7 +2678,7 @@ def peak_the_flux():
 
 
 
-def toggle_merlin_filer(filter_to  = "in"):
+def toggle_merlin_filter(filter_to  = "in"):
 
     if filter_to == "in":
         caput("XF:03IDC-ES{IO:1}DO:1-Cmd",1)
@@ -2693,6 +2692,22 @@ def toggle_merlin_filer(filter_to  = "in"):
 
         time.sleep(2)
         if caget("XF:03IDC-ES{IO:1}DO:1-Sts") != 0:
+            raise ValueError("filter motion failed")
+        
+def toggle_det_filter(pv, status_pv, filter_to  = "in"):
+
+    if filter_to == "in":
+        caput(pv,1)
+        time.sleep(2)
+
+        if caget(status_pv) != 1:
+            raise ValueError("filter motion failed")
+
+    elif filter_to == "out":
+        caput(pv,0)
+
+        time.sleep(2)
+        if caget(status_pv) != 0:
             raise ValueError("filter motion failed")
 
 
@@ -2737,8 +2752,8 @@ def recover_from_beamdump(peak_after = True):
 
 def move_zpz_with_energy(energy=9, move_zpz1 = False):
 
-    ref_energy = 7.8
-    ref_zpz1 = -1.1946
+    ref_energy = 10
+    ref_zpz1 = -14.592
     per_ev_corr = 6.093
 
     calc_zpz1 = ref_zpz1 +((ref_energy-energy)* per_ev_corr)
@@ -2797,7 +2812,7 @@ def cam06_laser_in():
 
 
 # Function to move the motor forward and backward
-def test_motor_motion(motor, move_amount):
+def test_motor_motion(motor, move_percent = 1):
     """
     Move a motor forward by a specified amount and then backward by the same amount.
     Handles any errors during the process.
@@ -2807,21 +2822,36 @@ def test_motor_motion(motor, move_amount):
         move_amount (float): The amount to move the motor forward and backward.
     """
     try:
-        print(f"Moving motor forward by {move_amount}")
+        move_amount = motor.position*move_percent*0.01
+        print(f"Moving {motor.name} forward by {move_amount}")
         yield from bps.movr(motor,move_amount)
     except Exception as e:
         print(f"Error during forward move: {e}")
 
     try:
-        print(f"Moving motor backward by {-move_amount}")
+        print(f"Moving {motor.name} backward by {-move_amount}")
         yield from bps.movr(motor,-1*move_amount)
     except Exception as e:
         print(f"Error during backward move: {e}")
 
 
 
+def test_all_child_motors(parent_name = 'diff', move_percent = 1):
 
+    for chld in eval(parent_name).component_names:
+        motor = eval(f'{parent_name}.{chld}')
+        curr_pos = motor.position
+        if type(motor).__name__ == "EpicsMotor":
+            print(curr_pos)
+            yield from test_motor_motion(motor, move_percent = move_percent)
+            
 
+def test_all_critical_motors(check_list = ['diff','ssa2','s5','fdet1', 'm2', 'm1'
+                                           'dcm', 's1', 'zp', 'zps', 'zpbs', 'zposa']):
+    
+    for parent in check_list:
+        yield   from test_all_child_motors(parent_name = parent, 
+                                           move_percent = 1)
 
 
 

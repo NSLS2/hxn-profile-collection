@@ -46,9 +46,9 @@ def recover_pos_and_scan(label,roi_positions, dets, mot1, mot1_s, mot1_e, mot1_n
     yield from check_for_beam_dump(threshold = 5000)
 
     if sclr2_ch2.get() < ic1_count*0.9:
-         yield from peak_the_flux()
+        yield from peak_the_flux()
     else:
-         pass
+        pass
     RE.md["scan_name"] = str(label)
     
     yield from fly2dpd(dets, mot1, mot1_s, mot1_e, mot1_n, mot2, mot2_s, mot2_e, mot2_n, exp_t)

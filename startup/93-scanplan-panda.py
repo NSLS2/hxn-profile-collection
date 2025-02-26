@@ -1125,9 +1125,14 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
 
             vx = range1/(exposure_time*num1)
 
+            print(f"{vx = }")
+            if (('merlin1' in [d.name for d in dets])):
+                caput("XF:03IDC-ES{Merlin:1}cam1:Acquire",0)
+
             if (('merlin1' in [d.name for d in dets])) and not merlin_cont_mode:
                 caput("XF:03IDC-ES{Merlin:1}cam1:QuadMerlinMode",1) # 0-12 bit; 1-24bit;
-                min_dead_time = 0.003
+                
+                min_dead_time = 0.005
                 if dead_time<min_dead_time:
                     print('Dead time set to %.1f ms for Merlin response time'%(min_dead_time*1000))
                     dead_time = min_dead_time

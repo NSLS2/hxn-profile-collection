@@ -2,6 +2,7 @@ print(f"Loading {__file__!r} ...")
 
 import IPython
 import bluesky.plan_stubs as bps
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -21,24 +22,10 @@ from matplotlib.colors import LogNorm
 #Add ctrl+c option to matplotlib
 matplotlib.rcParams['toolbar'] = 'toolmanager'
 
-warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
+#warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 
 #for debug mode
 #RE.msg_hook = print
-
-
-def focusmerlin(cnttime):
-    yield from bps.abs_set(merlin1.cam.acquire, 0)
-    yield from bps.abs_set(merlin1.cam.acquire_time,
-                           cnttime)
-    yield from bps.abs_set(merlin1.cam.acquire_period,
-                           cnttime)
-    yield from bps.abs_set(merlin1.cam.trigger_mode,
-                           0)
-    yield from bps.abs_set(merlin1.cam.image_mode,
-                           2)
-    yield from bps.sleep(.2)
-    yield from bps.abs_set(merlin1.cam.acquire, 1)
 
 
 def printfig():
@@ -60,88 +47,6 @@ def shutter(cmd):
     yield from bps.sleep(5)
 
 
-def mll_z_linescan(z_start, z_end, z_num,
-                   mot,
-                   start, end, num,
-                   acq_time,
-                   elem='Pt_L'):
-    """
-    Parameters
-    ----------
-    z_start, z_stop : float
-        start and stop position relative to the current position
-
-    z_num : int
-        The number of z postions to measure at
-
-    mot : {'dssx', 'dssy'}
-        The string name of the motor to fly
-
-    start, end : float
-        the start and stop for the fly motor, passed to
-        `fly1d`.
-
-    num : int
-        Number of positions in the fly scan,  passed to
-        `fly1d`.
-
-    acq_time : float
-        Acquire time (in s(??),  passed to
-        `fly1d`.
-
-    elem : str, optional
-        The element to plot.  Passed to the custom `plot` function
-        defined in 60-viewer2d.py
-    """
-    z_step = (z_end - z_start) / z_num
-    init_sz = smlld.sbz.position
-    mot = {'dssx': dssx, 'dssy': dssy}[mot]
-
-    yield from bps.movr(smlld.sbz, z_start)
-
-    for i in range(z_num + 1):
-        yield from fly1d(mot, start, end, num, acq_time)
-
-        plot(-1, elem, 'sclr1_ch4')
-        plt.title('sbz = %.3f' % smlld.sbz.position)
-        yield from bps.movr(smlld.sbz, z_step)
-    yield from bps.mov(smlld.sbz, init_sz)
-
-
-def mll_z_fly2d(z_start, z_end, z_num, mot1, start1, end1, num1, mot2, start2, end2, num2, acq_time, elem='Au_L'):
-    z_step = (z_end - z_start)/z_num
-    init_sz = smlld.sbz.position
-    yield from bps.movr(smlld.sbz, z_start)
-    for i in range(z_num + 1):
-        yield from fly2d(dets1,mot1, start1, end1, num1, mot2, start2, end2, num2, acq_time,return_speed=40)
-        plot2dfly(-1, elem, 'sclr1_ch4')
-        #plot_img_sum(-1)
-        insertFig(note='sbz = %.3f' % smlld.sbz.position, title = ' ')
-        #plt.title('sbz = %.3f' % smlld.sbz.position)
-        yield from bps.movr(smlld.sbz, z_step)
-        #insertFig()
-    yield from bps.mov(smlld.sbz, init_sz)
-    save_page()
-
-
-def zp_z_2dscan(z_start, z_end, z_num, mot1, start1, end1, num1, mot2, start2, end2, num2, acq_time, elem='Co'):
-    """This function hasn't been used for a while.
-
-    TODO: convert to use 'yield from ...'.
-    """
-    z_step = (z_end - z_start)/z_num
-    init_sz = zps.zpsz.position
-    movr(zps.zpsz, z_start/1000)
-    for i in range(z_num + 1):
-        RE(fly2d(mot1, start1, end1, num1, mot2, start2, end2, num2, acq_time))
-        plot2dfly(-1, elem, 'sclr1_ch4')
-        plt.title('zpsz = %.3f' % zps.zpsz.position)
-        movr(zps.zpsz, z_step/1000)
-    mov(zps.zpsz, init_sz)
-
-
-
-
 def sample_to_lab(xp, zp, alpha):
     x = np.cos(alpha)*xp + np.sin(alpha)*zp
     z = -np.sin(alpha)*xp + np.cos(alpha)*zp
@@ -151,231 +56,6 @@ def lab_to_sample(x, z, alpha):
     xp = np.cos(alpha)*x - np.sin(alpha)*z
     zp = np.sin(alpha)*x + np.cos(alpha)*z
     return(xp, zp)
-
-def mll_mosaic_scan_incomplete(x_start, x_end, x_num, x_block, y_start, y_end, y_num, y_block, acq_time, elem=None):
-
-    max_travel = 500
-    angle = 15.0*np.pi/180.0
-
-    #initialize parameters
-    x_start = float(x_start)
-    x_end = float(x_end)
-    x_num = int(x_num)
-    y_num = int(y_num)
-    y_start = float(y_start)
-    y_end = float(y_end)
-    x_block = int(x_block)
-    y_block = int(y_block)
-
-    #read initial position
-    pre_ssx = dsx.position #smll.ssx.position
-    pre_ssy = dsy.position #smll.ssy.position
-    pre_ssz = dsz.position #smll.ssz.position
-
-    print('Initial dsx = ', pre_ssx)
-    print('Initial dsy = ', pre_ssy)
-    print('Initial dsz = ', pre_ssz)
-
-    #calculate block size
-    x_block_size = (x_end - x_start)
-    y_block_size = (y_end - y_start)
-
-    #move to first block
-    dx = -(x_block*x_block_size/2.0 - 0.5*x_block_size)
-    dy = -(y_block*y_block_size/2.0 - 0.5*y_block_size)
-
-    #if np.abs(dx) < max_travel and np.abs(dy) < max_travel:
-    #    #movr_sx(dx)
-    #    #movr_sy(dy)
-    #    #print('moving to the starting position ...')
-    #    yield from bps.movr(dsx, dx)
-    #    yield from bps.movr(dsy, dy)
-    #    dx_start = dsx.position
-    #    #print('at starting position')
-    #else:
-    #    raise KeyError('Too large travel range')
-
-    #start mosaic scan
-    for i in range(y_block):
-        for j in range(x_block):
-            #yield from smll_sync_piezos()
-            yield from fly2d(dets1, dssx, x_start+0.9*(j-1)*x_block_size, x_end+0.9*(j-1)*x_block_size, x_num, dssy, y_start+0.9*i*y_block_size, y_end+0.9*i*y_block_size, y_num, acq_time, return_speed=40)
-            merlin1.unstage()
-            xspress3.unstage()
-            yield from bps.sleep(2)
-            print('sleep 2 s')
-            #dx = x_block_size * 0.8
-            #movr_sx(dx)
-            #yield from bps.movr(dsx, dx)
-            #if elem is not None:
-            #    plot2dfly(-1, elem, 'sclr1_ch4')
-            #    plt.close()
-        #dx = -x_block_size*(x_block-1)
-        #dy = y_block_size * 0.8
-        #yield from bps.mov(dsx, dx_start)
-        #yield from bps.movr(dsy, dy)
-        #movr_sx(dx)
-        #movr_sy(dy)
-
-    #return to initial position
-    #print('Return to prior positions')
-    #mov_sx(pre_ssx)
-    #mov_sy(pre_ssy)
-    #yield from bps.mov(dsx, pre_ssx)
-    #yield from bps.mov(dsy, pre_ssy)
-
-    print('%d x %d mosaic scan finished' % (x_block, y_block))
-
-def mll_mosaic_scan(x_start, x_end, x_num, x_block, y_start, y_end, y_num, y_block, acq_time, elem=None):
-
-    max_travel = 500
-    angle = 15.0*np.pi/180.0
-
-    #initialize parameters
-    x_start = float(x_start)
-    x_end = float(x_end)
-    x_num = int(x_num)
-    y_num = int(y_num)
-    y_start = float(y_start)
-    y_end = float(y_end)
-    x_block = int(x_block)
-    y_block = int(y_block)
-
-    #read initial position
-    pre_ssx = dsx.position #smll.ssx.position
-    pre_ssy = dsy.position #smll.ssy.position
-    pre_ssz = dsz.position #smll.ssz.position
-
-    print('Initial dsx = ', pre_ssx)
-    print('Initial dsy = ', pre_ssy)
-    print('Initial dsz = ', pre_ssz)
-
-    #calculate block size
-    x_block_size = (x_end - x_start)
-    y_block_size = (y_end - y_start)
-
-    #move to first block
-    dx = -(x_block*x_block_size/2.0 - 0.5*x_block_size)
-    dy = -(y_block*y_block_size/2.0 - 0.5*y_block_size)
-
-    #if np.abs(dx) < max_travel and np.abs(dy) < max_travel:
-    #    #movr_sx(dx)
-    #    #movr_sy(dy)
-    #    #print('moving to the starting position ...')
-    #    yield from bps.movr(dsx, dx)
-    #    yield from bps.movr(dsy, dy)
-    #    dx_start = dsx.position
-    #    #print('at starting position')
-    #else:
-    #    raise KeyError('Too large travel range')
-
-    #start mosaic scan
-    for i in range(y_block):
-        for j in range(x_block):
-            #yield from smll_sync_piezos()
-            yield from fly2d(dets1, dssx, x_start+0.9*(j-1)*x_block_size, x_end+0.9*(j-1)*x_block_size, x_num, dssy, y_start+0.9*(i-1)*y_block_size, y_end+0.9*(i-1)*y_block_size, y_num, acq_time, return_speed=40)
-            merlin1.unstage()
-            xspress3.unstage()
-            yield from bps.sleep(2)
-            print('sleep 2 s')
-            #dx = x_block_size * 0.8
-            #movr_sx(dx)
-            #yield from bps.movr(dsx, dx)
-            #if elem is not None:
-            #    plot2dfly(-1, elem, 'sclr1_ch4')
-            #    plt.close()
-        #dx = -x_block_size*(x_block-1)
-        #dy = y_block_size * 0.8
-        #yield from bps.mov(dsx, dx_start)
-        #yield from bps.movr(dsy, dy)
-        #movr_sx(dx)
-        #movr_sy(dy)
-
-    #return to initial position
-    #print('Return to prior positions')
-    #mov_sx(pre_ssx)
-    #mov_sy(pre_ssy)
-    #yield from bps.mov(dsx, pre_ssx)
-    #yield from bps.mov(dsy, pre_ssy)
-
-    print('%d x %d mosaic scan finished' % (x_block, y_block))
-
-
-def mosaic_scan(x_start, x_end, x_num, y_start, y_end, y_num, dwell_time):
-    x_start = float(x_start)
-    x_end = float(x_end)
-    x_num = int(x_num)
-    y_num = int(y_num)
-    y_start = float(y_start)
-    y_end = float(y_end)
-
-    # kill close-loop
-    #zps.zp_kill_piezos.put(1)
-    yield from bps.sleep(5)
-    if x_num == 1:
-        x_step = 0.0
-    else:
-        x_step = (x_end - x_start) / (x_num - 1)
-    if y_num == 1:
-        y_step = 0.0
-    else:
-        y_step = (y_end - y_start) / (y_num - 1)
-
-    # read initial positions
-    pre_x
-    pre_yps.smary.position
-    pre_ssx = zps.zpssx.position
-    pre_ssy = zps.zpssy.position
-
-    print('x_step = ', x_step)
-    print('y_step = ', y_step)
-    print('Original smarx = ', pre_x)
-    print('Original smary = ', pre_y)
-    print('Original zpssx = ', pre_ssx)
-    print('Original zpssy = ', pre_ssy)
-
-    # move to start position
-    x_ini=pre_x + x_start
-    y_ini = pre_y + y_start
-    yield from bps.movr(smarx, x_start)
-    yield from bps.movr(smary, y_start)
-    x = pre_ssx + (x_start * 1000)
-    y = pre_ssy + (y_start * 1000)
-    yield from bps.sleep(5)
-
-
-    for i in range(y_num):
-
-        for j in range(x_num):
-            print(i,zps.smary.position)
-            yield ffly2d(dets_fs,zpssx, -15, 15, 40, zpssy, -15, 15, 40, dwell_time)
-            merlin1.unstage()
-            xspress3.unstage()
-            #scan_id,df=_load_scan(-1,fill_events=False)
-
-            current_smarx
-            current_smaryps.smary.position
-            '''
-            plot2dfly(-1,'Zn',norm='sclr1_ch4')
-            plt.title('#'+str(scan_id)+', smarx '+str(current_smarx)+', smary '+str(current_smary))
-            printfig()
-            plot2dfly(-1, 'sclr1_ch5')
-            plt.title('#'+str(scan_id))
-            printfig()
-            print('scan finished, waiting for 2s...')
-            '''
-           # zps.zp_kill_piezos.put(1)
-            yield from bps.sleep(2)
-            yield from bps.movr(smarx, x_step)
-
-
-        yield from bps.mov(smarx, x_ini)
-        yield from bps.movr(smary, y_step)
-
-    print('mosaic scan finished, move back to prior positions')
-    yield from bps.mov(smarx, pre_x)
-    yield from bps.mov(smary, pre_y)
-    yield from shutter('close')
 
 
 def sin_offset(x, p0, p1, p2):
@@ -1774,23 +1454,23 @@ def zp_th_fly2d(dets,th_start, th_end, num, mot1, x_start, x_end, x_num, mot2, y
 
 
                 #yield from bps.movr(zpssx,-2)
-                yield from fly1d(dets_fs,mot2,-15,15,100,0.1)
-                yc = return_line_center(-1,elem,threshold=0.6)
-                yield from bps.movr(smary,yc*0.001)
-                #yield from bps.mov(mot2,yc)
+                yield from fly1d(dets_fs,mot2,-5,5,100,0.05)
+                yc = return_line_center(-1,elem,threshold=0.3)
+                #yield from bps.movr(smary,yc*0.001)
+                yield from bps.mov(mot2,yc)
                 #Move to the fiducial from scan start point
 
 
-                yield from fly1d(dets_fs,mot1,-15,15,100,0.1)
+                yield from fly1d(dets_fs,mot1,-5,5,100,0.05)
                 #xc,fwhm=erf_fit(-1,elem,linear_flag=False)
-                xc = return_line_center(-1,elem,threshold=0.75)
+                xc = return_line_center(-1,elem,threshold=0.3)
                 yield from bps.mov(mot1,xc)
                 #yield from bps.movr(smarx,xc*0.001)
                 plt.close()
 
 
 
-            yield from bps.movr(smary,-0*0.001)#################################################################################
+            #yield from bps.movr(smary,-0*0.001)#################################################################################
             #yield from bps.movr(zpssx,2)
 
 
@@ -1805,7 +1485,7 @@ def zp_th_fly2d(dets,th_start, th_end, num, mot1, x_start, x_end, x_num, mot2, y
         yield from bps.sleep(1)
         xspress3.unstage()
         merlin1.unstage()
-        yield from bps.movr(smary,0*0.001)############################################################################
+        #yield from bps.movr(smary,0*0.001)############################################################################
 
 
         try:

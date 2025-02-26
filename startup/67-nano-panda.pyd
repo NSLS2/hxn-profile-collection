@@ -513,7 +513,7 @@ from event_model import compose_resource
 def scan_and_fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwell, *,
                       panda_flyer, xmotor, ymotor, dead_time = 0,
                       delta=None, shutter=False, align=False, plot=False,
-                      md=None, snake=False, verbose=False, wait_before_scan=None):
+                      md=None, snake=False, verbose=False, wait_before_scan=None, position_supersample= 10):
     """Read IO from SIS3820.
     Zebra buffers x(t) points as a flyer.
     Xpress3 is our detector.
@@ -567,7 +567,7 @@ def scan_and_fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwe
 
     # Assign detectors to flying_zebra, this may fail
     panda_flyer.detectors = detectors
-    panda_flyer.position_supersample = 10
+    panda_flyer.position_supersample = position_supersample
     panda_flyer.frame_per_point = num_total * panda_flyer.position_supersample
 
     # Setup detectors, combine the zebra, sclr, and the just set detector list
@@ -688,7 +688,7 @@ def scan_and_fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwe
     except:
         pass
     md['scan']['detectors'] = [d.name for d in detectors]
-    md['scan']['detector_distance'] = 1.55
+    md['scan']['detector_distance'] = 1.00
     md['scan']['dwell'] = dwell
     md['scan']['fast_axis'] = {'motor_name' : xmotor.name,
                                'units' : xmotor.motor_egu.get()}
@@ -898,7 +898,7 @@ def scan_and_fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwe
             # print(f"Configuring 'eiger_mobile' ...")
             dpc = dets_by_name["eiger_mobile"]
             yield from abs_set(dpc.cam.num_triggers, 1, group=wait_before_scan)
-            yield from abs_set(dpc.cam.num_images, num_total + 5, group=wait_before_scan)
+            yield from abs_set(dpc.cam.num_images, num_total, group=wait_before_scan)
             yield from abs_set(dpc.cam.wait_for_plugins, 'No', group=wait_before_scan)
 
         ion = panda_flyer.sclr
@@ -916,6 +916,17 @@ def scan_and_fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwe
                                 num=num_total*panda_flyer.position_supersample,
                                 wait=True)
         yield from panda_kickoff()
+
+        panda_h5_path = os.path.realpath(os.path.join(panda_flyer.panda.data.hdf_directory.get(),panda_flyer.panda.data.hdf_file_name.get()))
+        panda_h5_link = '/nsls2/data2/hxn/legacy/home/home/zgao/panda_data.h5'
+
+        try:
+            if os.path.exists(panda_h5_link):
+                os.remove(panda_h5_link)
+
+            os.symlink(panda_h5_path,panda_h5_link)
+        except:
+            pass
 
         if verbose:
             toc(t_startfly, str='TIMER (STEP) - PANDA STARTED')
@@ -947,6 +958,10 @@ def scan_and_fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwe
                 f.write(json.dumps(kwargs))
                 f.write('\n')
         yield from bps.wait(group=wait_before_scan)
+
+
+        # Start Scan!
+
         st = yield from abs_set(ymotor, scan_stop+delta/2.0*v,group=row_scan)
         if verbose:
             st.add_callback(lambda x: toc(t_startfly, str=f"  MOTOR  {datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S.%f')}"))
@@ -976,10 +991,10 @@ def scan_and_fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwe
             print("Row scan is completed")
         counter = 0
         while dpc.cam.num_images_counter.get()<num_total:
-            counter +=1
+            counter +=0.5
             print("Eiger processing not finished, waiting")
             yield from bps.sleep(0.5)
-            if counter>6:
+            if counter>3:
                 break
         yield from abs_set(dpc._acquisition_signal,0,wait=True)
 
@@ -1057,7 +1072,7 @@ def scan_and_fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwe
     return uid
 
 
-def pt_fly2dcontpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, scan_end2, num2, exposure_time, pos_return = True, apply_tomo_drift = False, tomo_angle = None, auto_rescan = True,position_supersample= 10, **kwargs):
+def pt_fly2dcontpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, scan_end2, num2, exposure_time, pos_return = True, apply_tomo_drift = False, tomo_angle = None, auto_rescan = False,position_supersample= 10, **kwargs):
     """
     Relative scan
     """
@@ -1070,12 +1085,16 @@ def pt_fly2dcontpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_star
         try:
             center1, range1 =(scan_start1+scan_end1)/2, np.abs(scan_end1-scan_start1)
             if apply_tomo_drift:
-                if tomo_angle is None:
-                    tomo_angle = pt_tomo.th.user_setpoint.get()
-                center1 = center1 + get_tomo_drift(tomo_angle)
-                ydrift_tomo = get_tomo_drift_y(tomo_angle)
+               # if tomo_angle is None:
+               #     tomo_angle = pt_tomo.th.user_setpoint.get()
+               # center1 = center1 + get_tomo_drift(tomo_angle)
+               # ydrift_tomo = get_tomo_drift_y(tomo_angle)
+               tomo_angle = pt_tomo.th.user_setpoint.get()
+               print("drift %.2f"%((rasmi_x_ref() - get_tomo_ref(tomo_angle))*0.6))
+               center1 = center1 + (rasmi_x_ref() - get_tomo_ref(tomo_angle))*0.6
+               ydrift_tomo = 0
             else:
-                ydrift_tomo = 0
+               ydrift_tomo = 0
             start2, end2 = m2_pos + scan_start2 + ydrift_tomo, m2_pos + scan_end2 + ydrift_tomo
             range_min, range_max = -30, 30
             for v in [center1-range1/2, center1+range1/2, start2, end2]:
@@ -1103,7 +1122,7 @@ def pt_fly2dcontpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_star
             else:
                 raise RuntimeError(f"Xmotor voltage or frequency too high, check your input")
 
-            if exposure_time < 0.003:
+            if exposure_time < 1:
                 dead_time = 3.8e-6
             else:
                 dead_time = np.maximum(0.001,exposure_time * 0.1)
@@ -1112,7 +1131,7 @@ def pt_fly2dcontpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_star
             yield from bps.abs_set(panda1.pulse1.width_units,'s')
             yield from bps.abs_set(panda1.pulse1.step,(exposure_time-dead_time)/position_supersample)
             yield from bps.abs_set(panda1.pulse1.step_units,'s')
-            yield from bps.abs_set(panda1.pulse1.delay,0.005+(exposure_time-dead_time)/2.0/position_supersample)
+            yield from bps.abs_set(panda1.pulse1.delay,(exposure_time-dead_time)/2.0/position_supersample)
             yield from bps.abs_set(panda1.pulse1.delay_units,'s')
             yield from bps.abs_set(panda1.pulse1.pulses,position_supersample)
             
@@ -1124,9 +1143,9 @@ def pt_fly2dcontpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_star
             yield from bps.abs_set(panda1.pulse2.pulses,1)
 
 
-            yield from scan_and_fly_2dpd(dets, center1, range1, num1, start2, end2, num2, exposure_time, dead_time = dead_time, **kwargs)
+            yield from scan_and_fly_2dpd(dets, center1, range1, num1, start2, end2, num2, exposure_time, dead_time = dead_time, position_supersample = position_supersample, **kwargs)
 
-            if auto_rescan and eiger_mobile.cam.num_images_counter.get() < (num1*num2+5):
+            if auto_rescan and eiger_mobile.cam.num_images_counter.get() < (num1*num2):
                 do_scan = True
 
         finally:

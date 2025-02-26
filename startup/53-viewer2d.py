@@ -846,7 +846,7 @@ def plot_img_sum(sid, det = 'merlin1',norm ='sclr1_ch4',
         #print("image load_error")
     except ValueError:
         imgs = list(h.data(det))
-        #print("image loaded")
+        #print("panda scan")
     #imgs = np.array(imgs)
     imgs = np.array(np.squeeze(imgs))
     print("image_squeezed")
