@@ -16,7 +16,7 @@ from ophyd.areadetector.filestore_mixins import (FileStoreTIFFIterativeWrite,
                                                  FileStoreBase, new_short_uid,
                                                  FileStoreIterativeWrite)
 from ophyd import Component as Cpt, Signal
-from ophyd.utils import set_and_wait
+# from ophyd.utils import set_and_wait
 from pathlib import PurePath
 from bluesky.plan_stubs import stage, unstage, open_run, close_run, trigger_and_read, pause
 from collections import OrderedDict
@@ -136,8 +136,10 @@ class EigerSimulatedFilePlugin(Device, FileStoreBase):
     def stage(self):
         res_uid = new_short_uid()
         write_path = datetime.now().strftime(self.write_path_template)
-        set_and_wait(self.file_path, write_path)
-        set_and_wait(self.file_write_name_pattern, '{}_$id'.format(res_uid))
+        # set_and_wait(self.file_path, write_path)
+        # set_and_wait(self.file_write_name_pattern, '{}_$id'.format(res_uid))
+        self.file_path.set(write_path).wait()
+        self.file_write_name_pattern.set('{}_$id'.format(res_uid)).wait()
         super().stage()
         fn = (PurePath(self.file_path.get()) / res_uid)
         ipf = int(self.file_write_images_per_file.get())
@@ -201,11 +203,13 @@ class EigerBase(AreaDetector, HxnModalTrigger):
         # before parent
         ret = super().stage(*args, **kwargs)
         # after parent
-        set_and_wait(self.manual_trigger, 1)
+        # set_and_wait(self.manual_trigger, 1)
+        self.manual_trigger.set(1).wait()
         return ret
 
     def unstage(self):
-        set_and_wait(self.manual_trigger, 0)
+        # set_and_wait(self.manual_trigger, 0)
+        self.manual_trigger.set(0).wait()
         super().unstage()
 
     @property
@@ -262,7 +266,8 @@ class EigerSingleTrigger(SingleTrigger, EigerBase):
 
     def trigger(self, *args, **kwargs):
         status = super().trigger(*args, **kwargs)
-        set_and_wait(self.special_trigger_button, 1)
+        # set_and_wait(self.special_trigger_button, 1)
+        self.special_trigger_button.set(1).wait()
         return status
 
     def read(self, *args, streaming=False, **kwargs):
@@ -326,7 +331,8 @@ class EigerSingleTrigger_AD37(SingleTrigger, EigerBaseV33):
 
     def trigger(self, *args, **kwargs):
         status = super().trigger(*args, **kwargs)
-        set_and_wait(self.special_trigger_button, 1)
+        # set_and_wait(self.special_trigger_button, 1)
+        self.special_trigger_button.set(1).wait()
         return status
 
     def read(self, *args, streaming=False, **kwargs):

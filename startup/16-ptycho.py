@@ -1,3 +1,5 @@
+print(f"Loading {__file__!r} ...")
+
 from ophyd import (EpicsMotor, Device, Component as Cpt)
 class SigrayMll(Device):
     mll_x = Cpt(EpicsMotor, 'XF:03IDC-CT{SmarAct:Sigray1}:m10')

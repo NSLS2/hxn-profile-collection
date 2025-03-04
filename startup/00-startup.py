@@ -1,3 +1,5 @@
+print(f"Loading {__file__!r} ...")
+
 import functools
 import os
 import time
@@ -7,10 +9,19 @@ from collections import deque
 from datetime import datetime, timedelta, tzinfo
 from pathlib import Path
 
+
 # The following code allows to call Matplotlib API from threads (experimental)
 # Requires https://github.com/tacaswell/mpl-qtthread (not packaged yet)
 import matplotlib
 import matplotlib.backends.backend_qt
+import matplotlib.pyplot as plt
+
+# The following code is expected to fix the issue with MPL windows 'freezing'
+#   after completion of a plan.
+from IPython import get_ipython
+ipython = get_ipython()
+ipython.run_line_magic("matplotlib", "")
+
 import mpl_qtthread
 # set up the teleporter
 mpl_qtthread.backend.initialize_qt_teleporter()
@@ -19,11 +30,8 @@ matplotlib.use("module://mpl_qtthread.backend_agg")
 # suppress (now) spurious warnings for mpl3.3+
 mpl_qtthread.monkeypatch_pyplot()
 
-# The following code is expected to fix the issue with MPL windows 'freezing'
-#   after completion of a plan.
-from IPython import get_ipython
-ipython = get_ipython()
-ipython.run_line_magic("matplotlib", "")
+plt.ion()
+
 
 import certifi
 import ophyd
@@ -52,6 +60,8 @@ from jsonschema import validate as js_validate
 from pymongo import MongoClient
 
 os.environ["PPMAC_HOST"] = "xf03idc-ppmac1"
+
+os.chdir('/nsls2/data2/hxn/shared/config/bluesky/profile_collection/startup')
 
 bootstrap_servers = os.getenv("BLUESKY_KAFKA_BOOTSTRAP_SERVERS", None)
 if bootstrap_servers is None:
@@ -87,8 +97,8 @@ kafka_publisher = Publisher(
 
 # DB1
 db1_name = 'rs'
-db1_addr = 'mongodb://xf03id1-mdb01:27017,xf03id1-mdb02:27017,xf03id1-mdb03:27017'
-
+#db1_addr = 'mongodb://xf03id1-mdb01:27017,xf03id1-mdb02:27017,xf03id1-mdb03:27017'
+db1_addr = 'mongodb://xf03id1-mdb02:27017,xf03id1-mdb03:27017'
 _mds_config_db1 = {'host': db1_addr,
                    'port': 27017,
                    'database': 'datastore-2',
@@ -99,7 +109,8 @@ _fs_config_db1 = {'host': db1_addr,
                   'database': 'filestore-2'}
 
 # Benchmark file
-f_benchmark = open("/home/xf03id/benchmark.out", "a+")
+#f_benchmark = open("/home/xf03id/benchmark.out", "a+")
+f_benchmark = open("/nsls2/data/hxn/shared/config/bluesky/profile_collection/benchmark.out", "a+")
 datum_counts = {}
 
 def sanitize_np(val):
@@ -121,7 +132,6 @@ def _write_to_file(col_name, method_name, t1, t2):
             "{0}: {1}, t1: {2} t2:{3} time:{4} \n".format(
                 col_name, method_name, t1, t2, (t2-t1),))
         f_benchmark.flush()
-
 
 class CompositeRegistry(Registry):
     '''Composite registry.'''
@@ -297,7 +307,6 @@ class CompositeRegistry(Registry):
 mds_db1 = MDS(_mds_config_db1, auth=False)
 db1 = Broker(mds_db1, CompositeRegistry(_fs_config_db1))
 
-
 # wrapper for two databases
 class CompositeBroker(Broker):
     """wrapper for two databases"""
@@ -387,6 +396,9 @@ configure_base(
 from bluesky.callbacks.best_effort import BestEffortCallback
 
 bec = BestEffortCallback()
+table_max_lines = 10
+
+#bec.disable_table()
 
 # un import *
 ns = get_ipython().user_ns
@@ -408,7 +420,6 @@ RE.md['group'] = ''
 RE.md['config'] = {}
 RE.md['beamline_id'] = 'HXN'
 RE.verbose = True
-
 
 from hxntools.scan_number import HxnScanNumberPrinter
 from hxntools.scan_status import HxnScanStatus
@@ -435,7 +446,6 @@ for _event in ('start', 'stop'):
     RE.subscribe(uid_broadcaster, _event)
     RE.subscribe(hxn_scan_status, _event)
 
-
 def ensure_proposal_id(md):
     if 'proposal_id' not in md:
         raise ValueError("You forgot the proposal id.")
@@ -445,7 +455,8 @@ def ensure_proposal_id(md):
 # be nice on segfaults
 import faulthandler
 
-faulthandler.enable()
+# faulthandler.enable()
+
 
 # set up logging framework
 import logging
@@ -515,7 +526,8 @@ register_transform('RE', prefix='<')
 # -HACK- Patching set_and_wait in ophyd.device to make stage and unstage more
 # reliable
 
-_set_and_wait = ophyd.device.set_and_wait
+# _set_and_wait = ophyd.device.set_and_wait
+_set_and_wait = ophyd.utils.epics_pvs._set_and_wait
 
 @functools.wraps(_set_and_wait)
 def set_and_wait_again(signal, val, **kwargs):
@@ -548,7 +560,8 @@ def set_and_wait_again(signal, val, **kwargs):
 # Ivan: try a longer timeout for debugging
 #set_and_wait_again.timeout = 300
 set_and_wait_again.timeout = 1200
-ophyd.device.set_and_wait = set_and_wait_again
+# ophyd.device.set_and_wait = set_and_wait_again
+ophyd.utils.epics_pvs._set_and_wait = set_and_wait_again
 # -END HACK-
 
 
@@ -629,3 +642,22 @@ from ophyd.areadetector import EpicsSignalWithRBV
 EpicsSignal.get = _epicssignal_get
 EpicsSignalRO.get = _epicssignal_get
 EpicsSignalWithRBV.get = _epicssignal_get
+
+from datetime import datetime
+# LARGE_FILE_DIRECTORY_PATH = "/data" + datetime.now().strftime("/%Y/%m/%d")
+LARGE_FILE_DIRECTORY_ROOT = "/data"
+LARGE_FILE_DIRECTORY_PATH = "/data" + datetime.now().strftime("/%Y/%m/%d")
+
+FIP_TESTING = False  # Remove after FIP testing is complete
+
+
+def reload_bsui():
+    """Restarts the current bsui and updates live elements info."""
+    os.execl(sys.executable, sys.executable, * sys.argv)
+
+def bluesky_debug_mode(level='DEBUG'):
+    from bluesky.log import config_bluesky_logging
+    config_bluesky_logging(level=level)
+
+# bluesky_debug_mode(level='DEBUG')
+# del one_1d_step, one_nd_step, one_shot
