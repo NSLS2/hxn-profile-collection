@@ -14,6 +14,7 @@ from epics import caget, caput
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
+from hxntools.scan_info import get_scan_positions
 
 def erfunc3(z,a,b,c,d,e):
     return d+e*z+c*(scipy.special.erf((z-a)/(b*np.sqrt(2.0)))+1.0)
@@ -35,6 +36,10 @@ def is_close_to_reference(value, reference, rel_tol=0.05):
     # Check if the value is within 5% (default) relative tolerance of the reference
     if not math.isclose(value, reference, rel_tol=rel_tol):
         raise ValueError(f"{value} is not within 5% of {reference}")
+    
+
+def get_xrf_data(h,elem ="Cr",mon ='sclr1_ch4'):
+    pass
 
 def erf_fit(sid, elem, mon='sclr1_ch4', linear_flag=True):
     h = db[sid]
@@ -200,12 +205,33 @@ def square_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
     sid=h['start']['scan_id']
     df=h.table()
     mots=h.start['motors']
-    xdata=df[mots[0]]
-    xdata=np.array(xdata,dtype=float)
+
+    #threshold = np.max(xrf)/10.0
+    x_motor = h.start['motors']
+    try:
+        xdata = np.array(df[x_motor[0]])
+    except:
+        xdata = get_scan_positions(h)
+        
+    #x = get_scan_positions(h)
+    #xdata=df[mots[0]]
+    #xdata=np.array(xdata,dtype=float)
     #df[mon][df[mon]==np.inf] = np.mean(df[mon])
     #ydata=(df['Det1_'+elem]+df['Det2_'+elem]+df['Det3_'+elem])/(df[mon]+1e-8)
-    ydata=(df['Det1_'+elem]+df['Det2_'+elem]+df['Det3_'+elem])
 
+    channels = [1,2,3]
+    xrf = None
+    for i in channels:
+        fluo_data = np.array(list(h.data('Det%d_'%i+elem))).squeeze()
+        if xrf is None:
+            xrf = fluo_data.copy()
+        else:
+            xrf = xrf + fluo_data
+    #xrf = np.array(df2['Det2_' + elem]+df2['Det1_' + elem] + df2['Det3_' + elem])
+
+    xrf[xrf==np.nan] = np.nanmean(xrf)#patch for ic3 returns zero
+    xrf[xrf==np.inf] = np.nanmean(xrf)#patch for ic3 returns zero
+    ydata=xrf
     ydata=np.array(ydata,dtype=float)
     y_min=np.min(ydata)
     y_max=np.max(ydata)
@@ -386,7 +412,7 @@ def z_focus_alignment(mot_name,z_start, z_end, z_num, mot, start, end, num, acq_
 
     for i in tqdm.tqdm(range(z_num + 1)):
 
-        yield from fly1d(dets_fs, mot, start, end, num, acq_time)
+        yield from fly1dpd(dets_fs, mot, start, end, num, acq_time)
         edge_pos,fwhm=erf_fit(-1,elem,mon,linear_flag=linFlag)
         # sid = int(caget("XF:03IDC-ES{Status}ScanID-I"))
         # edge_pos,fwhm,x_data,y_data,y_fit,z_pos = get_knife_edge_data(sid,elem,mon='sclr1_ch4',linear_flag=True)
@@ -527,7 +553,7 @@ def mll_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem=
     yield from bps.movr(smlld.sbz, z_start)
     for i in range(z_num + 1):
 
-        yield from fly1d(dets_fs, mot, start, end, num, acq_time)
+        yield from fly1dpd(dets_fs, mot, start, end, num, acq_time)
 
         edge_pos,fwhm=erf_fit(-1,elem,mon,linear_flag=False)
         fit_size[i]= fwhm
@@ -550,7 +576,7 @@ def hmll_z_alignment(z_start, z_end, z_num, start, end, num, acq_time, elem='Pt_
     init_hz = hmll.hz.position
     yield from bps.movr(hmll.hz, z_start)
     for i in range(z_num + 1):
-        yield from fly1d(dets_fs,dssx, start, end, num, acq_time)
+        yield from fly1dpd(dets_fs,dssx, start, end, num, acq_time)
         edge_pos,fwhm=erf_fit(-1,elem,mon)
         fit_size[i]=fwhm
         z_pos[i]=hmll.hz.position
@@ -568,7 +594,7 @@ def mll_vchi_alignment(vchi_start, vchi_end, vchi_num, mot, start, end, num, acq
     init_vchi = vmll.vchi.position
     yield from bps.movr(vmll.vchi, vchi_start)
     for i in range(vchi_num + 1):
-        yield from fly1d(dets_fs, mot, start, end, num, acq_time,dead_time=0.002)
+        yield from fly1dpd(dets_fs, mot, start, end, num, acq_time,dead_time=0.002)
         edge_pos,fwhm=erf_fit(-1,elem,mon)
         fit_size[i]=fwhm
         vchi_pos[i]=vmll.vchi.position
@@ -592,7 +618,7 @@ def vmll_z_alignment(z_start, z_end, z_num, start, end, num, acq_time, elem='Pt_
     init_vz = vmll.vz.position
     yield from bps.movr(vmll.vz, z_start)
     for i in range(z_num + 1):
-        yield from fly1d(dets_fs,dssy, start, end, num, acq_time)
+        yield from fly1dpd(dets_fs,dssy, start, end, num, acq_time)
         edge_pos,fwhm=erf_fit(-1,elem,mon)
         #plt.title('vz={}'.format(vmll.vz.position),loc='right')
         fit_size[i]=fwhm
@@ -652,7 +678,7 @@ def zp_z_alignment2(z_start, z_end, z_num, mot, start, end, num, acq_time,
         
     for pos in z_pos:
         yield from mov_zpz1(pos)
-        yield from fly1d(dets_fs, mot, start, end, num, acq_time)
+        yield from fly1dpd(dets_fs, mot, start, end, num, acq_time)
         edge_pos,fwhm=erf_fit(-1,elem,mon,linear_flag=linFlag)
         yield from bps.sleep(1)
         fit_size[i]= fwhm
@@ -830,12 +856,12 @@ def zp_rot_alignment_edge(a_start, a_end, a_num, start, end, num, acq_time, elem
         x[i] = a_start + i*a_step
         yield from bps.mov(zps.zpsth, x[i])
         if np.abs(x[i]) > 45:
-            yield from fly1d(dets1,zpssz,start,end,num,acq_time)
+            yield from fly1dpd(dets1,zpssz,start,end,num,acq_time)
             #tmp = return_line_center(-1, elem=elem,threshold=0.5)
             edge,fwhm = erf_fit(-1,elem = elem,linear_flag=False)
             y[i] = edge*np.sin(x[i]*np.pi/180.0)
         else:
-            yield from fly1d(dets1,zpssx,start,end,num,acq_time)
+            yield from fly1dpd(dets1,zpssx,start,end,num,acq_time)
             #tmp = return_line_center(-1,elem=elem,threshold=0.5)
             edge,fwhm = erf_fit(-1,elem = elem,linear_flag=False)
             y[i] = edge*np.cos(x[i]*np.pi/180.0)
@@ -941,10 +967,10 @@ def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt
         '''
 
         if np.abs(x[i]) > 45.01:
-            #yield from fly2d(dets1,dssz,start,end,num, dssy, -2,2,20,acq_time)
+            #yield from fly2dpd(dets1,dssz,start,end,num, dssy, -2,2,20,acq_time)
             #cx,cy = return_center_of_mass(-1,elem,0.3)
             #y[i] = cx*np.sin(x[i]*np.pi/180.0)
-            yield from fly1d(dets_fs,dssz,start,end,num,acq_time)
+            yield from fly1dpd(dets_fs,dssz,start,end,num,acq_time)
             #plot(-1, elem)
             #plt.close()
             cen = return_line_center(-1, elem=elem,threshold = 0.6)
@@ -954,10 +980,10 @@ def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt
             y[i] = cen*np.sin(x[i]*np.pi/180.0)
             # yield from bps.mov(dssz,cen)
         else:
-            #yield from fly2d(dets1,dssx,start,end,num, dssy, -2,2,20,acq_time)
+            #yield from fly2dpd(dets1,dssx,start,end,num, dssy, -2,2,20,acq_time)
             #cx,cy = return_center_of_mass(-1,elem,0.3)
             #y[i] = cx*np.cos(x[i]*np.pi/180.0)
-            yield from fly1d(dets_fs,dssx,start,end,num,acq_time)
+            yield from fly1dpd(dets_fs,dssx,start,end,num,acq_time)
             cen = return_line_center(-1,elem=elem,threshold = 0.6)
             #plot(-1, elem)
             #plt.close()
@@ -970,7 +996,7 @@ def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt
         ##v[i] = cy
 
         #yield from bps.mov(dssy,cy)
-        #yield from fly1d(dets1,dssy,-2,2,100,acq_time)
+        #yield from fly1dpd(dets1,dssy,-2,2,100,acq_time)
         #tmp = return_line_center(-1, elem=elem)
         #yield from bps.mov(dssy,tmp)
         #v[i] = tmp
@@ -1066,7 +1092,7 @@ def mll_rot_alignment_2D(th_start, th_end, th_num, x_start, x_end, x_num,
         yield from bps.mov(dssx,0, dssz,0, smlld.dsth,th)
 
         if np.abs(x[i]) > 45.01:
-            yield from fly2d(dets1,
+            yield from fly2dpd(dets1,
                             dssz,
                             x_start,
                             x_end,
@@ -1082,7 +1108,7 @@ def mll_rot_alignment_2D(th_start, th_end, th_num, x_start, x_end, x_num,
             y[i] = cx*np.sin(x[i]*np.pi/180.0)
 
         else:
-            yield from fly2d(dets1,dssx,start,end,num, dssy, -2,2,20,acq_time)
+            yield from fly2dpd(dets1,dssx,start,end,num, dssy, -2,2,20,acq_time)
             cx,cy = return_center_of_mass(-1,elem,0.5)
             y[i] = cx*np.cos(x[i]*np.pi/180.0)
 
@@ -1113,7 +1139,7 @@ def mll_rot_v_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='
     for i in range(a_num+1):
         x[i] = a_start + i*a_step
         yield from bps.mov(smlld.dsth, x[i])
-        yield from fly1d(dets1,dssy,start,end,num,acq_time)
+        yield from fly1dpd(dets1,dssy,start,end,num,acq_time)
         edge_pos,fwhm=erf_fit(-1,elem=elem,mon=mon)
         y[i] = edge_pos
     y = -1*np.array(y)
@@ -1208,8 +1234,8 @@ def get_scan_command(sid):
             s1 = h.start['scan_start']
             e1 = h.start['scan_end']
             n1 = h.start['num']
-            print (f"fly1d({m1},{s1:.3f},{e1:.3f},{n1},{exp_time})")
-            return (f"fly1d({m1},{s1:.3f},{e1:.3f},{n1},{exp_time})")
+            print (f"fly1dpd({m1},{s1:.3f},{e1:.3f},{n1},{exp_time})")
+            return (f"fly1dpd({m1},{s1:.3f},{e1:.3f},{n1},{exp_time})")
         elif num_motors == 2:
             m1 = scan_motors[0]
             s1 = h.start['scan_start1']
@@ -1220,8 +1246,8 @@ def get_scan_command(sid):
             e2 = h.start['scan_end2']
             n2 = h.start['num2']
             
-            print (f"fly2d({m1},{s1:.3f},{e1:.3f},{n1},{m2},{s2 :.3f},{e2 :.3f},{n2},{exp_time})")
-            return (f"fly2d({m1},{s1:.3f},{e1:.3f},{n1},{m2},{s2 :.3f},{e2 :.3f},{n2},{exp_time})")
+            print (f"fly2dpd({m1},{s1:.3f},{e1:.3f},{n1},{m2},{s2 :.3f},{e2 :.3f},{n2},{exp_time})")
+            return (f"fly2dpd({m1},{s1:.3f},{e1:.3f},{n1},{m2},{s2 :.3f},{e2 :.3f},{n2},{exp_time})")
             
             
             
@@ -1238,8 +1264,8 @@ def repeat_scan(sid):
             s1 = h.start['scan_start']
             e1 = h.start['scan_end']
             n1 = h.start['num']
-            print (f"<fly1d({m1},{s1:.3f},{e1:.3f},{n1},{exp_time})")
-            yield from fly1d(m1,s1,e1,n1,exp_time)
+            print (f"<fly1dpd({m1},{s1:.3f},{e1:.3f},{n1},{exp_time})")
+            yield from fly1dpd(m1,s1,e1,n1,exp_time)
         elif num_motors == 2:
             m1 = scan_motors[0]
             s1 = h.start['scan_start1']
@@ -1250,8 +1276,8 @@ def repeat_scan(sid):
             e2 = h.start['scan_end2']
             n2 = h.start['num2']
             
-            print (f"<fly2d({m1},{s1:.3f},{e1:.3f},{n1},{m2},{s2 :.3f},{e2 :.3f},{n2},{exp_time})")
-            yield from fly2d(m1,s1,e1,n1,m2,s2,e2,n2,exp_time)
+            print (f"<fly2dpd({m1},{s1:.3f},{e1:.3f},{n1},{m2},{s2 :.3f},{e2 :.3f},{n2},{exp_time})")
+            yield from fly2dpd(m1,s1,e1,n1,m2,s2,e2,n2,exp_time)
             #return(mot1+' {:1.3f} {:1.3f} {:d}'.format(s1,e1,n1)+' '+mot2+' {:1.3f} {:1.3f} {:d} {:1.3f}'.format(s2,e2,n2,exp_time))
 
 
@@ -1551,15 +1577,17 @@ def do_motor_position_checks(check_list_dict, rel_tol_per = 25,abs_tol = 20, mes
 
 
 
-def go_det(det, disable_checks = False):
+def go_det(det, disable_checks = False, mll = True):
 
-    check_list = {ssa2.hgap:0.05, ssa2.vgap:0.03, s5.hgap:0.3,s5.vgap:0.3,zposa.zposay:0,mllosa.osax:0}
+    if mll:
+        check_list = {ssa2.hgap:0.05, ssa2.vgap:0.03, s5.hgap:0.1,s5.vgap:0.1,mllosa.osax:0}
+    else:
+        check_list = {ssa2.hgap:0.05, ssa2.vgap:0.03, s5.hgap:0.3,s5.vgap:0.3,zposa.zposay:0}
 
     if caget("XF:03IDC-ES{Stg:FPDet-Ax:Y}Mtr.RBV")<380:
 
         raise ValueError("Dexela detector maybe IN, Please move it away and try again!")
-        return
-
+        
     else:
 
         with open("/nsls2/data/hxn/shared/config/bluesky/profile_collection/startup/diff_det_pos.json") as fp:
@@ -1671,81 +1699,91 @@ def go_det(det, disable_checks = False):
 
 
 
-def update_det_pos(det = "merlin"):
+def update_det_pos(det = "merlin", do_confirm = True):
 
-    print("!!!Do not update position directly from function, edit  ~/.ipython/profile_collection/startup/diff_det_pos.json to modify detector positions.!!!")
-    print("Exiting...")
-    return
+    # print("!!!Do not update position directly from function, edit  ~/.ipython/profile_collection/startup/diff_det_pos.json to modify detector positions.!!!")
+    # print("Exiting...")
+    # return
 
-    json_path = "/nsls2/data/hxn/shared/config/bluesky/profile_collection/startup/diff_det_pos.json"
-
-    with open(json_path, "r") as read_file:
-        diff_pos = json.load(read_file)
-
-    if det == "merlin":
-
-        diff_pos['merlin_pos']['diff_x'] = np.round(diff.x.position,2)
-        diff_pos['merlin_pos']['diff_y1'] = np.round(diff.y1.position,2)
-        diff_pos['merlin_pos']['diff_y2'] = np.round(diff.y2.position,2)
-        diff_pos['merlin_pos']['diff_z'] = np.round(diff.z.position,2)
-        diff_pos['merlin_pos']['diff_cz'] = np.round(diff.cz.position,2)
-
-    elif det == "cam11":
-
-        diff_pos['cam11_pos']['diff_x'] = np.round(diff.x.position,2)
-        diff_pos['cam11_pos']['diff_y1'] = np.round(diff.y1.position,2)
-        diff_pos['cam11_pos']['diff_y2'] = np.round(diff.y2.position,2)
-        diff_pos['cam11_pos']['diff_z'] = np.round(diff.z.position,2)
-        diff_pos['cam11_pos']['diff_cz'] = np.round(diff.cz.position,2)
-
-    elif det == "telescope":
-
-        diff_pos['telescope_pos']['diff_x'] = np.round(diff.x.position,2)
-        diff_pos['merlin_pos']['diff_z'] = np.round(diff.z.position,2)
-        diff_pos['merlin_pos']['diff_cz'] = np.round(diff.cz.position,2)
-
-    elif det == "out":
-        diff_pos['out']['diff_x'] = np.round(diff.x.position,2)
-        diff_pos['out']['diff_y1'] = np.round(diff.y1.position,2)
-        diff_pos['out']['diff_y2'] = np.round(diff.y2.position,2)
-        diff_pos['out']['diff_z'] = np.round(diff.z.position,2)
-        diff_pos['out']['diff_cz'] = np.round(diff.cz.position,2)
-
-
-    elif det == "fip_merlin2":
-
-        diff_pos["fip_merlin2"]['bl_y'] = caget("XF:03IDC-ES{MC:10-Ax:5}Mtr.VAL")
-        diff_pos["fip_merlin2"]['bl_x'] = caget("XF:03IDC-ES{MC:10-Ax:6}Mtr.VAL")
-
-
-    elif det == "xray_eye":
-
-        diff_pos["xray_eye"]['bl_y'] = caget("XF:03IDC-ES{MC:10-Ax:5}Mtr.VAL")
-        diff_pos["xray_eye"]['bl_x'] = caget("XF:03IDC-ES{MC:10-Ax:6}Mtr.VAL")
-
-    elif det == "eiger_pos2":
-        diff_pos["eiger_pos2"]['diff_x'] = np.round(diff.x.position,2)
-        diff_pos["eiger_pos2"]['diff_y1'] = np.round(diff.y1.position,2)
-        diff_pos["eiger_pos2"]['diff_y2'] = np.round(diff.y2.position,2)
-        diff_pos["eiger_pos2"]['diff_z'] = np.round(diff.z.position,2)
-        diff_pos["eiger_pos2"]['diff_cz'] = np.round(diff.cz.position,2)
-
-
-
+    if do_confirm:
+        check = 'n'
+        check = input(f"Are you sure you want to update {det} position?")
     else:
-        raise KeyError ("Undefined detector name")
+        check = 'y'
+    
+    if check == "y":
 
-    read_file.close()
-    ext = datetime.now().strftime('%Y-%m-%d')
-    json_path_backup = f"/data/users/backup_params/diff_pos/{ext}_diff_det_pos.json"
 
-    with open(json_path, "w") as out_file:
-        json.dump(diff_pos, out_file, indent = 6)
 
-    with open(json_path_backup, "w") as out_file:
-        json.dump(diff_pos, out_file, indent = 6)
+        json_path = "/nsls2/data/hxn/shared/config/bluesky/profile_collection/startup/diff_det_pos.json"
 
-    out_file.close()
+        with open(json_path, "r") as read_file:
+            diff_pos = json.load(read_file)
+
+        if det == "merlin":
+
+            diff_pos['merlin_pos']['diff_x'] = np.round(diff.x.position,2)
+            diff_pos['merlin_pos']['diff_y1'] = np.round(diff.y1.position,2)
+            diff_pos['merlin_pos']['diff_y2'] = np.round(diff.y2.position,2)
+            diff_pos['merlin_pos']['diff_z'] = np.round(diff.z.position,2)
+            diff_pos['merlin_pos']['diff_cz'] = np.round(diff.cz.position,2)
+
+        elif det == "cam11":
+
+            diff_pos['cam11_pos']['diff_x'] = np.round(diff.x.position,2)
+            diff_pos['cam11_pos']['diff_y1'] = np.round(diff.y1.position,2)
+            diff_pos['cam11_pos']['diff_y2'] = np.round(diff.y2.position,2)
+            diff_pos['cam11_pos']['diff_z'] = np.round(diff.z.position,2)
+            diff_pos['cam11_pos']['diff_cz'] = np.round(diff.cz.position,2)
+
+        elif det == "telescope":
+
+            diff_pos['telescope_pos']['diff_x'] = np.round(diff.x.position,2)
+            diff_pos['merlin_pos']['diff_z'] = np.round(diff.z.position,2)
+            diff_pos['merlin_pos']['diff_cz'] = np.round(diff.cz.position,2)
+
+        elif det == "out":
+            diff_pos['out']['diff_x'] = np.round(diff.x.position,2)
+            diff_pos['out']['diff_y1'] = np.round(diff.y1.position,2)
+            diff_pos['out']['diff_y2'] = np.round(diff.y2.position,2)
+            diff_pos['out']['diff_z'] = np.round(diff.z.position,2)
+            diff_pos['out']['diff_cz'] = np.round(diff.cz.position,2)
+
+
+        elif det == "fip_merlin2":
+
+            diff_pos["fip_merlin2"]['bl_y'] = caget("XF:03IDC-ES{MC:10-Ax:5}Mtr.VAL")
+            diff_pos["fip_merlin2"]['bl_x'] = caget("XF:03IDC-ES{MC:10-Ax:6}Mtr.VAL")
+
+
+        elif det == "xray_eye":
+
+            diff_pos["xray_eye"]['bl_y'] = caget("XF:03IDC-ES{MC:10-Ax:5}Mtr.VAL")
+            diff_pos["xray_eye"]['bl_x'] = caget("XF:03IDC-ES{MC:10-Ax:6}Mtr.VAL")
+
+        elif det == "eiger_pos2":
+            diff_pos["eiger_pos2"]['diff_x'] = np.round(diff.x.position,2)
+            diff_pos["eiger_pos2"]['diff_y1'] = np.round(diff.y1.position,2)
+            diff_pos["eiger_pos2"]['diff_y2'] = np.round(diff.y2.position,2)
+            diff_pos["eiger_pos2"]['diff_z'] = np.round(diff.z.position,2)
+            diff_pos["eiger_pos2"]['diff_cz'] = np.round(diff.cz.position,2)
+
+
+
+        else:
+            raise KeyError ("Undefined detector name")
+
+        read_file.close()
+        ext = datetime.now().strftime('%Y-%m-%d')
+        json_path_backup = f"/data/users/backup_params/diff_pos/{ext}_diff_det_pos.json"
+
+        with open(json_path, "w") as out_file:
+            json.dump(diff_pos, out_file, indent = 6)
+
+        with open(json_path_backup, "w") as out_file:
+            json.dump(diff_pos, out_file, indent = 6)
+
+        out_file.close()
 
 
 
@@ -1767,11 +1805,11 @@ def find_45_degree(th_mtr,start_angle,end_angle,num, x_start, x_end, x_num, exp_
     w_z = np.zeros(num+1)
     th = np.zeros(num+1)
     for i in range(num+1):
-        yield from fly1d(dets_fs,x_mtr,x_start,x_end,x_num,exp_time)
+        yield from fly1dpd(dets_fast_fs,x_mtr,x_start,x_end,x_num,exp_time)
         l,r,c=square_fit(-1,elem)
         plt.close()
         w_x[i] = r-l
-        yield from fly1d(dets_fs,z_mtr,x_start,x_end,x_num,exp_time)
+        yield from fly1dpd(dets_fast_fs,z_mtr,x_start,x_end,x_num,exp_time)
         l,r,c=square_fit(-1,elem)
         plt.close()
         w_z[i] = r-l

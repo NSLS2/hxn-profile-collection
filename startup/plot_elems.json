@@ -1,11 +1,11 @@
 {
       "roi_elems": [
+            "Cr",
+            "Sr",
+            "Ca",
+            "S",
+            "Al",
             "Ta_L",
-            "Ni",
-            "Se_L",
-            "Si",
-            "Pt_M",
-            "Dy_L",
             "Ta_M",
             "Cl",
             "Au_M",
@@ -18,12 +18,12 @@
             "P"
       ],
       "live_plot_elems": [
-            "Ta_L",
-            "Ni",
-            "Se_L",
-            "Si"
+            "Cr",
+            "Sr",
+            "Ca",
+            "S"
       ],
       "line_plot_elem": [
-            "Ta_L"
+            "Cr"
       ]
 }

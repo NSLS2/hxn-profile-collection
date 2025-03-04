@@ -664,7 +664,7 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
     return fig, ax1, ax2, spectrum
 
 
-def export(sid_start, sid_end, interval=1,
+def export_diff(sid_start, sid_end, interval=1,
            export_folder='/data/users/2023Q1/Cao_2023Q1/diff_data_all',det='merlin1',
            fields_excluded=['xspress3_ch1', 'xspress3_ch2','xspress3_ch3', 'merlin1']):
 
