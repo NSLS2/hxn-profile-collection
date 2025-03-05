@@ -1110,6 +1110,11 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
 
     do_scan = True
     while do_scan:
+
+        if num1*num2>64000:
+            raise ValueError("total number of points cannot exceed 64k")
+
+
         try:
             m1_num = motor_numbers[motor1.name]
             m2_num = motor_numbers[motor2.name]
@@ -1155,13 +1160,18 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
             #     center1 = center1 + get_tomo_drift(tomo_angle)
 
 
-            range_min, range_max = -16, 16
+            range_min, range_max = -15, 15
+                
             for pos in [start1_scan, start1_scan + range1_scan, start2, start2 + range2]:
                 if pos < range_min or pos > range_max:
+
                     raise ValueError(
                         f"Scan range exceed limits for the motors: "
                         f"start1={scan_start1} end1={scan_end1} start2={scan_start2} end2={scan_end2}"
                     )
+                
+
+
             scan_input = [float(x) for x in [start1, start1+range1, num1, start2, start2+range2, num2]]
             # Metadata
             if md is None:
@@ -1247,6 +1257,15 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
                     print("Motors didn't reach starting position, moving again...")
                     sl('#%djog=%f'%(m1_num,start1_scan))
                     sl('#%djog=%f'%(m2_num,start2))
+
+                    #may avoid when scan stucks if user had a non-zero strat position or motor is stuck 
+                    #may need improvent if intial piezo positions are important  
+                    if motor2.name.startswith('zp'):
+                        yield from piezos_to_zero(zp_flag = True)
+                    elif motor2.name.startswith('ds'):
+                        yield from piezos_to_zero(zp_flag = False)
+                    else:
+                        pass
                 yield from bps.sleep(0.2)
 
             if motor2.name == 'zpssy':

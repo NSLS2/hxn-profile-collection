@@ -245,3 +245,8 @@ pssz = pmllf.pz
 pmllc = PseudoMLLCoarseSample('', name='pmllc')
 psx = pmllc.x
 psz = pmllc.z
+
+
+hz = hmll.hz
+vz = vmll.vz
+

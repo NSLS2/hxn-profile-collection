@@ -3,25 +3,27 @@
             "Cr",
             "Sr",
             "Ca",
+            "Zn",
+            "Fe",
+            "Cu",
             "S",
-            "Al",
-            "Ta_L",
-            "Ta_M",
             "Cl",
-            "Au_M",
+            "P",
             "Ar",
             "Co",
             "K",
             "Al",
-            "S",
+            "Ca",
             "Ti",
-            "P"
+            "Mn"
       ],
       "live_plot_elems": [
             "Cr",
             "Sr",
             "Ca",
-            "S"
+            "Zn",
+            "Fe",
+            "Cu"
       ],
       "line_plot_elem": [
             "Cr"

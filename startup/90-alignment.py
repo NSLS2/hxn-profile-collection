@@ -39,10 +39,79 @@ def is_close_to_reference(value, reference, rel_tol=0.05):
     
 
 def get_xrf_data(h,elem ="Cr",mon ='sclr1_ch4'):
-    pass
+
+    """returns scan positions and xrf data of 1d scans
+        useful for line fitting, erf etc."""
+    
+    sid = h.start['scan_id']
+    df2 = h.table()
+
+        
+    x_motor = h.start['motors']
+    try:
+        xdata = np.array(df2[x_motor[0]])
+    except:
+        from hxntools.scan_info import get_scan_positions
+        xdata = np.array(get_scan_positions(h))
+
+    if xdata.ndim>1:
+        raise ValueError ("not a 1d scan")
+
+    channels = [1,2,3]
+    xrf = None
+    for i in channels:
+        fluo_data = np.array(list(h.data('Det%d_'%i+elem))).squeeze()
+        if xrf is None:
+            xrf = fluo_data.copy()
+        else:
+            xrf = xrf + fluo_data
+    
+    if mon is not None:
+        mon_data = np.array(list(h.data(mon))).squeeze()
+        xrf = xrf/mon_data
+        xrf[xrf==np.nan] = np.nanmean(xrf)#patch for ic3 returns zero
+        xrf[xrf==np.inf] = np.nanmean(xrf)#patch for ic3 returns zero
+        
+    return xdata,xrf
 
 def erf_fit(sid, elem, mon='sclr1_ch4', linear_flag=True):
     h = db[sid]
+    sid = h.start['scan_id']
+    xdata, ydata = get_xrf_data(h,
+                            elem = elem,
+                            mon = mon)
+    ydata[0] = ydata[1] #patch for drop point issue
+    ydata[-1] = ydata[-2]#patch for drop point issue
+    y_min=np.min(ydata)
+    y_max=np.max(ydata)
+    ydata=(ydata-y_min)/(y_max-y_min)
+    plt.figure()
+    plt.plot(xdata,ydata,'bo')
+    y_mean = np.mean(ydata)
+    half_size = int (len(ydata)/2)
+    y_half_mean = np.mean(ydata[0:half_size])
+    edge_pos=find_edge(xdata,ydata,10)
+    if y_half_mean < y_mean:
+        if linear_flag == False:
+            popt,pcov=curve_fit(erfunc1,xdata,ydata, p0=[edge_pos,0.05,0.5])
+            fit_data=erfunc1(xdata,popt[0],popt[1],popt[2]);
+        else:
+            popt,pcov=curve_fit(erfunc3,xdata,ydata, p0=[edge_pos,0.05,0.5,0,0])
+            fit_data=erfunc3(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
+    else:
+        if linear_flag == False:
+            popt,pcov=curve_fit(erfunc2,xdata,ydata,p0=[edge_pos,0.05,0.5])
+            fit_data=erfunc2(xdata,popt[0],popt[1],popt[2]);
+        else:
+            popt,pcov=curve_fit(erfunc4,xdata,ydata,p0=[edge_pos,0.05,0.5,0,0])
+            fit_data=erfunc4(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
+    plt.plot(xdata,fit_data)
+    plt.title(f'{sid = }, edge = {popt[0] :.3f}, FWHM = {popt[1]*2354.8 :.2f} nm')
+    return (popt[0],popt[1]*2.3548*1000.0)
+
+def erf_fit_to_delete(sid, elem, mon='sclr1_ch4', linear_flag=True):
+    h = db[sid]
+    sid = h.start['scan_id']
     df2 = h.table()
     channels = [1,2,3]
     xrf = None
@@ -100,32 +169,12 @@ def get_knife_edge_data(sid,elem,z_mtr_name, mon='sclr1_ch4',linear_flag=True):
     """ returns knife edge scan data and fit along with z_motor position """
 
     h = db[sid]
-    df2 = h.table()
     bl = h.table('baseline')
     z_mtr_pos = bl[z_mtr_name].to_numpy()[0]
-
-    channels = [1,2,3]
-    xrf = None
-    for i in channels:
-        fluo_data = np.array(list(h.data('Det%d_'%i+elem))).squeeze()
-        if xrf is None:
-            xrf = fluo_data.copy()
-        else:
-            xrf = xrf + fluo_data
-    #xrf = np.array(df2['Det2_' + elem]+df2['Det1_' + elem] + df2['Det3_' + elem])
-
-    xrf[xrf==np.nan] = np.nanmean(xrf)#patch for ic3 returns zero
-    xrf[xrf==np.inf] = np.nanmean(xrf)#patch for ic3 returns zero
-
-    #threshold = np.max(xrf)/10.0
-    x_motor = h.start['motors']
-    try:
-        xdata = np.array(df2[x_motor[0]])
-    except:
-        from hxntools.scan_info import get_scan_positions
-        xdata = get_scan_positions(h)
+    xdata, ydata = get_xrf_data(h,
+                                elem = elem,
+                                mon = mon)
     
-    ydata = xrf
     ydata[0] = ydata[1] #patch for drop point issue
     ydata[-1] = ydata[-2]#patch for drop point issue
     y_min=np.min(ydata)
@@ -368,8 +417,6 @@ def find_double_edge(xdata, ydata, size):
         edge_2 = find_edge(xdata[1:index],ydata[1:index],size)
         return(edge_2,edge_1)
 
-
-
 def movr_zpz1(dz):
     yield from bps.movr(zp.zpz1, dz)
     #movr(zp.zpx, dz * 3.75)
@@ -382,210 +429,64 @@ def mov_zpz1(pos):
     dz = pos - c_zpz1
     yield from movr_zpz1(dz)
 
-'''
+def mll_z_alignment(z_motor, z_start, z_end, z_num, mot, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4',lin_flag = False):
 
-def z_focus_alignment(mot_name,z_start, z_end, z_num, mot, start, end, num, acq_time, elem='Pt_L',linFlag = True,mon='sclr1_ch4'):
-
-
-    """
-    generic plan for all z focusing, z motor shound be in microns for all (zp or mlll)
-    """
-
-    
-    
-    print(f"{mot_name.name} moves relatively and find the focus with a knife-edge at each position")
-
-    z_pos=np.linspace(z_start, z_end,z_num+1)
-    fit_size=np.zeros(z_num+1)
-    z_step = (z_end - z_start)/z_num
-    init_z = mot_name.position
-
-    # subplot_num = int(np.ceil((z_num+1)/2))
-    # fig, ax = plt.subplots(subplot_num,subplot_num)
-    # ax = ax.ravel()
-
-    if mot_name == zp.zpz1:
-        yield from movr_zpz1(z_start*0.001)
-    else:
-        yield from bps.movr(mot_name,z_start)
-
-
-    for i in tqdm.tqdm(range(z_num + 1)):
-
-        yield from fly1dpd(dets_fs, mot, start, end, num, acq_time)
-        edge_pos,fwhm=erf_fit(-1,elem,mon,linear_flag=linFlag)
-        # sid = int(caget("XF:03IDC-ES{Status}ScanID-I"))
-        # edge_pos,fwhm,x_data,y_data,y_fit,z_pos = get_knife_edge_data(sid,elem,mon='sclr1_ch4',linear_flag=True)
-        # edge_pos, fwhm = 1,0.5
-        # x_data =np.random.rand(num)
-        # y_data = np.random.rand(num)
-        # y_fit = np.random.rand(num)
-
-        fit_size[i]= fwhm
-        #z_pos[i]=mot_name.position
-
-        p1 = ax[i].plot(x_data,y_data,'bo')
-        p2 = ax[i].plot(x_data,y_fit,'r')
-        ax[i].title.set_text(f"{sid = }, {mot_name.name} = {mot_name.position :.3f}, {fwhm = :.1f}")
-        plt.show()
-
-        if mot_name == zp.zpz1:
-            #print(f"{z_step = }")
-            yield from movr_zpz1(z_step*0.001)
-        else:
-            yield from bps.movr(mot_name,z_step)
-
-        if abs(edge_pos)<14:
-            yield from bps.mov(mot, edge_pos)
-
-    if mot_name == zp.zpz1:
-        yield from mov_zpz1(init_z)
-    else:
-        yield from bps.mov(mot_name,init_z)
-
-    figure_with_insert_fig_button()
-    plt.title("Z Focus Scan")
-    plt.plot(np.array(z_pos),np.array(fit_size),'bo')
-    plt.xlabel(mot_name.name+" (um)")
-    plt.show()
-    return
-    
-
-
-def zp_z_alignment(z_start, z_end, z_num, mot, start, end, num, 
-                   acq_time, elem='Cr',linFlag = True,mon='sclr1_ch4'):
-
-    if abs(z_start)<1 or abs(z_end)<1:
-        z_start =*1000
-        z_end =*1000
-
-    else:
-
-        yield from z_focus_alignment(zp.zpz1,
-                                    z_start,
-                                    z_end,
-                                    z_num,
-                                    mot,
-                                    start,
-                                    end,
-                                    num,
-                                    acq_time,
-                                    elem=elem,
-                                    linFlag = linFlag,
-                                    mon=mon)
-
-def mll_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, 
-                    linFlag = True,elem='Pt_L',mon='sclr1_ch4'):
-
-    yield from z_focus_alignment(smlld.sbz,
-                            z_start,
-                            z_end,
-                            z_num,
-                            mot,
-                            start,
-                            end,
-                            num,
-                            acq_time,
-                            elem=elem,
-                            linFlag = linFlag,
-                            mon=mon)
-
-
-def hmll_z_alignment(z_start, z_end, z_num, start, end, num, acq_time, linFlag = True, elem='Pt_L',mon='sclr1_ch4'):
-
-    yield from z_focus_alignment(hmll.hz,
-                            z_start,
-                            z_end,
-                            z_num,
-                            dssx,
-                            start,
-                            end,
-                            num,
-                            acq_time,
-                            elem=elem,
-                            linFlag = linFlag,
-                            mon=mon)
-
-def mll_vchi_alignment(vchi_start, vchi_end, vchi_num, mot, start, end, num, acq_time, linFlag = True, elem='Pt_L',mon='sclr1_ch4'):
-
-    yield from z_focus_alignment(vmll.vchi,
-                        vchi_start,
-                        vchi_end,
-                        vchi_num,
-                        mot,
-                        start,
-                        end,
-                        num,
-                        acq_time,
-                        elem=elem,
-                        linFlag = linFlag,
-                        mon=mon)
-
-
-
-def vmll_z_alignment(z_start, z_end, z_num, start, end, num, acq_time, linFlag = True, elem='Pt_L',mon='sclr1_ch4'):
-
-    yield from z_focus_alignment(vmll.vz,
-                        z_start,
-                        z_end,
-                        z_num,
-                        dssy,
-                        start,
-                        end,
-                        num,
-                        acq_time,
-                        elem=elem,
-                        linFlag = linFlag,
-                        mon=mon)
-
-
-
-'''
-
-def mll_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4'):
-
-    """usage: <mll_z_alignment(-20,20,10,dssy,-0.5,0.5,100,0.05)"""
+    """usage: <mll_z_alignment(sbz,-20,20,10,dssy,-0.5,0.5,100,0.05)"""
 
     z_pos=np.zeros(z_num+1)
     fit_size=np.zeros(z_num+1)
     z_step = (z_end - z_start)/z_num
-    init_sz = smlld.sbz.position
-    yield from bps.movr(smlld.sbz, z_start)
+    init_sz = z_motor.position
+    mot_init = mot.position
+    yield from bps.movr(z_motor, z_start)
     for i in range(z_num + 1):
 
-        yield from fly1dpd(dets_fs, mot, start, end, num, acq_time)
+        yield from fly1dpd(dets_fast_fs, mot, start, end, num, acq_time)
 
-        edge_pos,fwhm=erf_fit(-1,elem,mon,linear_flag=False)
+        edge_pos,fwhm=erf_fit(-1,elem,mon,linear_flag=lin_flag)
         fit_size[i]= fwhm
-        z_pos[i]=smlld.sbz.position
+        z_pos[i]=z_motor.position
         if abs(edge_pos)<12:
             yield from bps.mov(mot, edge_pos)
-        yield from bps.movr(smlld.sbz, z_step)
-    yield from bps.mov(smlld.sbz, init_sz)
+        yield from bps.movr(z_motor, z_step)
+    yield from bps.mov(z_motor, init_sz)
+    yield from bps.mov(mot, mot_init)
     plt.figure()
     plt.plot(z_pos,fit_size,'bo')
-    plt.xlabel('sbz')
+    plt.xlabel(z_motor.name)
+
 
 def hmll_z_alignment(z_start, z_end, z_num, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4'):
 
     """ usage:hmll_z_alignment(-10, 10, 10, -0.5, 0.5, 100, 0.05) """
 
-    z_pos=np.zeros(z_num+1)
-    fit_size=np.zeros(z_num+1)
-    z_step = (z_end - z_start)/z_num
-    init_hz = hmll.hz.position
-    yield from bps.movr(hmll.hz, z_start)
-    for i in range(z_num + 1):
-        yield from fly1dpd(dets_fs,dssx, start, end, num, acq_time)
-        edge_pos,fwhm=erf_fit(-1,elem,mon)
-        fit_size[i]=fwhm
-        z_pos[i]=hmll.hz.position
-        yield from bps.mov(dssx, edge_pos)
-        yield from bps.movr(hmll.hz, z_step)
-    yield from bps.mov(hmll.hz, init_hz)
-    plt.figure()
-    plt.plot(z_pos,fit_size,'bo')
-    plt.xlabel('hz')
+    yield from mll_z_alignment(hz, 
+                               z_start, 
+                               z_end, 
+                               z_num, 
+                               dssx, 
+                               start, 
+                               end, 
+                               num, 
+                               acq_time, 
+                               elem=elem,
+                               mon='mon')
+    
+
+def vmll_z_alignment(z_start, z_end, z_num, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4'):
+    """ usage:vmll_z_alignment(-10, 10, 10, -0.5, 0.5, 100, 0.05) """
+    
+    yield from mll_z_alignment(vz, 
+                               z_start, 
+                               z_end, 
+                               z_num, 
+                               dssy, 
+                               start, 
+                               end, 
+                               num, 
+                               acq_time, 
+                               elem=elem,
+                               mon='mon')
 
 def mll_vchi_alignment(vchi_start, vchi_end, vchi_num, mot, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4'):
     vchi_pos = np.zeros(vchi_num+1)
@@ -594,7 +495,7 @@ def mll_vchi_alignment(vchi_start, vchi_end, vchi_num, mot, start, end, num, acq
     init_vchi = vmll.vchi.position
     yield from bps.movr(vmll.vchi, vchi_start)
     for i in range(vchi_num + 1):
-        yield from fly1dpd(dets_fs, mot, start, end, num, acq_time,dead_time=0.002)
+        yield from fly1dpd(dets_fast_fs, mot, start, end, num, acq_time,dead_time=0.002)
         edge_pos,fwhm=erf_fit(-1,elem,mon)
         fit_size[i]=fwhm
         vchi_pos[i]=vmll.vchi.position
@@ -611,27 +512,7 @@ def mll_vchi_alignment(vchi_start, vchi_end, vchi_num, mot, start, end, num, acq
     ax.set_yticks(fit_size)
     plt.show()
 
-def vmll_z_alignment(z_start, z_end, z_num, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4'):
-    z_pos=np.zeros(z_num+1)
-    fit_size=np.zeros(z_num+1)
-    z_step = (z_end - z_start)/z_num
-    init_vz = vmll.vz.position
-    yield from bps.movr(vmll.vz, z_start)
-    for i in range(z_num + 1):
-        yield from fly1dpd(dets_fs,dssy, start, end, num, acq_time)
-        edge_pos,fwhm=erf_fit(-1,elem,mon)
-        #plt.title('vz={}'.format(vmll.vz.position),loc='right')
-        fit_size[i]=fwhm
-        z_pos[i]=vmll.vz.position
-        yield from bps.movr(vmll.vz, z_step)
-    yield from bps.mov(vmll.vz, init_vz)
 
-    fig, ax = plt.subplots()
-    ax.plot(z_pos,fit_size,'bo')
-    ax.set_xlabel('vz')
-    ax.set_xticks(z_pos)
-    ax.set_yticks(fit_size)
-    plt.show()
 
 
 def zp_z_alignment(z_start, z_end, z_num, mot, start, end, num, acq_time, 
@@ -678,7 +559,7 @@ def zp_z_alignment2(z_start, z_end, z_num, mot, start, end, num, acq_time,
         
     for pos in z_pos:
         yield from mov_zpz1(pos)
-        yield from fly1dpd(dets_fs, mot, start, end, num, acq_time)
+        yield from fly1dpd(dets_fast_fs, mot, start, end, num, acq_time)
         edge_pos,fwhm=erf_fit(-1,elem,mon,linear_flag=linFlag)
         yield from bps.sleep(1)
         fit_size[i]= fwhm
@@ -970,7 +851,7 @@ def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt
             #yield from fly2dpd(dets1,dssz,start,end,num, dssy, -2,2,20,acq_time)
             #cx,cy = return_center_of_mass(-1,elem,0.3)
             #y[i] = cx*np.sin(x[i]*np.pi/180.0)
-            yield from fly1dpd(dets_fs,dssz,start,end,num,acq_time)
+            yield from fly1dpd(dets_fast_fs,dssz,start,end,num,acq_time)
             #plot(-1, elem)
             #plt.close()
             cen = return_line_center(-1, elem=elem,threshold = 0.6)
@@ -983,7 +864,7 @@ def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt
             #yield from fly2dpd(dets1,dssx,start,end,num, dssy, -2,2,20,acq_time)
             #cx,cy = return_center_of_mass(-1,elem,0.3)
             #y[i] = cx*np.cos(x[i]*np.pi/180.0)
-            yield from fly1dpd(dets_fs,dssx,start,end,num,acq_time)
+            yield from fly1dpd(dets_fast_fs,dssx,start,end,num,acq_time)
             cen = return_line_center(-1,elem=elem,threshold = 0.6)
             #plot(-1, elem)
             #plt.close()
