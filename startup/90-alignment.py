@@ -11,6 +11,7 @@ import pandas as pd
 
 from scipy.optimize import curve_fit
 from epics import caget, caput
+from PyQt5 import  QtTest
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
@@ -1182,60 +1183,6 @@ def scan_info(sid):
     return(si)
 
 
-
-def engage_mirror_feedback():
-
-    """
-    synchronizes necessary mirror motor positions and reengage the feedbacks
-    TODO conditions for enganging and error handling
-
-    """
-
-    caput("XF:03IDC-CT{FbPid:01}PID:on",0)
-    caput("XF:03IDC-CT{FbPid:02}PID:on",0)
-
-    yield from bps.mov(m1.p,m1.p.position)
-    print("HCM Pitch ; Done!")
-    yield from bps.mov(m2.p,m2.p.position)
-    print("HFM Pitch ; Done!")
-    yield from bps.mov(dcm.p,dcm.p.position)
-    print("DCM Pitch ; Done!")
-    yield from bps.mov(dcm.r,dcm.r.position)
-    print("DCM Roll ; Done!")
-
-    print("Engaging feedbacks....")
-
-    m1_p = m1.p.position
-    m2_p = m2.p.position
-
-    yield from bps.mov(m2.pf, 10)
-    #yield from bps.mov(m1.pf, 10)
-    caput("XF:03IDA-OP{HCM:1-Ax:PF}Mtr.VAL",10) #m1_pf
-    yield from bps.mov(m1.p,m1_p)
-    yield from bps.sleep(3)
-    yield from bps.mov(m2.p,m2_p)
-    yield from bps.sleep(3)
-
-    caput("XF:03IDC-CT{FbPid:01}PID.I",0) #PID I value to zero
-    caput("XF:03IDC-CT{FbPid:02}PID.I",0) #PID I value to zero
-
-    caput("XF:03IDC-CT{FbPid:01}PID:on",1)
-    caput("XF:03IDC-CT{FbPid:02}PID:on",1)
-
-    print("Feedbacks Engaged....")
-
-
-
-
-    #ensure fluorescence detecor is out; otherwise move it out
-
-    #if fdet1.x.position > -30:
-    #    yield from bps.mov(fdet1.x, -107)
-
-    #yield from
-
-
-
 def save_cam06_images(filename = "crl"):
 
     pv_filename = epics.PV("XF:03IDC-ES{CAM:06}TIFF1:FileName")
@@ -1904,7 +1851,7 @@ def mll_sample_out(move_lens_upstream = True):
 
 
     if move_lens_upstream:
-        yield from mlls_to_upstream()
+        yield from mll_to_upstream()
 
 def mll_sample_in(move_sbz = False, move_lens_downstream = True):
 
@@ -1923,10 +1870,10 @@ def mll_sample_in(move_sbz = False, move_lens_downstream = True):
 
 
         if move_lens_downstream:
-            yield from mlls_to_downstream()
+            yield from mll_to_downstream()
 
 
-def mlls_to_upstream():
+def mll_to_upstream():
 
     """
     vmll vz -10000 and confirm movement
@@ -1954,9 +1901,40 @@ def mlls_to_upstream():
         raise ValueError("HMLL motion failed try manually hz=-5000")
     else:
         return
+    
+def mll_to_upstream_no_re():
+
+    """
+    vmll vz -10000 and confirm movement
+    hmll hz -8000 and confirm movement
+
+    """
+
+    if abs(vz.position)<100:
+        print("vmll.vz moving to -10000")
+        vz.move(vz.position-10000)
+        QtTest.QTest.qWait(5000)
+    else:
+        raise ValueError("VZ is maybe already in out position")
+        #print("VZ<-2000 um; VZ is maybe already in out position; trying to move hz")
+
+    if abs(vz.position)>9900 and abs(hz.position)<100:
+        print("hmll.hz moving to -8000")
+        hz.move(hz.position-8000)
+        QtTest.QTest.qWait(5000)
+
+    else:
+        raise ValueError("VMLL is not out or HZ is not close to zero, try manual controls")
+
+    if abs(hz.position)<7900:
+        print("HMLL motion failed try manually hz=-5000")
+        raise ValueError("HMLL motion failed try manually hz=-5000")
+    else:
+        return
 
 
-def mlls_to_downstream():
+
+def mll_to_downstream():
 
     if abs(hmll.hz.position)>7980 and not mllosa.osaz.position>100:
         print("hmll.hz moving to 0")
@@ -1968,6 +1946,25 @@ def mlls_to_downstream():
     if abs(vmll.vz.position)>9990 and abs(hmll.hz.position)<10:
         print("vmll.vz moving to -0")
         yield from bps.movr(vmll.vz, 10000)
+    else:
+        raise ValueError("VMLL motion failed bacasue hz is not home; try manually vz=0 if hz~0")
+    
+
+def mll_to_downstream_no_re():
+
+    if abs(hz.position)>7980 and not mllosa.osaz.position>100:
+        print("hmll.hz moving to 0")
+        hz.move(hz.position+8000)
+        QtTest.QTest.qWait(5000)
+
+    else:
+        raise ValueError("HMLL motion failed bacasue hz is not OUT or OSA Z is not close to zero; try manually vz=0 if hz~0")
+
+    if abs(vz.position)>9990 and abs(hz.position)<10:
+        print("vmll.vz moving to -0")
+        vz.move(vz.position+10000)
+        QtTest.QTest.qWait(5000)
+        
     else:
         raise ValueError("VMLL motion failed bacasue hz is not home; try manually vz=0 if hz~0")
 

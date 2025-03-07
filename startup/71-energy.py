@@ -230,20 +230,10 @@ class HXNEnergy():
                     logger.info(f"Moving {hfm_p_target = :4f}")
                     yield from bps.mov(m2.p, hfm_p_target)
 
-                    #change merlin energy
-                    caput("XF:03IDC-ES{Merlin:1}cam1:Acquire",0)
-                    caput("XF:03IDC-ES{Merlin:1}cam1:OperatingEnergy", targetE)
-                    
-                    #change merlin energy
-                    caput("XF:03IDC-ES{Merlin:2}cam1:Acquire",0)
-                    caput("XF:03IDC-ES{Merlin:2}cam1:OperatingEnergy", targetE)
 
-                    #change eiger energy
-                    caput("XF:03IDC-ES{Det:Eiger1M}cam1:Acquire",0)
-                    caput("XF:03IDC-ES{Det:Eiger1M}cam1:PhotonEnergy", targetE*1000)
 
                     
-                
+            change_dets_energy(targetE)
 
             if not moveMirror == "ignore":
                 yield from self.moveMirror(targetE, moveMirror)
@@ -701,7 +691,7 @@ def peak_ugap():
 
 
 def move_energy_with_sid(sid, move_zpz1 =False):
-        #disable
+        #disable feedbacks
         caput("XF:03ID{XBPM:17}AutoFbEn-Cmd", 0)
         caput("XF:03ID-BI{EM:BPM1}fast_pidX.FBON",0)
         caput("XF:03ID-BI{EM:BPM1}fast_pidY.FBON",0)
@@ -739,13 +729,74 @@ def move_energy_with_sid(sid, move_zpz1 =False):
             yield from mov_zpz1(target_zpz1)
 
         yield from  find_beam_at_ssa2()
+
+        if sclr1_ch2.get()>100000:
+            yield from peak_ugap()
+
         yield from engage_mirror_feedback()
-
-
+        #yield from recover_from_beamdump(peak_after = False)
+        change_dets_energy(taget_e)
         print(f"energy set to {taget_e :.3f}")
 
+        if sclr1_ch2.get()<100000:
+            raise RuntimeError("Energy change seems to be failed; try manual alignment")
 
 
+
+
+def engage_mirror_feedback():
+
+    """
+    synchronizes necessary mirror motor positions and reengage the feedbacks
+    TODO conditions for enganging and error handling
+
+    """
+
+    caput("XF:03IDC-CT{FbPid:01}PID:on",0)
+    caput("XF:03IDC-CT{FbPid:02}PID:on",0)
+
+    yield from bps.mov(m2.p,m2.p.position)
+    print("HFM Pitch ; Done!")
+    yield from bps.mov(dcm.p,dcm.p.position)
+    print("DCM Pitch ; Done!")
+    yield from bps.mov(dcm.r,dcm.r.position)
+    print("DCM Roll ; Done!")
+
+    print("Engaging feedbacks....")
+
+    m1_p = m1.p.position
+    m2_p = m2.p.position
+
+    yield from bps.mov(m2.pf, 10)
+    #yield from bps.mov(m1.pf, 10)
+    caput("XF:03IDA-OP{HCM:1-Ax:PF}Mtr.VAL",10) #m1_pf
+    yield from bps.sleep(5)
+    
+    yield from bps.mov(m1.p,m1_p)
+    yield from bps.mov(m2.p,m2_p)
+    yield from bps.sleep(10)
+
+    caput("XF:03IDC-CT{FbPid:01}PID.I",0) #PID I value to zero
+    caput("XF:03IDC-CT{FbPid:02}PID.I",0) #PID I value to zero
+
+    caput("XF:03IDC-CT{FbPid:01}PID:on",1)
+    caput("XF:03IDC-CT{FbPid:02}PID:on",1)
+
+    print("Feedbacks Engaged....")
+
+
+def change_dets_energy(targetE):
+    #change merlin energy
+    caput("XF:03IDC-ES{Merlin:1}cam1:Acquire",0)
+    caput("XF:03IDC-ES{Merlin:1}cam1:OperatingEnergy", targetE)
+    
+    #change merlin energy
+    caput("XF:03IDC-ES{Merlin:2}cam1:Acquire",0)
+    caput("XF:03IDC-ES{Merlin:2}cam1:OperatingEnergy", targetE)
+
+    #change eiger energy
+    caput("XF:03IDC-ES{Det:Eiger1M}cam1:Acquire",0)
+    caput("XF:03IDC-ES{Det:Eiger1M}cam1:PhotonEnergy", targetE*1000)
 
 Energy = HXNEnergy(ugap,e,dcm.p, "ic3", wd+"ugap_calib.csv")
 
