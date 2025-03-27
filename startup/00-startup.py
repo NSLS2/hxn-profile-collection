@@ -548,7 +548,7 @@ def set_and_wait_again(signal, val, **kwargs):
 # Ivan: try a longer timeout for debugging
 #set_and_wait_again.timeout = 300
 set_and_wait_again.timeout = 1200
-ophyd.device.set_and_wait = set_and_wait_again
+# ophyd.device.set_and_wait = set_and_wait_again
 # -END HACK-
 
 
