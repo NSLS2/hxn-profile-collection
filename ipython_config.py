@@ -295,7 +295,7 @@ c.TerminalInteractiveShell.autocall = 0
 # c.TerminalInteractiveShell.deep_reload = False
 
 # Start logging to the given file in append mode.
-c.TerminalInteractiveShell.logappend = '/home/xf03id/logs/ophyd_user_log_xf03id.log'
+# c.TerminalInteractiveShell.logappend = '/home/xf03id/logs/ophyd_user_log_xf03id.log'
 
 #
 # c.TerminalInteractiveShell.xmode = 'Context'
