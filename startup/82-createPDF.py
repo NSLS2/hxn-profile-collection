@@ -17,8 +17,9 @@ import numpy as np
 from PyPDF2 import PdfFileMerger, PdfFileReader
 
 global PDF_FILE
+wd = "/data/users/startup_parameters/"
 #PDF_FILE = '/GPFS/XF03ID1/home/xf03id/startup/eLog_info.obj'
-PDF_FILE = "/nsls2/data/hxn/shared/config/bluesky/profile_collection/startup/eLog_info.obj"
+PDF_FILE = wd+"eLog_info.obj"
 
 global DPI
 DPI=300
@@ -44,7 +45,7 @@ if os.path.isfile(PDF_FILE):
     G_INFO = pickle.load(infoFile)
 
 global PDF_C
-PDF_C = Canvas('tmp_fig.pdf',pagesize=letter)
+PDF_C = Canvas(wd+'tmp_fig.pdf',pagesize=letter)
 
 
 #matplotlib.use('Agg')
@@ -93,9 +94,9 @@ class FigPage:
         styleN = styles['Normal']
         styleN.alignment = TA_CENTER
         #imgdata = cStringIO.StringIO()
-        self.fig.savefig('tmp_img.png',dpi=DPI,format='png')
+        self.fig.savefig(wd+'tmp_img.png',dpi=DPI,format='png')
         #imgdata.seek(0)  # rewind the data
-        image = Image('tmp_img.png',3.5*inch,2.75*inch)
+        image = Image(wd+'tmp_img.png',3.5*inch,2.75*inch)
         story = []
         story.append(Paragraph(self.fig_info.title,styleN))
         story.append(image)
@@ -261,10 +262,10 @@ def setup_pdf():
 def insertTitle():
     global G_INFO
     if os.path.isfile(G_INFO.fname):
-        c = Canvas('tmp_title.pdf',pagesize=letter)
+        c = Canvas(wd+'tmp_title.pdf',pagesize=letter)
         tp = TitlePage(G_INFO,c)
         tp.create()
-        pdf_append(G_INFO.fname,'tmp_title.pdf')
+        pdf_append(G_INFO.fname,wd+'tmp_title.pdf')
     else:
         c = Canvas(G_INFO.fname,pagesize=letter)
         tp = TitlePage(G_INFO,c)
@@ -286,12 +287,12 @@ def insertFig(note='',title ='', *, fig=None):
         PDF_C.save()
         PDF_CTS = 1
         if os.path.isfile(G_INFO.fname):
-            pdf_append(G_INFO.fname,'tmp_fig.pdf')
+            pdf_append(G_INFO.fname,wd+'tmp_fig.pdf')
         else:
-            os.rename('tmp_fig.pdf',G_INFO.fname)
+            os.rename(wd+'tmp_fig.pdf',G_INFO.fname)
     elif PDF_CTS == 1:
         #print(PDF_CTS)
-        PDF_C = Canvas('tmp_fig.pdf',pagesize=letter)
+        PDF_C = Canvas(wd+'tmp_fig.pdf',pagesize=letter)
         fp = FigPage(PDF_C,fig,fi,PDF_CTS)
         fp.create()
         PDF_CTS = PDF_CTS + 1
@@ -313,12 +314,12 @@ def insertPic(picFile,note='',title =''):
         PDF_C.save()
         PDF_CTS = 1
         if os.path.isfile(G_INFO.fname):
-            pdf_append(G_INFO.fname,'tmp_fig.pdf')
+            pdf_append(G_INFO.fname,wd+'tmp_fig.pdf')
         else:
-            os.rename('tmp_fig.pdf',G_INFO.fname)
+            os.rename(wd+'tmp_fig.pdf',G_INFO.fname)
     elif PDF_CTS == 1:
         #print(PDF_CTS)
-        PDF_C = Canvas('tmp_fig.pdf',pagesize=letter)
+        PDF_C = Canvas(wd+'tmp_fig.pdf',pagesize=letter)
         fp = PicPage(PDF_C,picFile,fi,PDF_CTS)
         fp.create()
         PDF_CTS = PDF_CTS + 1
@@ -340,12 +341,12 @@ def insertNote():
         PDF_C.save()
         PDF_CTS = 1
         if os.path.isfile(G_INFO.fname):
-            pdf_append(G_INFO.fname,'tmp_fig.pdf')
+            pdf_append(G_INFO.fname,wd+'tmp_fig.pdf')
         else:
-            os.rename('tmp_fig.pdf',G_INFO.fname)
+            os.rename(wd+'tmp_fig.pdf',G_INFO.fname)
     elif PDF_CTS == 1:
         #print(PDF_CTS)
-        PDF_C = Canvas('tmp_fig.pdf',pagesize=letter)
+        PDF_C = Canvas(wd+'tmp_fig.pdf',pagesize=letter)
         fp = NotePage(PDF_C,note,PDF_CTS)
         fp.create()
         PDF_CTS = PDF_CTS + 1
@@ -374,9 +375,9 @@ def save_page():
         PDF_C.save()
         PDF_CTS = 1
         if os.path.isfile(G_INFO.fname):
-            pdf_append(G_INFO.fname,'tmp_fig.pdf')
+            pdf_append(G_INFO.fname,wd+'tmp_fig.pdf')
         else:
-            os.rename('tmp_fig.pdf',G_INFO.fname)
+            os.rename(wd+'tmp_fig.pdf',G_INFO.fname)
         print('Page has been saved.')
     else:
         print('Page has been saved.')

@@ -1,27 +1,34 @@
+if not 'use_rasmi' in locals() or not use_rasmi \
+    or True: # Merlin not used
+    # print(f"RASMI Merlin not used, skipping {__file__!r} ...")
+    import sys
+    sys.exit()
+
 print(f"Loading {__file__!r} ...")
 
+import copy
 import datetime
+from enum import Enum
 import itertools
 import sys
 import numpy as np
 from pathlib import PurePath
 import traceback
-from collections import OrderedDict
-from ophyd.areadetector.base import ADComponent
 
 from ophyd import Signal
 from ophyd import Component as Cpt
 
+from ophyd.areadetector.base import ADComponent
 from ophyd.areadetector import (AreaDetector, PixiradDetectorCam, ImagePlugin,
                                 TIFFPlugin, StatsPlugin, HDF5Plugin,
                                 ProcessPlugin, ROIPlugin, TransformPlugin,
                                 OverlayPlugin)
-from ophyd.areadetector.plugins import PluginBase
+from ophyd.areadetector.plugins import PluginBase, HDF5Plugin_V33, TimeSeriesPlugin_V33
+
 from ophyd.areadetector.cam import AreaDetectorCam
 from ophyd.device import BlueskyInterface
 from ophyd.utils.epics_pvs import set_and_wait
-from ophyd.areadetector.trigger_mixins import SingleTrigger, ADTriggerStatus
-from ophyd.areadetector.plugins import PluginBase, HDF5Plugin_V33, TimeSeriesPlugin_V33
+from ophyd.areadetector.trigger_mixins import SingleTrigger
 from ophyd.areadetector.filestore_mixins import (FileStoreIterativeWrite,
                                                  FileStoreHDF5IterativeWrite,
                                                  FileStoreTIFFSquashing,
@@ -43,24 +50,38 @@ try:
 except ImportError:
     from databroker.assets.handlers import Xspress3HDF5Handler, HandlerBase
 
+
+class BulkXspress(HandlerBase):
+    HANDLER_NAME = "XPS3_FLY"
+    def __init__(self, resource_fn):
+        self._handle = h5py.File(resource_fn, "r")
+
+    def __call__(self):
+        return self._handle["entry/instrument/detector/data"][:]
+
+
+class BulkMerlin(HandlerBase):
+    HANDLER_NAME = 'MERLIN_FLY_STREAM_V2'
+
+    def __init__(self, resource_fn, *, frame_per_point):
+        self._frame_per_point = frame_per_point
+        self._handle = h5py.File(resource_fn, "r", libver='latest', swmr=True)
+
+    def __call__(self, point_number):
+        n_first = point_number * self._frame_per_point
+        n_last = n_first + self._frame_per_point
+        ds = self._handle['entry/instrument/detector/data']
+        ds.id.refresh()
+        return ds[n_first:n_last, :, :]
+
+
+db.reg.register_handler(BulkMerlin.HANDLER_NAME, BulkMerlin,  overwrite=True)
+
 class SRXMode(Enum):
     step = 1
     fly = 2
-class TimeSeriesPluginHXN(TimeSeriesPlugin_V33):
-    ts_read_scan = ADComponent(EpicsSignal, "TSRead.SCAN")
-    ts_read_proc = ADComponent(EpicsSignal, "TSRead.PROC")
 
-class StatsPluginHXN(StatsPlugin):
-    ts = ADComponent(TimeSeriesPluginHXN, "TS:")
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.stage_sigs[self.queue_size] = 2000
-        self.stage_sigs[self.ts.queue_size] = 2000
-        self.stage_sigs[self.ts.ts_acquire_mode] = "Fixed length"
-
-class EigerFileStoreHDF5(FileStoreBase):
+class MerlinFileStoreHDF5(FileStoreBase):
 
     _spec = 'TPX_HDF5'
 
@@ -71,13 +92,12 @@ class EigerFileStoreHDF5(FileStoreBase):
                                 ('array_counter', 0),
                                 ('auto_save', 'Yes'),
                                 ('num_capture', 0),  # will be updated later
-                                (self.file_write_mode, 'Stream'),
                                 (self.file_template, '%s%s_%6.6d.h5'),
-                                (self.compression, 'szip'),
+                                (self.file_write_mode, 'Stream'),
+                                (self.compression, 'zlib'),
                                 (self.capture, 1),
-                                (self.queue_size, 10000),  # Make the queue large enough
+                                (self.queue_size, 2000),  # Make the queue large enough
                                 ])
-        self.reg_root = '/'
 
         self._point_counter = None
         self.frame_per_point = None
@@ -89,8 +109,8 @@ class EigerFileStoreHDF5(FileStoreBase):
     def make_filename(self):
         filename = new_short_uid()
         formatter = datetime.now().strftime
-        write_path = formatter(os.path.realpath(self.write_path_template)) + '/'
-        read_path = formatter(os.path.realpath(self.read_path_template)) + '/'
+        write_path = formatter(self.write_path_template)
+        read_path = formatter(self.read_path_template)
 
         fn, read_path, write_path = filename, read_path, write_path
         return fn, read_path, write_path
@@ -98,7 +118,7 @@ class EigerFileStoreHDF5(FileStoreBase):
     @property
     def filestore_spec(self):
         if self.parent._mode == SRXMode.fly:
-            return 'MERLIN_FLY_STREAM_V2'
+            return BulkMerlin.HANDLER_NAME
         return 'TPX_HDF5'
 
     def generate_datum(self, key, timestamp, datum_kwargs):
@@ -116,6 +136,9 @@ class EigerFileStoreHDF5(FileStoreBase):
     def stage(self):
         # Make a filename.
         filename, read_path, write_path = self.make_filename()
+
+        if self.frame_per_point:
+            self.stage_sigs[self.num_frames_flush] = self.frame_per_point
 
         # Ensure we do not have an old file open.
         # set_and_wait(self.capture, 0)
@@ -165,7 +188,7 @@ class EigerFileStoreHDF5(FileStoreBase):
         super().resume()
 
 
-class HDF5PluginWithFileStoreEiger(HDF5Plugin_V33, EigerFileStoreHDF5):
+class HDF5PluginWithFileStoreMerlin(HDF5Plugin_V33, MerlinFileStoreHDF5):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -175,7 +198,9 @@ class HDF5PluginWithFileStoreEiger(HDF5Plugin_V33, EigerFileStoreHDF5):
         self.stage_sigs.move_to_end(self.num_frames_flush, last=False)
         self.stage_sigs.move_to_end(self.swmr_mode, last=False)
 
+
     def stage(self):
+
         if np.array(self.array_size.get()).sum() == 0:
             raise Exception("you must warmup the hdf plugin via the `warmup()` "
                             "method on the hdf5 plugin.")
@@ -188,131 +213,74 @@ class HDF5PluginWithFileStoreEiger(HDF5Plugin_V33, EigerFileStoreHDF5):
     def describe(self):
         desc = super().describe()
 
-        # Replace the shape for 'eiger_mobile_image'. Height and width should be acquired directly
+        # Replace the shape for 'merlin2_image'. Height and width should be acquired directly
         # from HDF5 plugin, since the size of the image could be restricted by ROI.
-        # Number of images is returned as 1, so replace it with the number of triggers (for flyscan).
         for k, v in desc.items():
-            if k.endswith("_image") and ("shape" in v):
+            if k.endswith("_image") and ("shape" in v) and (len(v["shape"]) >= 2):
                 height = self.height.get()
                 width = self.width.get()
-                # Generated shape is valid for flyscan using 'External Enable' triggering mode
-                num_triggers = self.parent.cam.num_triggers.get()
                 orig_shape = v["shape"]
-                v["shape"] = (num_triggers, height, width)
+                v["shape"] = orig_shape[:-2] + (height, width)
                 print(f"Descriptor: shape of {k!r} was updated. The shape {orig_shape} was replaced by {v['shape']}")
 
         return desc
 
-    def warmup(self, acquire_time=1):
-        """
-        A convenience method for 'priming' the plugin.
 
-        The plugin has to 'see' one acquisition before it is ready to capture.
-        This sets the array size, etc.
-
-        Parameters
-        ----------
-        acquire_time: float
-            Exposure time for warmup, s
-        """
-        self.enable.set(1).wait()
-        sigs = OrderedDict(
-            [
-                # (self.file_write_mode, "Capture"),
-                # (self.file_write_mode, "Single"),
-                (self.parent.roi1.enable, 1),
-                (self.parent.cam.array_callbacks, 1),
-                (self.parent.cam.image_mode, "Single"),
-                (self.parent.cam.trigger_mode, "Internal Series"),
-                (self.parent.cam.manual_trigger, "Disable"),
-                (self.parent.cam.num_triggers, 1),
-                (self.parent.cam.acquire_period, acquire_time),  # Adjusted once acquire_time is set
-                (self.parent.cam.acquire_time, acquire_time),
-                (self.parent.cam.acquire, 1),
-            ]
-        )
-
-        original_vals = {sig: sig.get() for sig in sigs}
-
-       # for sig, val in sigs.items():
-       #     ttime.sleep(0.1)  # abundance of caution
-       #     sig.set(val).wait()
-
-       # ttime.sleep(acquire_time + 1)  # wait for acquisition
-
-       # for sig, val in reversed(list(original_vals.items())):
-       #     ttime.sleep(0.1)
-       #     sig.set(val).wait()
+class MerlinDetectorCam(AreaDetectorCam, CamV33Mixin):
+    pass
 
 
-
-class EigerDetectorCam(AreaDetectorCam, CamV33Mixin):
-    manual_trigger = ADComponent(EpicsSignalWithRBV, "ManualTrigger")  # 'Enable'/'Disable'
-    num_triggers = ADComponent(EpicsSignalWithRBV, 'NumTriggers')
-    stream_enable = ADComponent(EpicsSignalWithRBV, 'StreamEnable')
-    stream_decompress = ADComponent(EpicsSignalWithRBV, "StreamDecompress")
-    data_source = ADComponent(EpicsSignalWithRBV, 'DataSource')
-    fw_enable = ADComponent(EpicsSignalWithRBV, 'FWEnable')
-    detector_state = ADComponent(EpicsSignalRO, "DetectorState_RBV")
-    ROI_mode = ADComponent(EpicsSignal, "ROIMode")
-    Flatfield_corr = ADComponent(EpicsSignal, "FlatfieldApplied")
-    FW_compress = ADComponent(EpicsSignal, "FWCompression")
-    Compress_alg = ADComponent(EpicsSignal, "CompressionAlgo")
-    Array_callbacks = ADComponent(EpicsSignal, "ArrayCallbacks")
-    Data_source = ADComponent(EpicsSignal, "DataSource")
-
-
-class EigerDetector(AreaDetector):
-    cam = Cpt(EigerDetectorCam, 'cam1:',
+class MerlinDetector(AreaDetector):
+    cam = Cpt(MerlinDetectorCam, 'cam1:',
               read_attrs=[],
               configuration_attrs=['image_mode', 'trigger_mode',
                                    'acquire_time', 'acquire_period'],
               )
 
-class EigerTriggerStatus(ADTriggerStatus):
+class TimeSeriesPluginHXN(TimeSeriesPlugin_V33):
+    ts_read_scan = ADComponent(EpicsSignal, "TSRead.SCAN")
+    ts_read_proc = ADComponent(EpicsSignal, "TSRead.PROC")
+
+
+class StatsPluginHXN(StatsPlugin):
+    ts = ADComponent(TimeSeriesPluginHXN, "TS:")
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if not self.done:
-            self._target_count = self.device.cam.num_triggers.get()
+
+        self.stage_sigs[self.queue_size] = 2000
+        self.stage_sigs[self.ts.queue_size] = 2000
+        self.stage_sigs[self.ts.ts_acquire_mode] = "Fixed length"
 
 
-class EigerSingleTriggerV33(SingleTriggerV33):
-    _status_type = EigerTriggerStatus
-
-
-
-class SRXEiger(EigerSingleTriggerV33, EigerDetector):
+class SRXMerlin(SingleTriggerV33, MerlinDetector):
     total_points = Cpt(Signal,
                        value=1,
                        doc="The total number of points to be taken")
     fly_next = Cpt(Signal,
                    value=False,
                    doc="latch to put the detector in 'fly' mode")
-    internal_trigger = Cpt(Signal,
-                   value=False,
-                   doc="Flag whether panda box is used")
 
-    hdf5 = Cpt(HDF5PluginWithFileStoreEiger, 'HDF1:',
+    hdf5 = Cpt(HDF5PluginWithFileStoreMerlin, 'HDF1:',
                read_attrs=[],
-               # read_path_template='/nsls2/data2/hxn/legacy/%Y/%m/%d/',
+               # read_path_template='/nsls2/xf05id1/XF05ID1/MERLIN/%Y/%m/%d/',
                # read_path_template='/nsls2/xf05id1/XF05ID1/MERLIN/2021/02/11/',
                # read_path_template='/nsls2/data/srx/assets/merlin/%Y/%m/%d/',
                # read_path_template = LARGE_FILE_DIRECTORY_ROOT + '/%Y/%m/%d/',
-               read_path_template = LARGE_FILE_DIRECTORY_PATH + '/',
+               read_path_template = LARGE_FILE_DIRECTORY_PATH,
                configuration_attrs=[],
-               # write_path_template='/nsls2/data2/hxn/legacy/%Y/%m/%d/',
+               # write_path_template='/epicsdata/merlin/%Y/%m/%d/',
                # write_path_template='/epicsdata/merlin/2021/02/11/',
                # write_path_template='/nsls2/data/srx/assets/merlin/%Y/%m/%d/',
                # write_path_template=LARGE_FILE_DIRECTORY_ROOT + '/%Y/%m/%d/',
-               write_path_template = LARGE_FILE_DIRECTORY_PATH + '/',
-
+               write_path_template = LARGE_FILE_DIRECTORY_PATH,
                root=LARGE_FILE_DIRECTORY_ROOT)
 
     stats1 = Cpt(StatsPluginHXN, 'Stats1:')
-    #stats2 = Cpt(StatsPluginHXN, 'Stats2:')
-    #stats3 = Cpt(StatsPluginHXN, 'Stats3:')
-    #stats4 = Cpt(StatsPluginHXN, 'Stats4:')
-    #stats5 = Cpt(StatsPluginHXN, 'Stats5:')
+    stats2 = Cpt(StatsPluginHXN, 'Stats2:')
+    stats3 = Cpt(StatsPluginHXN, 'Stats3:')
+    stats4 = Cpt(StatsPluginHXN, 'Stats4:')
+    stats5 = Cpt(StatsPluginHXN, 'Stats5:')
     proc1 = Cpt(ProcessPlugin, 'Proc1:')
     transform1 = Cpt(TransformPlugin, 'Trans1:')
 
@@ -321,9 +289,7 @@ class SRXEiger(EigerSingleTriggerV33, EigerDetector):
     roi3 = Cpt(ROIPlugin, 'ROI3:')
     roi4 = Cpt(ROIPlugin, 'ROI4:')
 
-    tif_capture = Cpt(EpicsSignal, 'TIFF1:Capture')
-    tif_filename = Cpt(EpicsSignalWithRBV, 'TIFF1:FileName')
-    tif_lastfile = Cpt(EpicsSignal, 'TIFF1:FullFileName_RBV')
+    image1 = Cpt(ImagePlugin, 'image1:')
 
     # def __init__(self, prefix, *, configuration_attrs=None, read_attrs=None,
     #              **kwargs):
@@ -339,6 +305,7 @@ class SRXEiger(EigerSingleTriggerV33, EigerDetector):
 
     def stage(self):
         # do the latching
+        print("Staging Merlin - starting")
         if self.fly_next.get():
             self.fly_next.put(False)
             # According to Ken's comments in hxntools, this is a de-bounce time
@@ -348,19 +315,9 @@ class SRXEiger(EigerSingleTriggerV33, EigerDetector):
             # self.stage_sigs[self.cam.acquire_time] = 0.005
             # self.stage_sigs[self.cam.acquire_period] = 0.0066392
 
-            self.stage_sigs[self.cam.stream_enable] = 1  # Enable stream
-            self.stage_sigs[self.cam.stream_decompress] = 1  # We need to enable StreamDecompress for some reason
-            self.stage_sigs[self.cam.data_source] = 2    # Data source - stream
-            self.stage_sigs[self.cam.fw_enable] = 0      # Disable file writer
-
-            if self.internal_trigger.get():
-                self.stage_sigs[self.cam.image_mode] = 1    # 0 -single, 1 - multiple
-                self.stage_sigs[self.cam.trigger_mode] = 0  # 0 - internal, 2 - external series, 3 - external enable
-                #   NOTE: 'external enable' is sensitive to noise in the triggering line
-            else:
-                self.stage_sigs[self.cam.image_mode] = 1    # 0 -single, 1 - multiple
-                self.stage_sigs[self.cam.trigger_mode] = 3  # 0 - internal, 2 - external series, 3 - external enable
-                #   NOTE: 'external enable' is sensitive to noise in the triggering line
+            self.stage_sigs[self.cam.image_mode] = 1  # 0 -single, 1 - multiple
+            self.stage_sigs[self.cam.trigger_mode] = 1  # 0 - internal, 1 - trigger enable, 2 - start rising
+            # self.stage_sigs[self.cam.trigger_mode] = 2  # 0 - internal, 1 - trigger enable, 2 - start rising
 
             self.stats1.ts.ts_acquire.set(1).wait()
 
@@ -381,7 +338,10 @@ class SRXEiger(EigerSingleTriggerV33, EigerDetector):
 
             self._mode = SRXMode.step
 
-        return super().stage()
+        print("Staging Merlin - superclass")
+        st = super().stage()
+        print("Staging Merlin - finished ")
+        return st
 
     def unstage(self):
         try:
@@ -403,45 +363,28 @@ class SRXEiger(EigerSingleTriggerV33, EigerDetector):
         self.stats1.ts.ts_acquire.set(1).wait()
         return super().trigger()
 
-    def trigger_stop(self):
-        self._acquisition_signal.put(0).wait()
 
 try:
-    # raise Exception("'eiger_mobile' is disabled ...")
-    eiger_mobile = SRXEiger('XF:03IDC-ES{Det:Eig1M}',
-                       name='eiger_mobile',
+    raise Exception("'merlin2' is disabled.")
+    merlin2 = SRXMerlin('XF:03IDC-ES{Merlin:2}',
+                       name='merlin2',
                        # read_attrs=['hdf5', 'cam', 'stats1'])
                        read_attrs=['hdf5', 'cam'])
-    eiger_mobile.hdf5.read_attrs = []
-    eiger_mobile.cam.acquire_period.tolerance = 0.002  # default is 0.001
-
-    def Eiger_setup():
-        camset = short_uid('Eiger_setup')
-        yield from bps.abs_set(eiger_mobile.cam.ROI_mode,'Disable',group=camset)
-        yield from bps.abs_set(eiger_mobile.cam.Flatfield_corr,'Enable',group=camset)
-        yield from bps.abs_set(eiger_mobile.cam.FW_compress,'Disable',group=camset)
-        yield from bps.abs_set(eiger_mobile.cam.Compress_alg,'LZ4',group=camset)
-        yield from bps.abs_set(eiger_mobile.cam.Array_callbacks,'Enable',group=camset)
-        yield from bps.abs_set(eiger_mobile.cam.Data_source,'Stream',group=camset)
-        yield from bps.wait(group=camset)
-    RE(Eiger_setup())
-    eiger_mobile.hdf5.compression.set("szip").wait()  # If 'compression' is None, the plan will not start
-
-    # source = "EIG"
-    source = "ROI1"
+    merlin2.hdf5.read_attrs = []
+    merlin2.cam.acquire_period.tolerance = 0.002  # default is 0.001
 
     # Should be set before warmup
-    eiger_mobile.hdf5.nd_array_port.set(source).wait()
-    eiger_mobile.stats1.nd_array_port.set(source).wait()
+    merlin2.hdf5.nd_array_port.set("MERLIN").wait()
+    # merlin2.hdf5.nd_array_port.set("ROI1").wait()
 
-    eiger_mobile.hdf5.warmup()
+    merlin2.hdf5.warmup()
 except TimeoutError as ex:
-    print('\nCannot connect to Eiger. Continuing without device.\n')
+    print('\nCannot connect to Merlin. Continuing without device.\n')
     # print(f"Exception: {ex}")
     traceback.print_exc()
     print()
 except Exception:
-    print('\nUnexpected error connecting to Eiger.\n',
+    print('\nUnexpected error connecting to Merlin.\n',
           sys.exc_info()[0],
           end='\n\n')
     traceback.print_exc()

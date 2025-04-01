@@ -1,3 +1,8 @@
+if not 'use_rasmi' in locals() or not use_rasmi:
+    print(f"RASMI not used, skipping {__file__!r} ...")
+    import sys
+    sys.exit()
+
 print(f"Loading {__file__!r} ...")
 from collections import OrderedDict
 

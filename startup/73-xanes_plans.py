@@ -14,7 +14,7 @@ EXAMPLE OF USAGE:
 
 import numpy as np
 import pandas as pd
-import time,json
+import time,json,math
 from datetime import datetime
 import scipy.constants as consts
 
@@ -367,7 +367,7 @@ def generateEList_MLL(XANESParam = As_MLL_XANES, highEStart = False):
     return e_list                        
 
 
-def generateEList_MLL_2(path_to_parameter_file):
+def generateEList_MLL_2(path_to_parameter_file, highEStart = False):
     print("generating e_list")
 
     """
@@ -395,8 +395,6 @@ def generateEList_MLL_2(path_to_parameter_file):
     XANESParam = scan_params["elem_params"]
                     
     #e_list = generateEList(elemParam, highEStart =  scan_params["start_from_high_e"])
-    highEStart =  scan_params["start_from_high_e"]
-
 
     # empty dataframe
     e_list = pd.DataFrame()
@@ -471,10 +469,26 @@ def run_zp_xanes(path_to_parameter_file, do_confirm  =True, add_low_res_scan = F
         
     elemParam = scan_params["elem_params"]
     # marker to track beam dump             
-    beamDumpOccured = False    
+    beamDumpOccured = False
+
+
                     
     e_list = generateEList(elemParam, 
-                           highEStart =  scan_params["start_from_high_e"])
+                           highEStart = True)
+
+    #find energy scan direction
+    current_energy = e.position
+    if not math.isclose(current_energy,e_list['energy'].to_numpy()[0], abs_tol=0.07):
+
+        print("current energy is below the edge; scanning from low to high")
+
+        e_list = generateEList(elemParam, 
+                           highEStart = False)
+
+    else: 
+        print("current energy is above the edge; scanning from high to low")
+        
+        
 
     #add real energy to the dataframe
     e_list['E Readback'] = np.nan 
@@ -747,7 +761,7 @@ def run_zp_xanes(path_to_parameter_file, do_confirm  =True, add_low_res_scan = F
         return
         
         
-def run_mll_xanes(path_to_parameter_file, do_confirm =True):
+def run_mll_xanes(path_to_parameter_file,do_confirm =True):
 
 
     """ 
@@ -774,22 +788,56 @@ def run_mll_xanes(path_to_parameter_file, do_confirm =True):
     
     
     """ 
-    mot1 = dssx #temp fix
-    mot2 = dssy #temp fix
     with open(path_to_parameter_file,"r") as fp:
         scan_params = json.load(fp)
         fp.close()
+
+        #remeber the start positions
+    image_scan_i = scan_params["fly2d_scan"]
+    x_motor = eval(image_scan_i["x_motor"])
+    y_motor = eval(image_scan_i["y_motor"])
+
+    #recover the position using a scan numer and do a flyscan to center the particle
+    if scan_params["pos_recover_scan_num"]:
+        print(f'recovering positions from {scan_params["pos_recover_scan_num"]}')
+        extra = scan_params["pos_recover_scan_extra_um"]
+        yield from recover_scan_pos_and_find_com(int(scan_params["pos_recover_scan_num"]), 
+                                             elem = scan_params["pos_recover_align_elem"], 
+                                             fly_scan_plan = [x_motor,
+                                                             image_scan_i["x_start"]-extra,
+                                                             image_scan_i["x_end"]+extra,
+                                                             image_scan_i["x_num"],
+                                                             y_motor,
+                                                             image_scan_i["y_start"]-extra,
+                                                             image_scan_i["y_end"]+extra,
+                                                             image_scan_i["y_num"],
+                                                             image_scan_i["exposure"]],
+                                             com_threshold = 0.1)
+        
+    
     
     elemParam = scan_params["elem_params"]
     # marker to track beam dump             
     beamDumpOccured = False    
                     
     #e_list = generateEList(elemParam, highEStart =  scan_params["start_from_high_e"])
-    e_list = generateEList_MLL_2(path_to_parameter_file)
+    e_list = generateEList_MLL_2(path_to_parameter_file, highEStart=True)
+
+    #find energy scan direction
+    current_energy = e.position
+    if not math.isclose(current_energy,e_list['energy'].to_numpy()[0], abs_tol=0.07):
+
+        print("current energy is below the edge; scanning from low to high")
+
+        e_list = generateEList_MLL_2(path_to_parameter_file, 
+                           highEStart = False)
+
+    else: 
+        print("current energy is above the edge; scanning from high to low")
+        
+
     # marker to track beam dump             
     beamDumpOccured = False
-                    
-    #e_list = generateEList_MLL(elemParam, highEStart =  scan_params["start_from_high_e"])
 
     #add real energy to the dataframe
     e_list['E Readback'] = np.nan 
@@ -824,13 +872,7 @@ def run_mll_xanes(path_to_parameter_file, do_confirm =True):
     #get the initial ic3 reading for peaking the beam
     ic_3_init =  sclr2_ch4.get()
     
-    #remeber the start positions
-    mot1_i = mot1.position
-    mot2_i = mot2.position
 
-    image_scan_i = scan_params["fly2d_scan"]
-    x_motor = eval(image_scan_i["x_motor"])
-    y_motor = eval(image_scan_i["y_motor"])
 
     tot_time_ = (image_scan_i["x_num"]*image_scan_i["y_num"]*image_scan_i["exposure"]*len(e_list))
     tot_time = tot_time_/3600
@@ -850,11 +892,25 @@ def run_mll_xanes(path_to_parameter_file, do_confirm =True):
 
         for i in tqdm.tqdm(range(len(e_list)),desc = 'Energy Scan'):
             print(f'Current scan: {i+1}/{len(e_list)}')
-        #for i in range (len(e_list)):
+            #for i in range (len(e_list)):
 
             with open(path_to_parameter_file,"r") as fp:
                 scan_params = json.load(fp)
                 fp.close()
+
+            while scan_params["pause_scan"]:
+                yield from bps.sleep(10) #check if this freezes the gui or not
+                with open(path_to_parameter_file,"r") as fp:
+                    scan_params = json.load(fp)
+                    fp.close() 
+
+                if not scan_params["pause_scan"]:   
+                    break
+
+            #stop data collection if necessary.user input taken 
+            if scan_params["stop_iter"]:
+                save_page()
+                break
 
             #if beam dump occur turn the marker on
             if sclr2_ch2.get()<1000:
@@ -886,13 +942,13 @@ def run_mll_xanes(path_to_parameter_file, do_confirm =True):
             #open fast shutter to check if ic3 reading is satistactory
             caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',1) 
             yield from bps.sleep(3)
-            caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0) 
+            #caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0) 
             
             #get ic3 value before peaking, e change
             ic3_ = sclr2_ch4.get()
             
             # if ic3 value is below the threshold, peak the beam
-            if ic3_ < ic_3_init*0.8:
+            if ic3_ < ic_3_init*0.85:
                 
                 if scan_params["peak_flux"]: yield from peak_the_flux()
                 fluxPeaked = True # for df record
@@ -965,7 +1021,7 @@ def run_mll_xanes(path_to_parameter_file, do_confirm =True):
 
             if image_scan["det"] == "dets_fs": #for fast xanes scan, no transmission (merlin) in the list
 
-                yield from fly2dpd([fs,xspress3,eiger2], mot1,x_s,x_e,x_num,mot2,y_s,y_e,y_num,accq_t) 
+                yield from fly2dpd([fs,xspress3,eiger2], x_motor,x_s,x_e,x_num,y_motor,y_s,y_e,y_num,accq_t) 
                 #dead_time = 0.001 for 0.015 dwell
 
             else:
@@ -1012,7 +1068,8 @@ def run_mll_xanes(path_to_parameter_file, do_confirm =True):
                 except:
                     pass
             # save the DF in the loop so quitting a scan won't affect
-            filename = f"HXN_nanoXANES_{scan_params['sample_name']}_StartID{int(e_list['scan_id'][0])}_{len(e_list)}_e_points.csv"
+            sample_name = scan_params["sample_name"]
+            filename = f"HXN_nanoXANES_{sample_name}_StartID{int(e_list['scan_id'][0])}_{len(e_list)}_e_points.csv"
             e_list.to_csv(os.path.join(scan_params["save_log_to"], filename), float_format= '%.5f')
         '''
         #go back to max energy point if scans done reverese
@@ -1033,6 +1090,8 @@ def run_mll_xanes(path_to_parameter_file, do_confirm =True):
 
     else:
         return
+    
+'''
 
 def batch_xanes2():
     yield from run_mll_xanes("/data/users/current_user/mll_xanes_sample5_roi2.json", do_confirm = False)
@@ -1041,14 +1100,18 @@ def batch_xanes2():
                                              elem = "Hg_L", 
                                              fly_scan_plan = [dssx,-2,2,50,dssy,-2,2,50,0.1],
                                              com_threshold = 0.7)
-    yield from run_mll_xanes("/data/users/current_user/mll_xanes_sample5_roi3.json", do_confirm = False)
+    yield from run_mll_xanes("/data/users/current_user/mll_xanes_sample5_roi3.json", 
+                             sample_name= "A",
+                             do_confirm = False)
 
                                  
     yield from recover_scan_pos_and_find_com(298423, 
                                              elem = "Hg_L", 
                                              fly_scan_plan = [dssx,-1.5,1.5,50,dssy,-1.5,1.5,50,0.1],
                                              com_threshold = 0.7)
-    yield from run_mll_xanes("/data/users/current_user/mll_xanes_sample6_roi1.json", do_confirm = False)
+    yield from run_mll_xanes("/data/users/current_user/mll_xanes_sample6_roi1.json", 
+                             sample_name= "B",
+                             do_confirm = False)
         
 
 
@@ -1066,4 +1129,4 @@ def zp_batch_xanes():
                              do_confirm = False,add_low_res_scan=True)
     
 
-
+'''

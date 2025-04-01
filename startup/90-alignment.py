@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 #mpl.use('agg')
 
-from scipy.optimize import curve_fit
+from scipy.optimize import curve_fit, minimize
 from epics import caget, caput
 from PyQt5 import  QtTest
 
@@ -1648,8 +1648,127 @@ def find_45_degree(th_mtr,start_angle,end_angle,num, x_start, x_end, x_num, exp_
         np.savetxt("/nsls2/data/hxn/legacy/users/Beamline_Performance/45deg_calib.txt",np.column_stack([th,w_x,w_z]))
     plt.figure()
     plt.plot(th,w_x,'r+',th,w_z,'g-')
+
+    find_45_offset()
     return th,w_x,w_z
 
+
+def find_45_offset(data_path = "/nsls2/data/hxn/legacy/users/Beamline_Performance/45deg_calib.txt"):
+
+    """ usage :find_45_offset() """
+
+
+    data = np.loadtxt(data_path)
+    # Define the objective function
+    def objective(offset, data):
+        # Calculate theta
+        theta = np.deg2rad(data[:, 0] - offset)  # theta in radians
+        
+        # Calculate the sum to minimize
+        result = np.sum((np.cos(theta) * data[:, 1]) - (np.sin(theta) * data[:, 2]))
+        return abs(result)
+
+    # Initial guess for the offset
+    initial_guess = 0.0  # You can set this to any reasonable starting point
+
+    # Use scipy's minimize function to find the optimal offset
+    result = minimize(objective, initial_guess, args=(data,))
+
+    # Output the optimal offset and the minimized result
+    optimal_offset = result.x[0]
+    minimized_value = result.fun
+
+    print(f"Optimal offset in degree: {optimal_offset}")
+    print(f"Minimized value: {minimized_value}")
+
+    # Calculate theta with the optimal offset
+    theta_raw = (data[:, 0]) * np.pi / 180
+    theta_optimal = (data[:, 0] - optimal_offset) * np.pi / 180
+
+    # Plotting the data before and after finding the optimal offset
+    fig, ax = plt.subplots(1, 2, figsize=(12, 6))
+
+    theta_raw = (data[:, 0]) * np.pi / 180
+
+    # Plot before applying the offset (raw data)
+    ax[0].scatter(data[:, 0], np.cos(theta_raw) * data[:, 1], label='X', color='r', alpha=0.7)
+    ax[0].scatter(data[:, 0], np.sin(theta_raw) * data[:, 2], label='Z', color='b', alpha=0.7)
+    ax[0].set_title("Before Applying Offset")
+    ax[0].set_xlabel("Angle")
+    ax[0].set_ylabel("Size")
+    ax[0].legend()
+
+    # Plot after applying the optimal offset
+    ax[1].scatter(data[:, 0], np.cos(theta_optimal) * data[:, 1], label='Adjusted X', color='r', alpha=0.7)
+    ax[1].scatter(data[:, 0], np.sin(theta_optimal) * data[:, 2], label='Adjusted Z', color='b', alpha=0.7)
+    ax[1].set_title(f"After Applying Optimal Offset of {optimal_offset :.2f} degree")
+    ax[1].set_xlabel("Angle")
+    ax[1].set_ylabel("Size")
+    ax[1].legend()
+
+    plt.tight_layout()
+    plt.show()
+    return optimal_offset
+
+def find_45_offset_scaling(data_path = "/nsls2/data/hxn/legacy/users/Beamline_Performance/45deg_calib.txt"):
+
+    """ usage :find_45_offset() """
+
+
+    data = np.loadtxt(data_path)
+    # Define the objective function
+    def objective(offset,xscale, yscale, data):
+        # Calculate theta
+        theta = np.deg2rad(data[:, 0] - offset)  # theta in radians
+        
+        # Calculate the sum to minimize
+        result = np.sum((np.cos(theta) * (xscale*data[:, 1])) - (np.sin(theta) * (yscale*data[:, 2])))
+        return abs(result)
+
+    # Initial guess for the offset
+    initial_guess = 0# You can set this to any reasonable starting point
+
+    # Use scipy's minimize function to find the optimal offset
+    result = minimize(objective, initial_guess, args=(data,0,0))
+    print(result)
+
+    '''
+    # Output the optimal offset and the minimized result
+    optimal_offset = result.x[0]
+    minimized_value = result.fun
+
+    print(f"Optimal offset in degree: {optimal_offset}")
+    print(f"Minimized value: {minimized_value}")
+
+    # Calculate theta with the optimal offset
+    theta_raw = (data[:, 0]) * np.pi / 180
+    theta_optimal = (data[:, 0] - optimal_offset) * np.pi / 180
+
+    # Plotting the data before and after finding the optimal offset
+    fig, ax = plt.subplots(1, 2, figsize=(12, 6))
+
+    theta_raw = (data[:, 0]) * np.pi / 180
+
+    # Plot before applying the offset (raw data)
+    ax[0].scatter(data[:, 0], np.cos(theta_raw) * data[:, 1], label='X', color='r', alpha=0.7)
+    ax[0].scatter(data[:, 0], np.sin(theta_raw) * data[:, 2], label='Z', color='b', alpha=0.7)
+    ax[0].set_title("Before Applying Offset")
+    ax[0].set_xlabel("Angle")
+    ax[0].set_ylabel("Size")
+    ax[0].legend()
+
+    # Plot after applying the optimal offset
+    ax[1].scatter(data[:, 0], np.cos(theta_optimal) * data[:, 1], label='Adjusted X', color='r', alpha=0.7)
+    ax[1].scatter(data[:, 0], np.sin(theta_optimal) * data[:, 2], label='Adjusted Z', color='b', alpha=0.7)
+    ax[1].set_title(f"After Applying Optimal Offset of {optimal_offset :.2f} degree")
+    ax[1].set_xlabel("Angle")
+    ax[1].set_ylabel("Size")
+    ax[1].legend()
+
+    plt.tight_layout()
+    plt.show()
+    return optimal_offset
+    '''
 
 def plot_45_degree_calib():
 

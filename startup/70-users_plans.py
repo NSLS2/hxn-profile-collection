@@ -9,6 +9,7 @@ import os
 import tqdm
 import shutil
 import sys
+import time
 
 from scipy.optimize import curve_fit
 from scipy import ndimage
@@ -3660,6 +3661,8 @@ def insert_xrf_map_to_pdf(scan_id = -1, elements = ["Cr", "Fe"],
 
         ax.set_title(elem)
         fig.tight_layout()
+
+    time.sleep(2)
     
     note += f"\n {df['time'].iloc[-1].strftime('%Y-%m-%d %X')}"
 

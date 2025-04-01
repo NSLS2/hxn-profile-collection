@@ -788,8 +788,48 @@ def th_fly1d_diff_sum(sid_start,sid_end,det = 'merlin1',threshold = [0,10000]):
     plt.imshow(np.log(img2d_array))
     return dff
 
+def get_img_sum(sid, det = 'eiger2_image',threshold=[0,1e4]):
+    threshold=[0,1e6]
+    h = db[int(sid)]
+    sid = h.start['scan_id']
+    imgs = list(h.data(det))
+    #imgs = np.array(imgs)
+    imgs = np.array(np.squeeze(imgs))
+
+    start_doc = h.start
+    if 'num1' and 'num2' in start_doc:
+        dim1,dim2 = start_doc['num1'],start_doc['num2']
+    elif 'shape' in start_doc:
+        dim1,dim2 = start_doc.shape
+
+    imgs[imgs>threshold[1]]=0
+    imgs[imgs<threshold[0]]=0
+
+    return np.nanmean(imgs,(1,2)).reshape(dim1,dim2)
 
 
+def get_img_sum_stack(sid_list,det = 'eiger2_image'):
+
+    z = len(sid_list)
+    h = db[int(sid_list[0])]
+    
+    start_doc = h.start
+    if 'num1' and 'num2' in start_doc:
+        dim1,dim2 = start_doc['num1'],start_doc['num2']
+    elif 'shape' in start_doc:
+        dim1,dim2 = start_doc.shape
+
+    stack = np.zeros((z,dim1,dim2))
+
+    for i, sid in enumerate(sid_list):
+
+        print(f"{sid = :.0f}")
+
+        img = get_img_sum(sid, det = det)
+
+        stack[i] = img
+
+    return stack
 
 
 

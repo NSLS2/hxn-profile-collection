@@ -674,7 +674,7 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
                       panda_flyer,
                       delta=None, shutter=False, align=False, plot=False, dead_time = 0, scan_dim = None,
                       md=None, snake=False, verbose=False, wait_before_scan=None, position_supersample = 1,
-                      merlin_cont_mode=False, wait_for_start_input = False):
+                      merlin_cont_mode=False, wait_for_start_input = False, trigger_funcgen = False):
     """Read IO from SIS3820.
     Zebra buffers x(t) points as a flyer.
     Xpress3 is our detector.
@@ -1019,6 +1019,9 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
         if wait_for_start_input:
             input("Waiting for start scan input...Hit Enter when ready.")
         # Scan!
+        if trigger_funcgen:
+            print("Sending manual trigger to function generator......")
+            pt_fg_ch1.trig.put(1)
         ppmac.gpascii.send_line(start_signal)
 
         counter = 0
@@ -1909,7 +1912,7 @@ def fly2dcontpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2,
 
 def timescanpd(dets, num, exposure_time, pos_return = True, apply_tomo_drift = False,
                 tomo_angle = None, auto_rescan = False, dead_time = 0.0005, line_overhead = [0.01,0.01], line_dwell = 0.1, return_speed = 100.0, position_supersample = 10,
-                md = None, merlin_cont_mode = False, **kwargs):
+                md = None, merlin_cont_mode = False, wait_for_start_input = True, **kwargs):
     """
     Relative scan
     """
@@ -2022,7 +2025,7 @@ def timescanpd(dets, num, exposure_time, pos_return = True, apply_tomo_drift = F
             for d in dets:
                 if d.name == 'xspress3' or d.name == 'xspress3_det2':
                     panda_live_plot.setup_plot(scan_input,d)
-            yield from flyscan_pd(dets, '&6begin41r', num, exposure_time, dead_time = dead_time, md=md, scan_dim = [num,1], position_supersample = position_supersample, merlin_cont_mode=merlin_cont_mode, wait_for_start_input = True, **kwargs)
+            yield from flyscan_pd(dets, '&6begin41r', num, exposure_time, dead_time = dead_time, md=md, scan_dim = [num,1], position_supersample = position_supersample, merlin_cont_mode=merlin_cont_mode, wait_for_start_input = wait_for_start_input, **kwargs)
 
 
             # yield from bps.sleep(1)

@@ -1,3 +1,8 @@
+if not 'use_rasmi' in locals() or not use_rasmi:
+    print(f"RASMI not used, skipping {__file__!r} ...")
+    import sys
+    sys.exit()
+
 print(f"Loading {__file__!r} ...")
 
 class HXN_FuncGen1(Device):
@@ -12,6 +17,8 @@ class HXN_FuncGen1(Device):
     burst = Cpt(EpicsSignal, '{FG:1}OUTPUT1:BURST_STATUS:SP')
     output = Cpt(EpicsSignal, '{FG:1}OUTPUT1:STATUS:SP') #output.set('ON'){.wait()}
     output_readout = Cpt(EpicsSignal, '{FG:1}OUTPUT1:STATUS') #output.set('ON'){.wait()}
+    trig = Cpt(EpicsSignal, '{FG:1}TRIGGER') #output.set('ON'){.wait()}
+    
     #slt_hcen = Cpt(EpicsMotor, '{Slt:4-Ax:Top}Mtr')
 
     def on(self):
@@ -50,9 +57,9 @@ pt_fg_ch2 = HXN_FuncGen2('XF:03IDC-ES', name='pt_fg_ch2')
 # pt_fg.output._put_complete = True
 # pt_fg.burst._put_complete = True
 
-RASMI_align_drift = np.load('/nsls2/data/hxn/shared/config/bluesky/profile_collection/startup/68-RASMI-align-drift.npy')
-RASMI_align_drift_y = np.load('/nsls2/data/hxn/shared/config/bluesky/profile_collection/startup/68-RASMI-align-drift_y.npy')
-RASMI_laser_ref = np.load('/nsls2/data/hxn/shared/config/bluesky/profile_collection/startup/68-RASMI-laser-ref.npy')
+RASMI_align_drift = np.load('/nsls2/data2/hxn/legacy/users/startup_parameters/68-RASMI-align-drift.npy')
+RASMI_align_drift_y = np.load('/nsls2/data2/hxn/legacy/users/startup_parameters/68-RASMI-align-drift_y.npy')
+RASMI_laser_ref = np.load('/nsls2/data2/hxn/legacy/users/startup_parameters/68-RASMI-laser-ref.npy')
 def get_tomo_ref(angle):
     if angle < RASMI_laser_ref[0,0] or angle>RASMI_laser_ref[-1,0]:
         return 0
