@@ -227,5 +227,6 @@ def panda_zero_all_encoders():
 
 panda_live_plot = PandaLivePlot()
 
+time.sleep(0.05)
 plt.close(panda_live_plot.fig)
 
