@@ -1,5 +1,5 @@
 # Line managed by script, do not modify manually
-use_rasmi = False
+use_rasmi = True
 #####
 
 if not 'use_rasmi' in locals() or not use_rasmi:
