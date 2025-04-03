@@ -1,8 +1,10 @@
-# Line managed by script, do not modify manually
-use_rasmi = True
-#####
+import os
+if os.path.isfile('/data/users/startup_parameters/USE_RASMI'):
+    USE_RASMI = True
+else:
+    USE_RASMI = False
 
-if not 'use_rasmi' in locals() or not use_rasmi:
+if not USE_RASMI:
     print(f"RASMI not used, skipping {__file__!r} ...")
     import sys
     sys.exit()

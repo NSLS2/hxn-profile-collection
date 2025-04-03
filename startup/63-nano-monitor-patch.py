@@ -1,4 +1,4 @@
-if not 'use_rasmi' in locals() or not use_rasmi:
+if not USE_RASMI:
     print(f"RASMI not used, skipping {__file__!r} ...")
     import sys
     sys.exit()
