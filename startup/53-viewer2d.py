@@ -916,7 +916,7 @@ def plot_img_sum(sid, det = 'merlin1',norm ='sclr1_ch4',
         x = df[mots[0]]
         x = np.array(x)
         tot = np.mean(imgs,2)
-        tot = np.array(np.mean(tot,1), dtype=float32)
+        tot = np.array(np.mean(tot,1), dtype=np.float32)
         tot = np.divide(tot,mon)
         #hlim = np.percentile(tot,99.99)
         #tot[tot > hlim] = 0

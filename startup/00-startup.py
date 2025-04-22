@@ -20,7 +20,6 @@ import matplotlib.pyplot as plt
 #   after completion of a plan.
 from IPython import get_ipython
 ipython = get_ipython()
-ipython.run_line_magic("matplotlib", "")
 
 import mpl_qtthread
 # set up the teleporter
@@ -29,6 +28,7 @@ mpl_qtthread.backend.initialize_qt_teleporter()
 matplotlib.use("module://mpl_qtthread.backend_agg")
 # suppress (now) spurious warnings for mpl3.3+
 mpl_qtthread.monkeypatch_pyplot()
+ipython.run_line_magic("matplotlib", "")
 
 plt.ion()
 
@@ -370,12 +370,17 @@ class CompositeBroker(Broker):
 
         if name in {'bulk_events'}:
             ret2 = self._insert(name, doc, db1.mds._event_col, ts)
+        elif name == 'event_page':
+            import event_model
+            for ev_doc in event_model.unpack_event_page(doc):
+                db1.insert('event', ev_doc)
+            ret2 = None
         else:
             ret2 = db1.insert(name, doc)
         return ret2
 
 db = CompositeBroker(mds_db1, CompositeRegistry(_fs_config_db1))
-
+db.name = 'hxn'
 from hxntools.handlers import register as _hxn_register_handlers
 
 _hxn_register_handlers(db)
