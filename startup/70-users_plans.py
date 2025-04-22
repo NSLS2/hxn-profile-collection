@@ -4103,7 +4103,7 @@ def plot_diff_roi(sid, det = 'merlin1', roi=[35,0,120,120], plot_log = True):
 
     axs[1].imshow(sum_diff_img[roi[0]:roi[0]+roi[2],roi[1]:roi[1]+roi[3]],
                   cmap = 'jet',norm = norm_,
-                  extent = [roi[0],roi[0]+roi[2],roi[1],roi[1]+roi[3]])
+                  extent = [roi[1],roi[1]+roi[3],roi[0],roi[0]+roi[2]])
 
 
     axs[1].set_title("selected roi")

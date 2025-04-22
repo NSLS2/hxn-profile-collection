@@ -459,7 +459,7 @@ class HXNFlyerPanda(Device):
 
         self.panda.data.hdf_directory.set(self.fl_path).wait()
         self.panda.data.hdf_file_name.set(self.fl_name).wait()
-        self.panda.data.flush_period.set(1).wait()
+        #self.panda.data.flush_period.set(1).wait()
 
         self.panda.data.capture_mode.set("FIRST_N").wait()
         self.panda.data.num_capture.set(self.frame_per_point).wait()
@@ -652,7 +652,7 @@ class HXNFlyerPanda(Device):
         return [getattr(self._sis.channels, f"chan{_}").name for _ in range(1, n_mcas + 1)]
 
 panda_flyer = HXNFlyerPanda(panda1,[],sclr1,name="PandaFlyer")
-panda_flyer_fip = HXNFlyerPanda(panda1,[],sclr3,name="PandaFlyer_FIP")
+panda_flyer_fip = HXNFlyerPanda(panda1,[],sclr1,name="PandaFlyer_FIP")
 
 class PandAHandlerHDF5(HandlerBase):
     """The handler to read HDF5 files produced by PandABox."""
@@ -1276,6 +1276,9 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
                 yield from bps.sleep(1)
 
             ## Setup scanning program
+            if m1_num == 3:
+                vx *= 20
+                return_speed *=10
             sl('open prog 41;inc;linear;L1=0;')
             sl('while (L1<%d) {'%(num2-1))
             sl('M100=1;F(%.5f);x(%.5f);dwell 0;M100=0;F(%.5f);x(%.5f)y(%.5f);L1=L1+1;dwell %.2f;}'%(np.abs(vx),range1_scan,return_speed,-range1_scan,step2,line_dwell*1000))
@@ -1283,7 +1286,7 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
             sl('dwell 0; close;')
 
             ## Define motors
-            sl('&6abort;undefine;&7abort;undefine;')
+            sl('&5abort;undefine;&6abort;undefine;&7abort;undefine;')
             sl('&6;#%d->x;#%d->y;'%(m1_num,m2_num))
 
             # print(f"dets={dets} args={args} kwargs={kwargs}")
@@ -1521,7 +1524,7 @@ def fly2dpd_repeat(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_star
             #yield from set_scanner_velocity(5)
         finally:
             # Undefine motors
-            sl('&6abort;undefine;')
+            sl('&5abort;undefine;&6abort;undefine;&7abort;undefine;')
             if pos_return:
                 mv_back = short_uid('back')
                 if motor1.name.startswith('zp'):

@@ -83,7 +83,9 @@ merlin2 = HxnMerlinDetector('XF:03IDC-ES{Merlin:2}', name='merlin2',
                             read_attrs=['hdf5', 'cam', 'stats1'])
 merlin2.hdf5.read_attrs = []
 
-#merlin2.hdf5.stage_sigs.update([(merlin2.hdf5.compression,'szip')])
+merlin2.hdf5.stage_sigs.update([(merlin2.hdf5.compression,'szip')])
+
+merlin2.ensure_nonblocking()
 
 # -- Dexela 1 (Dexela 1512 GigE-V24)
 '''

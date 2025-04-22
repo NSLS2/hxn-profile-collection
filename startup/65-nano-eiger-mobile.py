@@ -239,15 +239,15 @@ class HDF5PluginWithFileStoreEiger(HDF5Plugin_V33, EigerFileStoreHDF5):
 
         original_vals = {sig: sig.get() for sig in sigs}
 
-       # for sig, val in sigs.items():
-       #     ttime.sleep(0.1)  # abundance of caution
-       #     sig.set(val).wait()
+        for sig, val in sigs.items():
+            ttime.sleep(0.1)  # abundance of caution
+            sig.set(val).wait()
 
-       # ttime.sleep(acquire_time + 1)  # wait for acquisition
+        ttime.sleep(acquire_time + 1)  # wait for acquisition
 
-       # for sig, val in reversed(list(original_vals.items())):
-       #     ttime.sleep(0.1)
-       #     sig.set(val).wait()
+        for sig, val in reversed(list(original_vals.items())):
+            ttime.sleep(0.1)
+            sig.set(val).wait()
 
 
 
@@ -425,7 +425,7 @@ try:
         yield from bps.abs_set(eiger_mobile.cam.ROI_mode,'Disable',group=camset)
         yield from bps.abs_set(eiger_mobile.cam.Flatfield_corr,'Enable',group=camset)
         yield from bps.abs_set(eiger_mobile.cam.FW_compress,'Disable',group=camset)
-        yield from bps.abs_set(eiger_mobile.cam.Compress_alg,'LZ4',group=camset)
+        yield from bps.abs_set(eiger_mobile.cam.Compress_alg,'BS LZ4',group=camset)
         yield from bps.abs_set(eiger_mobile.cam.Array_callbacks,'Enable',group=camset)
         yield from bps.abs_set(eiger_mobile.cam.Data_source,'Stream',group=camset)
         yield from bps.wait(group=camset)
@@ -439,7 +439,7 @@ try:
     eiger_mobile.hdf5.nd_array_port.set(source).wait()
     eiger_mobile.stats1.nd_array_port.set(source).wait()
 
-    eiger_mobile.hdf5.warmup()
+    #eiger_mobile.hdf5.warmup()
 except TimeoutError as ex:
     print('\nCannot connect to Eiger. Continuing without device.\n')
     # print(f"Exception: {ex}")

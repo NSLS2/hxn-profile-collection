@@ -1,3 +1,19 @@
+def export_scan_header(scan_id,motorx,rangex,numx,motory,rangey,numy,detector):
+    with open('/data/users/startup_parameters/scan_header.txt','w') as f:
+        f.write('[scan]\n')
+        f.write('scan_num = %d\n'%scan_id)
+        f.write('xmotor = %s\n'%motorx.name)
+        f.write('ymotor = %s\n'%motory.name)
+        f.write('x_range = %.2f\n'%rangex)
+        f.write('y_range = %.2f\n'%rangey)
+        f.write('x_num = %d\n'%numx)
+        f.write('y_num = %d\n'%numy)
+        f.write('nz = %d\n'%(numx*numy))
+        roi_start = detector.roi1.min_xyz.get()
+        f.write('det_roix_start = %d\n'%roi_start[0])
+        f.write('det_roiy_start = %d\n'%roi_start[1])
+
+
 def plotlastfluo(id=-1,elem = 'Ni'):
     st = db[id].start['scan']
     scan_size = [st['scan_input'][2],st['scan_input'][5]]

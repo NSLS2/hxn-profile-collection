@@ -635,6 +635,16 @@ def scan_and_fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwe
                 #  'autosummation' for longer exposure times, which may result in different
                 #  data representation for short and long exposures (just an assumption).
                 #dpc.hdf5.warmup(acquire_time=acquire_time)
+                if acquire_time < 0.02:
+                    image_bitdepth = 16
+                else:
+                    image_bitdepth = 32
+                if 'UInt'+str(image_bitdepth) != dpc.hdf5.data_type.get():
+                    print("Adjusting eiger output bitdepth")
+                    dpc.cam.acquire.set(0)
+                    dpc.hdf5.warmup(acquire_time)
+                pass
+
                 pass
             if verbose:
                 toc(t_detset,'hdf5 warmup')
@@ -651,6 +661,9 @@ def scan_and_fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwe
     if verbose:
         toc(t_detset,'Detectors initialized')
     print('[Panda]Detectors initialized')
+
+    export_scan_header(hxntools.scans.get_last_scan_id()+1,xmotor,xrange,xnum,ymotor,np.abs(ystop-ystart),ynum,\
+            [d for d in [sclr1,eiger_mobile] if d.name.startswith('eiger')][0])
 
     # If delta is None, set delta based on time for acceleration
     if delta is None:
