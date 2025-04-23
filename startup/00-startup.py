@@ -394,7 +394,8 @@ configure_base(
     db,
     bec=False,
     ipython_logging=False,
-    publish_documents_with_kafka=True
+    publish_documents_with_kafka=True,
+    redis_url='info.hxn.nsls2.bnl.gov'
 )
 # configure_olog(get_ipython().user_ns)
 
@@ -416,9 +417,6 @@ for m in [bp, bps, bpp]:
 del ns
 from bluesky.magics import BlueskyMagics
 
-from bluesky.utils import PersistentDict
-runengine_metadata_dir = Path("/nsls2/data/hxn/shared/config/runengine-metadata")
-RE.md = PersistentDict(runengine_metadata_dir)
 
 # set some default meta-data
 RE.md['group'] = ''
