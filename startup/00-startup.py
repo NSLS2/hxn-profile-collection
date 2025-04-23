@@ -395,7 +395,7 @@ configure_base(
     bec=False,
     ipython_logging=False,
     publish_documents_with_kafka=True,
-    redis_url='info.hxn.nsls2.bnl.gov'
+    redis_url="info.hxn.nsls2.bnl.gov",
 )
 # configure_olog(get_ipython().user_ns)
 
