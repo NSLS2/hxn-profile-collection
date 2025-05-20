@@ -1,4 +1,4 @@
-
+print(f"Loading {__file__!r} ...")
 
 def my_export(str_list, interval=1,det = 'merlin1', mon = 'sclr1_ch4'):
     sid_list = get_sid_list(str_list = str_list,interval=interval)

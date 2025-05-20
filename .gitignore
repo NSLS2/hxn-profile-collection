@@ -1,6 +1,6 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
-*.py[cod]
+# *.py[cod]
 
 # C extensions
 *.so
@@ -39,6 +39,8 @@ htmlcov/
 .cache
 nosetests.xml
 coverage.xml
+benchmark.out
+startup/DEBUG
 
 # Translations
 *.mo
@@ -64,13 +66,10 @@ security
 profile_default
 
 *.sw*
-startup/20-detectors.py.bak.write-on-gpfs-on-merlin_matt_20200219
-startup/20-detectors.py.write-local-on-merlin-test_matt_20200219
 *~
 startup/#*.py#
 startup/eLog.pdf
 startup/eLog_info.obj
-old/
 # Quick test:
 startup/20-detectors-eiger.py
 
@@ -89,3 +88,6 @@ startup/plt
 startup/shutil
 startup/sys
 startup/css-workspace-xf03id-ws1/
+
+startup/existing_plans_and_devices.yaml
+

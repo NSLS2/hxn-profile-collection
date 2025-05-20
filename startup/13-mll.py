@@ -1,3 +1,5 @@
+print(f"Loading {__file__!r} ...")
+
 import math
 from ophyd import (Device, EpicsMotor, Signal, Component as Cpt,
                    PseudoSingle, PseudoPositioner, EpicsSignal)
@@ -243,3 +245,8 @@ pssz = pmllf.pz
 pmllc = PseudoMLLCoarseSample('', name='pmllc')
 psx = pmllc.x
 psz = pmllc.z
+
+
+hz = hmll.hz
+vz = vmll.vz
+

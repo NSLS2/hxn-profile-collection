@@ -50,7 +50,7 @@ c = get_config()
 c.StoreMagics.autorestore = True
 
 # A list of dotted module names of IPython extensions to load.
-c.InteractiveShellApp.extensions = ['pyOlog.cli.ipy']
+# c.InteractiveShellApp.extensions = ['pyOlog.cli.ipy']
 
 # Run the module as a script.
 # c.InteractiveShellApp.module_to_run = ''
@@ -81,7 +81,7 @@ c.InteractiveShellApp.extensions = ['pyOlog.cli.ipy']
 
 # Pre-load matplotlib and numpy for interactive use, selecting a particular
 # matplotlib backend and loop integration.
-c.TerminalIPythonApp.pylab = 'auto'
+# c.TerminalIPythonApp.pylab = 'auto'
 
 # Create a massive crash report when IPython encounters what may be an internal
 # error.  The default is to append a short message to the usual traceback
@@ -91,7 +91,7 @@ c.TerminalIPythonApp.pylab = 'auto'
 # c.TerminalIPythonApp.module_to_run = ''
 
 # The date format used by logging formatters for %(asctime)s
-c.TerminalIPythonApp.log_datefmt = '%Y-%m-%d %H:%M:%S'
+# c.TerminalIPythonApp.log_datefmt = '%Y-%m-%d %H:%M:%S'
 
 # Whether to overwrite existing config files when copying
 # c.TerminalIPythonApp.overwrite = False

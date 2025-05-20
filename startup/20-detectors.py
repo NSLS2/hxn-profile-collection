@@ -1,3 +1,5 @@
+print(f"Loading {__file__!r} ...")
+
 from ophyd import (EpicsSignal, EpicsSignalRO)
 from ophyd import (Device, Component as Cpt)
 
@@ -53,17 +55,37 @@ class HxnMerlinDetector(_HMD):
                root='/data',
                reg=db.reg)
 
+    total_points = Cpt(Signal,
+                       value=1,
+                       doc="The total number of points to be taken")
+
+    def ensure_nonblocking(self):
+        for c in self.component_names:
+            cpt = getattr(self, c)
+            if hasattr(cpt, 'ensure_nonblocking'):
+                cpt.ensure_nonblocking()
+
+
 
 merlin1 = HxnMerlinDetector('XF:03IDC-ES{Merlin:1}', name='merlin1',
                             image_name='merlin1',
                             read_attrs=['hdf5', 'cam', 'stats1'])
 merlin1.hdf5.read_attrs = []
 
+merlin1.ensure_nonblocking()
+
+merlin1.hdf5.stage_sigs.update([(merlin1.hdf5.compression,'szip')])
+merlin1.cam.acquire_period.put_complete = True
+
 
 merlin2 = HxnMerlinDetector('XF:03IDC-ES{Merlin:2}', name='merlin2',
                             image_name='merlin2',
                             read_attrs=['hdf5', 'cam', 'stats1'])
 merlin2.hdf5.read_attrs = []
+
+merlin2.hdf5.stage_sigs.update([(merlin2.hdf5.compression,'szip')])
+
+merlin2.ensure_nonblocking()
 
 # -- Dexela 1 (Dexela 1512 GigE-V24)
 '''

@@ -1,3 +1,5 @@
+print(f"Loading {__file__!r} ...")
+
 from hxntools.struck_scaler import (HxnTriggeringScaler, StruckScaler)
 
 # - 3IDC RG:C4 VME scalers
@@ -14,6 +16,7 @@ sclr1.read_attrs = ['channels', 'calculations']
 sclr1.mcas.kind = 'omitted'
 sclr1.channels.read_attrs = [f'chan{j}' for j in range(1, 17)]
 sclr1.calculations.read_attrs = ['calc5']
+sclr1.count_on_start.put('Yes')
 # sclr1.hints = {'fields': [f'sclr1_ch{j}' for j in (1, 2, 3)]}
 
 
@@ -43,6 +46,7 @@ sclr2.read_attrs = ['channels', 'calculations']
 sclr2.mcas.kind = 'omitted'
 sclr2.channels.read_attrs = [f'chan{j}' for j in range(1, 17)]
 sclr2.calculations.read_attrs = ['calc5']
+sclr2.count_on_start.put('Yes')
 # sclr2.hints = {'fields': [f'sclr2_ch{j}' for j in (2, 3, 4)]}
 
 sclr2_ch1 = sclr2.channels.chan1
@@ -52,6 +56,41 @@ sclr2_ch4 = sclr2.channels.chan4
 sclr2_ch5 = sclr2.channels.chan5
 
 sclr2_ch4_calc = sclr2.calculations.calc4.value
+
+
+sclr3 = HxnTriggeringScaler('XF:03IDC-ES{Sclr:3}', name='sclr3')
+# let the scans know which detectors sclr1 triggers:
+# sclr3.scan_type_triggers['step'] = [zebra, merlin1, xspress3]
+sclr3.scan_type_triggers['step'] = [zebra, xspress3]
+sclr3.scan_type_triggers['fly'] = []
+
+
+sclr3.read_attrs = ['channels', 'calculations']
+sclr3.mcas.kind = 'omitted'
+sclr3.channels.read_attrs = [f'chan{j}' for j in range(1, 17)]
+sclr3.calculations.read_attrs = ['calc5']
+sclr3.count_on_start.put('Yes')
+# sclr3.hints = {'fields': [f'sclr1_ch{j}' for j in (1, 2, 3)]}
+
+
+#[.chan1', 'channels.chan2', 'channels.chan3',
+#                    'channels.chan4', 'channels.chan5', 'channels.chan6',
+#                    'channels.chan7','channels.chan8', 'calculations.calc5',
+
+sclr3_ch1 = sclr3.channels.chan1
+sclr3_ch2 = sclr3.channels.chan2
+sclr3_ch3 = sclr3.channels.chan3
+sclr3_ch4 = sclr3.channels.chan4
+sclr3_ch5 = sclr3.channels.chan5
+
+sclr3_ch5_calc = sclr3.calculations.calc5.value
+
+n_scaler_mca = 16
+sclr3_mca = [sclr3.mca_by_index[i] for i in range(1, n_scaler_mca + 1)]
+
+for mca in sclr3_mca:
+    mca.name = 'sclr3_mca{}'.format(mca.index)
+
 
 
 # Rename all scaler channels according to a common format.
@@ -68,6 +107,7 @@ def setup_scaler_names(scaler, channel_format, calc_format):
 
 setup_scaler_names(sclr1, 'sclr1_ch{}', 'sclr1_ch{}_calc')
 setup_scaler_names(sclr2, 'sclr2_ch{}', 'sclr2_ch{}_calc')
+setup_scaler_names(sclr3, 'sclr3_ch{}', 'sclr3_ch{}_calc')
 
 # TODO fix this
 def hint_sclr_channels(sclr, chans):

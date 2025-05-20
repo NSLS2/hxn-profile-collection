@@ -1,3 +1,6 @@
+
+print(f"Loading {__file__!r} ...")
+
 import functools
 import os
 import sys
@@ -5,13 +8,44 @@ import numpy as np
 from datetime import datetime
 import h5py
 import matplotlib.pyplot as plt
+from matplotlib.widgets import Slider
 import matplotlib.gridspec as gridspec
 
 # from xray_vision.qt_widgets import CrossSectionMainWindow
 # from xray_vision.backend.mpl.cross_section_2d import CrossSection
 from scipy.interpolate import interp1d, interp2d
 from hxnfly.callbacks.liveplot import add_toolbar_button
+from hxntools.scan_info import get_scan_positions
 
+
+def plot3D(data,axis=0,index_init=None, *args, **kwargs):
+    fig, ax = plt.subplots()
+    if index_init is None:
+        index_init = int(data.shape[axis]//2)
+    im = ax.imshow(data.take(index_init,axis=axis),*args, **kwargs)
+    fig.subplots_adjust(bottom=0.15)
+    axslide = fig.add_axes([0.1, 0.03, 0.8, 0.03])
+    im_slider = Slider(
+        ax=axslide,
+        label='index',
+        valmin=0,
+        valmax=data.shape[axis] - 1,
+        valstep=1,
+        valinit=index_init,
+    )
+    def update(val):
+        im.set_data(data.take(val,axis=axis))
+        fig.canvas.draw_idle()
+    def keylisten(event):
+        if event.key == 'left':
+            im_slider.set_val(np.maximum(im_slider.val-1,im_slider.valmin))
+        elif event.key == 'right':
+            im_slider.set_val(np.minimum(im_slider.val+1,im_slider.valmax))
+
+    im_slider.on_changed(update)
+    fig.canvas.mpl_connect('key_release_event',keylisten)
+    plt.show()
+    return im,im_slider
 
 @functools.wraps(plt.figure)
 def figure_with_insert_fig_button(*args, **kwargs):
@@ -128,24 +162,37 @@ def plot(scan_id, elem='Pt', norm=None,
          center_method='com', log=0, e_flag=0):
     figure_with_insert_fig_button()
     scan_id, df = _load_scan(scan_id, fill_events=False)
-    hdr = db[scan_id]['start']
+    h = db[scan_id]
+    hdr = h['start']
     scan_start_time = datetime.isoformat(datetime.fromtimestamp(hdr['time']))
 
-    if elem in df:
-        data = np.asarray(df[elem])
+    if elem.startswith('Det'):
+        spectrum = np.array(list(h.data(elem)),dtype=np.float32).squeeze()
+    elif elem.startswith('sclr'):
+        spectrum = np.array(list(h.data(elem)))[0]
     else:
         channels = [1, 2, 3]
         roi_keys = ['Det%d_%s' % (chan, elem) for chan in channels]
-        for key in roi_keys:
-            if key not in df:
-                raise KeyError('ROI %s not found' % (key, ))
-        data = np.sum([getattr(df, roi) for roi in roi_keys], axis=0)
+
+        spectrum = np.sum([np.array(list(h.data(roi)),dtype=np.float32).squeeze() for roi in roi_keys], axis=0)
+
+    # if elem in df:
+    #     data = np.asarray(df[elem])
+    # else:
+    #     channels = [1, 2, 3]
+    #     roi_keys = ['Det%d_%s' % (chan, elem) for chan in channels]
+    #     for key in roi_keys:
+    #         if key not in df:
+    #             raise KeyError('ROI %s not found' % (key, ))
+    #     data = np.sum([getattr(df, roi) for roi in roi_keys], axis=0)
 
     scanned_axis = hdr['motors'][0]
 
     if scanned_axis == 'ugap':
         scanned_axis = 'ugap_readback'
-    x = df[scanned_axis]
+    
+    from hxntools.scan_info import get_scan_positions
+    x = get_scan_positions(h)
 
     if e_flag:
         x = 12.39842 / (2.*3.1355893*np.sin(np.deg2rad(x)))
@@ -158,11 +205,11 @@ def plot(scan_id, elem='Pt', norm=None,
         data = df[elem]
     '''
     x = np.asarray(x)
-    data = np.asarray(data)
+    data = np.asarray(spectrum)
 
     if norm is not None:
-        norm_v = df[norm]
-        norm_v[norm_v ==0] = norm_v.mean() #patch for first frame drop issue
+        norm_v = np.asarray(list(h.data(norm)), dtype=np.float32).squeeze()
+        norm_v = np.where(norm_v == 0, np.nanmean(norm_v),norm_v) #patch for dropping first data point
         if log:
             plt.plot(x, np.log10(data / (norm_v+1.e-8)))
             plt.plot(x, np.log10(data / (norm_v + 1.e-8)), 'bo')
@@ -325,15 +372,17 @@ if 'data_cache' not in globals():
 def _load_scan(scan_id, fill_events=False):
     '''Load scan from databroker by scan id'''
 
-    if scan_id > 0 and scan_id in data_cache:
-        df = data_cache[scan_id]
-    else:
-        hdr = db[scan_id]
-        scan_id = hdr['start']['scan_id']
-        if scan_id not in data_cache:
-            data_cache[scan_id] = db.get_table(hdr, fill=fill_events)
-
-        df = data_cache[scan_id]
+    #if scan_id > 0 and scan_id in data_cache:
+    #    df = data_cache[scan_id]
+    #else:
+    #    hdr = db[scan_id]
+    #    scan_id = hdr['start']['scan_id']
+    #    if scan_id not in data_cache:
+    #        data_cache[scan_id] = db.get_table(hdr, fill=fill_events)
+    #    df = data_cache[scan_id]
+    hdr = db[scan_id]
+    scan_id = hdr['start']['scan_id']
+    df = db.get_table(hdr,fill=fill_events)
 
     return scan_id, df
 
@@ -470,43 +519,56 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
     if channels is None:
         channels = [1, 2, 3]
 
-    scan_id, df = _load_scan(scan_id, fill_events=fill_events)
+    hdr = db[scan_id]
+    scan_id = hdr.start['scan_id']
+    #scan_id, df = _load_scan(scan_id, fill_events=fill_events)
 
     title = 'Scan id %s. ' % scan_id + elem
-    if elem in df:
-        spectrum = np.asarray(df[elem], dtype=np.float32)
-
+    if elem.startswith('Det'):
+        spectrum = np.array(list(hdr.data(elem)),dtype=np.float32).squeeze()
+    elif elem.startswith('sclr'):
+        spectrum = np.array(list(hdr.data(elem)))[0]
     else:
         roi_keys = ['Det%d_%s' % (chan, elem) for chan in channels]
 
-        for key in roi_keys:
-            if key not in df:
-                raise KeyError('ROI %s not found' % (key, ))
+        spectrum = np.sum([np.array(list(hdr.data(roi)),dtype=np.float32).squeeze() for roi in roi_keys], axis=0)
+    #if elem in df:
+    #    spectrum = np.asarray(df[elem], dtype=np.float32)
 
-        spectrum = np.sum([getattr(df, roi) for roi in roi_keys], axis=0)
-        
+    #else:
+    #    roi_keys = ['Det%d_%s' % (chan, elem) for chan in channels]
+
+    #    for key in roi_keys:
+    #        if key not in df:
+    #            raise KeyError('ROI %s not found' % (key, ))
+
+    #    spectrum = np.sum([getattr(df, roi) for roi in roi_keys], axis=0)
+
         #if spectrum[0] == 0:
             #spectrum[0] = spectrum[1]
 
 
-    hdr = db[scan_id]['start']
-    if x is None:
-        x = hdr['motor1']
-        #x = hdr['motors'][0]
-    x_data = np.asarray(df[x])
+    #hdr = db[scan_id]['start']
+    md = hdr.start
+    #if x is None:
+    #    x = hdr['motor1']
+    #    #x = hdr['motors'][0]
+    #x_data = np.asarray(df[x])
 
-    if y is None:
-        y = hdr['motor2']
-        #y = hdr['motors'][1]
-    y_data = np.asarray(df[y])
+    #if y is None:
+    #    y = hdr['motor2']
+    #    #y = hdr['motors'][1]
+    #y_data = np.asarray(df[y])
+
+    x_data,y_data = get_scan_positions(hdr)
 
     if norm is not None:
-        monitor = np.asarray(df[norm], dtype=np.float32)
+        monitor = np.asarray(list(hdr.data(norm)), dtype=np.float32).squeeze()
         monitor = np.where(monitor == 0, np.nanmean(monitor),monitor) #patch for dropping first data point
         spectrum = spectrum/(monitor)
 
 
-    nx, ny = get_flyscan_dimensions(hdr)
+    nx, ny = get_flyscan_dimensions(md)
     total_points = nx * ny
 
     if clim is None:
@@ -539,16 +601,16 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
     if interp2d is not None:
         print('\tUsing 2D %s interpolation...' % (interp2d, ), end=' ')
         sys.stdout.flush()
-        spectrum = interp2d_scan(hdr, x_data, y_data, spectrum,
+        spectrum = interp2d_scan(md, x_data, y_data, spectrum,
                                  kind=interp2d)
         print('done')
 
-    spectrum2 = fly2d_reshape(hdr, spectrum)
+    spectrum2 = fly2d_reshape(md, spectrum)
 
     if interp is not None:
         print('\tUsing 1D %s interpolation...' % (interp, ), end=' ')
         sys.stdout.flush()
-        spectrum2 = interp1d_scan(hdr, x_data, y_data, spectrum2, kind=interp)
+        spectrum2 = interp1d_scan(md, x_data, y_data, spectrum2, kind=interp)
         print('done')
 
     fig = None
@@ -602,42 +664,46 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
     return fig, ax1, ax2, spectrum
 
 
-def export(sid_start, sid_end, interval=1,
-           export_folder='/data/users/2020Q1/Roberto_2020Q1',det='merlin1',
+def export_diff(sid_start, sid_end, interval=1,
+           export_folder='/data/users/2023Q1/Cao_2023Q1/diff_data_all',det='merlin1',
            fields_excluded=['xspress3_ch1', 'xspress3_ch2','xspress3_ch3', 'merlin1']):
 
     for sid in range(sid_start,sid_end+1,interval):
-        #sid, df = _load_scan(sid, fill_events=False)
-        h = db[sid]
-        sid = h.start['scan_id']
-        df = h.table()
-        path = os.path.join(export_folder, 'scan_{}.txt'.format(sid))
-        print('Scan {}. Saving to {}'.format(sid, path))
-        # non_objects = [name for name, col in df.iteritems()
-        #               if col.dtype.name not in ('object', )]
-        non_objects = [name for name in df.keys()
-                       if name not in fields_excluded]
-        # print('fields inclued: {}'.format(sorted(non_objects)))
-        # dump all data
-        # non_objects = [name for name, col in df.iteritems()]
-        df.to_csv(path, float_format='%1.5e', sep='\t',
-                  columns=sorted(non_objects))
-        path = os.path.join(export_folder, 'scan_{}.h5'.format(sid))
-        filename = get_path(sid, det)
-        num_subscan = len(filename)
-        if num_subscan == 1:
-            for fn in filename:
-                break
-            mycmd = ''.join(['cp', ' ', fn, ' ', path])
-            os.system(mycmd)
-        else:
-            imgs = list(h.data(det))
-            imgs = np.squeeze(imgs)
-            #path = os.path.join(export_folder, 'scan_{}.h5'.format(sid))
-            f = h5py.File(path, 'w')
-            dset = f.create_dataset('/entry/instrument/detector/data', data=imgs)
-            f.close()
-        print('Scan {}. Saving to {}'.format(sid, path))
+        try:
+            #sid, df = _load_scan(sid, fill_events=False)
+            h = db[sid]
+            sid = h.start['scan_id']
+            df = h.table()
+            path = os.path.join(export_folder, 'scan_{}.txt'.format(sid))
+            print('Scan {}. Saving to {}'.format(sid, path))
+            # non_objects = [name for name, col in df.iteritems()
+            #               if col.dtype.name not in ('object', )]
+            non_objects = [name for name in df.keys()
+                        if name not in fields_excluded]
+            # print('fields inclued: {}'.format(sorted(non_objects)))
+            # dump all data
+            # non_objects = [name for name, col in df.iteritems()]
+            df.to_csv(path, float_format='%1.5e', sep='\t',
+                    columns=sorted(non_objects))
+            path = os.path.join(export_folder, 'scan_{}.h5'.format(sid))
+            filename = get_path(sid, det)
+            num_subscan = len(filename)
+            if num_subscan == 1:
+                for fn in filename:
+                    break
+                mycmd = ''.join(['cp', ' ', fn, ' ', path])
+                os.system(mycmd)
+            else:
+                imgs = list(h.data(det))
+                imgs = np.squeeze(imgs)
+                #path = os.path.join(export_folder, 'scan_{}.h5'.format(sid))
+                f = h5py.File(path, 'w')
+                dset = f.create_dataset('/entry/instrument/detector/data', data=imgs)
+                f.close()
+            print('Scan {}. Saving to {}'.format(sid, path))
+
+        except:
+            pass
 
 
 
@@ -672,6 +738,100 @@ def get_all_filenames(scan_id, key='merlin1'):
     if len(set(filenames)) != len(filenames):
         return set(filenames)
     return filenames
+
+
+
+def th_fly1d_diff_sum(sid_start,sid_end,det = 'merlin1',threshold = [0,10000]):
+
+    sid_list = np.arange(sid_start, sid_end+1)
+
+    dff = pd.DataFrame(index = sid_list)
+
+    dff["sid"] = np.nan
+    dff["sam_theta"] = np.nan
+    dff["diff_sum"] = np.nan
+
+    h = db[int(sid_start)]
+    df = h.table()
+    mots = h.start['motors']
+    x = np.array(df[mots[0]])
+
+    img2d_array = np.zeros((len(sid_list),len(x)))
+
+    for i, sid in enumerate(sid_list):
+        h = db[int(sid)]
+        df = h.table()
+        mots = h.start['motors']
+        x = np.array(df[mots[0]])
+        imgs = list(h.data(det))
+        imgs = np.array(np.squeeze(imgs))
+        imgs[imgs>threshold[1]]=0
+        imgs[imgs<threshold[0]]=0
+        mon = np.array(df['sclr1_ch4'],dtype=float32)
+        img_sum = np.sum(imgs,axis=(1,2))/mon
+        tot = np.sum(imgs,2)
+        tot = np.array(np.sum(tot,1), dtype=float32)
+        tot = np.divide(tot,mon)
+        print(np.sum(tot))
+        theta = (h.table("baseline")['zpsth'].values)[0]
+        print(theta)
+        dff["sid"].iat[i] = int(sid)
+        dff["diff_sum"].iat[i] = np.sum(tot)
+        dff["sam_theta"].iat[i] = theta
+
+        img2d_array[i] = img_sum
+
+    plt.figure()
+    plt.plot(dff["sam_theta"],dff["diff_sum"])
+
+    plt.figure()
+    plt.imshow(np.log(img2d_array))
+    return dff
+
+def get_img_sum(sid, det = 'eiger2_image',threshold=[0,1e4]):
+    threshold=[0,1e6]
+    h = db[int(sid)]
+    sid = h.start['scan_id']
+    imgs = list(h.data(det))
+    #imgs = np.array(imgs)
+    imgs = np.array(np.squeeze(imgs))
+
+    start_doc = h.start
+    if 'num1' and 'num2' in start_doc:
+        dim1,dim2 = start_doc['num1'],start_doc['num2']
+    elif 'shape' in start_doc:
+        dim1,dim2 = start_doc.shape
+
+    imgs[imgs>threshold[1]]=0
+    imgs[imgs<threshold[0]]=0
+
+    return np.nanmean(imgs,(1,2)).reshape(dim1,dim2)
+
+
+def get_img_sum_stack(sid_list,det = 'eiger2_image'):
+
+    z = len(sid_list)
+    h = db[int(sid_list[0])]
+    
+    start_doc = h.start
+    if 'num1' and 'num2' in start_doc:
+        dim1,dim2 = start_doc['num1'],start_doc['num2']
+    elif 'shape' in start_doc:
+        dim1,dim2 = start_doc.shape
+
+    stack = np.zeros((z,dim1,dim2))
+
+    for i, sid in enumerate(sid_list):
+
+        print(f"{sid = :.0f}")
+
+        img = get_img_sum(sid, det = det)
+
+        stack[i] = img
+
+    return stack
+
+
 
 def plot_img_sum2(sid, det = 'merlin1', roi_flag=False,x_cen=0,y_cen=0,size=0):
     h = db[sid]
@@ -717,38 +877,52 @@ def plot_img_sum2(sid, det = 'merlin1', roi_flag=False,x_cen=0,y_cen=0,size=0):
         plt.imshow(image,extent=extent)
         plt.title('sid={} ROI SUM'.format(sid))
 
-def plot_img_sum(sid, det = 'merlin1',mon ='sclr1_ch4', 
+def plot_img_sum(sid, det = 'merlin1',norm ='sclr1_ch4',
                  roi_flag=False,x_cen=0,y_cen=0,size=0,threshold=[0,1e6]):
-    h = db[sid]
+    h = db[int(sid)]
     sid = h.start['scan_id']
-    imgs = list(h.data(det))
+    try:
+        imgs = np.stack(db[int(sid)].table(fill=True)[det])
+        #print("image load_error")
+    except ValueError:
+        imgs = list(h.data(det))
+        #print("panda scan")
     #imgs = np.array(imgs)
     imgs = np.array(np.squeeze(imgs))
+    print("image_squeezed")
+    #imgs.shape()
     #imgs[imgs>3*np.std(imgs)] = 0
     imgs[imgs>threshold[1]]=0
     imgs[imgs<threshold[0]]=0
+    print("thrshold set")
     df = h.table()
-    mon = np.array(df[mon],dtype=float32)
+    #print(df.head())
+    #mon = np.array(df[mon],dtype=float32)np.nanmax(y),
+    if norm is None:
+        mon = 1
+    else:
+        mon = np.stack(h.table(fill=True)[norm])
+    print("mono_read")
     #figure_with_insert_fig_button()
     #plt.imshow(imgs[0],clim=[0,50])
     if roi_flag:
         imgs = imgs[:,x_cen-size//2:x_cen+size//2,y_cen-size//2:y_cen+size//2]
     mots = h.start['motors']
+    print(f"{mots = }")
     num_mots = len(mots)
     #num_mots = 1
     #df = h.table()
     if num_mots == 1:
         x = df[mots[0]]
         x = np.array(x)
-        tot = np.sum(imgs,2)
-        tot = np.array(np.sum(tot,1), dtype=float32)
+        tot = np.mean(imgs,2)
+        tot = np.array(np.mean(tot,1), dtype=np.float32)
         tot = np.divide(tot,mon)
-        hlim = np.percentile(tot,99.99)
-        tot[tot > hlim] = 0
+        #hlim = np.percentile(tot,99.99)
+        #tot[tot > hlim] = 0
         #idx = np.where(abs(tot - np.mean(tot)) >3*np.std(tot))
         #tot[idx[0]] = np.mean(tot)
-        #tot = tot[abs(tot - np.mean(tot)) < 3 * np.std(tot)]
-
+        #tot = tot[abs(tot - nplist(h.data(det))
         figure_with_insert_fig_button()
 
         plt.subplot(1,2,1)
@@ -757,30 +931,211 @@ def plot_img_sum(sid, det = 'merlin1',mon ='sclr1_ch4',
         plt.subplot(1,2,2)
         plt.semilogy(x,tot)
         plt.title('sid={}'.format(sid))
-        data_erf_fit(sid, x,tot,linear_flag=True)
+        #data_erf_fit(sid, x,tot,linear_flag=True)
 
     elif num_mots == 2:
-        tot = np.sum(imgs,2)
-        tot = np.array(np.sum(tot,1),dtype=float32)
-        dim1 = h.start['num1']
-        dim2 = h.start['num2']
-        x = np.array(df[mots[0]])
-        y = np.array(df[mots[1]])
-        extent = (np.nanmin(x), np.nanmax(x),np.nanmax(y), np.nanmin(y))
+        tot = np.mean(imgs,2)
+        tot = np.array(np.mean(tot,1),dtype=np.float32)
+        start_doc = h.start
+        if 'num1' and 'num2' in start_doc:
+            dim1,dim2 = start_doc['num1'],start_doc['num2']
+        elif 'shape' in start_doc:
+            dim1,dim2 = start_doc.shape
+        try:
+            x = np.array(df[mots[0]])
+            y = np.array(df[mots[1]])
+            extent = (np.nanmin(x), np.nanmax(x), np.nanmax(y),np.nanmin(y))
+        except:
+            x,y = hxntools.scan_info.get_scan_positions(h)
+            extent = (np.nanmin(x), np.nanmax(x), np.nanmax(y),np.nanmin(y))
+        print(extent)
         figure_with_insert_fig_button()
         tot =np.divide(tot, mon)
-        hlim = np.percentile(tot,99.99)
-        tot[tot > hlim] = 0
-        #idx = np.where(abs(tot - np.mean(tot)) >3*np.std(tot))
-        #tot[idx[0]] = np.mean(tot)
-        #tot = tot[abs(tot - np.mean(tot)) < 3 * np.std(tot)]
-        image = tot.reshape(dim2,dim1)
+        plot_frame = np.zeros([dim2*dim1])
+        plot_frame[:tot.size] = tot
+        image = plot_frame.reshape(dim2,dim1)
         plt.imshow(image,extent=extent)
+        #plt.imshow(image)
         plt.colorbar()
         plt.title('sid={} ROI SUM'.format(sid))
 
 
-def get_diff_sum(sid, det = 'merlin1',mon ='sclr1_ch4', 
+def display_eiger_image(sid,frame_num = -1, roi_flag=False,x_cen=110,y_cen=135,size=128,threshold=[0,1e4]):
+
+    det = 'eiger2_image'
+    h = db[int(sid)]
+    sid = h.start['scan_id']
+    try:
+        imgs = np.stack(db[int(sid)].table(fill=True)[det])
+        #print("image load_error")
+    except ValueError:
+        imgs = list(h.data(det))
+    scan_param = h.start["scan"]
+    mots = [scan_param["fast_axis"]["motor_name"],scan_param["slow_axis"]["motor_name"]]
+    num_mots = len(np.squeeze(scan_param['shape']))
+    imgs = np.array(np.squeeze(imgs))
+    print(f"image_shape:", imgs.shape)
+    #imgs.shape()
+    #imgs[imgs>3*np.std(imgs)] = 0
+    imgs[imgs>threshold[1]]=0
+    imgs[imgs<threshold[0]]=0
+    if scan_param['shape'][1] == 1:
+        if roi_flag:
+            imgs = imgs[:,x_cen-size//2:x_cen+size//2,y_cen-size//2:y_cen+size//2]
+
+
+    else:
+        print('2D Scan')
+        if roi_flag:
+            imgs = imgs[:,:,x_cen-size//2:x_cen+size//2,y_cen-size//2:y_cen+size//2]
+
+        im_shape = imgs.shape
+        print(f' before reshape; {imgs.shape}')
+        imgs = imgs.reshape(im_shape[0]*im_shape[1],im_shape[2],im_shape[3])
+        #print(f' after reshape; {imgs.shape}')
+
+    plt.figure()
+    plt.imshow(imgs[frame_num])
+    plt.colorbar()
+    plt.title(f"{sid}_{frame_num}")
+    plt.show()
+
+
+
+
+
+def plot_img_sum_fip(sid, det = 'merlin2_image',norm ='sclr1_ch4',
+                 roi_flag=False,x_cen=130,y_cen=110,size=160,threshold=[0,1e4], normalize=True):
+    h = db[int(sid)]
+    sid = h.start['scan_id']
+    try:
+        imgs = np.stack(db[int(sid)].table(fill=True)[det])
+        #print("image load_error")
+    except ValueError:
+        imgs = list(h.data(det))
+        #print("image loaded")
+    #imgs = np.array(imgs)
+    imgs = np.array(np.squeeze(imgs))
+    print(f"image_shape:", imgs.shape)
+    #imgs.shape()
+    #imgs[imgs>3*np.std(imgs)] = 0
+    imgs[imgs>threshold[1]]=0
+    imgs[imgs<threshold[0]]=0
+    print("thrshold set")
+    df = h.table()
+    #print(df.head())
+    #mon = np.array(df[mon],dtype=float32)
+    if normalize:
+        mon = np.stack(h.table(fill=True)[norm])
+    print("mono_read")
+    print(f"mono_shape = {mon.shape}")
+    #figure_with_insert_fig_button()
+    #plt.imshow(imgs[0],clim=[0,50])
+    if roi_flag:
+        imgs = imgs[:,:,x_cen-size//2:x_cen+size//2,y_cen-size//2:y_cen+size//2]
+
+        print(f'image shape after roi{imgs.shape}')
+
+    scan_param = h.start["scan"]
+    mots = [scan_param["fast_axis"]["motor_name"],scan_param["slow_axis"]["motor_name"]]
+    num_mots = len(np.squeeze(scan_param['shape']))
+    #num_mots = 1
+    #df = h.table()
+
+
+
+    if scan_param['shape'][1] == 1:
+        print("Scan type = 1D scan")
+        #x = df[mots[0]]
+        x = np.arange(scan_param["shape"][0])
+        print(x)
+        tot = np.sum(imgs,2)
+        tot = np.array(np.sum(tot,1), dtype=np.float32)
+        tot = np.squeeze(tot)
+        plt.figure()
+        plt.subplot(2,2,1)
+        plt.plot(x,tot)
+        plt.title(f'{sid} not normalized')
+        # tot = np.squeeze(np.divide(tot,mon))
+        print(f"mono shape: {mon.shape}")
+        if normalize:
+            tot = np.squeeze(np.divide(tot,mon))
+        #hlim = np.percentile(tot,99.99)
+        #tot[tot > hlim] = 0
+        #idx = np.where(abs(tot - np.mean(tot)) >3*np.std(tot))
+        #tot[idx[0]] = np.mean(tot)
+        #tot = tot[abs(tot - np.mean(tot)) < 3 * np.std(tot)]
+
+        #figure_with_insert_fig_button()
+
+        plt.subplot(2,2,2)
+        plt.semilogy(x,tot)
+        plt.title(f'{sid} norm')
+
+        plt.subplot(2,2,3)
+        plt.semilogy(x,np.squeeze(mon))
+        plt.title(f'{sid} ion chamber')
+
+        plt.subplot(2,2,4)
+        plt.imshow(imgs[-1])
+        plt.show()
+
+
+
+    else:
+
+        print("Scan type = 2D scan")
+        #tot = np.sum(imgs,2)
+        tot = np.array(np.sum(imgs,axis =(2,3)),dtype=np.float32)
+        plt.figure()
+        plt.subplot(2,2,1)
+        plt.imshow(tot[:,1:])
+        plt.title('{sid} not normalized ,ROI SUM')
+        plt.colorbar()
+
+        dim1 = np.array(scan_param["shape"][1])
+        dim2 = np.array(scan_param["shape"][0])
+        x = np.array(scan_param["shape"][1])
+        y = np.array(scan_param["shape"][0])
+        #extent = (np.nanmin(x), np.nanmax(x),np.nanmax(y), np.nanmin(y))
+        #256
+        scan_dim = scan_param["scan_input"]
+        extent = [scan_dim[0],scan_dim[1],scan_dim[3],scan_dim[4]]
+        #figure_with_insert_fig_button()
+
+        if normalize:
+            print(tot.shape, mon.shape)
+            tot =np.divide(tot, mon)
+
+        print(f"tot.shape={tot.shape}")
+        # image = tot.reshape(dim2,dim1)
+        image = tot
+        print(f"image.shape={image.shape}")
+
+
+
+        plt.subplot(2,2,2)
+        plt.imshow(imgs[-1, -1, :,:])
+        plt.colorbar()
+        plt.title(f'{sid} last frame:after crop')
+
+
+        plt.subplot(2,2,3)
+        plt.imshow(image[:,1:])
+        plt.title("")
+        plt.colorbar()
+        plt.title(f'{sid} normalized ,ROI SUM')
+
+
+        plt.subplot(2,2,4)
+        plt.imshow(mon[:,1:],extent=extent)
+        plt.title("")
+        plt.colorbar()
+        plt.title(f'{sid} Ion Chamber')
+
+        plt.show()
+
+def get_diff_sum(sid, det = 'merlin1',mon ='sclr1_ch4',
                  roi_flag=False,x_cen=0,y_cen=0,size=0,threshold=[0,1e5]):
 
     h = db[sid]
@@ -821,7 +1176,7 @@ def get_diff_sum(sid, det = 'merlin1',mon ='sclr1_ch4',
         image = tot.reshape(dim2,dim1)
 
         return np.float32(image)
-    
+
 
 def plot_xanes(sid, ref_sid=0,overlay=0):
     h = db[sid]
@@ -842,6 +1197,19 @@ def plot_xanes(sid, ref_sid=0,overlay=0):
 
     plt.plot(energy,absorb)
     plt.title('sid={}'.format(sid))
+
+
+def plot_det_frame(sid,det = 'eiger1', frame_num = 0):
+
+    h = db[int(sid)]
+    sid = h.start['scan_id']
+    imgs = np.squeeze(np.stack(db[int(sid)].table(fill=True)[det]))
+    plt.figure()
+    plt.imshow(imgs[int(frame_num),:,:])
+    plt.title(sid)
+    plt.show()
+
+
 
 '''
 def show_width():

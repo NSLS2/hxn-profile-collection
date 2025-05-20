@@ -179,18 +179,42 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     #images = db.get_images(db[sid],name=det_name)
     h = db[sid]
     #print('get h')
-    images = list(h.data(det_name))
-    #print('image size:',np.shape(images))
-    images = np.array(np.squeeze(images))
-    plan_args = db[sid].start['plan_args']
+    
+    #ic = np.asarray(df['sclr1_ch4'])
+    ic = np.squeeze(np.asarray(list(hdr.data('sclr1_ch4'))))
+    num_frame = np.size(ic)
+    print(np.shape(ic))
+    '''
+    img = list(h.data(det_name))
+    
+    for i in range(num_frame):
+        try:
+            tmp = np.array(img[i])
+            #print(i)
+            if i == 0:
+                tt, nnx,nny = np.shape(tmp)
+                print(np.shape(tmp))
+                images = np.zeros((num_frame,nnx,nny))
+            images[i] = tmp
+        except:
+            break
+    if i < num_frame-1:
+        n_missing = num_frame - i
+        images[20+n_missing:num_frame] = images[20:i].copy()
+    '''
+    images = np.array(np.squeeze(list(h.data(det_name))))
+
+    print('image size:',np.shape(images))
+    #images = np.array(np.squeeze(images))
+    #plan_args = db[sid].start['plan_args']
 
 
-    ic = np.asfarray(df['sclr1_ch4'])
+    
     index = np.where(ic == 0)
     nn = np.size(index[0])
     for i in range(nn):
         ii = index[0][i]
-        ic[ii] = ic[ii+1]
+        ic[ii] = ic[ii-1]
     #print('done ic')
     #ic_0 = 153000
 
@@ -198,56 +222,19 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     #images = np.array(np.squeeze(list(hdr.data(det_name))))
     print(np.shape(images))
     num_frame,nnx,nny = np.shape(images)
-    # mm = 1
-    #mask = 1-io.imread('/data/users/2020Q3/Huang_2020Q3/NPO_mask.tif')
-    #mm = np.load('/data/users/2022Q3/Huang_2022Q3/A1_diff_mask.npy')
-    #mm2 = np.load('/data/users/2021Q2/Huang_2021Q2/TMA_LCO_pristine/mask2.npy')
-    #index = np.where(mask == 1)
-    #mx = index[0]
-    #my = index[1]
-    #print(mx)
-    #print(my)
-    #m_num = np.shape(mx)
-    #print('load mask 2')
-    #mask = np.load('/data/users/2022Q3/Singer_2022Q3/Fe3O4_100nm_post-treatment/mask.npy')
-    #mask = np.load('/data/users/2022Q1/Singer_2022Q1/50nm_post-treatment_rocking/mask_userversion.npy')
-    #mask = np.load('/data/users/2022Q3/Xue_2022Q3/mask.npy')
-    #mask = np.load('/data/users/2022Q3/Liu_2022Q3/NiMn_NiCo_4.5V_diff/mask.npy')
-    #mm3 = np.load('/data/users/2021Q2/Liu_2021Q2/Z150_1/mask.npy')
+
+    #mask = np.load('/data/users/2023Q3/Liu_2023Q3/NNCM_3.75V_004/mask.npy')
+    mask = np.load('/data/users/2025Q1/Huang_2025Q1/nc_104/mask.npy')
+
     for i in range(num_frame):
         if np.mod(i,500) ==0:
             print('load frame ',i, '/', num_frame)
         #t = np.flipud(images.get_frame(i)[0]).T
         t = np.flipud(images[i,:,:]).T
-        #t = t * mask
+        t = t  #* mask
         t = t*ic[0] / ic[i]
-        #t = t * mask
-        #t *= (1-mm)
-        #t *= (1-mm2)
-        ##t = np.flipud(t)
-        #t[126,124] = 0
-        #t[126,124] = 0
-        #t *= (1-mm3)
-        #t *= (1-mm3)
-        #t *= (1-mm4)
-        #t[mm2 == 1.] == 0
-        #t[mm3 == 1.] == 0
-        #t[mm4 == 1.] == 0
-        #for jj in range(m_num[0]):
-        #    t = rm_pixel(t,mx[jj],my[jj])
-        '''
-        plt.figure()
-        plt.imshow(t)
-        plt.show()
-        ddd
-        '''
-        #if i == 0:
-        #    index = np.where(t >= 5)
-        #'''
-        #t[96,222] = 0.
-        #t[140,94] = 0.
-        #t[57,138] = 0.
-        #'''
+       
+
         if i == 0:
             nx,ny = np.shape(t)
             global diff_array
@@ -257,9 +244,8 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
         #t[index] = 0
         #t[mask == 1] = 0
         #t[164,107] = 0
-        diff_array[:,:,i] = t #+* mask
-        #diff_array_l[:,:,i] = t[:158,:]
-        #diff_array_r[:,:,i] = t[158:,:]
+        diff_array[:,:,i] = np.flipud(t) * mask
+
 
 
     #diff_array[22,255,:] = 0
@@ -304,7 +290,9 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     if elem in df:
         xrf = np.asarray(df[elem])
     else:
-        xrf = np.asfarray(eval('df.Det1_'+elem)) + np.asarray(eval('df.Det2_'+elem)) + np.asarray(eval('df.Det3_'+elem))
+        xrf = np.squeeze(np.asfarray(list(h.data('Det1_'+elem)))+np.asfarray(list(h.data('Det2_'+elem)))+np.asfarray(list(h.data('Det3_'+elem))))
+
+        #xrf = np.asfarray(eval('df.Det1_'+elem)) + np.asarray(eval('df.Det2_'+elem)) + np.asarray(eval('df.Det3_'+elem))
     xrf = xrf * ic[0] / (ic + 1.e-9)
 
 
@@ -366,14 +354,17 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
                 num_x = hdr.start.shape[0]
                 num_y = hdr.start.shape[1]
             else:
-                x_motor = hdr['motor1']
-                x_data = np.asarray(df[x_motor])
-                y_motor = hdr['motor2']
-                y_data = np.asarray(df[y_motor])
+                #x_motor = hdr['motor1']
+                #x_data = np.asarray(df[x_motor])
+                #y_motor = hdr['motor2']
+                #y_data = np.asarray(df[y_motor])
+                x_data,y_data = hxntools.scan_info.get_scan_positions(hdr)
                 xrf = np.reshape(xrf,(hdr.start.shape[1],hdr.start.shape[0]))
                 roi = np.reshape(roi,(hdr.start.shape[1],hdr.start.shape[0]))
                 #roi2 = np.reshape(roi2,(hdr.start.shape[1],hdr.start.shape[0]))
                 extent = (np.nanmin(x_data), np.nanmax(x_data),np.nanmax(y_data), np.nanmin(y_data))
+                num_x = hdr.start['shape'][0]
+                num_y = hdr.start['shape'][1]
                 #print('no num')
     #"""
     fig=plt.figure(0)
@@ -395,18 +386,19 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     fig3 = plt.figure(3)
     ax3 = fig3.add_subplot(111)
 
-    
+
     plt.show()
 
     #"""
 
+    fn = '/data/users/2025Q1/Huang_2025Q1/nm_104/'
+    
+    if not os.path.exists(fn):
+        os.makedirs(fn)
+    
+    
     if save_flag:
-        io.imsave('/data/users/2022Q3/Singer_2022Q3/BTO_10nm_38degphi/rock/'+scan_num+'_roi.tif',roi.astype(np.float32))
-        #io.imsave('/GPFS/XF03ID1/users/2022Q2/Huang_2022Q2/Huolin/pristine/rock_'+scan_num+'_roi_r.tif',roi_r.astype(np.float32))
-        #io.imsave('/GPFS/XF03ID1/users/2022Q2/Huang_2022Q2/Huolin/pristine/rock_'+scan_num+'_roi_l.tif',roi_l.astype(np.float32))
-        io.imsave('/data/users/2022Q3/Singer_2022Q3/BTO_10nm_38degphi/rock/'+scan_num+'_xrf.tif',xrf.astype(np.float32))
-        io.imsave('/data/users/2022Q3/Singer_2022Q3/BTO_10nm_38degphi/rock/'+scan_num+'_diff_data.tif',diff_array.astype(np.float32))
-        #io.imsave('/GPFS/XF03ID1/users/2022Q2/Huang_2022Q2/Huolin/pristine/rock_'+scan_num+'_diff_data_r.tif',diff_array_r.astype(np.float32))
-        #io.imsave('/GPFS/XF03ID1/users/2022Q2/Huang_2022Q2/Huolin/pristine/rock_'+scan_num+'_diff_data_l.tif',diff_array_l.astype(np.float32))
-
+        io.imsave(fn+scan_num+'_roi.tif',roi.astype(np.float32))
+        io.imsave(fn+scan_num+'_xrf.tif',xrf.astype(np.float32))
+        io.imsave(fn+scan_num+'_diff_data.tif',diff_array.astype(np.float32))
 

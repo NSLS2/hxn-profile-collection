@@ -1,3 +1,5 @@
+print(f"Loading {__file__!r} ...")
+
 import math
 from ophyd import (EpicsMotor, Device, Component as Cpt,
                    EpicsSignalRO, PseudoPositioner, PseudoSingle,
@@ -90,6 +92,24 @@ class HxnMirror2(MotorBundle):
 
 
 m2 = HxnMirror2('', name='m2')
+
+
+class HxnVMS(MotorBundle):
+    '''HXN DCM Device'''
+    y = Cpt(EpicsMotor, 'XF:03IDA-OP{VMS:1-Ax:Y}Mtr')
+    p = Cpt(EpicsMotor, 'XF:03IDA-OP{VMS:1-Ax:P}Mtr')
+    yu = Cpt(EpicsMotor, 'XF:03IDA-OP{VMS:1-Ax:YU}Mtr')
+    yd = Cpt(EpicsMotor, 'XF:03IDA-OP{VMS:1-Ax:YD}Mtr')
+    tx = Cpt(EpicsMotor, 'XF:03IDA-OP{VMS:1-Ax:TX}Mtr')
+    ys = Cpt(EpicsMotor, 'XF:03IDA-OP{VMS:1-Ax:YS}Mtr')
+    #p_rdbk = Cpt(EpicsMotor, 'XF:03IDA-OP{VMS:1-Ax:PRbk}Mtr}')
+    #p_rdbk was disconnected
+    pf = Cpt(EpicsMotor, 'XF:03IDA-OP{VMS:1-Ax:PF}Mtr')
+
+
+
+vms = HxnVMS('', name='vms')
+# dcmth = dcm.th
 
 
 class HxnSlitA(Device):
