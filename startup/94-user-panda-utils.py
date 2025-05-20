@@ -12,6 +12,12 @@ def export_scan_header(scan_id,motorx,rangex,numx,motory,rangey,numy,detector):
         roi_start = detector.roi1.min_xyz.get()
         f.write('det_roix_start = %d\n'%roi_start[0])
         f.write('det_roiy_start = %d\n'%roi_start[1])
+        
+        # Eiger2 image is mirrored
+        if detector.name == 'eiger2':
+            f.write('mirror_image = True\n')
+        else:
+            f.write('mirror_image = False\n')
 
 
 def plotlastfluo(id=-1,elem = 'Ni'):

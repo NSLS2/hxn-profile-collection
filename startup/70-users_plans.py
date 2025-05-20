@@ -23,7 +23,7 @@ from matplotlib.colors import LogNorm
 #Add ctrl+c option to matplotlib
 matplotlib.rcParams['toolbar'] = 'toolmanager'
 
-#warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
+
 
 #for debug mode
 #RE.msg_hook = print
@@ -3676,7 +3676,7 @@ def insert_xrf_map_to_pdf(scan_id = -1, elements = ["Cr", "Fe"],
         title_str += f"{title} = {titleValue:.4f}, "
 
     insertFig(note = note, title = title_str)
-
+    print("figure inserted")
     plt.close()
 
 def insert_xrf_map_to_pdf_old(scan_id = -1, elements = ["Cr", "Fe"],

@@ -674,7 +674,7 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
                       panda_flyer,
                       delta=None, shutter=False, align=False, plot=False, dead_time = 0, scan_dim = None,
                       md=None, snake=False, verbose=False, wait_before_scan=None, position_supersample = 1,
-                      merlin_cont_mode=False, wait_for_start_input = False, trigger_funcgen = False):
+                      merlin_cont_mode=False, wait_for_start_input = False, trigger_funcgen = False, scan_header = None):
     """Read IO from SIS3820.
     Zebra buffers x(t) points as a flyer.
     Xpress3 is our detector.
@@ -810,6 +810,10 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
     if verbose:
         toc(t_detset,'Detectors initialized')
     print('[Panda]Detectors initialized')
+
+    if scan_header:
+        export_scan_header(hxntools.scans.get_last_scan_id()+1,scan_header[0],scan_header[1],scan_header[2],scan_header[3],scan_header[4],scan_header[5],\
+                [d for d in detectors if d.name.startswith('eiger')][0])
 
     if panda_flyer._sis is not None:
         # Put SIS3820 into single count (not autocount) mode
@@ -1302,8 +1306,10 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
             for d in dets:
                 if d.name == 'xspress3' or d.name == 'xspress3_det2':
                     panda_live_plot.setup_plot(scan_input,d)
+            
+            scan_header = [motor1,np.abs(range1),num1,motor2,np.abs(range2),num2]
 
-            yield from flyscan_pd(dets, '&6begin41r', num1*num2, exposure_time, dead_time = dead_time, md=md, scan_dim = [num1,num2], position_supersample = position_supersample, merlin_cont_mode=merlin_cont_mode, **kwargs)
+            yield from flyscan_pd(dets, '&6begin41r', num1*num2, exposure_time, dead_time = dead_time, md=md, scan_dim = [num1,num2], position_supersample = position_supersample, merlin_cont_mode=merlin_cont_mode, scan_header = scan_header, **kwargs)
 
             # yield from bps.sleep(1)
             #yield from set_scanner_velocity(5)

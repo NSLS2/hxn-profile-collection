@@ -5,9 +5,12 @@ import os
 import time
 import uuid
 import warnings
+import pandas as pd
 from collections import deque
 from datetime import datetime, timedelta, tzinfo
 from pathlib import Path
+
+warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 
 
 # The following code allows to call Matplotlib API from threads (experimental)
@@ -159,7 +162,8 @@ class CompositeRegistry(Registry):
 
         try:
             col.insert_one(resource_object)
-        except duplicate_exc:
+        except Exception as duplicate_exc:
+            print(duplicate_exc)
             if ignore_duplicate_error:
                 warnings.warn("Ignoring attempt to insert Datum with duplicate "
                           "datum_id, assuming that both ophyd and bluesky "

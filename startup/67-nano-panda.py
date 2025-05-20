@@ -663,7 +663,7 @@ def scan_and_fly_2dpd(detectors, xcenter, xrange, xnum, ystart, ystop, ynum, dwe
     print('[Panda]Detectors initialized')
 
     export_scan_header(hxntools.scans.get_last_scan_id()+1,xmotor,xrange,xnum,ymotor,np.abs(ystop-ystart),ynum,\
-            [d for d in [sclr1,eiger_mobile] if d.name.startswith('eiger')][0])
+            [d for d in detectors if d.name.startswith('eiger')][0])
 
     # If delta is None, set delta based on time for acceleration
     if delta is None:

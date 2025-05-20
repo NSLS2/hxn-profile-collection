@@ -189,7 +189,7 @@ c.StoreMagics.autorestore = True
 # c.TerminalInteractiveShell.ast_transformers = []
 
 #
-# c.TerminalInteractiveShell.history_length = 10000
+c.TerminalInteractiveShell.history_length = 30000
 
 # Don't call post-execute functions that have failed in the past.
 # c.TerminalInteractiveShell.disable_failing_post_execute = False

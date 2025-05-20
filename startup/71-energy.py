@@ -52,7 +52,7 @@ class HXNEnergy():
 
 
 
-    def calcGap(self,E,harmonics = 5, offset = 2):
+    def calcGap(self,E,harmonics = 5, offset = 0):
         E1 = E/harmonics
         calc_gap =  np.polyval(self.ugap_coeffs, E1) + offset
         return (np.around(calc_gap,1))
@@ -120,7 +120,7 @@ class HXNEnergy():
          #caput("XF:03IDA-OP{Mir:2-Ax:Y}Mtr",positions[1])
          yield from bps.mov(m1.y, positions[0], m2.y, positions[1] )
 
-    def calibrate_optics(self, plot_after = False):
+    def calibrate_optics(self, plot_after = True):
 
         en = self.df["energy"].to_numpy()
 
@@ -244,7 +244,7 @@ class HXNEnergy():
 
 
     
-    def autoUGapCalibration(self,EStart = 6, EEnd = 18, EStep = 48, ssa_close_pos = (1,0.25), save_suffix='20250121'):
+    def autoUGapCalibration(self,EStart = 6, EEnd = 18, EStep = 48, ssa_close_pos = (1,0.25)):
         """
         Make sure strating energy is at optimized conditions and you have a  good beam at ssa2
 
@@ -254,6 +254,8 @@ class HXNEnergy():
          - move out,FS if in 
                             
         """
+
+        save_suffix = datetime.now().strftime("%Y%m%d_%H%M")
         if os.path.exists(wd+f"ugap_calib{save_suffix}.csv"):
             raise OSError ("Calibration file with the same  filename exists; choose a different name")
 
@@ -294,8 +296,6 @@ class HXNEnergy():
                 yield from bps.sleep(60)
 
             yield from check_for_beam_dump(1000)
-
-        #for i in range(len(ePoints)):
 
             if sclr2_ch2.get() < ic1_init*0.25:
                 raise RuntimeError ("Ion chamber value dropped; aborting calibration")
@@ -358,7 +358,8 @@ class HXNEnergy():
 
             ugap_offset = ugap.position - gap_
             logger.info(f"Gap offset: {ugap_offset :.1f}")
-
+        
+        yield from bshutter.cls()
         adj_E = df["energy"].to_numpy()/df["harmonic"].to_numpy()
         E_Ugap_fit = np.polyfit(adj_E, df["ugap"].to_numpy(),3)
         print(E_Ugap_fit)

@@ -14,7 +14,7 @@ from datetime import date
 import pickle
 import os.path
 import numpy as np
-from PyPDF2 import PdfFileMerger, PdfFileReader
+from PyPDF2 import PdfMerger, PdfReader
 
 global PDF_FILE
 wd = "/data/users/startup_parameters/"
@@ -378,14 +378,14 @@ def save_page():
             pdf_append(G_INFO.fname,wd+'tmp_fig.pdf')
         else:
             os.rename(wd+'tmp_fig.pdf',G_INFO.fname)
-        print('Page has been saved.')
+        print(f'Page has been saved.{G_INFO.fname}')
     else:
-        print('Page has been saved.')
+        print(f'Page has been saved {G_INFO.fname}.')
 
 def pdf_append(file1,file2):
-    merger = PdfFileMerger()
-    merger.append(PdfFileReader(open(file1,'rb')))
-    merger.append(PdfFileReader(open(file2,'rb')))
+    merger = PdfMerger()
+    merger.append(PdfReader(open(file1,'rb')))
+    merger.append(PdfReader(open(file2,'rb')))
     merger.write(file1)
 
 def output2pdf(sid_start,sid_end,elem, mot_name=''):

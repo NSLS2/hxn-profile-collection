@@ -421,7 +421,7 @@ try:
         yield from bps.abs_set(eiger2.cam.ROI_mode,'Disable',group=camset)
         yield from bps.abs_set(eiger2.cam.Flatfield_corr,'Enable',group=camset)
         yield from bps.abs_set(eiger2.cam.FW_compress,'Disable',group=camset)
-        yield from bps.abs_set(eiger2.cam.Compress_alg,'LZ4',group=camset)
+        yield from bps.abs_set(eiger2.cam.Compress_alg,'BS LZ4',group=camset)
         yield from bps.abs_set(eiger2.cam.Array_callbacks,'Enable',group=camset)
         yield from bps.abs_set(eiger2.cam.Data_source,'Stream',group=camset)
         yield from bps.wait(group=camset)

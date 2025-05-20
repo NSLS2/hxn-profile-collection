@@ -394,7 +394,7 @@ def find_2D_edge(sid, axis, elem):
 
 def find_edge(xdata,ydata,size):
     set_point=0.5
-    j=int (ceil(size/2.0))
+    j=int (np.ceil(size/2.0))
     l=len(ydata)
     local_mean=np.zeros(l-size)
     for i in range(l-size):
@@ -816,7 +816,7 @@ def calc_rot_alignment(first_sid = -10, last_sid =-1, elem = "Cr"):
 
 
 
-def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt_L', move_flag=0):
+def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt_L', move_flag=0, threshold = 0.5):
 
     """
     Usage <mll_rot_alignment(-30,30,6,-15,15,100,0.05,'W_L')
@@ -855,7 +855,7 @@ def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt
             yield from fly1dpd(dets_fast_fs,dssz,start,end,num,acq_time)
             #plot(-1, elem)
             #plt.close()
-            cen = return_line_center(-1, elem=elem,threshold = 0.6)
+            cen = return_line_center(-1, elem=elem,threshold = threshold)
             #plt.close()
             #cen, edg1, edg2 = square_fit(-1,elem=elem)
             #cen, fwhm = erf_fit(-1,elem=elem)
@@ -866,7 +866,7 @@ def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt
             #cx,cy = return_center_of_mass(-1,elem,0.3)
             #y[i] = cx*np.cos(x[i]*np.pi/180.0)
             yield from fly1dpd(dets_fast_fs,dssx,start,end,num,acq_time)
-            cen = return_line_center(-1,elem=elem,threshold = 0.6)
+            cen = return_line_center(-1,elem=elem,threshold = threshold)
             #plot(-1, elem)
             #plt.close()
             #cen, edg1, edg2 = square_fit(-1,elem=elem)
@@ -1615,7 +1615,8 @@ def update_det_pos(det = "merlin", do_confirm = True):
 
 
 
-def find_45_degree(th_mtr,start_angle,end_angle,num, x_start, x_end, x_num, exp_time=0.02, elem="Pt_L"):
+def find_45_degree(th_mtr,start_angle,end_angle,num, x_start, x_end, x_num, exp_time=0.02, elem="Pt_L", 
+                   save_name = 'pstv_45deg_calib'):
 
 
     ''' Usage: find_45_degree(dsth,40,50,25,-5, 5,100, exp_time=0.02,elem="Au_L") '''
@@ -1645,11 +1646,11 @@ def find_45_degree(th_mtr,start_angle,end_angle,num, x_start, x_end, x_num, exp_
         yield from bps.sleep(1)
         yield from bps.movr(th_mtr,step)
 
-        np.savetxt("/nsls2/data/hxn/legacy/users/Beamline_Performance/45deg_calib.txt",np.column_stack([th,w_x,w_z]))
+        np.savetxt(f"/nsls2/data/hxn/legacy/users/Beamline_Performance/{save_name}.txt",np.column_stack([th,w_x,w_z]))
     plt.figure()
     plt.plot(th,w_x,'r+',th,w_z,'g-')
 
-    find_45_offset()
+    find_45_offset(f"/nsls2/data/hxn/legacy/users/Beamline_Performance/{save_name}.txt")
     return th,w_x,w_z
 
 
@@ -1658,7 +1659,7 @@ def find_45_offset(data_path = "/nsls2/data/hxn/legacy/users/Beamline_Performanc
     """ usage :find_45_offset() """
 
 
-    data = np.loadtxt(data_path)
+    data = abs(np.loadtxt(data_path))
     # Define the objective function
     def objective(offset, data):
         # Calculate theta
@@ -1688,7 +1689,7 @@ def find_45_offset(data_path = "/nsls2/data/hxn/legacy/users/Beamline_Performanc
     # Plotting the data before and after finding the optimal offset
     fig, ax = plt.subplots(1, 2, figsize=(12, 6))
 
-    theta_raw = (data[:, 0]) * np.pi / 180
+    theta_raw = abs(data[:, 0]) * np.pi / 180
 
     # Plot before applying the offset (raw data)
     ax[0].scatter(data[:, 0], np.cos(theta_raw) * data[:, 1], label='X', color='r', alpha=0.7)
@@ -1770,9 +1771,9 @@ def find_45_offset_scaling(data_path = "/nsls2/data/hxn/legacy/users/Beamline_Pe
     return optimal_offset
     '''
 
-def plot_45_degree_calib():
+def plot_45_degree_calib(filename):
 
-    data = np.loadtxt("/nsls2/data/hxn/legacy/users/Beamline_Performance/45deg_calib.txt")
+    data = np.loadtxt(filename)
     print(data.shape)
     th = data[:,0]
     w_x = data[:,1]
@@ -1874,8 +1875,6 @@ def feedback_auto_off(wait_time_sec = 0.5):
 
 
 def check_for_beam_dump(threshold = 5000):
-
-
 
     while (sclr2_ch2.get() < threshold):
         yield from bps.sleep(60)
@@ -2691,25 +2690,27 @@ def peak_all(x_start = -25,x_end=25,x_n_step=50, y_start = -15,y_end=15, y_n_ste
 def peak_the_flux():
 
     """ Scan the c-bpm set points to find IC3 maximum """
+    try:
+        #open c
+        caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0",1)
 
-    #open c
-    caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0",1)
+        if abs(caget("XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.RBV")) <10:
+            raise ValueError ("CAM06 is IN, move it out and try again")
 
-    if abs(caget("XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.RBV")) <10:
-        raise ValueError ("CAM06 is IN, move it out and try again")
+        print("Peaking the flux.")
+        yield from bps.sleep(2)
+        yield from peak_bpm_y(-15,15,10)
 
-    print("Peaking the flux.")
-    yield from bps.sleep(2)
-    yield from peak_bpm_y(-15,15,10)
+        yield from bps.sleep(1)
+        yield from peak_bpm_x(-15,15,6)
 
-    yield from bps.sleep(1)
-    yield from peak_bpm_x(-15,15,6)
+        yield from bps.sleep(1)
+        yield from peak_bpm_y(-4,4,10)
 
-    yield from bps.sleep(1)
-    yield from peak_bpm_y(-4,4,10)
+        #close c
+        caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0",0)
 
-    #close c
-    caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0",0)
+    except: pass
 
 
 
