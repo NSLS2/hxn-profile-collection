@@ -138,6 +138,7 @@ def _write_to_file(col_name, method_name, t1, t2):
 
 
 from .tiled_writer import buff_tw
+
 class CompositeRegistry(Registry):
     '''Composite registry.'''
 
@@ -226,7 +227,8 @@ class CompositeRegistry(Registry):
         # ignore the second attempt to insert.
         try:
             kafka_publisher('datum', datum)
-            tiled_datum_publisher('datum', datum)
+            # tiled_datum_publisher('datum', datum)
+            buff_tw('datum', datum)
 
             #col.insert_one(datum)
         except duplicate_exc:
@@ -448,9 +450,9 @@ def flush_on_stop_doc(name, doc):
     if name=='stop':
         kafka_publisher.flush()
 
-def tiled_datum_publisher(name, doc):
-    if name == 'datum':
-        pass
+# def tiled_datum_publisher(name, doc):
+#     if name == 'datum':
+#         pass
 
 # This is needed to prevent the local buffer from filling.
 RE.subscribe(flush_on_stop_doc, 'stop')

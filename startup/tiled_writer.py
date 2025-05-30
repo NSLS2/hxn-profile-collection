@@ -23,7 +23,7 @@ from bluesky.run_engine import Dispatcher
 from bluesky.callbacks.core import CallbackBase
 from bluesky.callbacks.tiled_writer import TiledWriter
 
-from tiled.client import from_profile
+from tiled.client import from_profile, from_uri
 import os
 import atexit
 import logging
@@ -267,7 +267,8 @@ class DocumentConverter(CallbackBase):
 
 
 api_key = os.environ.get("TILED_BLUESKY_WRITING_API_KEY_HXN")
-tiled_writing_client = from_profile("nsls2", api_key=api_key)['hxn']['migration']
+# tiled_writing_client = from_profile("nsls2", api_key=api_key)['hxn']['migration']
+tiled_writing_client = from_uri("https://tiled.nsls2.bnl.gov", api_key=api_key)['hxn']['migration']
 
 converter = DocumentConverter()
 tw = TiledWriter(client= tiled_writing_client)
