@@ -2166,6 +2166,16 @@ def mll_lens_out():
         raise ValueError("lens positions are not close to zero or fluorescence detector is too close to hmll")
         pass
 
+def mll_mov_zfocus(distance):
+    sbz_current = sbz.user_readback.get()
+    sbz_target = sbz_current + distance
+    if sbz_target > -10 and sbz_target < 5000:
+        yield from bps.mov(sbz,sbz_target)
+        yield from bps.abs_set(sbx.user_setpoint,sbx.user_readback.get()+distance / 500 * 3,wait=True)
+        yield from bps.abs_set(dsy.user_setpoint,dsy.user_readback.get()+distance / 500 * -3.3,wait=True)
+        yield from bps.sleep(1)
+    else:
+        print('Target sbz out of range -10~5000 um')
 
 def move_motor_caput(motor_name_value_dict):
 
@@ -2612,11 +2622,11 @@ def peak_bpm_x(start,end,n_steps):
         caput('XF:03ID-BI{EM:BPM1}fast_pidX.VAL',peak[0])
         yield from bps.sleep(5)
 
-        xbpmc_x = caget('XF:03ID-BI{EM:BPM2}PosX:MeanValue_RBV')
-        xbpmc_y = caget('XF:03ID-BI{EM:BPM2}PosY:MeanValue_RBV')
-        print(xbpmc_x,xbpmc_y)
-        caput('XF:03IDC-CT{FbPid:03}PID.VAL',xbpmc_y)
-        caput('XF:03IDC-CT{FbPid:04}PID.VAL',xbpmc_x)
+        # xbpmc_x = caget('XF:03ID-BI{EM:BPM2}PosX:MeanValue_RBV')
+        # xbpmc_y = caget('XF:03ID-BI{EM:BPM2}PosY:MeanValue_RBV')
+        # print(xbpmc_x,xbpmc_y)
+        # caput('XF:03IDC-CT{FbPid:03}PID.VAL',xbpmc_y)
+        # caput('XF:03IDC-CT{FbPid:04}PID.VAL',xbpmc_x)
         caput('XF:03IDC-ES{Status}ScanRunning-I', 0)
 
 
@@ -2666,11 +2676,11 @@ def peak_bpm_y(start,end,n_steps):
         caput('XF:03ID-BI{EM:BPM1}fast_pidY.VAL',peak[0])
         yield from bps.sleep(2)
 
-        xbpmc_x = caget('XF:03ID-BI{EM:BPM2}PosX:MeanValue_RBV')
-        xbpmc_y = caget('XF:03ID-BI{EM:BPM2}PosY:MeanValue_RBV')
-        print(xbpmc_x,xbpmc_y)
-        caput('XF:03IDC-CT{FbPid:03}PID.VAL',xbpmc_y)
-        caput('XF:03IDC-CT{FbPid:04}PID.VAL',xbpmc_x)
+        # xbpmc_x = caget('XF:03ID-BI{EM:BPM2}PosX:MeanValue_RBV')
+        # xbpmc_y = caget('XF:03ID-BI{EM:BPM2}PosY:MeanValue_RBV')
+        # print(xbpmc_x,xbpmc_y)
+        # caput('XF:03IDC-CT{FbPid:03}PID.VAL',xbpmc_y)
+        # caput('XF:03IDC-CT{FbPid:04}PID.VAL',xbpmc_x)
         caput('XF:03IDC-ES{Status}ScanRunning-I', 0)
 
 
@@ -2772,8 +2782,8 @@ def recover_from_beamdump(peak_after = True):
         yield from bps.mov(dcm.p, dcm_pitch_set,dcm.r, dcm_roll_set)
         yield from bps.sleep(5)
 
-        if not math.isclose(dcm.p.position, dcm_pitch_set, rel_tol=0.05) or \
-        not math.isclose(dcm.r.position, dcm_roll_set, rel_tol=0.05):
+        if not math.isclose(dcm.p.position, dcm_pitch_set, abs_tol=0.02) or \
+        not math.isclose(dcm.r.position, dcm_roll_set, abs_tol=0.02):
             raise ValueError("Failed! DCM positions not within 5% of the set values")
 
 

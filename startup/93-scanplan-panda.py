@@ -813,7 +813,7 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
 
     if scan_header:
         export_scan_header(hxntools.scans.get_last_scan_id()+1,scan_header[0],scan_header[1],scan_header[2],scan_header[3],scan_header[4],scan_header[5],\
-                [d for d in detectors if d.name.startswith('eiger')][0])
+                [d for d in detectors if d.name.startswith('eiger')])
 
     if panda_flyer._sis is not None:
         # Put SIS3820 into single count (not autocount) mode
@@ -1139,10 +1139,11 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
 
             print(f"{vx = }")
             if (('merlin1' in [d.name for d in dets])):
-                caput("XF:03IDC-ES{Merlin:1}cam1:Acquire",0)
+                yield from bps.abs_set(merlin1.cam.acquire,0)
 
             if (('merlin1' in [d.name for d in dets])) and not merlin_cont_mode:
-                caput("XF:03IDC-ES{Merlin:1}cam1:QuadMerlinMode",1) # 0-12 bit; 1-24bit;
+
+                yield from bps.abs_set(merlin1.cam.quad_merlin_mode,1) # 0-12 bit; 1-24bit;
                 
                 min_dead_time = 0.005
                 if dead_time<min_dead_time:
@@ -1167,7 +1168,7 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
             #     center1 = center1 + get_tomo_drift(tomo_angle)
 
 
-            range_min, range_max = -15, 15
+            range_min, range_max = -21, 21
                 
             for pos in [start1_scan, start1_scan + range1_scan, start2, start2 + range2]:
                 if pos < range_min or pos > range_max:
@@ -1267,12 +1268,12 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
 
                     #may avoid when scan stucks if user had a non-zero strat position or motor is stuck 
                     #may need improvent if intial piezo positions are important  
-                    if motor2.name.startswith('zp'):
-                        yield from piezos_to_zero(zp_flag = True)
-                    elif motor2.name.startswith('ds'):
-                        yield from piezos_to_zero(zp_flag = False)
-                    else:
-                        pass
+                    # if motor2.name.startswith('zp'):
+                    #    yield from piezos_to_zero(zp_flag = True)
+                    # elif motor2.name.startswith('ds'):
+                    #    yield from piezos_to_zero(zp_flag = False)
+                    # else:
+                    #    pass
                 yield from bps.sleep(0.2)
 
             if motor2.name == 'zpssy':
@@ -1377,7 +1378,7 @@ def fly2dpd_repeat(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_star
             vx = range1/(exposure_time*num1)
 
             if (('merlin1' in [d.name for d in dets])) and not merlin_cont_mode:
-                caput("XF:03IDC-ES{Merlin:1}cam1:QuadMerlinMode",1) # 0-12 bit; 1-24bit;
+                yield from bps.abs_set(merlin1.cam.quad_merlin_mode,1) # 0-12 bit; 1-24bit;
                 min_dead_time = 0.003
                 if dead_time<min_dead_time:
                     print('Dead time set to %.1f ms for Merlin response time'%(min_dead_time*1000))
@@ -1947,7 +1948,7 @@ def timescanpd(dets, num, exposure_time, pos_return = True, apply_tomo_drift = F
         try:
 
             if (('merlin1' in [d.name for d in dets])) and not merlin_cont_mode:
-                caput("XF:03IDC-ES{Merlin:1}cam1:QuadMerlinMode",1) # 0-12 bit; 1-24bit;
+                yield from bps.abs_set(merlin1.cam.quad_merlin_mode,1) # 0-12 bit; 1-24bit;
                 min_dead_time = 0.003
                 if dead_time<min_dead_time:
                     print('Dead time set to %.1f ms for Merlin response time'%(min_dead_time*1000))

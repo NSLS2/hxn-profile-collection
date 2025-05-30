@@ -449,5 +449,5 @@ except Exception:
     print()
 
 dets_fast = [fs,eiger2,xspress3]
-dets_fast_merlin = [fs,xspress3,merlin1]
+dets_fast_merlin = [fs,xspress3,merlin1,eiger2]
 dets_fast_fs = [fs,xspress3]
