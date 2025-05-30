@@ -1,4 +1,4 @@
-def export_scan_header(scan_id,motorx,rangex,numx,motory,rangey,numy,detector):
+def export_scan_header(scan_id,motorx,rangex,numx,motory,rangey,numy,detectors):
     with open('/data/users/startup_parameters/scan_header.txt','w') as f:
         f.write('[scan]\n')
         f.write('scan_num = %d\n'%scan_id)
@@ -9,15 +9,17 @@ def export_scan_header(scan_id,motorx,rangex,numx,motory,rangey,numy,detector):
         f.write('x_num = %d\n'%numx)
         f.write('y_num = %d\n'%numy)
         f.write('nz = %d\n'%(numx*numy))
-        roi_start = detector.roi1.min_xyz.get()
-        f.write('det_roix_start = %d\n'%roi_start[0])
-        f.write('det_roiy_start = %d\n'%roi_start[1])
+        if detectors:
+            roi_start = detectors[0].roi1.min_xyz.get()
+            f.write('det_roix_start = %d\n'%roi_start[0])
+            f.write('det_roiy_start = %d\n'%roi_start[1])
         
         # Eiger2 image is mirrored
-        if detector.name == 'eiger2':
-            f.write('mirror_image = True\n')
-        else:
-            f.write('mirror_image = False\n')
+        if detectors:
+            if detectors[0].name == 'eiger2':
+                f.write('mirror_image = True\n')
+            else:
+                f.write('mirror_image = False\n')
 
 
 def plotlastfluo(id=-1,elem = 'Ni'):

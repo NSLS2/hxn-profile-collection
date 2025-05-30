@@ -134,9 +134,9 @@ def align_scan(mtr,start,end,num,exp,elem_, align_with="line_center",
     if zp_flag:
         uni_conv = 1000
 
-
     if reset_piezos_to_zero:
-            yield from piezos_to_zero(zp_flag = zp_flag)
+            yield from bps.mov(mtr,0,wait=True)
+            # yield from piezos_to_zero(zp_flag = zp_flag)
 
     if not tomo_use_panda:
         yield from fly1d(dets_fs,
@@ -179,6 +179,8 @@ def align_scan(mtr,start,end,num,exp,elem_, align_with="line_center",
     else:
         yield from bps.sleep(1)
         yield from bps.mov(mtr,xc)
+    
+    return xc
 
 
 def tomo_2d_scan(angle,dets_,fly_motors,x_start,x_end,x_num,y_start,y_end,y_num,exp, 
@@ -225,8 +227,8 @@ def tomo_2d_scan(angle,dets_,fly_motors,x_start,x_end,x_num,y_start,y_end,y_num,
         x_end_real = x_end / np.abs(np.sin(angle * np.pi / 180.))
         if fly_motors[2].name == 'dssz':
             print('WARNING!!: Applying temporary scaling correction ratio to dssz motor.')
-            x_start_real *= 0.98164
-            x_end_real *= 0.98164
+            x_start_real *= 0.955
+            x_end_real *= 0.955
         print(x_start_real,x_end_real)
 
         if not tomo_use_panda:
@@ -344,7 +346,7 @@ def tomo_scan_to_loop(angle, tomo_params, ic_init, do_y_offset = True,tracking_f
         print(f'{tomo_params["flying_panda"] = }')
         #1d alignment sequence, based on angle x or z will be scanned
         if np.abs(angle) < 44.99:
-
+            print('dssx scanning')
             if xalign["do_align"]:
                 yield from align_scan(fly_motors[0],
                                 xalign["start"],
@@ -357,7 +359,8 @@ def tomo_scan_to_loop(angle, tomo_params, ic_init, do_y_offset = True,tracking_f
                                 xalign["move_coarse"],
                                 xalign["neg_flag"],
                                 xalign["offset"],
-                                tomo_params["flying_panda"]
+                                tomo_params["flying_panda"],
+                                xalign["zero_before_scan"]
                                 )
 
             #2d alignemnt using center of mass if condition is true
@@ -388,20 +391,21 @@ def tomo_scan_to_loop(angle, tomo_params, ic_init, do_y_offset = True,tracking_f
                 pass
 
         else:
-
+            print('dssz scanning')
             if xalign["do_align"]:
                 yield from align_scan(  fly_motors[2],
-                                        xalign["start"],
-                                        xalign["end"],
-                                        xalign["num"],
-                                        xalign["exposure"],
-                                        xalign["elem"],
-                                        xalign["center_with"],
-                                        xalign["threshold"],
-                                        xalign["move_coarse"],
-                                        xalign["neg_flag"],
-                                        xalign["offset"],
-                                        tomo_params["flying_panda"]
+                                xalign["start"],
+                                xalign["end"],
+                                xalign["num"],
+                                xalign["exposure"],
+                                xalign["elem"],
+                                xalign["center_with"],
+                                xalign["threshold"],
+                                xalign["move_coarse"],
+                                xalign["neg_flag"],
+                                xalign["offset"],
+                                tomo_params["flying_panda"],
+                                xalign["zero_before_scan"]
                                 )
 
             #2d alignemnt using center of mass if condition is true
