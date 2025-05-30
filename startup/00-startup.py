@@ -414,9 +414,7 @@ converter = DocumentConverter()
 tw = TiledWriter(client= tiled_writing_client)
 converter.subscribe(tw)
 
-# RE.subscribe(converter)
-
-buff_tw = BufferingWrapper(converter)
+# buff_tw = BufferingWrapper(converter)
 
 ################################################################
 
@@ -511,7 +509,8 @@ class CompositeRegistry(Registry):
         try:
             kafka_publisher('datum', datum)
             # tiled_datum_publisher('datum', datum)
-            buff_tw('datum', datum)
+            # buff_tw('datum', datum)
+            converter('datum', datum)
 
             #col.insert_one(datum)
         except duplicate_exc:
@@ -737,7 +736,8 @@ def flush_on_stop_doc(name, doc):
 #     if name == 'datum':
 #         pass
 
-RE.subscribe(buff_tw)
+# RE.subscribe(buff_tw)
+RE.subscribe(converter)
 
 # This is needed to prevent the local buffer from filling.
 RE.subscribe(flush_on_stop_doc, 'stop')
