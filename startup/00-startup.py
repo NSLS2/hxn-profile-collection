@@ -417,8 +417,6 @@ converter.subscribe(tw)
 # RE.subscribe(converter)
 
 buff_tw = BufferingWrapper(converter)
-RE.subscribe(buff_tw)
-
 
 ################################################################
 
@@ -738,6 +736,8 @@ def flush_on_stop_doc(name, doc):
 # def tiled_datum_publisher(name, doc):
 #     if name == 'datum':
 #         pass
+
+RE.subscribe(buff_tw)
 
 # This is needed to prevent the local buffer from filling.
 RE.subscribe(flush_on_stop_doc, 'stop')
