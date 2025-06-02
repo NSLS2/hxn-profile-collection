@@ -115,6 +115,7 @@ _fs_config_db1 = {'host': db1_addr,
 #f_benchmark = open("/home/xf03id/benchmark.out", "a+")
 f_benchmark = open("/nsls2/data/hxn/shared/config/bluesky/profile_collection/benchmark.out", "a+")
 datum_counts = {}
+datum_cache = []
 
 def sanitize_np(val):
     "Convert any numpy objects into built-in Python types."
@@ -135,6 +136,7 @@ def _write_to_file(col_name, method_name, t1, t2):
             "{0}: {1}, t1: {2} t2:{3} time:{4} \n".format(
                 col_name, method_name, t1, t2, (t2-t1),))
         f_benchmark.flush()
+
 
 class CompositeRegistry(Registry):
     '''Composite registry.'''
@@ -224,6 +226,9 @@ class CompositeRegistry(Registry):
         # ignore the second attempt to insert.
         try:
             kafka_publisher('datum', datum)
+            # tiled_datum_publisher('datum', datum)
+            datum_cache.append(datum)
+
             #col.insert_one(datum)
         except duplicate_exc:
             if ignore_duplicate_error:
@@ -446,6 +451,23 @@ def flush_on_stop_doc(name, doc):
 
 # This is needed to prevent the local buffer from filling.
 RE.subscribe(flush_on_stop_doc, 'stop')
+
+
+# This is needed to prevent the cache of Datum docuemnts from overfilling
+def clear_datum_cache(name, doc):
+    if name == 'start':
+        logger = logging.getLogger('bluesky')
+        while True:
+            if cache_length := len(datum_cache):
+                # There's something in the cache, wait a bit before clearing it
+                time.sleep(2)
+                if cache_length == len(datum_cache):
+                    # If the cache length is still the same -- we are stuck; clear it
+                    logger.info(f"Clearing datum_cache with {cache_length} items")
+                    datum_cache.clear()
+                    return
+
+RE.subscribe(clear_datum_cache, 'start')
 
 # Pass on only start/stop documents to a few subscriptions
 for _event in ('start', 'stop'):
