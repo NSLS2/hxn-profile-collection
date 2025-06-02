@@ -115,6 +115,7 @@ _fs_config_db1 = {'host': db1_addr,
 #f_benchmark = open("/home/xf03id/benchmark.out", "a+")
 f_benchmark = open("/nsls2/data/hxn/shared/config/bluesky/profile_collection/benchmark.out", "a+")
 datum_counts = {}
+datum_cache = []
 
 def sanitize_np(val):
     "Convert any numpy objects into built-in Python types."
@@ -135,289 +136,6 @@ def _write_to_file(col_name, method_name, t1, t2):
             "{0}: {1}, t1: {2} t2:{3} time:{4} \n".format(
                 col_name, method_name, t1, t2, (t2-t1),))
         f_benchmark.flush()
-
-########### COPIED FROM MONGO MGRATION SCRIPT ##############
-
-import copy
-
-from event_model import (
-    DocumentNames,
-    schema_validators,
-    unpack_datum_page,
-    unpack_event_page,
-)
-from event_model.documents import (
-    Datum,
-    DatumPage,
-    Event,
-    EventDescriptor,
-    EventPage,
-    Resource,
-    RunStart,
-    RunStop,
-    StreamDatum,
-    StreamResource,
-)
-
-from bluesky.run_engine import Dispatcher
-from bluesky.callbacks.core import CallbackBase
-from bluesky.callbacks.tiled_writer import TiledWriter
-
-from tiled.client import from_profile, from_uri
-import os
-import atexit
-import logging
-import threading
-from queue import Empty, Queue
-from typing import Callable
-
-logger = logging.getLogger(__name__)
-
-def patch_descriptor(doc):
-    # Issue #1: data keys for 'scaler_alive', 'sclr1_ch2' .. 'sclr1_ch8' have incorrect "dtype": "array"  and "shape": [1].
-    #   Replace the values with "dtype": "number" and "shape": []. Also set "dtype_str": "<i8" for "sclr1_ch.." to get rid of warnings.
-    # Issue #2: Fix for incorrect shape and type of merlin1 data.
-    DATA_KEY_PREFIXES = ["scaler_alive", "sclr1_ch"]
-    for k in doc["data_keys"].keys():
-        if k == "scaler_alive":
-            doc["data_keys"][k]["dtype"] = "number"
-            doc["data_keys"][k]["shape"] = []
-        elif k.startswith("sclr"):
-            doc["data_keys"][k]["dtype"] = "number"
-            doc["data_keys"][k]["dtype_str"] = "<f4"
-        elif k == "merlin1":
-            doc["data_keys"][k]["dtype_str"] = "<u4"
-            # doc["data_keys"][k]["shape"] = [1, 209, 203]     # The shape is inconsistent; need to validate
-        elif k == "eiger1" or k == "eiger_mobile_image":
-            # doc["data_keys"][k]["shape"] = [1, 409, 412]     # or [1, 394, 338]? in "TPX_HDF5" spec
-            doc["data_keys"][k]["dtype_str"] = "<u2"           # Inconsistent? Need to validate
-        elif k == "eiger2_image":
-            doc["data_keys"][k]["dtype_str"] = "<u4"           # Could be "<u4" or "<u2"
-        elif k.startswith("Det"):
-            doc["data_keys"][k]["dtype_str"] = "<f4"
-
-    return doc
-
-def patch_datum(doc):
-    if "datum_kwargs" in doc.keys():
-        dataset = doc['datum_kwargs'].pop("det_elem", None) \
-                or doc['datum_kwargs'].pop("column", None) \
-                or doc['datum_kwargs'].pop("field", None)
-        if dataset:
-            doc["datum_kwargs"]["dataset"] = dataset
-        
-        if channel := doc["datum_kwargs"].get("channel", None):
-            doc["datum_kwargs"]["slice"] = f"(:,{channel-1},:)"
-            doc["datum_kwargs"]["squeeze"] = True
-    return doc
-
-def patch_resource(doc):
-    if doc["resource_path"].startswith(doc["root"]):
-        doc["resource_path"] = doc["resource_path"].replace(doc["root"], '')
-    # doc["root"] == re.sub(r"^/data", "/nsls2/data/hxn/legacy", doc["root"])
-    doc["root"] = doc["root"].replace("/data", "/nsls2/data/hxn/legacy")
-    doc["resource_path"] = doc["resource_path"].replace("nsls2/data2/hxn", "nsls2/data/hxn")
-    
-    # Replace 'frame_per_point' with 'multiplier'
-    if frame_per_point := doc["resource_kwargs"].pop("frame_per_point", None):
-        doc["resource_kwargs"]["multiplier"] = frame_per_point
-    
-    # Sey default chunk_shape to (1,)
-    if "chunk_shape" not in doc["resource_kwargs"].keys():
-        doc["resource_kwargs"]["chunk_shape"] = (1, )
-
-    spec = doc["spec"]
-    if spec in ["MERLIN_FLY_STREAM_V2", "TPX3", "TPX_HDF5", "EIGER2_STREAM", "MERLIN_HDF5_BULK"]:
-        doc["resource_kwargs"].update({"dataset": '/entry/data/data', "chunk_shape": (1, ), "join_method": "concat"})
-    elif spec == "PANDA":
-        doc["resource_kwargs"].update({"chunk_shape": (1024, ), "join_method": "concat"})
-    elif spec == "ROI_HDF5_FLY":
-        doc["resource_kwargs"].update({"chunk_shape": (1024, ), "join_method": "concat"})
-    elif spec in ["XSP"]:
-        # NOTE: here data is accessed by "channel"
-        doc["resource_kwargs"].update({"dataset": 'entry/instrument/detector/data', "chunk_shape": (1, ), "join_method": "concat"})
-    elif spec == "XSP3_BULK":
-        # NOTE: here data is accessed by "channel"
-        # NOTE: "XSP3_BULK" does not declare the number of rows in the descriptor -- need to validate (see below)
-        doc["resource_kwargs"].update({"dataset": 'entry/instrument/detector/data',
-                                       "chunk_shape": (1, ),
-                                       "join_method": "stack"})
-    elif spec == "XSP3":
-        # NOTE: here data is accessed by "channel" -- need to decide how to handle it in Tiled
-        doc["resource_kwargs"].update({"dataset": 'entry/instrument/detector/data', "chunk_shape": (1, ), "join_method": "stack"})
-    elif spec == "SIS_HDF51_FLY_STREAM_V1":
-        # These correspond to 'sclr1_ch*' data_keys
-        doc["resource_kwargs"].update({"chunk_shape": (1024, ), "join_method": "concat"})
-
-    # Validate the structure if e.g. the datum shape is not declared in the descriptor
-    # NOTE: Flyscannning specs often do not include the total number recorded points, only points per frame
-    # NOTE: TPX_HDF5 has inconsistent shape definitions for eiger1 and merlin (stackable T/F)
-    if spec in ["XSP3_BULK", "MERLIN_HDF5_BULK", "ROI_HDF5_FLY", "SIS_HDF51_FLY_STREAM_V1",
-                "MERLIN_FLY_STREAM_V2", "PANDA"] + ["TPX_HDF5"]:
-        doc["resource_kwargs"].update({"_validate": True})
-
-    return doc
-
-
-class BufferingWrapper:
-    """A wrapper for callbacks that processes documents in a separate thread.
-
-    This class allows a callback to be executed in a background thread, processing
-    documents as they are received. This prevent the blocking of RunEngine on any
-    slow I/O operations by the callback. It handles graceful shutdown on exit or signal
-    termination, ensuring that no new documents are accepted after shutdown has been
-    initiated.
-
-    The wrapped callback should be thread-safe and not subscribed to the RE directly.
-    If it maintains shared mutable state, it must protect it using internal locking.
-
-    This is mainly a development feature to allow subscribing (potentially many)
-    experimental callbacks to a `RunEngine` without the risk of blocking the experiment.
-    The use in production is currently not encouraged (at least not without a proper
-    testing and risk assessment).
-
-    Parameters
-    ----------
-        target : callable
-            The instance of a callback that will be called with the documents.
-            It should accept two parameters: `name` and `doc`.
-        queue_size : int, optional
-            The maximum size of the internal queue. Default is 1,000,000.
-
-    Usage
-    -----
-        tw = TiltedWriter(client)
-        buff_tw = BufferingWrapper(tw)
-        RE.subscribe(buff_tw)
-    """
-
-    def __init__(self, target: Callable, queue_size: int = 1_000_000):
-        self._wrapped_callback = target
-        self._queue: Queue = Queue(maxsize=queue_size)
-        self._stop_event = threading.Event()
-        self._shutdown_lock = threading.Lock()
-
-        self._thread = threading.Thread(target=self._process_queue, daemon=True)
-        self._thread.start()
-
-        atexit.register(self.shutdown)
-
-    def __call__(self, name, doc):
-        if self._stop_event.is_set():
-            raise RuntimeError("Cannot accept new data after shutdown.")
-            # TODO: This can be refactored using the upstream functionality (in Python >= 3.13)
-            # https://docs.python.org/3/library/queue.html#queue.Queue.shutdown
-        try:
-            self._queue.put((name, doc))
-        except Exception as e:
-            logger.exception(f"Failed to put document {name} in queue: {e}")
-
-    def _process_queue(self):
-        while True:
-            try:
-                if item := self._queue.get(timeout=1):
-                    self._wrapped_callback(*item)  # Delegate to wrapped callback
-                else:
-                    break  # Received sentinel value to stop processing
-            except Empty:
-                if self._stop_event.is_set():
-                    break
-            except Exception as e:
-                logger.exception(f"Exception in {self._wrapped_callback.__class__.__name__}: {e}")
-
-    def shutdown(self, wait: bool = True):
-        if self._stop_event.is_set():
-            return
-        self._stop_event.set()
-        self._queue.put(None)
-
-        atexit.unregister(self.shutdown)
-
-        if wait:
-            self._thread.join()
-
-        logger.info(f"{self._wrapped_callback.__class__.__name__} shut down gracefully.")
-
-
-class DocumentConverter(CallbackBase):
-    """Callback for updating Bluesky documents"""
-
-    def __init__(self):
-        self._token_refs = {}
-        self.dispatcher = Dispatcher()
-
-    def start(self, doc: RunStart):
-        doc = copy.deepcopy(doc)
-        self.emit(DocumentNames.start, doc)
-
-    def stop(self, doc: RunStop):
-        doc = copy.deepcopy(doc)
-        self.emit(DocumentNames.stop, doc)
-
-    def descriptor(self, doc: EventDescriptor):
-        doc = copy.deepcopy(doc)
-        doc = patch_descriptor(doc)
-        self.emit(DocumentNames.descriptor, doc)
-
-    def event(self, doc: Event):
-        doc = copy.deepcopy(doc)
-        self.emit(DocumentNames.event, doc)
-
-    def resource(self, doc: Resource):
-        doc = copy.deepcopy(doc)
-        doc = patch_resource(doc)
-        self.emit(DocumentNames.resource, doc)
-
-    def stream_resource(self, doc: StreamResource):
-        doc = copy.deepcopy(doc)
-        self.emit(DocumentNames.stream_resource, doc)
-
-    def datum(self, doc: Datum):
-        doc = copy.deepcopy(doc)
-        doc = patch_datum(doc)
-        self.emit(DocumentNames.datum, doc)
-
-    def stream_datum(self, doc: StreamDatum):
-        doc = copy.deepcopy(doc)
-        self.emit(DocumentNames.stream_datum, doc)
-
-    def datum_page(self, doc: DatumPage):
-        for _doc in unpack_datum_page(doc):
-            self.datum(_doc)
-
-    def event_page(self, doc: EventPage):
-        for _doc in unpack_event_page(doc):
-            self.event(_doc)
-
-    def emit(self, name, doc):
-        """Check the document schema and send to the dispatcher"""
-        schema_validators[name].validate(doc)
-        self.dispatcher.process(name, doc)
-
-    def subscribe(self, func, name="all"):
-        """Convenience function for dispatcher subscription"""
-        token = self.dispatcher.subscribe(func, name)
-        self._token_refs[token] = func
-        return token
-
-    def unsubscribe(self, token):
-        """Convenience function for dispatcher un-subscription"""
-        self._token_refs.pop(token, None)
-        self.dispatcher.unsubscribe(token)
-
-
-api_key = os.environ.get("TILED_BLUESKY_WRITING_API_KEY_HXN")
-# tiled_writing_client = from_profile("nsls2", api_key=api_key)['hxn']['migration']
-tiled_writing_client = from_uri("https://tiled.nsls2.bnl.gov", api_key=api_key)['hxn']['migration']
-
-converter = DocumentConverter()
-tw = TiledWriter(client= tiled_writing_client)
-converter.subscribe(tw)
-
-# buff_tw = BufferingWrapper(converter)
-
-################################################################
-
 
 
 class CompositeRegistry(Registry):
@@ -509,8 +227,7 @@ class CompositeRegistry(Registry):
         try:
             kafka_publisher('datum', datum)
             # tiled_datum_publisher('datum', datum)
-            # buff_tw('datum', datum)
-            converter('datum', datum)
+            datum_cache.append(datum)
 
             #col.insert_one(datum)
         except duplicate_exc:
@@ -732,15 +449,25 @@ def flush_on_stop_doc(name, doc):
     if name=='stop':
         kafka_publisher.flush()
 
-# def tiled_datum_publisher(name, doc):
-#     if name == 'datum':
-#         pass
-
-# RE.subscribe(buff_tw)
-RE.subscribe(converter)
-
 # This is needed to prevent the local buffer from filling.
 RE.subscribe(flush_on_stop_doc, 'stop')
+
+
+# This is needed to prevent the cache of Datum docuemnts from overfilling
+def clear_datum_cache(name, doc):
+    if name == 'start':
+        logger = logging.getLogger('bluesky')
+        while True:
+            if cache_length := len(datum_cache):
+                # There's something in the cache, wait a bit before clearing it
+                time.sleep(2)
+                if cache_length == len(datum_cache):
+                    # If the cache length is still the same -- we are stuck; clear it
+                    logger.info(f"Clearing datum_cache with {cache_length} items")
+                    datum_cache.clear()
+                    return
+
+RE.subscribe(clear_datum_cache, 'start')
 
 # Pass on only start/stop documents to a few subscriptions
 for _event in ('start', 'stop'):

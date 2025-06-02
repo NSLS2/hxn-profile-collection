@@ -274,7 +274,19 @@ converter = DocumentConverter()
 tw = TiledWriter(client= tiled_writing_client)
 converter.subscribe(tw)
 
-# RE.subscribe(converter)
+def datum_consumer(name, doc):
+    """Replay all received datum documents from the cache when the scan finishes."""
+    if name == "stop":
+        while True:
+            try:
+                datum_doc = datum_cache.popleft()
+                converter("datum", datum_doc)
+            except IndexError:
+                # All Datums have been processed
+                break
+    converter(name, doc)
 
-buff_tw = BufferingWrapper(converter)
+# RE.subscribe(datum_consumer)
+
+buff_tw = BufferingWrapper(datum_consumer)
 RE.subscribe(buff_tw)
