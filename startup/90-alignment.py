@@ -899,7 +899,7 @@ def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt
 
     #moving back to intial y position
     yield from bps.mov(dssy, y_init)
-    print(f'{dx = :.2f}, {dz = :.2f}')
+    print(f'Relative motion: {dx = :.2f}, {dz = :.2f} and sbx by {-1*dx :.2f}')
 
     #if move_flag:
         #yield from bps.movr(smlld.dsx, dx)
@@ -911,12 +911,12 @@ def mll_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time, elem='Pt
     x = np.array(x)
     y = -np.array(y)
 
-    print(x)
-    print(y)
-    print(v)
+    # print(x)
+    # print(y)
+    # print(v)
     #caliFIle = open('rotCali','wb')
     #pickle.dump(y,CaliFile)
-    return v
+    return dx, dz
 
 
 def refit_rot_align(scan_list, elem, threshold):
@@ -2340,7 +2340,7 @@ def mll_to_nanobeam():
 
     yield from bps.movr(ssa2.hgap,-2,ssa2.vgap,-2,s5.hgap,-3.5,s5.vgap,-3.5)
 
-    do_motor_position_checks(check_list_after,message_string ="Failed to go to nanobeam position")
+    do_motor_position_checks(check_list_after,abs_tol = 5, message_string ="Failed to go to nanobeam position")
 
 
 def zp_to_nanobeam(peak_the_flux_after = False):

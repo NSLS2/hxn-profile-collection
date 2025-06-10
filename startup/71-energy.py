@@ -550,8 +550,8 @@ def foil_calib_scan_list(elem_line = "Mn_K", saveLogFolder =  "/data/users/curre
     edgeE = xraydb.xray_edge(elem_line.split('_')[0],
                      elem_line.split('_')[1], 
                      True)/1000
-    startE = np.around(edgeE-0.03,4)
-    endE = np.around(edgeE+0.060,4)
+    startE = np.around(edgeE-0.05,4)
+    endE = np.around(edgeE+0.100,4)
     
     energies = np.arange(startE,endE,0.0005)
     
