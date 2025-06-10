@@ -115,7 +115,7 @@ _fs_config_db1 = {'host': db1_addr,
 #f_benchmark = open("/home/xf03id/benchmark.out", "a+")
 f_benchmark = open("/nsls2/data/hxn/shared/config/bluesky/profile_collection/benchmark.out", "a+")
 datum_counts = {}
-datum_cache = []
+datum_cache = deque([])
 
 def sanitize_np(val):
     "Convert any numpy objects into built-in Python types."
@@ -467,7 +467,7 @@ def clear_datum_cache(name, doc):
                     datum_cache.clear()
                     return
 
-RE.subscribe(clear_datum_cache, 'start')
+# RE.subscribe(clear_datum_cache, 'start')
 
 # Pass on only start/stop documents to a few subscriptions
 for _event in ('start', 'stop'):

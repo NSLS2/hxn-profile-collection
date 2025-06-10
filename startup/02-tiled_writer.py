@@ -1,4 +1,7 @@
+print(f"Loading {__file__!r} ...")
+
 import copy
+import atexit
 
 from event_model import (
     DocumentNames,
@@ -287,9 +290,9 @@ def datum_consumer(name, doc):
                 break
     converter(name, doc)
 
-# # Subscribe the datum_consumer directly
-# RE.subscribe(datum_consumer)
+# Subscribe the datum_consumer directly
+RE.subscribe(datum_consumer)
 
-# Create a thread-safe queue to hold documents
-buff_tw = BufferingWrapper(datum_consumer)
-RE.subscribe(buff_tw)
+# # Create a thread-safe queue to hold documents
+# buff_tw = BufferingWrapper(datum_consumer)
+# RE.subscribe(buff_tw)
