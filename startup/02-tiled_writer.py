@@ -269,6 +269,7 @@ class DocumentConverter(CallbackBase):
 api_key = os.environ.get("TILED_BLUESKY_WRITING_API_KEY_HXN")
 # tiled_writing_client = from_profile("nsls2", api_key=api_key)['hxn']['migration']
 tiled_writing_client = from_uri("https://tiled.nsls2.bnl.gov", api_key=api_key)['hxn']['migration']
+RE.md["tiled_access_tags"] = ["hxn_beamline"]
 
 converter = DocumentConverter()
 tw = TiledWriter(client= tiled_writing_client)
@@ -286,7 +287,9 @@ def datum_consumer(name, doc):
                 break
     converter(name, doc)
 
+# # Subscribe the datum_consumer directly
 # RE.subscribe(datum_consumer)
 
+# Create a thread-safe queue to hold documents
 buff_tw = BufferingWrapper(datum_consumer)
 RE.subscribe(buff_tw)
