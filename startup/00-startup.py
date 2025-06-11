@@ -164,6 +164,7 @@ class CompositeRegistry(Registry):
 
         try:
             col.insert_one(resource_object)
+            datum_cache.append(("resource", resource_object))
         except Exception as duplicate_exc:
             print(duplicate_exc)
             if ignore_duplicate_error:
@@ -227,7 +228,7 @@ class CompositeRegistry(Registry):
         try:
             kafka_publisher('datum', datum)
             # tiled_datum_publisher('datum', datum)
-            datum_cache.append(datum)
+            datum_cache.append(("datum", datum))
 
             #col.insert_one(datum)
         except duplicate_exc:

@@ -3,6 +3,7 @@ print(f"Loading {__file__!r} ...")
 import copy
 import atexit
 import time
+from event_model import DocumentNames
 
 from event_model import (
     DocumentNames,
@@ -302,6 +303,7 @@ class DocumentConverter(CallbackBase):
     def resource(self, doc: Resource):
         doc = copy.deepcopy(doc)
         doc = patch_resource(doc)
+        doc.pop('id', None)
         self.emit(DocumentNames.resource, doc)
 
     def stream_resource(self, doc: StreamResource):
@@ -341,6 +343,10 @@ class DocumentConverter(CallbackBase):
         self._token_refs.pop(token, None)
         self.dispatcher.unsubscribe(token)
 
+    def __call__(self, name, doc):
+        print(f"In __call__ {name}")
+        print(f"Callbacks: {len(self.dispatcher.cb_registry.callbacks[DocumentNames[name]])}")
+        return super().__call__(name, doc)
 
 # This is needed to prevent the cache of Datum docuemnts from overfilling
 def clear_datum_cache(name, doc):
@@ -363,11 +369,11 @@ api_key = os.environ.get("TILED_BLUESKY_WRITING_API_KEY_HXN")
 tiled_writing_client = from_uri("https://tiled.nsls2.bnl.gov", api_key=api_key)['hxn']['migration']
 RE.md["tiled_access_tags"] = ["hxn_beamline"]
 
-
-tw = TiledWriter(client= tiled_writing_client, normalizer=RunNormalizerHXN, backup_directory="/tmp/tiled_backup",
-                 patches = {"descriptor": patch_descriptor,
-                           "datum": patch_datum,
-                           "resource": patch_resource})
+# normalizer=RunNormalizerHXN, 
+tw = TiledWriter(client= tiled_writing_client, backup_directory="/tmp/tiled_backup")
+                #  patches = {"descriptor": patch_descriptor,
+                #            "datum": patch_datum,
+                #            "resource": patch_resource})
 converter = DocumentConverter()
 converter.subscribe(tw)
 # converter = tw
@@ -377,8 +383,8 @@ def datum_consumer(name, doc):
     if name == "stop":
         while True:
             try:
-                datum_doc = datum_cache.popleft()
-                converter("datum", datum_doc)
+                name, doc = datum_cache.popleft()
+                converter(name, doc)
             except IndexError:
                 # All Datums have been processed
                 break
