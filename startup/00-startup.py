@@ -453,22 +453,6 @@ def flush_on_stop_doc(name, doc):
 RE.subscribe(flush_on_stop_doc, 'stop')
 
 
-# This is needed to prevent the cache of Datum docuemnts from overfilling
-def clear_datum_cache(name, doc):
-    if name == 'start':
-        logger = logging.getLogger('bluesky')
-        while True:
-            if cache_length := len(datum_cache):
-                # There's something in the cache, wait a bit before clearing it
-                time.sleep(2)
-                if cache_length == len(datum_cache):
-                    # If the cache length is still the same -- we are stuck; clear it
-                    logger.info(f"Clearing datum_cache with {cache_length} items")
-                    datum_cache.clear()
-                    return
-
-# RE.subscribe(clear_datum_cache, 'start')
-
 # Pass on only start/stop documents to a few subscriptions
 for _event in ('start', 'stop'):
     RE.subscribe(scan_number_printer, _event)
