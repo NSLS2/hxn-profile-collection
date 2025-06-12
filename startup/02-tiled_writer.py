@@ -1,39 +1,13 @@
 print(f"Loading {__file__!r} ...")
 
 import copy
-import atexit
-import time
-from event_model import DocumentNames
 
-from event_model import (
-    DocumentNames,
-    schema_validators,
-    unpack_datum_page,
-    unpack_event_page,
-)
-from event_model.documents import (
-    Datum,
-    DatumPage,
-    Event,
-    EventDescriptor,
-    EventPage,
-    Resource,
-    RunStart,
-    RunStop,
-    StreamDatum,
-    StreamResource,
-)
-
-from bluesky.run_engine import Dispatcher
-from bluesky.callbacks.core import CallbackBase
 from bluesky.callbacks.tiled_writer import TiledWriter, RunNormalizer
+from bluesky.callbacks.buffer import BufferingWrapper
 
-from tiled.client import from_profile, from_uri
+from tiled.client import from_uri
 import os
 import logging
-import threading
-from queue import Empty, Queue
-from typing import Callable
 
 logger = logging.getLogger(__name__)
 
@@ -78,14 +52,15 @@ def patch_datum(doc):
 def patch_resource(doc):
     if doc["resource_path"].startswith(doc["root"]):
         doc["resource_path"] = doc["resource_path"].replace(doc["root"], '')
-    # doc["root"] == re.sub(r"^/data", "/nsls2/data/hxn/legacy", doc["root"])
-    doc["root"] = doc["root"].replace("/data", "/nsls2/data/hxn/legacy")
+    if doc["root"].startswith("/data"):
+        doc["root"] = doc["root"].replace("/data", "/nsls2/data/hxn/legacy")
+    # doc["root"] = re.sub(r"^/data", "/nsls2/data/hxn/legacy", doc["root"])
     doc["resource_path"] = doc["resource_path"].replace("nsls2/data2/hxn", "nsls2/data/hxn")
     
     # Replace 'frame_per_point' with 'multiplier'
     if frame_per_point := doc["resource_kwargs"].pop("frame_per_point", None):
         doc["resource_kwargs"]["multiplier"] = frame_per_point
-    
+
     # Sey default chunk_shape to (1,)
     if "chunk_shape" not in doc["resource_kwargs"].keys():
         doc["resource_kwargs"]["chunk_shape"] = (1, )
@@ -196,203 +171,32 @@ class RunNormalizerHXN(RunNormalizer):
         super().stop(doc)
 
 
-class BufferingWrapper:
-    """A wrapper for callbacks that processes documents in a separate thread.
-
-    This class allows a callback to be executed in a background thread, processing
-    documents as they are received. This prevent the blocking of RunEngine on any
-    slow I/O operations by the callback. It handles graceful shutdown on exit or signal
-    termination, ensuring that no new documents are accepted after shutdown has been
-    initiated.
-
-    The wrapped callback should be thread-safe and not subscribed to the RE directly.
-    If it maintains shared mutable state, it must protect it using internal locking.
-
-    This is mainly a development feature to allow subscribing (potentially many)
-    experimental callbacks to a `RunEngine` without the risk of blocking the experiment.
-    The use in production is currently not encouraged (at least not without a proper
-    testing and risk assessment).
-
-    Parameters
-    ----------
-        target : callable
-            The instance of a callback that will be called with the documents.
-            It should accept two parameters: `name` and `doc`.
-        queue_size : int, optional
-            The maximum size of the internal queue. Default is 1,000,000.
-
-    Usage
-    -----
-        tw = TiltedWriter(client)
-        buff_tw = BufferingWrapper(tw)
-        RE.subscribe(buff_tw)
-    """
-
-    def __init__(self, target: Callable, queue_size: int = 1_000_000):
-        self._wrapped_callback = target
-        self._queue: Queue = Queue(maxsize=queue_size)
-        self._stop_event = threading.Event()
-        self._shutdown_lock = threading.Lock()
-
-        self._thread = threading.Thread(target=self._process_queue, daemon=True)
-        self._thread.start()
-
-        atexit.register(self.shutdown)
-
-    def __call__(self, name, doc):
-        if self._stop_event.is_set():
-            raise RuntimeError("Cannot accept new data after shutdown.")
-            # TODO: This can be refactored using the upstream functionality (in Python >= 3.13)
-            # https://docs.python.org/3/library/queue.html#queue.Queue.shutdown
-        try:
-            self._queue.put((name, doc))
-        except Exception as e:
-            logger.exception(f"Failed to put document {name} in queue: {e}")
-
-    def _process_queue(self):
-        while True:
-            try:
-                if item := self._queue.get(timeout=1):
-                    self._wrapped_callback(*item)  # Delegate to wrapped callback
-                else:
-                    break  # Received sentinel value to stop processing
-            except Empty:
-                if self._stop_event.is_set():
-                    break
-            except Exception as e:
-                logger.exception(f"Exception in {self._wrapped_callback.__class__.__name__}: {e}")
-
-    def shutdown(self, wait: bool = True):
-        if self._stop_event.is_set():
-            return
-        self._stop_event.set()
-        self._queue.put(None)
-
-        atexit.unregister(self.shutdown)
-
-        if wait:
-            self._thread.join()
-
-        logger.info(f"{self._wrapped_callback.__class__.__name__} shut down gracefully.")
-
-
-class DocumentConverter(CallbackBase):
-    """Callback for updating Bluesky documents"""
-
-    def __init__(self):
-        self._token_refs = {}
-        self.dispatcher = Dispatcher()
-
-    def start(self, doc: RunStart):
-        doc = copy.deepcopy(doc)
-        self.emit(DocumentNames.start, doc)
-
-    def stop(self, doc: RunStop):
-        doc = copy.deepcopy(doc)
-        self.emit(DocumentNames.stop, doc)
-
-    def descriptor(self, doc: EventDescriptor):
-        doc = copy.deepcopy(doc)
-        doc = patch_descriptor(doc)
-        self.emit(DocumentNames.descriptor, doc)
-
-    def event(self, doc: Event):
-        doc = copy.deepcopy(doc)
-        self.emit(DocumentNames.event, doc)
-
-    def resource(self, doc: Resource):
-        doc = copy.deepcopy(doc)
-        doc = patch_resource(doc)
-        doc.pop('id', None)
-        self.emit(DocumentNames.resource, doc)
-
-    def stream_resource(self, doc: StreamResource):
-        doc = copy.deepcopy(doc)
-        self.emit(DocumentNames.stream_resource, doc)
-
-    def datum(self, doc: Datum):
-        doc = copy.deepcopy(doc)
-        doc = patch_datum(doc)
-        self.emit(DocumentNames.datum, doc)
-
-    def stream_datum(self, doc: StreamDatum):
-        doc = copy.deepcopy(doc)
-        self.emit(DocumentNames.stream_datum, doc)
-
-    def datum_page(self, doc: DatumPage):
-        for _doc in unpack_datum_page(doc):
-            self.datum(_doc)
-
-    def event_page(self, doc: EventPage):
-        for _doc in unpack_event_page(doc):
-            self.event(_doc)
-
-    def emit(self, name, doc):
-        """Check the document schema and send to the dispatcher"""
-        schema_validators[name].validate(doc)
-        self.dispatcher.process(name, doc)
-
-    def subscribe(self, func, name="all"):
-        """Convenience function for dispatcher subscription"""
-        token = self.dispatcher.subscribe(func, name)
-        self._token_refs[token] = func
-        return token
-
-    def unsubscribe(self, token):
-        """Convenience function for dispatcher un-subscription"""
-        self._token_refs.pop(token, None)
-        self.dispatcher.unsubscribe(token)
-
-    def __call__(self, name, doc):
-        print(f"In __call__ {name}")
-        print(f"Callbacks: {len(self.dispatcher.cb_registry.callbacks[DocumentNames[name]])}")
-        return super().__call__(name, doc)
-
-# This is needed to prevent the cache of Datum docuemnts from overfilling
-def clear_datum_cache(name, doc):
-    if name == 'start':
-        while True:
-            if cache_length := len(datum_cache):
-                # There's something in the cache, wait a bit before clearing it
-                time.sleep(2)
-                if cache_length == len(datum_cache):
-                    # If the cache length is still the same -- we are stuck; clear it
-                    logger.info(f"Clearing datum_cache with {cache_length} items")
-                    datum_cache.clear()
-                    return
-
-# RE.subscribe(clear_datum_cache, 'start')
-
-
 api_key = os.environ.get("TILED_BLUESKY_WRITING_API_KEY_HXN")
-# tiled_writing_client = from_profile("nsls2", api_key=api_key)['hxn']['migration']
 tiled_writing_client = from_uri("https://tiled.nsls2.bnl.gov", api_key=api_key)['hxn']['migration']
 RE.md["tiled_access_tags"] = ["hxn_beamline"]
 
-# normalizer=RunNormalizerHXN, 
-tw = TiledWriter(client= tiled_writing_client, backup_directory="/tmp/tiled_backup")
-                #  patches = {"descriptor": patch_descriptor,
-                #            "datum": patch_datum,
-                #            "resource": patch_resource})
-converter = DocumentConverter()
-converter.subscribe(tw)
-# converter = tw
+tw = TiledWriter(client = tiled_writing_client,
+                 normalizer=RunNormalizerHXN,
+                 backup_directory="/tmp/tiled_backup",
+                 patches = {"descriptor": patch_descriptor,
+                           "datum": patch_datum,
+                           "resource": patch_resource})
+# tw = BufferingWrapper(tw)      # Thread-safe wrapper for TiledWriter
 
-def datum_consumer(name, doc):
-    """Replay all received datum documents from the cache when the scan finishes."""
-    if name == "stop":
+def cache_retriever(name, doc):
+    """Replay all received datum documents from the cache when the scan finishes. Wraps TiledWriter."""
+    if name in ("stop", "start"):
+        # Clear the cache when the Stop document is received and at the start of a new run.
+        # The latter is a safeguard to prevent the cache from overfilling; normally it should be empty.
         while True:
-            try:
-                name, doc = datum_cache.popleft()
-                converter(name, doc)
-            except IndexError:
-                # All Datums have been processed
-                break
-    converter(name, doc)
+            if item := tiled_document_cache.popleft():
+                tw(*item)    # item is a tuple (name, doc) or None
+            else:
+                break        # No more items in the cache, we are done
+    else:
+        if item := tiled_document_cache.popleft():
+            tw(*item)     # While we're here, we can also process (one?) cached document -- this is debatable...
+    tw(name, doc)
 
-# Subscribe the datum_consumer directly
-RE.subscribe(datum_consumer)
-
-# # Create a thread-safe queue to hold documents
-# buff_tw = BufferingWrapper(datum_consumer)
-# RE.subscribe(buff_tw)
+# Subscribe the cache_retriever + TW
+RE.subscribe(cache_retriever)
