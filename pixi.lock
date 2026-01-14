@@ -215,7 +215,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/httpx-0.28.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/humanize-4.14.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/hxnfly-0.0.11-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/hxntools-0.6.3-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/hxntools-0.6.4-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/hyperframe-6.1.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/icu-75.1-he02047a_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/idna-3.11-pyhd8ed1ab_0.conda
@@ -918,7 +918,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/httpx-0.28.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/humanize-4.14.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/hxnfly-0.0.11-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/hxntools-0.6.3-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/hxntools-0.6.4-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/hyperframe-6.1.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/icu-75.1-he02047a_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/idna-3.11-pyhd8ed1ab_0.conda
@@ -4371,9 +4371,9 @@ packages:
   - pkg:pypi/hxnfly?source=hash-mapping
   size: 39427
   timestamp: 1674858224466
-- conda: https://conda.anaconda.org/conda-forge/noarch/hxntools-0.6.3-pyhd8ed1ab_0.conda
-  sha256: e4ecfcb8659485198403151245c95a8f4333672d0545154110e16b63642bae23
-  md5: bbeda73fd30951a7caeb8d00e40fd72d
+- conda: https://conda.anaconda.org/conda-forge/noarch/hxntools-0.6.4-pyhd8ed1ab_0.conda
+  sha256: 15346485472bf36ac0e0e0e3e65ae4efe5eb1460dfdda81cf8970f2de357be22
+  md5: 60261d8b41a4feb99d2f880aac623615
   depends:
   - bluesky
   - boltons
@@ -4392,8 +4392,8 @@ packages:
   license_family: BSD
   purls:
   - pkg:pypi/hxntools?source=hash-mapping
-  size: 40351
-  timestamp: 1756249995061
+  size: 41217
+  timestamp: 1768338658789
 - conda: https://conda.anaconda.org/conda-forge/noarch/hyperframe-6.1.0-pyhd8ed1ab_0.conda
   sha256: 77af6f5fe8b62ca07d09ac60127a30d9069fdc3c68d6b256754d0ffb1f7779f8
   md5: 8e6923fc12f1fe8f8c4e5c9f343256ac
