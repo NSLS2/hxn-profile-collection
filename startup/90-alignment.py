@@ -11,7 +11,7 @@ import pandas as pd
 
 from scipy.optimize import curve_fit, minimize
 from epics import caget, caput
-from PyQt5 import  QtTest
+from qtpy import  QtTest
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()

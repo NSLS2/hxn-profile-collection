@@ -48,7 +48,7 @@ from ophyd.signal import EpicsSignalBase
 
 EpicsSignalBase.set_defaults(timeout=10, connection_timeout=10)
 
-os.chdir('/nsls2/data2/hxn/shared/config/bluesky/profile_collection/startup')
+# os.chdir('/nsls2/data2/hxn/shared/config/bluesky/profile_collection/startup')
 
 os.environ["PPMAC_HOST"] = "xf03idc-ppmac1"
 
@@ -352,8 +352,13 @@ configure_base(
     bec=False,
     ipython_logging=False,
     publish_documents_with_kafka=False,
-    redis_url="info.hxn.nsls2.bnl.gov",
+    # redis_url="info.hxn.nsls2.bnl.gov",
+    redis_url="xf03id1-hxn-redis1.nsls2.bnl.gov",
+    redis_port=6380,
+    redis_ssl=True,
 )
+
+
 # configure_olog(get_ipython().user_ns)
 
 from bluesky.callbacks.best_effort import BestEffortCallback
