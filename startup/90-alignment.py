@@ -425,8 +425,8 @@ def movr_zpz1(dz):
     # yield from bps.movr(zp.zpx, dz*(0.0009795))
 
     # For chamber at 700 mmHg
-    yield from bps.movr(zp.zpy, (-0.002)*dz) #follow the sign for corr factors
-    yield from bps.movr(zp.zpx, dz*(0.0009795+0.00036))
+    yield from bps.movr(zp.zpy, (-0.003402)*dz) #follow the sign for corr factors
+    yield from bps.movr(zp.zpx, dz*(0.0006100))
 
 def mov_zpz1(pos):
 
@@ -1361,9 +1361,15 @@ def save_cam06_images(filename = "crl"):
         caput('XF:03IDC-ES{CAM:06}TIFF1:WriteFile',1)
 
 # Global variables
-z_yaw_distance = 574.668 + 581.20 + 7.2
-z1_distance = 574.668 + 395.2 - 20 + 8
-y_offset = -1.2
+# z_yaw_distance = 574.668 + 581.20 + 7.2
+# z1_distance = 574.668 + 395.2 - 20 + 8
+# y_offset = -1.2
+# cz_distance = 395.2
+
+
+z_yaw_distance = 574.668 + 581.20 
+z1_distance = 574.668 + 395.2 
+y_offset = 0
 cz_distance = 395.2
 
 def mov_diff(gamma, delta, r=500, calc=0, check_for_dexela = True):
@@ -2249,11 +2255,14 @@ def check_for_beam_dump(
                                  beam returns for stabilization. Defaults to 900 (15 min).
     """
     i = 0
+    beam_dum_occured = False
     # --- Beam-Off Loop ---
     while (sclr2_ch2.get() < threshold) and sr_beam_current.get() <499:
 
+        beam_dum_occured = True
+
         if i%4 ==0:
-            print (f"IC1 intensity  = ({sclr2_ch2.get()});  Lower than {threshold = }."
+            print (f"IC1 intensity  = ({sclr2_ch1.get()});  Lower than {threshold = }."
                 f"\nBeam Current  = {sr_beam_current.get()}; Lower than theshold = 499 mA"
                 f"\nWaiting for recovery...\n{20*'*'}\n")
         yield from bps.sleep(check_period)
@@ -2264,13 +2273,15 @@ def check_for_beam_dump(
             print(f"Beam Current  = {sr_beam_current.get()}; Beam is back")
             print(f" Beamline Ready = {det_beamstatus.status}")
             break
-    
-    print(f"Initiating Beam Recovery Protocol"
-          f"\nWaiting for stability for {stabilization_delay} seconds")
-    yield from bps.sleep(stabilization_delay)
 
-    print("Stabilization complete. Running beam dump recovery protocol.")
-    yield from recover_from_beamdump()
+    if beam_dum_occured:
+    
+        print(f"Initiating Beam Recovery Protocol"
+            f"\nWaiting for stability for {stabilization_delay} seconds")
+        yield from bps.sleep(stabilization_delay)
+
+        print("Stabilization complete. Running beam dump recovery protocol.")
+        yield from recover_from_beamdump()
         
 
 
@@ -2885,7 +2896,7 @@ def find_beam_at_ssa2(ic1_target_k = 400, max_iter = 1):
     caput("XF:03IDC-CT{SR570:1}sens_unit.VAL",2)
 
     #close b shutter, so that first iter works
-    caput("XF:03IDB-PPS{PSh}Cmd:Cls-Cmd", 1)
+    #caput("XF:03IDB-PPS{PSh}Cmd:Cls-Cmd", 1)
     yield from bps.sleep(2)
 
     iter=0
@@ -3209,8 +3220,8 @@ def recover_from_beamdump(peak_after = True):
 
 def calc_zpz_with_energy(energy=9):
 
-    ref_energy = 9
-    ref_zpz1 = -8.205
+    ref_energy = 10
+    ref_zpz1 = -15.567
     per_ev_corr = 6.093
 
     calc_zpz1 = ref_zpz1 +((ref_energy-energy)* per_ev_corr)

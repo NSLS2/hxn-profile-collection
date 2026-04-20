@@ -277,8 +277,7 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
 
 xspress3 = HxnXspress3Detector('XF:03IDC-ES{Xsp:1}:', name='xspress3')
 
-
-# xspress3 = HxnXspress3Detector('XF:03IDC-ES{Xsp:3}:', name='xspress3')
+#xspress3 = HxnXspress3Detector('XF:03IDC-ES{Xsp:2}:', name='xspress3')
 
 
 # Create directories on the xspress3 server, otherwise scans can fail:

@@ -6,6 +6,7 @@ import sys
 import numpy as np
 from datetime import datetime
 import h5py
+import tifffile
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 import matplotlib.gridspec as gridspec
@@ -40,6 +41,21 @@ def plot_Dexela_data(scan_id):
 
     return plot3D(data,0,titles=titles)
 
+def save_Dexela_data_as_tiff(scan_id, output_dir='/data/users/current_user/'):
+    hd = db[scan_id]
+    data = np.array(list(hd.data('dexela1_image')))
+    num_points = data.shape[0]
+
+    #generate titles
+    motors = hd.start['motors']
+    titles = []
+    for i in range(num_points):
+        title = ''
+        for motor in motors:
+            title += '%s  = %.2f, '%(motor,hd.table()[motor][i+1])
+        titles.append(title)
+
+    tifffile.imwrite('{}stacked_dexela_image_sid{}.tif'.format(output_dir, scan_id), data)
 
 def plot_Dexela_data_diff(scan_id):
     hd = db[scan_id]
