@@ -11,7 +11,7 @@ import pandas as pd
 
 from scipy.optimize import curve_fit, minimize
 from epics import caget, caput
-from PyQt5 import  QtTest
+# from PyQt5 import  QtTest
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
@@ -2420,7 +2420,7 @@ def mll_to_upstream_no_re():
     if abs(vz.position)<100:
         print("vmll.vz moving to -10000")
         vz.move(vz.position-10000)
-        QtTest.QTest.qWait(5000)
+        # QtTest.QTest.qWait(5000)
     else:
         raise ValueError("VZ is maybe already in out position")
         #print("VZ<-2000 um; VZ is maybe already in out position; trying to move hz")
@@ -2428,7 +2428,7 @@ def mll_to_upstream_no_re():
     if abs(vz.position)>9900 and abs(hz.position)<100:
         print("hmll.hz moving to -8000")
         hz.move(hz.position-8000)
-        QtTest.QTest.qWait(5000)
+        # QtTest.QTest.qWait(5000)
 
     else:
         raise ValueError("VMLL is not out or HZ is not close to zero, try manual controls")
@@ -2461,7 +2461,7 @@ def mll_to_downstream_no_re():
     if abs(hz.position)>7980 and not mllosa.osaz.position>100:
         print("hmll.hz moving to 0")
         hz.move(hz.position+8000)
-        QtTest.QTest.qWait(5000)
+        # QtTest.QTest.qWait(5000)
 
     else:
         raise ValueError("HMLL motion failed bacasue hz is not OUT or OSA Z is not close to zero; try manually vz=0 if hz~0")
@@ -2469,7 +2469,7 @@ def mll_to_downstream_no_re():
     if abs(vz.position)>9990 and abs(hz.position)<10:
         print("vmll.vz moving to -0")
         vz.move(vz.position+10000)
-        QtTest.QTest.qWait(5000)
+        # QtTest.QTest.qWait(5000)
         
     else:
         raise ValueError("VMLL motion failed bacasue hz is not home; try manually vz=0 if hz~0")
