@@ -48,7 +48,7 @@ from ophyd.signal import EpicsSignalBase
 
 EpicsSignalBase.set_defaults(timeout=10, connection_timeout=10)
 
-os.chdir('/nsls2/data2/hxn/shared/config/bluesky/profile_collection/startup')
+# os.chdir('/nsls2/data2/hxn/shared/config/bluesky/profile_collection/startup')
 
 os.environ["PPMAC_HOST"] = "xf03idc-ppmac1"
 

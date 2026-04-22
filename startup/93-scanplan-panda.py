@@ -1003,6 +1003,9 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
         for d in panda_flyer.detectors:
             print(f'  triggering {d.name}')
             st = yield from bps.trigger(d)
+
+            print(st)
+            print(f'  triggered {d.name}')
             #st.add_callback(lambda x: toc(t_startfly, str=f"  DETECTOR  {datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S.%f')}"))
 
         ## Wait a bit for detectors
