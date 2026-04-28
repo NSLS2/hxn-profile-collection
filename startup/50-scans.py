@@ -82,7 +82,7 @@ conflict_name = ['pmllf',
 # sd.baseline = [ugap,e,dcm,m1,m2,smll,vmll,hmll,ssa2,s5,mllosa,zp,zps,
 #                zposa,zpbs,smlld,fdet1,diff,p,ps,pp,vms]
 
-#temp baseline , trying pixi migration, smarpod is under repair AP:04-20-2026
+#temp due to smarpod is under repair, switch to abobe ad.baseline april 2026 AP
 sd.baseline = [ugap,e,dcm,m1,m2,smll,vmll,hmll,ssa2,s5,mllosa,zp,
                zposa,zpbs,smlld,fdet1,diff,p,ps,pp,vms]
 
