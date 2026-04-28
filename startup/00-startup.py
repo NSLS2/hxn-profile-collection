@@ -48,7 +48,7 @@ from ophyd.signal import EpicsSignalBase
 
 EpicsSignalBase.set_defaults(timeout=10, connection_timeout=10)
 
-os.chdir('/nsls2/data2/hxn/shared/config/bluesky/profile_collection/startup')
+# os.chdir('/nsls2/data2/hxn/shared/config/bluesky/profile_collection/startup')
 
 os.environ["PPMAC_HOST"] = "xf03idc-ppmac1"
 
@@ -440,8 +440,8 @@ logging.getLogger('ppmac').setLevel(logging.INFO)
 logging.getLogger('httpx').setLevel(logging.ERROR)
 logging.getLogger('hdf5plugin').setLevel(logging.WARNING)
 
-# logging.getLogger('ophyd').addHandler(handler)
-# logging.getLogger('ophyd').setLevel(logging.DEBUG)
+logging.getLogger('ophyd').addHandler(handler)
+logging.getLogger('ophyd').setLevel(logging.DEBUG)
 
 # Flyscan results are shown using pandas. Maximum rows/columns to use when
 # printing the table:
@@ -628,5 +628,5 @@ def bluesky_debug_mode(level='DEBUG'):
     logging.getLogger('hxntools').setLevel(logging.DEBUG)
     logging.getLogger('hxnfly').setLevel(logging.DEBUG)
 
-# bluesky_debug_mode(level='DEBUG')
+#bluesky_debug_mode(level='DEBUG')
 # del one_1d_step, one_nd_step, one_shot
