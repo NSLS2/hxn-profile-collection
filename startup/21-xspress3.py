@@ -309,7 +309,7 @@ class HxnXspress3Mk2Detector(HxnXspress3Detector):
               )
 
 
-xs3 = HxnXspress3Detector('XF:03IDC-ES{Xsp:2}:', name='xs3')
+xs3 = HxnXspress3Mk2Detector('XF:03IDC-ES{Xsp:2}:', name='xs3')
 
 
 # Create directories on the xspress3 server, otherwise scans can fail:
