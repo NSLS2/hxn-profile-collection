@@ -1252,7 +1252,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zlib-ng-2.2.5-hde8ca8f_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstandard-0.25.0-py312h5253ce2_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb8e6e7a_2.conda
-      - pypi: git+https://github.com/NSLS-II-HXN/hxnfly?branch=main#3af7644d54620adca9d4cf86d3446bc2faab87bf
+      - pypi: git+https://github.com/NSLS-II-HXN/hxnfly?branch=main#de7b1ee052028d87bb0065a2ce447a481e073727
       - pypi: https://files.pythonhosted.org/packages/67/d8/8af47ecca80c365d5ffcdce6fae78ec71921052189c1486ba9dbac7a36f4/pvxslibs-1.3.2-cp312-cp312-manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/25/f8/7c057d029d52dd6a0e7936704ccb6b5ba784a894fe6b401909fa50413302/xray_vision-0.1.1-py3-none-any.whl
   terminal:
@@ -1954,7 +1954,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zlib-ng-2.2.5-hde8ca8f_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstandard-0.25.0-py312h5253ce2_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb8e6e7a_2.conda
-      - pypi: git+https://github.com/NSLS-II-HXN/hxnfly?branch=main#3af7644d54620adca9d4cf86d3446bc2faab87bf
+      - pypi: git+https://github.com/NSLS-II-HXN/hxnfly?branch=main#de7b1ee052028d87bb0065a2ce447a481e073727
       - pypi: https://files.pythonhosted.org/packages/67/d8/8af47ecca80c365d5ffcdce6fae78ec71921052189c1486ba9dbac7a36f4/pvxslibs-1.3.2-cp312-cp312-manylinux2014_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/25/f8/7c057d029d52dd6a0e7936704ccb6b5ba784a894fe6b401909fa50413302/xray_vision-0.1.1-py3-none-any.whl
 packages:
@@ -6317,9 +6317,9 @@ packages:
   license_family: MIT
   size: 67994
   timestamp: 1766267728652
-- pypi: git+https://github.com/NSLS-II-HXN/hxnfly?branch=main#3af7644d54620adca9d4cf86d3446bc2faab87bf
+- pypi: git+https://github.com/NSLS-II-HXN/hxnfly?branch=main#de7b1ee052028d87bb0065a2ce447a481e073727
   name: hxnfly
-  version: 0.0.13.dev2+g3af7644d5
+  version: 0.0.14.dev2+gde7b1ee05
   requires_dist:
   - bluesky
   - databroker
