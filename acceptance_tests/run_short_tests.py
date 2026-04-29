@@ -29,7 +29,7 @@ def test_fly1d():
     Test ``fly1d`` scan with ZP motor.
     """
     print("Running scan ..")
-    uid, = RE(fly1d([sclr1,zebra,merlin1,xspress3,eiger2],zpssx,-1,1,10,0.03))
+    uid, = RE(fly1d([sclr1,zebra,merlin1,xspress3,eiger1],zpssx,-1,1,10,0.03))
     print("Scan is completed")
     print("Filling the table ...")
     _ = db[uid].table(fill=True)
@@ -41,7 +41,7 @@ def test_fly2d():
     Test ``fly2d`` scan with ZP motors.
     """
     print("Running scan ..")
-    uid, = RE(fly2d([sclr1,zebra,merlin1,xspress3,eiger2],zpssx,-1,1,10,zpssy,-1,1,10,0.03))
+    uid, = RE(fly2d([sclr1,zebra,merlin1,xspress3,eiger1],zpssx,-1,1,10,zpssy,-1,1,10,0.03))
     print("Scan is completed")
     print("Filling the table ...")
     _ = db[uid].table(fill=True)

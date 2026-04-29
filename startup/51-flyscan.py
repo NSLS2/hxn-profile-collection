@@ -79,7 +79,22 @@ _fly1d = FlyPlan1D(usable_detectors=fly_scannable_detectors,
 
 _fly1d.sub_factories = [maybe_a_table]
 _fly1d.subs = [pt_plot, ]
-fly1d = _fly1d.__call__
+#fly1d = _fly1d.__call__
+def fly1d(dets, motor, scan_start, scan_end, num, exposure_time, *,
+                 dead_time=None, return_speed=None, fly_type=None, md=None):
+      for det in dets:
+            if det.name in ['eiger1']:
+                  # for the old fly scan, always required to use UInt32 regardless of the exposure time
+                  # currently only eiger2.hdf5.warmup() can change the bitdepth
+                  if det.hdf5.data_type.get() != 'UInt32':
+                    print("Forcing eiger output bitdepth to UInt32")
+                  eiger2.hdf5.warmup(1)
+      yield from _fly1d(dets=dets,
+        motor=motor, scan_start=scan_start, scan_end=scan_end, num=num,
+        exposure_time=exposure_time,
+        dead_time=dead_time, return_speed=return_speed, fly_type=fly_type,
+        md=md
+      )
 
 _fly2d = FlyPlan2D(usable_detectors=fly_scannable_detectors,
                   scaler_channels=range(1,17))
@@ -101,6 +116,11 @@ def fly2d(dets,
 
       for det in dets:
             if det.name in ['eiger1']:
+                  # for the old fly scan, always required to use UInt32 regardless of the exposure time
+                  # currently only eiger2.hdf5.warmup() can change the bitdepth
+                  if det.hdf5.data_type.get() != 'UInt32':
+                    print("Forcing eiger output bitdepth to UInt32")
+                  eiger2.hdf5.warmup(1)
                   det.hdf5.frame_per_point = num1*num2
                   yield from bps.abs_set(det.cam.num_triggers, num1*num2, wait=True)
             if det.name == 'xspress3':
