@@ -12,6 +12,8 @@ def test_fly1dpd():
     _ = db[uid].table(fill=True)
     print("Table is filled")
 
+    #plt.close('all')
+
 
 def test_fly2dpd():
     """
@@ -23,6 +25,8 @@ def test_fly2dpd():
     print("Filling the table ...")
     _ = db[uid].table(fill=True)
     print("Table is filled")
+    #plt.close('all')
+
 
 def test_fly1d():
     """
@@ -34,6 +38,8 @@ def test_fly1d():
     print("Filling the table ...")
     _ = db[uid].table(fill=True)
     print("Table is filled")
+    #plt.close('all')
+
 
 
 def test_fly2d():
@@ -46,6 +52,8 @@ def test_fly2d():
     print("Filling the table ...")
     _ = db[uid].table(fill=True)
     print("Table is filled")
+    #plt.close('all')
+
 
 def test_dscan():
     """
@@ -57,6 +65,8 @@ def test_dscan():
     print("Filling the table ...")
     _ = db[uid].table(fill=True)
     print("Table is filled")
+    #plt.close('all')
+
 
 
 
@@ -70,6 +80,8 @@ def test_d2scan():
     print("Filling the table ...")
     _ = db[uid].table(fill=True)
     print("Table is filled")
+    #plt.close('all')
+
 
 
 
@@ -83,6 +95,8 @@ def test_mesh():
     print("Filling the table ...")
     _ = db[uid].table(fill=True)
     print("Table is filled")
+    #plt.close('all')
+
 
 print("="*90)
 print("="*90)
