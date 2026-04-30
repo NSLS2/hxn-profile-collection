@@ -73,13 +73,36 @@ pt_plot = FlyRoiPlot(['Fe'],
 '''
 # NOTE: indicate which detectors can be used in fly scans.
 # fly_scannable_detectors = [xspress3, zebra, sclr1, dexela1]
+
+def forceEiger1BitDepthtoUINT32(det):
+      ''' 
+      For the old fly scan, always required to use UInt32 because the exposure time cannot be shorter than 0.007 s.
+      Currently only eiger2.hdf5.warmup() can change the bitdepth.
+      Note eiger1 and eiger2 refer to the same PV, but they are instances of differenct classes.
+      '''
+      if det.hdf5.data_type.get() != 'UInt32':
+            print("Forcing eiger output bitdepth to UInt32")
+            eiger2.hdf5.warmup(0.007) # fastest exposure time using the old fly scan mode
+
 fly_scannable_detectors = [xspress3, zebra, sclr1]
 _fly1d = FlyPlan1D(usable_detectors=fly_scannable_detectors,
-                  scaler_channels=range(1,17))
+                  scaler_channels=range(1,17))     
 
 _fly1d.sub_factories = [maybe_a_table]
 _fly1d.subs = [pt_plot, ]
-fly1d = _fly1d.__call__
+#fly1d = _fly1d.__call__
+def fly1d(dets, motor, scan_start, scan_end, num, exposure_time, *,
+                 dead_time=None, return_speed=None, fly_type=None, md=None):
+      for det in dets:
+            if det.name in ['eiger1']:
+                  # for the old fly scan, always required to use UInt32 regardless of the exposure time
+                  forceEiger1BitDepthtoUINT32(det)                  
+      yield from _fly1d(dets=dets,
+        motor=motor, scan_start=scan_start, scan_end=scan_end, num=num,
+        exposure_time=exposure_time,
+        dead_time=dead_time, return_speed=return_speed, fly_type=fly_type,
+        md=md
+      )
 
 _fly2d = FlyPlan2D(usable_detectors=fly_scannable_detectors,
                   scaler_channels=range(1,17))
@@ -101,6 +124,8 @@ def fly2d(dets,
 
       for det in dets:
             if det.name in ['eiger1']:
+                  # for the old fly scan, always required to use UInt32 regardless of the exposure time
+                  forceEiger1BitDepthtoUINT32(det)
                   det.hdf5.frame_per_point = num1*num2
                   yield from bps.abs_set(det.cam.num_triggers, num1*num2, wait=True)
             if det.name == 'xspress3':
