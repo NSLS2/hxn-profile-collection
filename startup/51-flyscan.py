@@ -76,7 +76,7 @@ pt_plot = FlyRoiPlot(['Fe'],
 
 def forceEiger1BitDepthtoUINT32(det):
       ''' 
-      For the old fly scan, always required to use UInt32 regardless of the exposure time.
+      For the old fly scan, always required to use UInt32 because the exposure time cannot be shorter than 0.007 s.
       Currently only eiger2.hdf5.warmup() can change the bitdepth.
       Note eiger1 and eiger2 refer to the same PV, but they are instances of differenct classes.
       '''
