@@ -52,7 +52,7 @@ class HXNEnergy():
 
 
 
-    def calcGap(self,E,harmonics = 5, offset = -15):
+    def calcGap(self,E,harmonics = 5, offset = 0):
         E1 = E/harmonics
         calc_gap =  np.polyval(self.ugap_coeffs, E1) + offset
         return (np.around(calc_gap,1))
@@ -618,7 +618,7 @@ def foil_calib_scan(elem_line = "Cu_K", step_size_ev = 0.5, exp_time = 0.5,
     
     yield from Energy.move(startE, moveMonoPitch=False,moveMirror = "ignore")
     yield from d2scan(dets_fs,num_steps, e, 0, dE, ugap, 0, dUgap, exp_time)
-    plot_foil_calib(sid=-1, saveLogFolder = saveLogFolder, save_as = elem_line,downstream_ic = 'downstream_ic')
+    plot_foil_calib(sid=-1, saveLogFolder = saveLogFolder, save_as = elem_line,downstream_ic = downstream_ic)
 
     
 def plot_foil_calib(sid=-1, saveLogFolder = "/data/users/current_user",save_as = "Au_L3", downstream_ic = 'sclr1_ch4'):
@@ -696,6 +696,7 @@ def move_energy_with_sid(sid, move_zpz1 =False):
         target_zpz1 = bl['zpz1'][1]
         target_m1_y = bl['m1_y'][1]
         target_m2_y = bl['m2_y'][1]
+        target_m2_x = bl['m2_x'][1]
 
         print(f"{target_ugap = }, /n {taget_e =}, /n {target_p =} \n {target_m2_p = },/n {target_r=}, /n {target_zpz1=},"
               f"/n {target_m1_y = }, /n {target_m2_y =}")
@@ -709,7 +710,8 @@ def move_energy_with_sid(sid, move_zpz1 =False):
                            dcm.r, target_r,
                            m1.y, target_m1_y,
                            m2.y, target_m2_y,
-                           m2.p, target_m2_p)
+                           m2.p, target_m2_p,
+                           m2.x, target_m2_x)
         
         if move_zpz1:
             yield from mov_zpz1(target_zpz1)
@@ -724,8 +726,10 @@ def move_energy_with_sid(sid, move_zpz1 =False):
         change_dets_energy(taget_e)
         print(f"energy set to {taget_e :.3f}")
 
+        caput("XF:03ID{XBPM:17}AutoFbEn-Cmd", 1)
+
         if sclr2_ch2.get()<100000:
-            raise RuntimeError("Energy change seems to be failed; try manual alignment")
+            raise RuntimeError("Energy change seems to be failed; try recover_from_beamdump")
 
 
 
@@ -784,5 +788,5 @@ def change_dets_energy(targetE):
     caput("XF:03IDC-ES{Det:Eiger1M}cam1:Acquire",0)
     caput("XF:03IDC-ES{Det:Eiger1M}cam1:PhotonEnergy", targetE*1000)
 
-Energy = HXNEnergy(ugap,e,dcm.p, "ic3", wd+"ugap_calib2025C3.csv")
+Energy = HXNEnergy(ugap,e,dcm.p, "ic3", wd+"ugap_calib20260121_2256.csv")
 

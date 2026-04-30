@@ -194,6 +194,8 @@ class ExportSISDataPanda:
         self._filepath = filepath
         self._fp = h5py.File(filepath, "w", libver="latest")
 
+        print(f'{filepath = }')
+
         self._fp.swmr_mode = True
 
         self._ion = ion
@@ -224,8 +226,13 @@ class ExportSISDataPanda:
         for n in range(1, n_mcas + 1):
             mca = self._ion.mca_by_index[n].spectrum.get(timeout=5.0)
             mca_data.append(mca)
-
+        
+        #some problem here ROI data is saved correctly but correct len is 0:  AP 04/24/2026
         correct_length = int(self._panda.data.num_captured.get()/self._panda.position_supersample)
+        # correct_length = int(self._panda.data.num_capture.get()/self._panda.position_supersample) trial on 4/26/2026
+        print (f"{'='*30}")
+        print(f' {correct_length = }')
+        print (f"{'='*30}")
 
         for n in range(len(mca_data)):
             mca = mca_data[n]
@@ -416,6 +423,7 @@ class HXNFlyerPanda(Device):
         self._xsp_roi_exporter = None
         ## Xspress3 ROIs
         for d in self._dets:
+            #print(f"{d = }")
             if d.name == 'xspress3' or d.name == 'xspress3_det2':
 
                 self.xsp = d
@@ -534,6 +542,8 @@ class HXNFlyerPanda(Device):
 
         for d in self._dets:
             if d.name != 'fs' and d.name != 'bshutter' and d.name != 'xspress3':
+                #print (f"{'='*30}")
+                #print (d)
                 self._document_cache.extend(d.collect_asset_docs())
             if d.name == 'xspress3':
                 doc_cnt = 0
@@ -1002,9 +1012,9 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
 
         for d in panda_flyer.detectors:
             print(f'  triggering {d.name}')
+            #d.unstage()
+            #d.stage() AP 2026/04/24
             st = yield from bps.trigger(d)
-
-            print(st)
             print(f'  triggered {d.name}')
             #st.add_callback(lambda x: toc(t_startfly, str=f"  DETECTOR  {datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S.%f')}"))
 
@@ -1019,7 +1029,10 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
         if trigger_funcgen:
             print("Sending manual trigger to function generator......")
             pt_fg_ch1.trig.put(1)
+
+        #print(f'  before ppmac')
         ppmac.gpascii.send_line(start_signal)
+        #print(f'  after ppmac')
 
         counter = 0
         while(scan_counter[0].get()<total_points):

@@ -173,6 +173,13 @@ class DetectorStation(PseudoPositioner):
         z2 = z1 + 380
         d = 395.2
 
+
+        # z_yaw = 574.668 + 581.20 + 7.2
+        # z1 = 574.668 + 395.2 - 20 + 8
+        # y_offset = -1.2
+        # d = 395.2
+
+
         x_yaw = np.sin(gamma) * z_yaw / np.sin(beta + gamma)
         R_yaw = np.sin(beta) * z_yaw / np.sin(beta + gamma)
         R1 = R_yaw - (z_yaw - z1)
