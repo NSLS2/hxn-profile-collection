@@ -761,6 +761,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/httptools-0.7.1-py312h4c3975b_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/httpx-0.28.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/humanize-4.14.0-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/hxnfly-0.0.14-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/hxntools-0.6.5-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/hyperframe-6.1.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/icu-75.1-he02047a_0.conda
@@ -1239,6 +1240,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/xorg-libxtst-1.2.5-hb9d3cd8_3.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/xorg-libxxf86vm-1.1.6-hb9d3cd8_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/xorg-xorgproto-2024.1-hb9d3cd8_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/xray-vision-0.1.1-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/xraydb-4.5.8-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/xraylib-4.2.0-py312h6eeef32_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/xyzservices-2025.11.0-pyhd8ed1ab_0.conda
@@ -1252,9 +1254,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zlib-ng-2.2.5-hde8ca8f_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstandard-0.25.0-py312h5253ce2_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb8e6e7a_2.conda
-      - pypi: git+https://github.com/NSLS-II-HXN/hxnfly?branch=main#de7b1ee052028d87bb0065a2ce447a481e073727
       - pypi: https://files.pythonhosted.org/packages/67/d8/8af47ecca80c365d5ffcdce6fae78ec71921052189c1486ba9dbac7a36f4/pvxslibs-1.3.2-cp312-cp312-manylinux2014_x86_64.whl
-      - pypi: https://files.pythonhosted.org/packages/25/f8/7c057d029d52dd6a0e7936704ccb6b5ba784a894fe6b401909fa50413302/xray_vision-0.1.1-py3-none-any.whl
   terminal:
     channels:
     - url: https://conda.anaconda.org/conda-forge/
@@ -1464,6 +1464,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/httptools-0.7.1-py312h4c3975b_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/httpx-0.28.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/humanize-4.14.0-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/hxnfly-0.0.14-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/hxntools-0.6.5-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/hyperframe-6.1.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/icu-75.1-he02047a_0.conda
@@ -1941,6 +1942,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/xorg-libxtst-1.2.5-hb9d3cd8_3.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/xorg-libxxf86vm-1.1.6-hb9d3cd8_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/xorg-xorgproto-2024.1-hb9d3cd8_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/xray-vision-0.1.1-pyhd8ed1ab_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/xraydb-4.5.8-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/xraylib-4.2.0-py312h6eeef32_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/xyzservices-2025.11.0-pyhd8ed1ab_0.conda
@@ -1954,9 +1956,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zlib-ng-2.2.5-hde8ca8f_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstandard-0.25.0-py312h5253ce2_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb8e6e7a_2.conda
-      - pypi: git+https://github.com/NSLS-II-HXN/hxnfly?branch=main#de7b1ee052028d87bb0065a2ce447a481e073727
       - pypi: https://files.pythonhosted.org/packages/67/d8/8af47ecca80c365d5ffcdce6fae78ec71921052189c1486ba9dbac7a36f4/pvxslibs-1.3.2-cp312-cp312-manylinux2014_x86_64.whl
-      - pypi: https://files.pythonhosted.org/packages/25/f8/7c057d029d52dd6a0e7936704ccb6b5ba784a894fe6b401909fa50413302/xray_vision-0.1.1-py3-none-any.whl
 packages:
 - conda: https://conda.anaconda.org/conda-forge/linux-64/_libgcc_mutex-0.1-conda_forge.tar.bz2
   sha256: fe51de6107f9edc7aa4f786a70f4a883943bc9d39b3bb7307c04c41410990726
@@ -6317,20 +6317,20 @@ packages:
   license_family: MIT
   size: 67994
   timestamp: 1766267728652
-- pypi: git+https://github.com/NSLS-II-HXN/hxnfly?branch=main#de7b1ee052028d87bb0065a2ce447a481e073727
-  name: hxnfly
-  version: 0.0.14.dev2+gde7b1ee05
-  requires_dist:
-  - bluesky
-  - databroker
-  - ipython
-  - nslsii
-  - numpy
-  - ophyd
-  - pandas
-  - pyepics
-  - scipy
-  requires_python: '>=3.10'
+- conda: https://conda.anaconda.org/conda-forge/noarch/hxnfly-0.0.14-pyhd8ed1ab_0.conda
+  sha256: 5568b14f9d20e71096bed12cb4f97bfc08673503bc04132e9dce2691ac03ed34
+  md5: 343c9ebd6f1dfd8591d923a74acb72ac
+  depends:
+  - hxntools
+  - ppmac
+  - python >=3.10
+  - xray-vision
+  license: BSD-3-Clause
+  license_family: BSD
+  purls:
+  - pkg:pypi/hxnfly?source=hash-mapping
+  size: 42226
+  timestamp: 1777667379118
 - conda: https://conda.anaconda.org/conda-forge/noarch/hxntools-0.6.5-pyhd8ed1ab_0.conda
   sha256: 63482ecac663f9edc50fe1800a4a38da386b88752f2248351cd88a5f4f290e5d
   md5: e6a04c301c2e5da514778c98d3a9cc5e
@@ -16586,17 +16586,24 @@ packages:
   license_family: MIT
   size: 570010
   timestamp: 1766154256151
-- pypi: https://files.pythonhosted.org/packages/25/f8/7c057d029d52dd6a0e7936704ccb6b5ba784a894fe6b401909fa50413302/xray_vision-0.1.1-py3-none-any.whl
-  name: xray-vision
-  version: 0.1.1
-  sha256: 9b09fdc0f5d743882c69240404abdf851a00c4efe5124e604f63b277a5e6b1ee
-  requires_dist:
+- conda: https://conda.anaconda.org/conda-forge/noarch/xray-vision-0.1.1-pyhd8ed1ab_0.tar.bz2
+  sha256: 614f72ea1d5a2ac1ea69123d095646c7315aaab12d29696de7eee656ef3988a6
+  md5: 294ad32e72b622a7daabdf1cf92e18a0
+  depends:
   - matplotlib
   - numpy
   - pandas
-  - pyqt5
+  - pyqt
+  - python >=3.6
   - scipy
+  - sip
   - six
+  license: BSD-3-Clause
+  license_family: BSD
+  purls:
+  - pkg:pypi/xray-vision?source=hash-mapping
+  size: 46019
+  timestamp: 1643152401779
 - conda: https://conda.anaconda.org/conda-forge/noarch/xraydb-4.5.8-pyhd8ed1ab_0.conda
   sha256: 384aeeea80946a551a8d8fe1edd4c0a196c69cbe2b503e7b0d5216c345d5c33c
   md5: 55ab22c55440e99346817da26353385e
