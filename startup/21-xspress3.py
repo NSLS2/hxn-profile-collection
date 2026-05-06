@@ -174,8 +174,8 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
             try:
                 ret = super().stage(*args, **kwargs)
             except TimeoutError:
-                N_try = 20
-                if j < 20:
+                N_try = 8
+                if j < 8:
                     print(f"failed to stage on try{j}/{N_try}, may try again")
                     continue
                 else:
