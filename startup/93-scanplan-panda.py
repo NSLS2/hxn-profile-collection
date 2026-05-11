@@ -1099,12 +1099,14 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
     return uid
 
 
-def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, scan_end2, num2, exposure_time, panda_flyer = panda_flyer, pos_return = True, apply_tomo_drift = False,
+def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, scan_end2, num2, exposure_time, panda_flyer = None, pos_return = True, apply_tomo_drift = False,
                 tomo_angle = None, auto_rescan = False, dead_time = 0.0005, line_overhead = [0.01,0.01], line_dwell = 0.1, return_speed = 100.0, position_supersample = 10,
                 md = None, merlin_cont_mode = False, num_sclr_ch = None, **kwargs):
     """
     Relative scan
     """
+
+    panda_flyer = panda_flyer or globals()["panda_flyer"] 
 
     # PPMAC control signal
     sl = ppmac.gpascii.send_line
@@ -1365,12 +1367,14 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
                     yield from bps.wait(group=mv_back)
 
 
-def fly2dpd_repeat(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, scan_end2, num2,  exposure_time,panda_flyer = panda_flyer, repeat = 10, pos_return = True, apply_tomo_drift = False,
+def fly2dpd_repeat(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, scan_end2, num2,  exposure_time,panda_flyer = None, repeat = 10, pos_return = True, apply_tomo_drift = False,
                 tomo_angle = None, auto_rescan = False, dead_time = 0.0005, line_overhead = [0.01,0.01], line_dwell = 0.005, return_speed = 150.0, position_supersample = 10,
                 md = None, merlin_cont_mode = False, **kwargs):
     """
     Relative scan
     """
+
+    panda_flyer = panda_flyer or globals()["panda_flyer"]
 
     # PPMAC control signal
     sl = ppmac.gpascii.send_line
@@ -1582,12 +1586,14 @@ def fly2dpd_repeat(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_star
                     yield from bps.abs_set(motor2,m2_pos,group=mv_back)
                     yield from bps.wait(group=mv_back)
 
-def fly1dpd(dets, motor1, scan_start1, scan_end1, num1, exposure_time, panda_flyer = panda_flyer, pos_return = True, apply_tomo_drift = False,
+def fly1dpd(dets, motor1, scan_start1, scan_end1, num1, exposure_time, panda_flyer = None, pos_return = True, apply_tomo_drift = False,
                 tomo_angle = None, auto_rescan = False, dead_time = 0.0005, line_overhead = [0.01,0.01], line_dwell = 0.1, return_speed = 100.0, position_supersample = 10,
                 md = None, merlin_cont_mode = False, **kwargs):
     """
     Relative scan
     """
+
+    panda_flyer = panda_flyer or globals()["panda_flyer"]
 
     # PPMAC control signal
     sl = ppmac.gpascii.send_line
@@ -1776,12 +1782,14 @@ def fly1dpd(dets, motor1, scan_start1, scan_end1, num1, exposure_time, panda_fly
                     yield from bps.abs_set(motor1,m1_pos,group=mv_back)
                     yield from bps.wait(group=mv_back)
 
-def fly2dcontpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, scan_end2, num2, exposure_time,panda_flyer = panda_flyer,  pos_return = True, apply_tomo_drift = False,
+def fly2dcontpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, scan_end2, num2, exposure_time,panda_flyer = None,  pos_return = True, apply_tomo_drift = False,
                 tomo_angle = None, auto_rescan = False, dead_time = 0.0002, scan_overhead = [0.1,0.05],
                 md = None, merlin_cont_mode = False, **kwargs):
     """
     Relative scan
     """
+
+    panda_flyer = panda_flyer or globals()["panda_flyer"]
 
     # PPMAC control signal
     sl = ppmac.gpascii.send_line
@@ -1955,12 +1963,14 @@ def fly2dcontpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2,
                 yield from bps.wait(group=mv_back)
 
 
-def timescanpd(dets, num, exposure_time, panda_flyer = panda_flyer, pos_return = True, apply_tomo_drift = False,
+def timescanpd(dets, num, exposure_time, panda_flyer = None, pos_return = True, apply_tomo_drift = False,
                 tomo_angle = None, auto_rescan = False, dead_time = 0.0005, line_overhead = [0.01,0.01], line_dwell = 0.1, return_speed = 100.0, position_supersample = 10,
                 md = None, merlin_cont_mode = False, wait_for_start_input = True, **kwargs):
     """
     Relative scan
     """
+
+    panda_flyer = panda_flyer or globals()["panda_flyer"]
 
     # PPMAC control signal
     sl = ppmac.gpascii.send_line

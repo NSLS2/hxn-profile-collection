@@ -70,3 +70,5 @@ qs = {features=["profile", "qs"], solve-group="profile"}
 
 [dependencies]
 hxntools = ">=0.6.5,<0.7"
+qtpy = ">=2.4.3,<3"
+bluesky-queueserver = ">=0.0.24,<0.0.25"
