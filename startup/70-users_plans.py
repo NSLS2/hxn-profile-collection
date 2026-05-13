@@ -3228,8 +3228,11 @@ def recover_mll_scan_pos(scan_id,moveflag=True,base_moveflag=True):
     print (f"{return_str1}{return_str2}")
 
 
-def recover_scan_pos_and_find_com(scan_id, elem = "Hg_L", fly_scan_plan = [dssx,-10,10,100,dssy,-10,10,100,0.01],
-                                  com_threshold = 0.5, apply_to = [dsx,dsy]):
+def recover_scan_pos_and_find_com(scan_id, elem = "Hg_L", fly_scan_plan = None,
+                                  com_threshold = 0.5, apply_to = None):
+
+    fly_scan_plan = fly_scan_plan or [dssx,-10,10,100,dssy,-10,10,100,0.01]
+    apply_to = apply_to or [dsx,dsy]
 
     yield from recover_mll_scan_pos(scan_id,moveflag=True,base_moveflag=True)
     yield from fly2dpd([fs,xspress3], 

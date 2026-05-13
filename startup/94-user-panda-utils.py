@@ -261,15 +261,23 @@ class PandaLivePlot():
     
 def panda_zero_all_encoders():
     print("Make sure to move all piezo motors to zero position when running this command!")
-    panda1.inenc1.setp.put(0)
-    panda1.inenc2.setp.put(0)
-    panda1.inenc3.setp.put(0)
-    panda1.inenc4.setp.put(0)
-    panda2.inenc1.setp.put(0)
-    panda2.inenc2.setp.put(0)
-    panda2.inenc3.setp.put(0)
-    panda2.inenc4.setp.put(0)
-    print("All panda encoders set to zero at current piezo position.")
+    try:
+        panda1.inenc1.setp.put(0)
+        panda1.inenc2.setp.put(0)
+        panda1.inenc3.setp.put(0)
+        panda1.inenc4.setp.put(0)
+        print("Panda1 encoders set to zero at current piezo position.")
+    except:
+        print("Panda1 encoders were not accessible.")
+    try:
+        panda2.inenc1.setp.put(0)
+        panda2.inenc2.setp.put(0)
+        panda2.inenc3.setp.put(0)
+        panda2.inenc4.setp.put(0)
+        print("Panda2 encoders set to zero at current piezo position.")
+    except:
+        print("Panda2 encoders were not accessible.")
+    print("Panda encoder resets have been finished.")
 
 panda_live_plot = PandaLivePlot()
 
