@@ -80,13 +80,9 @@ conflict_name = ['pmllf',
 # sd.baseline = [dcm, m1, m2, beamline_status, smll, vmll, hmll, ssa2, zp]
 # sd.baseline = [dcm, m1, m2, beamline_status, smll, vmll, hmll, ssa2, bpm1, bpm2, smlld]
 # sd.baseline = [ugap,e,dcm,m1,m2,smll,vmll,hmll,ssa2,s5,mllosa,zp,zps,
-#                zposa,zpbs,smlld,fdet1,diff,p,ps,pp,vms]
+#                 zposa,zpbs,smlld,fdet1,diff,p,ps,pp,vms]
 
-#temp due to smarpod is under repair, switch to abobe ad.baseline april 2026 AP
-sd.baseline = [ugap,e,dcm,m1,m2,smll,vmll,hmll,ssa2,s5,mllosa,zp,
-               zposa,zpbs,smlld,fdet1,diff,p,ps,pp,vms]
 
-'''
 sd.baseline = [ugap,
                e,
                dcm,
@@ -94,7 +90,7 @@ sd.baseline = [ugap,
                m2,
                beamline_status,
                smll,
-               vmll,150
+               vmll,
                hmll,
                ssa2,
                s5,
@@ -108,8 +104,10 @@ sd.baseline = [ugap,
                diff,
                p,
                ps,
-               pp,]
-'''
+               pp,
+               vms
+               ]
+
 # The following is a temporary solution, which replaces fixed list of devices passed to 'BlueskyMagics.positioners' (deprecated).
 #   TODO: The proper way to label devices is to pass 'labels' to the device (Ophyd object) constructor. Use meaningful labels.
 dev_list_motor = [d for  d in bu.separate_devices(ophyd.utils.instances_from_namespace((ophyd.EpicsMotor,)))]
