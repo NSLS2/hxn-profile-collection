@@ -405,7 +405,7 @@ class CommunityHxnXspress3Detector(CommunityXspress3_8Channel, HxnModalBase):
             for channel in self.iterate_channels():
                 channel.get_external_file_ref().kind = 0
             self.get_external_file_ref().kind = 1
-        self.scan_type = scan_type
+        self._scan_type = scan_type
 
 
     def stop(self, *, success=False):
@@ -465,7 +465,7 @@ class CommunityHxnXspress3Detector(CommunityXspress3_8Channel, HxnModalBase):
         # do the latching
         if self.fly_next.get():
             self.fly_next.put(False)
-            self._mode = SRXMode.fly
+            self._scan_type = 'fly'
         return super().stage()
 
     def unstage(self):
@@ -473,11 +473,11 @@ class CommunityHxnXspress3Detector(CommunityXspress3_8Channel, HxnModalBase):
         try:
             ret = super().unstage()
         finally:
-            self._mode = SRXMode.step
+            self._scan_type = 'step'
         return ret
 
 
-xspress3_mk2 = HxnXspress3Mk2Detector('XF:03IDC-ES{Xsp:2}:', name='xspress3_mk2')
+xspress3_mk2 = CommunityHxnXspress3Detector('XF:03IDC-ES{Xsp:2}:', name='xspress3_mk2')
 
 
 # Create directories on the xspress3 server, otherwise scans can fail:
