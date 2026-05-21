@@ -332,25 +332,25 @@ class Xspress3HDF5PluginWithRedis(Xspress3HDF5Plugin):
     "Subclass to determine file location based on proposal info in Redis"
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
         # self._redis_dict = RunEngineRedisDict("info.srx.nsls2.bnl.gov")
-        if kwargs["root_path"] is None:
+        if "root_path" not in kwargs:
             # self.root_path.put(self.root_path_str)
             kwargs["root_path"] = self.root_path_str
-        if kwargs["path_template"] is None:
+        if "path_template" not in kwargs:
             # self.path_template.put(self.path_template_str)
             kwargs["path_template"] = self.path_template_str
+        super().__init__(*args, **kwargs)
 
     @property
     def root_path_str(self):
         # data_session = self._redis_dict["data_session"]
         # cycle = self._redis_dict["cycle"]
-        data_session = RE.md["data_session"]
-        cycle = RE.md["cycle"]
-        if "Commissioning" in get_proposal_type():
-            root_path = f"/nsls2/data/srx/proposals/commissioning/{data_session}/assets/xspress3/"
-        else:
-            root_path = f"/nsls2/data/srx/proposals/{cycle}/{data_session}/assets/xspress3/"
+        # data_session = RE.md["data_session"]
+        # cycle = RE.md["cycle"]
+        # if "Commissioning" in get_proposal_type():
+        root_path = f"/nsls2/data/hxn/legacy/"
+        # else:
+        #     root_path = f"/nsls2/data/hxn/legacy/"
         return root_path
 
     @property
