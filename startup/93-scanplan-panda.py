@@ -1099,9 +1099,11 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
     return uid
 
 
-def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, scan_end2, num2, exposure_time, panda_flyer = None, pos_return = True, apply_tomo_drift = False,
-                tomo_angle = None, auto_rescan = False, dead_time = 0.0005, line_overhead = [0.01,0.01], line_dwell = 0.1, return_speed = 100.0, position_supersample = 10,
-                md = None, merlin_cont_mode = False, num_sclr_ch = None, **kwargs):
+def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, scan_end2, num2, exposure_time, panda_flyer = None, 
+            pos_return = True, apply_tomo_drift = False,
+            tomo_angle = None, auto_rescan = False, dead_time = 0.0005, 
+            line_overhead = [0.01,0.01], line_dwell = 0.1, return_speed = 100.0, position_supersample = 10,
+            md = None, merlin_cont_mode = False, num_sclr_ch = None, **kwargs):
     """
     Relative scan
     """
