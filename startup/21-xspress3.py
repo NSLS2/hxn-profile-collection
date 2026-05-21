@@ -343,6 +343,7 @@ class Xspress3HDF5PluginWithRedis(Xspress3HDF5Plugin):
 
     @property
     def root_path_str(self):
+        # TODO - this will change after data security is done
         # data_session = self._redis_dict["data_session"]
         # cycle = self._redis_dict["cycle"]
         # data_session = RE.md["data_session"]
@@ -367,7 +368,7 @@ CommunityXspress3_8Channel = build_xspress3_class(
     channel_numbers=(1, 2, 3, 4),
     mcaroi_numbers=(1, 2, 3, 4),
     image_data_key=None,
-    xspress3_parent_classes=(Xspress3Detector, Xspress3Trigger),
+    xspress3_parent_classes=(Xspress3Detector, Xspress3Trigger, HxnModalBase),
     extra_class_members={
         "hdf5": Cpt(
             Xspress3HDF5PluginWithRedis,
@@ -377,7 +378,8 @@ CommunityXspress3_8Channel = build_xspress3_class(
     }
 )
 
-class CommunityHxnXspress3Detector(CommunityXspress3_8Channel, HxnModalBase):
+
+class CommunityHxnXspress3Detector(CommunityXspress3_8Channel):
     # replace HDF5:FileCreateDir with HDF1:FileCreateDir
     create_dir = Cpt(EpicsSignal, "HDF1:FileCreateDir")
 
@@ -440,7 +442,6 @@ class CommunityHxnXspress3Detector(CommunityXspress3_8Channel, HxnModalBase):
                 channel.get_external_file_ref().kind = 0
             self.get_external_file_ref().kind = 1
         self._scan_type = scan_type
-
 
     def stop(self, *, success=False):
         ret = super().stop()
