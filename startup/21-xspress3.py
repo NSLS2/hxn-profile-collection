@@ -311,6 +311,21 @@ xspress3 = HxnXspress3Detector('XF:03IDC-ES{Xsp:1}:', name='xspress3')
 import itertools
 from ophyd.areadetector import Xspress3Detector
 from nslsii.areadetector.xspress3 import Xspress3HDF5Plugin, Xspress3Trigger, build_xspress3_class
+import httpx
+
+
+nslsii_api_client = httpx.Client(base_url="https://api.nsls2.bnl.gov")
+
+def get_proposal_type(proposal_id=None):
+    if (proposal_id is None):
+        proposal_id = RE.md["proposal"]["proposal_id"]
+
+    proposal_response = nslsii_api_client.get(f"/v1/proposal/{RE.md['proposal']['proposal_id']}")
+    proposal_response.raise_for_status()
+    proposal = proposal_response.json()["proposal"]
+
+    return proposal["type"]
+
 
 
 class Xspress3HDF5PluginWithRedis(Xspress3HDF5Plugin):
@@ -320,9 +335,11 @@ class Xspress3HDF5PluginWithRedis(Xspress3HDF5Plugin):
         super().__init__(*args, **kwargs)
         # self._redis_dict = RunEngineRedisDict("info.srx.nsls2.bnl.gov")
         if kwargs["root_path"] is None:
-            self.root_path.put(self.root_path_str)
+            # self.root_path.put(self.root_path_str)
+            kwargs["root_path"] = self.root_path_str
         if kwargs["path_template"] is None:
-            self.path_template.put(self.path_template_str)
+            # self.path_template.put(self.path_template_str)
+            kwargs["path_template"] = self.path_template_str
 
     @property
     def root_path_str(self):
