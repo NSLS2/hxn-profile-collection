@@ -126,6 +126,13 @@ class HxnDetectorPositioner(MotorBundle):
     y = Cpt(EpicsMotor, '-Ax:Y}Mtr')
     z = Cpt(EpicsMotor, '-Ax:Z}Mtr')
 
+class HxnDetectorPositionerNumbered(MotorBundle):
+    '''HXN X/Y positioner device PVs named like -Ax:1}Mtr '''
+    x = Cpt(EpicsMotor, '-Ax:1}Mtr')
+    y = Cpt(EpicsMotor, '-Ax:2}Mtr')
+    z = Cpt(EpicsMotor, '-Ax:3}Mtr')
+
+
 
 fdet1 = HxnDetectorPositioner('XF:03IDC-ES{Det:Vort', name='fdet1')
 fdet2 = HxnDetectorPositioner('XF:03IDC-ES{Det:Bruk', name='fdet2')
@@ -133,10 +140,11 @@ fdet2 = HxnDetectorPositioner('XF:03IDC-ES{Det:Bruk', name='fdet2')
 bs_x = EpicsMotor('XF:03IDC-ES{MC:12-Ax:4}Mtr', name='bs_x')
 bs_y = EpicsMotor('XF:03IDC-ES{MC:12-Ax:5}Mtr', name='bs_y')
 
+difftrans = HxnDetectorPositionerNumbered('XF:03IDC-ES{MC:14', name='difftrans')
 
-difftrans_x = EpicsMotor('XF:03IDC-ES{MC:14-Ax:1}Mtr', name='DiffTransX')
-difftrans_y = EpicsMotor('XF:03IDC-ES{MC:14-Ax:2}Mtr', name='DiffTransY')
-difftrans_z = EpicsMotor('XF:03IDC-ES{MC:14-Ax:3}Mtr', name='DiffTransZ')
+# difftrans_x = EpicsMotor('XF:03IDC-ES{MC:14-Ax:1}Mtr', name='DiffTransX')
+# difftrans_y = EpicsMotor('XF:03IDC-ES{MC:14-Ax:2}Mtr', name='DiffTransY')
+# difftrans_z = EpicsMotor('XF:03IDC-ES{MC:14-Ax:3}Mtr', name='DiffTransZ')
 
 
 mc12 = HxnTurboPmacController('XF:03IDC-ES{MC:12', name='mc12')
