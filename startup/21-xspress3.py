@@ -324,6 +324,23 @@ class Xspress3HDF5PluginWithRedis(Xspress3HDF5Plugin):
         if kwargs["path_template"] is None:
             self.path_template.put(self.path_template_str)
 
+    @property
+    def root_path_str(self):
+        # data_session = self._redis_dict["data_session"]
+        # cycle = self._redis_dict["cycle"]
+        data_session = RE.md["data_session"]
+        cycle = RE.md["cycle"]
+        if "Commissioning" in get_proposal_type():
+            root_path = f"/nsls2/data/srx/proposals/commissioning/{data_session}/assets/xspress3/"
+        else:
+            root_path = f"/nsls2/data/srx/proposals/{cycle}/{data_session}/assets/xspress3/"
+        return root_path
+
+    @property
+    def path_template_str(self):
+        path_template = "%Y/%m/%d"
+        return path_template
+
     def stage(self, *args, **kwargs):
         self.root_path.put(self.root_path_str)
         return super().stage()
