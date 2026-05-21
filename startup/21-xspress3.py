@@ -3,7 +3,8 @@ from ophyd.device import (Component as Cpt)
 from ophyd import (Signal, EpicsSignal, EpicsSignalRO, DerivedSignal)
 
 from nslsii.detectors.xspress3 import (Xspress3FileStore,
-                                       Xspress3Channel)
+                                       Xspress3Channel,
+                                       Xspress3DetectorSettings)
 from hxntools.detectors.hxn_xspress3 import HxnXspress3DetectorBase
 import threading
 from ophyd import DeviceStatus
@@ -173,8 +174,8 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
             try:
                 ret = super().stage(*args, **kwargs)
             except TimeoutError:
-                N_try = 20
-                if j < 20:
+                N_try = 8
+                if j < 8:
                     print(f"failed to stage on try{j}/{N_try}, may try again")
                     continue
                 else:
@@ -277,7 +278,38 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
 
 xspress3 = HxnXspress3Detector('XF:03IDC-ES{Xsp:1}:', name='xspress3')
 
-#xspress3 = HxnXspress3Detector('XF:03IDC-ES{Xsp:2}:', name='xspress3')
+
+class HxnXspress3Mk2Detector(HxnXspress3Detector):
+    """
+    This class uses the new ioc for the xspress3 detector,
+    located here: https://github.com/epics-modules/xspress3
+
+    There are some differences from the old version in PV naming conventions.
+
+    settings - there is a block of PVs that uses a `det1:` PV suffix for
+    detector settings.
+    In particular:
+    XF:03IDC-ES{Xsp:2}:Acquire_RBV -> XF:03IDC-ES{Xsp:2}:det1:Acquire_RBV
+
+    hdf5 - the areadetector naming convention is used, so `HDF5` PVs in the old
+    ioc become `HDF1` PVs, where the "1" denotes the first HDF file writing plugin.
+    But only the name has changed. The underlying filewriting plugin is the same.
+    In particular:
+    XF:03IDC-ES{Xsp:2}:HDF5:BlockingCallbacks_RBV ->
+        XF:03IDC-ES{Xsp:2}:HDF1:BlockingCallbacks_RBV
+    """
+
+    settings = Cpt(Xspress3DetectorSettings, 'det1:')
+
+    hdf5 = Cpt(Xspress3FileStore, 'HDF1:',
+              write_path_template='/data/%Y/%m/%d/',
+              mds_key_format='xspress3_ch{chan}',
+              reg=db.reg,
+              root='/data',
+              )
+
+
+xspress3_mk2 = HxnXspress3Mk2Detector('XF:03IDC-ES{Xsp:2}:', name='xspress3_mk2')
 
 
 # Create directories on the xspress3 server, otherwise scans can fail:

@@ -181,14 +181,14 @@ def align_scan(mtr,start,end,num,exp,elem_, align_with="line_center",
 
 
 def tomo_2d_scan(angle,dets_,fly_motors,x_start,x_end,x_num,y_start,y_end,y_num,exp, 
-                     tomo_use_panda = False):
+                     tomo_use_panda = False, axis_switch_angle = 44.99):
     
     '''
     fly_motors = [dssx,dssy,dssz]
     fly_motors = [zpssx,zpssy,zpssz]
     '''
 
-    if np.abs(angle) < 44.99:
+    if abs(angle) < axis_switch_angle:
 
         x_start_real = x_start / np.cos(angle * np.pi / 180.)
         x_end_real = x_end / np.cos(angle * np.pi / 180.)
@@ -216,7 +216,7 @@ def tomo_2d_scan(angle,dets_,fly_motors,x_start,x_end,x_num,y_start,y_end,y_num,
                             exp
                             )
         else:
-            yield from fly2dpd([fs,eiger2,xspress3],
+            yield from fly2dpd(dets_,
                             fly_motors[0],
                             x_start_real,
                             x_end_real,
@@ -230,8 +230,8 @@ def tomo_2d_scan(angle,dets_,fly_motors,x_start,x_end,x_num,y_start,y_end,y_num,
                             )
 
     else:
-        x_start_real = x_start / np.abs(np.sin(angle * np.pi / 180.))
-        x_end_real = x_end / np.abs(np.sin(angle * np.pi / 180.))
+        x_start_real = x_start / abs(np.sin(angle * np.pi / 180.))
+        x_end_real = x_end / abs(np.sin(angle * np.pi / 180.))
         if fly_motors[2].name == 'dssz':
             pass
             # print('WARNING!!: Applying temporary scaling correction ratio to dssz motor.')
@@ -264,7 +264,7 @@ def tomo_2d_scan(angle,dets_,fly_motors,x_start,x_end,x_num,y_start,y_end,y_num,
                             exp
                             )
         else:
-            yield from fly2dpd([fs,eiger2,xspress3],
+            yield from fly2dpd(dets_,
                             fly_motors[2],
                             x_start_real,
                             x_end_real,
@@ -343,7 +343,8 @@ def align_2d_com_scan(mtr1,x_s,x_e,x_n,mtr2,y_s,y_e,y_n,exp,elem_,
     if move_y:
         yield from bps.mov(mtr2,cy)
 
-def tomo_scan_to_loop(angle, tomo_params, ic_init, do_y_offset = True,tracking_file = None):
+def tomo_scan_to_loop(angle, tomo_params, ic_init, do_y_offset = True,
+                      tracking_file = None):
 
         #caput("XF:03IDC-ES{Merlin:2}HDF1:NDArrayPort","ROI1") #patch for merlin2 issuee
 
@@ -355,6 +356,7 @@ def tomo_scan_to_loop(angle, tomo_params, ic_init, do_y_offset = True,tracking_f
         dets = eval(image_scan["det"])
         elems_to_pdf = tomo_params["pdf_elems"]
         fly_motors= [eval(item) for item in tomo_params["fly_motors"]]
+        axis_switch_angle = tomo_params["axis_switch_angle"]
 
 
         yield from bps.mov(eval(tomo_params["th_motor"]), angle)
@@ -373,8 +375,8 @@ def tomo_scan_to_loop(angle, tomo_params, ic_init, do_y_offset = True,tracking_f
         #yield from bps.mov(dssx,0,dssz,0)
         print(f'{tomo_params["flying_panda"] = }')
         #1d alignment sequence, based on angle x or z will be scanned
-        if np.abs(angle) < 44.99:
-            print('dssx scanning')
+        if abs(angle) < axis_switch_angle:
+            print(f'{fly_motors[0].name}scanning')
             if xalign["do_align"]:
                 yield from align_scan(fly_motors[0],
                                 xalign["start"],
@@ -420,7 +422,7 @@ def tomo_scan_to_loop(angle, tomo_params, ic_init, do_y_offset = True,tracking_f
                 pass
 
         else:
-            print('dssz scanning')
+            print(f'{fly_motors[2].name}scanning')
             if xalign["do_align"]:
                 yield from align_scan(  fly_motors[2],
                                 xalign["start"],
@@ -440,8 +442,8 @@ def tomo_scan_to_loop(angle, tomo_params, ic_init, do_y_offset = True,tracking_f
             #2d alignemnt using center of mass if condition is true
             elif align_2d["do_align"]:
 
-                x_start_real = align_2d["x_start"] / np.abs(np.sin(angle * np.pi / 180.))
-                x_end_real = align_2d["x_end"] / np.abs(np.sin(angle * np.pi / 180.))
+                x_start_real = align_2d["x_start"] / abs(np.sin(angle * np.pi / 180.))
+                x_end_real = align_2d["x_end"] / abs(np.sin(angle * np.pi / 180.))
 
                 yield from align_2d_com_scan(   fly_motors[2],
                                                 x_start_real,
@@ -497,7 +499,8 @@ def tomo_scan_to_loop(angle, tomo_params, ic_init, do_y_offset = True,tracking_f
                                     image_scan["y_end"],
                                     image_scan["y_num"],
                                     image_scan["exposure"],
-                                    tomo_params["flying_panda"]
+                                    tomo_params["flying_panda"],
+                                    axis_switch_angle = tomo_params["axis_switch_angle"]
                                     )
 
         xspress3.unstage()
@@ -555,7 +558,7 @@ def run_tomo_json(path_to_json,tracking_file = None):
     if "start_angle" in angle_info:
         angst = angle_info["start_angle"]
         for i,ang in enumerate(angles):
-            if np.abs(ang-angst)<1e-3:
+            if abs(ang-angst)<1e-3:
                 angles = angles[i:]
                 break
 
@@ -1045,7 +1048,7 @@ def run_diff_json(path_to_json,tracking_file = None,do_confirm =True):
     if "start_angle" in angle_info:
         angst = angle_info["start_angle"]
         for i,ang in enumerate(angles):
-            if np.abs(ang-angst)<1e-3:
+            if abs(ang-angst)<1e-3:
                 angles = angles[i:]
                 break
 
