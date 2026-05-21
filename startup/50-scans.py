@@ -79,12 +79,12 @@ conflict_name = ['pmllf',
 
 # sd.baseline = [dcm, m1, m2, beamline_status, smll, vmll, hmll, ssa2, zp]
 # sd.baseline = [dcm, m1, m2, beamline_status, smll, vmll, hmll, ssa2, bpm1, bpm2, smlld]
-sd.baseline = [ugap,e,dcm,m1,m2,smll,vmll,hmll,ssa2,s5,mllosa,zp,zps,
-                zposa,zpbs,smlld,fdet1,diff,p,ps,pp,vms]
+#sd.baseline = [ugap,e,dcm,m1,m2,smll,vmll,hmll,ssa2,s5,mllosa,zp,zps,
+                # zposa,zpbs,smlld,fdet1,diff,p,ps,pp,vms]
 
 #temp due to smarpod is under repair, switch to abobe ad.baseline april 2026 AP
-sd.baseline = [ugap,e,dcm,m1,m2,smll,vmll,hmll,ssa2,s5,mllosa,zp,
-               zposa,zpbs,smlld,fdet1,diff,p,ps,pp,vms]
+#sd.baseline = [ugap,e,dcm,m1,m2,smll,vmll,hmll,ssa2,s5,mllosa,zp,
+#               zposa,zpbs,smlld,fdet1,diff,p,ps,pp,vms]
 
 sd.baseline = [ugap,
                e,
@@ -108,7 +108,8 @@ sd.baseline = [ugap,
                p,
                ps,
                pp,
-               vms
+               vms,
+               difftrans
                ]
 
 # The following is a temporary solution, which replaces fixed list of devices passed to 'BlueskyMagics.positioners' (deprecated).

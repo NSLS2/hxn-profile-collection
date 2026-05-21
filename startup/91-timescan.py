@@ -480,7 +480,7 @@ def time_scan(detectors, num, dwell, *,
     md['scan']['scan_input'] = [num,dwell]
     md['scan']['sample_name'] = ''
     md['scan']['detectors'] = [d.name for d in detectors]
-    md['scan']['detector_distance'] = 2.05
+    md['scan']['detector_distance'] = difftrans_z.position *0.001 # Originally 2.05, now automatic based on TransZ on MC14
     md['scan']['dwell'] = dwell
     # md['scan']['theta'] = {'val' : pt_tomo.th.user_readback.get(),
     #                        'units' : pt_tomo.th.motor_egu.get()}

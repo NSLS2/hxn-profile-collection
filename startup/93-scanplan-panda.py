@@ -1209,7 +1209,7 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
             md['scan']['sample_name'] = ''
 
             md['scan']['detectors'] = [d.name for d in dets] + [panda_flyer.panda.name, panda_flyer.sclr.name]
-            md['scan']['detector_distance'] = 2.05
+            md['scan']['detector_distance'] = difftrans.z.position *0.001 # Originally 2.05, now automatic based on TransZ on MC14
             md['scan']['dwell'] = exposure_time
             md['scan']['fast_axis'] = {'motor_name' : motor1.name,
                                     'units' : motor1.motor_egu.get()}
@@ -1461,7 +1461,7 @@ def fly2dpd_repeat(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_star
             md['scan']['sample_name'] = ''
 
             md['scan']['detectors'] = [d.name for d in dets] + [panda_flyer.panda.name, panda_flyer.sclr.name]
-            md['scan']['detector_distance'] = 2.05
+            md['scan']['detector_distance'] = difftrans.z.position *0.001 # Originally 2.05, now automatic based on TransZ on MC14
             md['scan']['dwell'] = exposure_time
             md['scan']['fast_axis'] = {'motor_name' : motor1.name,
                                     'units' : motor1.motor_egu.get()}
@@ -1674,7 +1674,7 @@ def fly1dpd(dets, motor1, scan_start1, scan_end1, num1, exposure_time, panda_fly
             md['scan']['sample_name'] = ''
 
             md['scan']['detectors'] = [d.name for d in dets] + [panda_flyer.panda.name, panda_flyer.sclr.name]
-            md['scan']['detector_distance'] = 2.05
+            md['scan']['detector_distance'] = difftrans.z.position *0.001 # Originally 2.05, now automatic based on TransZ on MC14
             md['scan']['dwell'] = exposure_time
             md['scan']['fast_axis'] = {'motor_name' : motor1.name,
                                     'units' : motor1.motor_egu.get()}
@@ -1865,7 +1865,7 @@ def fly2dcontpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2,
             md['scan']['sample_name'] = ''
 
             md['scan']['detectors'] = [d.name for d in dets] + [panda_flyer.panda.name, panda_flyer.sclr.name]
-            md['scan']['detector_distance'] = 2.05
+            md['scan']['detector_distance'] = difftrans.z.position *0.001 # Originally 2.05, now automatic based on TransZ on MC14
             md['scan']['dwell'] = exposure_time
             md['scan']['fast_axis'] = {'motor_name' : motor1.name,
                                     'units' : motor1.motor_egu.get()}
@@ -2016,7 +2016,7 @@ def timescanpd(dets, num, exposure_time, panda_flyer = None, pos_return = True, 
             md['scan']['sample_name'] = ''
 
             md['scan']['detectors'] = [d.name for d in dets] + [panda_flyer.panda.name, panda_flyer.sclr.name]
-            md['scan']['detector_distance'] = 2.05
+            md['scan']['detector_distance'] = difftrans.z.position *0.001 # Originally 2.05, now automatic based on TransZ on MC14
             md['scan']['dwell'] = exposure_time
             md['scan']['shape'] = (num, 1)
 

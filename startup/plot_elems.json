@@ -1,8 +1,8 @@
 {
       "roi_elems": [
-            "Cu",
-            "Ti",
             "Si",
+            "Ti",
+            "Cu",
             "Ni",
             "Fe",
             "Pt_M",
@@ -18,12 +18,10 @@
             "Cu"
       ],
       "live_plot_elems": [
-            "Cu",
-            "Ti",
             "Si",
-            "Ni"
+            "Ti"
       ],
       "line_plot_elem": [
-            "Cu"
+            "Si"
       ]
 }
