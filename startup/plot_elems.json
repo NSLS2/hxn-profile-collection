@@ -1,14 +1,14 @@
 {
       "roi_elems": [
-            "Au_M",
-            "Er_L",
+            "Cu",
+            "Ti",
             "Si",
-            "Al",
-            "Cr",
+            "Ni",
+            "Fe",
             "Pt_M",
             "Cl",
             "Ti",
-            "Fe",
+            "Co",
             "Ni",
             "S",
             "Ar",
@@ -18,14 +18,12 @@
             "Cu"
       ],
       "live_plot_elems": [
-            "Au_M",
-            "Er_L",
+            "Cu",
+            "Ti",
             "Si",
-            "Al",
-            "Cr",
-            "Pt_M"
+            "Ni"
       ],
       "line_plot_elem": [
-            "Au_M"
+            "Cu"
       ]
 }

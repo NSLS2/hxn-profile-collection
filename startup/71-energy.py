@@ -275,14 +275,15 @@ class HXNEnergy():
         caput('XF:03IDC-OP{Slt:SSA2-Ax:XAp}Mtr.VAL', 2)
         caput('XF:03IDC-OP{Slt:SSA2-Ax:YAp}Mtr.VAL', 2)
 
-        yield from bps.mov(m1.y, 30, m2.y, -12 ) #use Rh for all energies
+        #yield from bps.mov(m1.y, 30, m2.y, -12 ) #use Rh for all energies, was bad for low e
 
 
         #setm2pf to 10
         caput("XF:03IDA-OP{HFM:1-Ax:PF}Mtr.VAL", 10)
 
         ic1_init = sclr1_ch2.get()
-        df = pd.DataFrame(columns = ["Time Stamp","energy","harmonic","ugap","dcmPitch",'dcmRoll', "hfmPitch", "IC1"], dtype = "object")
+        df = pd.DataFrame(columns = ["Time Stamp","energy","harmonic","ugap","dcmPitch",
+                                     'dcmRoll', "hfmPitch", "IC1"], dtype = "object")
 
         ePoints = np.linspace(EStart, EEnd, EStep+1)
         df["energy"] = ePoints
@@ -319,7 +320,7 @@ class HXNEnergy():
                 logger.info("Gap moved")
 
             #yield from bps.mov(e,target_e)
-            yield from Energy.move(target_e, moveMonoPitch=False, moveMirror = "ignore") #do all at Rh edge
+            yield from Energy.move(target_e, moveMonoPitch=False) #doing all at Rh edge was bad for low e
             if sclr2_ch2.get() < ic1_init*0.5:
                 yield from Energy.fluxOptimizerScan(dcm.r,-0.2, 0.2, 12, ic = sclr2_ch2, moveToMax = True)
                 yield from Energy.fluxOptimizerScan(m2.p,-0.05, 0.05, 10, ic = sclr2_ch2, moveToMax = True)
@@ -788,5 +789,5 @@ def change_dets_energy(targetE):
     caput("XF:03IDC-ES{Det:Eiger1M}cam1:Acquire",0)
     caput("XF:03IDC-ES{Det:Eiger1M}cam1:PhotonEnergy", targetE*1000)
 
-Energy = HXNEnergy(ugap,e,dcm.p, "ic3", wd+"ugap_calib20260121_2256.csv")
+Energy = HXNEnergy(ugap,e,dcm.p, "ic3", wd+"ugap_calib20260519_1739.csv")
 
