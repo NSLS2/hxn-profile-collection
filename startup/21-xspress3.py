@@ -310,7 +310,10 @@ xspress3 = HxnXspress3Detector('XF:03IDC-ES{Xsp:1}:', name='xspress3')
 #               )
 import itertools
 from ophyd.areadetector import Xspress3Detector
-from nslsii.areadetector.xspress3 import Xspress3HDF5Plugin, Xspress3Trigger, build_xspress3_class
+from nslsii.areadetector.xspress3 import (
+    Xspress3HDF5Plugin, Xspress3Trigger, build_xspress3_class,
+    Xspress3FileStore as CommunityXspress3FileStore
+)
 import httpx
 
 
@@ -328,7 +331,8 @@ def get_proposal_type(proposal_id=None):
 
 
 
-class Xspress3HDF5PluginWithRedis(Xspress3HDF5Plugin):
+# class Xspress3HDF5PluginWithRedis(Xspress3HDF5Plugin):
+class Xspress3HDF5PluginWithRedis(CommunityXspress3FileStore):
     "Subclass to determine file location based on proposal info in Redis"
 
     def __init__(self, *args, **kwargs):
