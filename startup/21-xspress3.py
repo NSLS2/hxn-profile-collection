@@ -331,8 +331,7 @@ def get_proposal_type(proposal_id=None):
 
 
 
-# class Xspress3HDF5PluginWithRedis(Xspress3HDF5Plugin):
-class Xspress3HDF5PluginWithRedis(CommunityXspress3FileStore):
+class Xspress3HDF5PluginWithRedis(Xspress3HDF5Plugin):
     "Subclass to determine file location based on proposal info in Redis"
 
     def __init__(self, *args, **kwargs):
