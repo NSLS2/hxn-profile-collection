@@ -479,18 +479,15 @@ class CommunityHxnXspress3Detector(CommunityXspress3_8Channel):
         if ext_trig:
             self.stage_sigs[self.cam.trigger_mode] = 'TTL Veto Only'
             self.stage_sigs[self.cam.num_images] = total_capture
-            self.fluor.shape = (
-                total_capture,
-                self.hdf5.array_size_all.array_size1.get(),
-                self.hdf5.array_size_all.array_size0.get(),
-            )
         else:
             # self.settings.trigger_mode.put('Internal')
             # self.settings.num_images.put(1)
             self.stage_sigs[self.cam.trigger_mode] = 'Internal'
             self.stage_sigs[self.cam.num_images] = spec_per_point
+
+        if self.get_external_file_ref():
             # Failed attempt to fix expected shape in tiled
-            self.fluor.shape = (
+            self.get_external_file_ref().shape = (
                 self.hdf5.array_size_all.array_size1.get(),
                 self.hdf5.array_size_all.array_size0.get(),
             )
