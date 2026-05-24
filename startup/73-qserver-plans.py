@@ -448,7 +448,7 @@ def align_and_scan(
         exposure
     )
 
-    print("✅ Particle alignment and 2D scan complete.")
+    print(" Particle alignment and 2D scan complete.")
 
 def align_and_scan_qserver_plan(
         label,
@@ -533,7 +533,7 @@ def send_align_and_scan_to_queue(
         )
     )
 
-    print(f"✅ Added '{label}' align_and_scan plan to QServer queue.")
+    print(f" Added '{label}' align_and_scan plan to QServer queue.")
 
 
 def get_scan_num_label(plan_dict):
