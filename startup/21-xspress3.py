@@ -315,6 +315,7 @@ from nslsii.areadetector.xspress3 import (
     Xspress3FileStore as CommunityXspress3FileStore
 )
 import httpx
+from collections import OrderedDict
 
 
 nslsii_api_client = httpx.Client(base_url="https://api.nsls2.bnl.gov")
@@ -330,12 +331,13 @@ def get_proposal_type(proposal_id=None):
     return proposal["type"]
 
 
-
 class Xspress3HDF5PluginWithRedis(Xspress3HDF5Plugin):
     "Subclass to determine file location based on proposal info in Redis"
 
     def __init__(self, *args, **kwargs):
-        # self._redis_dict = RunEngineRedisDict("info.srx.nsls2.bnl.gov")
+        # TODO - this will change after data security is done
+        self.root_path_str = "/nsls2/data/hxn/legacy/"
+        self.path_template_str = "%Y/%m/%d"
         if "root_path" not in kwargs:
             # self.root_path.put(self.root_path_str)
             kwargs["root_path"] = self.root_path_str
@@ -344,30 +346,41 @@ class Xspress3HDF5PluginWithRedis(Xspress3HDF5Plugin):
             kwargs["path_template"] = self.path_template_str
         super().__init__(*args, **kwargs)
 
-    @property
-    def root_path_str(self):
-        # TODO - this will change after data security is done
-        # data_session = self._redis_dict["data_session"]
-        # cycle = self._redis_dict["cycle"]
-        # data_session = RE.md["data_session"]
-        # cycle = RE.md["cycle"]
-        # if "Commissioning" in get_proposal_type():
-        root_path = f"/nsls2/data/hxn/legacy/"
-        # else:
-        #     root_path = f"/nsls2/data/hxn/legacy/"
-        return root_path
+    def warmup(self):
+        """
+        Overwrites HDF5Plugin.warmup(), but removes det1:ImageMode and det1:AcquirePeriod since those PVs do not exist in the
+        community IOC.
 
-    @property
-    def path_template_str(self):
-        path_template = "%Y/%m/%d"
-        return path_template
+        A convenience method for 'priming' the plugin.
 
-    def stage(self, *args, **kwargs):
-        self.root_path.put(self.root_path_str)
-        return super().stage()
+        The plugin has to 'see' one acquisition before it is ready to capture.
+        This sets the array size, etc.
+        """
+        self.enable.set(1).wait()
+        sigs = OrderedDict(
+            [
+                (self.parent.cam.array_callbacks, 1),
+                (self.parent.cam.trigger_mode, "Internal"),
+                # just in case tha acquisition time is set very long...
+                (self.parent.cam.acquire_time, 1),
+                (self.parent.cam.acquire, 1),
+            ]
+        )
+
+        original_vals = {sig: sig.get() for sig in sigs}
+
+        for sig, val in sigs.items():
+            time.sleep(0.1)  # abundance of caution
+            sig.set(val).wait()
+
+        time.sleep(2)  # wait for acquisition
+
+        for sig, val in reversed(list(original_vals.items())):
+            time.sleep(0.1)
+            sig.set(val).wait()
 
 
-CommunityXspress3_8Channel = build_xspress3_class(
+CommunityXspress3_4Channel = build_xspress3_class(
     channel_numbers=(1, 2, 3, 4),
     mcaroi_numbers=(1, 2, 3, 4),
     image_data_key=None,
@@ -382,7 +395,7 @@ CommunityXspress3_8Channel = build_xspress3_class(
 )
 
 
-class CommunityHxnXspress3Detector(CommunityXspress3_8Channel):
+class CommunityHxnXspress3Detector(CommunityXspress3_4Channel):
     # replace HDF5:FileCreateDir with HDF1:FileCreateDir
     create_dir = Cpt(EpicsSignal, "HDF1:FileCreateDir")
 
