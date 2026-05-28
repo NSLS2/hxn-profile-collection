@@ -23,6 +23,7 @@ beamline_status = BeamlineStatus('', name='beamline_status')
 
 
 class PseudoEnergyCal(PseudoPositioner, NamedDevice):
+    
     def __init__(self, prefix, **kwargs):
         super().__init__(prefix, **kwargs)
 
@@ -35,11 +36,13 @@ class PseudoEnergyCal(PseudoPositioner, NamedDevice):
 
     @pseudo_position_argument
     def forward(self, position):
+        
         angle = math.asin((12.39842)/(2 * 3.1355893 * position.energy)) * (180/math.pi)
         return self.RealPosition(mono_angle=angle)
 
     @real_position_argument
     def inverse(self, position):
+        
         energy_kev = 12.39842 / (2. * 3.1355893 * math.sin(position.mono_angle*math.pi/180.))
         return self.PseudoPosition(energy=energy_kev)
 

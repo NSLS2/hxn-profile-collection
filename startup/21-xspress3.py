@@ -75,7 +75,7 @@ class Xspress3FileStoreHXN(Xspress3FileStore):
                      write_path, filename)
 
         logger.debug('Erasing old spectra')
-        self.settings.erase.put(1, wait=True)
+        # self.settings.erase.put(1, wait=True)
 
         # this must be set after self.settings.num_images because at the Epics
         # layer  there is a helpful link that sets this equal to that (but
@@ -346,11 +346,9 @@ class Xspress3HDF5PluginWithRedis(Xspress3HDF5Plugin):
             kwargs["path_template"] = self.path_template_str
         super().__init__(*args, **kwargs)
 
+
     def warmup(self):
         """
-        Overwrites HDF5Plugin.warmup(), but removes det1:ImageMode and det1:AcquirePeriod since those PVs do not exist in the
-        community IOC.
-
         A convenience method for 'priming' the plugin.
 
         The plugin has to 'see' one acquisition before it is ready to capture.
@@ -360,9 +358,12 @@ class Xspress3HDF5PluginWithRedis(Xspress3HDF5Plugin):
         sigs = OrderedDict(
             [
                 (self.parent.cam.array_callbacks, 1),
+                # (self.parent.cam.image_mode, "Single"),
                 (self.parent.cam.trigger_mode, "Internal"),
                 # just in case tha acquisition time is set very long...
                 (self.parent.cam.acquire_time, 1),
+                # (self.parent.cam.acquire_period, 1),
+                (self.parent.cam.num_images, 1),
                 (self.parent.cam.acquire, 1),
             ]
         )
@@ -371,18 +372,19 @@ class Xspress3HDF5PluginWithRedis(Xspress3HDF5Plugin):
 
         for sig, val in sigs.items():
             time.sleep(0.1)  # abundance of caution
-            sig.set(val).wait()
+            sig.set(val, timeout=10).wait()
 
         time.sleep(2)  # wait for acquisition
 
         for sig, val in reversed(list(original_vals.items())):
             time.sleep(0.1)
-            sig.set(val).wait()
+            sig.set(val, timeout=10).wait()
 
 
 CommunityXspress3_4Channel = build_xspress3_class(
     channel_numbers=(1, 2, 3, 4),
-    mcaroi_numbers=(1, 2, 3, 4),
+    # mcaroi_numbers=(1, 2, 3, 4),
+    mcaroi_numbers=(1,2,3),
     image_data_key=None,
     xspress3_parent_classes=(Xspress3Detector, Xspress3Trigger, HxnModalBase),
     extra_class_members={
@@ -397,10 +399,10 @@ CommunityXspress3_4Channel = build_xspress3_class(
 
 class CommunityHxnXspress3Detector(CommunityXspress3_4Channel):
     # replace HDF5:FileCreateDir with HDF1:FileCreateDir
-    create_dir = Cpt(EpicsSignal, "HDF1:FileCreateDir")
+    # create_dir = Cpt(EpicsSignal, "HDF1:FileCreateDir")
 
     # this is used as a latch to put the xspress3 into 'bulk' mode
-    # for fly scanning.  Do this is a signal (rather than as a local variable
+    # for fly scanning.  Do this is a signal (rather than as a local variable)
     # or as a method so we can modify this as part of a plan
     fly_next = Cpt(Signal, value=False)
 
