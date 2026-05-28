@@ -3090,7 +3090,9 @@ def peak_the_flux():
         #close c
         # caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0",0)
 
-    except: pass
+    except Exception:
+        import traceback
+        traceback.print_exc()
 
 
 
