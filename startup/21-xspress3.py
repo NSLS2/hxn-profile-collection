@@ -383,8 +383,7 @@ class Xspress3HDF5PluginWithRedis(Xspress3HDF5Plugin):
 
 CommunityXspress3_4Channel = build_xspress3_class(
     channel_numbers=(1, 2, 3, 4),
-    # mcaroi_numbers=(1, 2, 3, 4),
-    mcaroi_numbers=(1,2,3),
+    mcaroi_numbers=(1, 2, 3, 4, 5, 6, 7, 8), #TODO - this should be 48
     image_data_key=None,
     xspress3_parent_classes=(Xspress3Detector, Xspress3Trigger, HxnModalBase),
     extra_class_members={
