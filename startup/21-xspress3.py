@@ -78,7 +78,7 @@ class Xspress3FileStoreHXN(Xspress3FileStore):
                      write_path, filename)
 
         logger.debug('Erasing old spectra')
-        # self.settings.erase.put(1, wait=True)
+        self.settings.erase.put(1, wait=True)
 
         # this must be set after self.settings.num_images because at the Epics
         # layer  there is a helpful link that sets this equal to that (but
