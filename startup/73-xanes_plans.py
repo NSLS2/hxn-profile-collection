@@ -424,7 +424,7 @@ def generateEList_MLL_2(path_to_parameter_file, highEStart = False):
 
 
 def run_zp_xanes(path_to_parameter_file, do_confirm  =True, 
-                 add_low_res_scan = False):
+                 add_low_res_scan = False, multi_pos_scan = False, pos_refs_scan_nums = []):
 
     """ 
     Function to run XANES Scan. 
@@ -518,6 +518,11 @@ def run_zp_xanes(path_to_parameter_file, do_confirm  =True,
     e_list['IC0'] = sclr2_ch2.get()
     e_list['IC3_before_peak'] = sclr2_ch4.get()
     e_list["zpsth"] = zpsth.position
+    e_list["param_file"] = path_to_parameter_file
+
+    if multi_pos_scan:
+        e_list["pos_ref_scan_id"] = 0
+
     
     #get the initial ic3 reading for peaking the beam
     ic_3_init =  sclr2_ch4.get()
@@ -596,167 +601,341 @@ def run_zp_xanes(path_to_parameter_file, do_confirm  =True,
             
             yield from move_energy(e_t,zpz_t, harmonic=curr_harm)
 
-            #open fast shutter to check if ic3 reading is satistactory
-            caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',1) 
-            yield from bps.sleep(5)
-            
-            #get ic3 value before peaking, e change
-            ic3_ = sclr2_ch4.get()
-            
-            # if ic3 value is below the threshold, peak the beam
-            #if ic3_ < ic_3_init*0.9:
-            if ic3_ < ic_3_init*scan_params["flux_threshold"]:
-                
-                if scan_params["peak_flux"]: 
-                    yield from bps.movr(smary,-0.040) 
-                    yield from peak_the_flux()
-                    yield from bps.movr(smary,0.040)                     
-                fluxPeaked = True # for df record
-            else:
-                fluxPeaked = False
-            
-            #for df
-            ic_3 = sclr2_ch4.get()
-            ic_0 = sclr2_ch2.get()
-            
-            alignX = scan_params["xalign"]
-            alignY = scan_params["yalign"]
-            align_com = scan_params["align_with_com"]        
 
-            if e_list['energy'][i]<0: # for special scans if no align elem available
-                
-                '''
-                yield from fly1d(dets,x_motor,-1,1,100,0.1)
-                xcen = return_line_center(-1,'Cl',0.7)
-                yield from bps.mov(x_motor, xcen)
-                yield from fly1d(dets,y_motor,-1,1 ,100,0.1)
-                ycen = return_line_center(-1,'Cl',0.7)
-                yield from bps.mov(y_motor, ycen)
-                '''
-                pass
+            if multi_pos_scan:
 
-            if (align_com["do_align"] and e_t>align_com["energy_threshold"] and not i==0): 
-            # for special scans if no align elem available
-                
-                try:
-                #find com
-                    cx,cy = return_center_of_mass(-1,
-                                                align_com["elem"],
-                                                align_com["com_threshold"]
-                                                )
+                for sid in pos_refs_scan_nums:
+
+                    yield from recover_zp_scan_pos(int(sid),0,1,0)
+
+
+                    #open fast shutter to check if ic3 reading is satistactory
+                    caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',1) 
+                    yield from bps.sleep(3)
                     
+                    #get ic3 value before peaking, e change
+                    ic3_ = sclr2_ch4.get()
+                    
+                    # if ic3 value is below the threshold, peak the beam
+                    #if ic3_ < ic_3_init*0.9:
+                    if ic3_ < ic_3_init*scan_params["flux_threshold"]:
+                        
+                        if scan_params["peak_flux"]: 
+                            yield from bps.movr(smary,-10) 
+                            yield from peak_the_flux()
+                            yield from bps.movr(smary,10)                     
+                        fluxPeaked = True # for df record
+                    else:
+                        fluxPeaked = False
+                    
+                    #for df
+                    ic_3 = sclr2_ch4.get()
+                    ic_0 = sclr2_ch2.get()
+                    
+                    alignX = scan_params["xalign"]
+                    alignY = scan_params["yalign"]
+                    align_com = scan_params["align_with_com"]        
 
-                    #move if true
-                    if align_com["move_x"]:
-                        yield from bps.mov(x_motor,cx)
-                    if align_com["move_y"]:
-                        yield from bps.mov(y_motor,cy)
+                    if e_list['energy'][i]<0: # for special scans if no align elem available
+                        
+                        '''
+                        yield from fly1d(dets,x_motor,-1,1,100,0.1)
+                        xcen = return_line_center(-1,'Cl',0.7)
+                        yield from bps.mov(x_motor, xcen)
+                        yield from fly1d(dets,y_motor,-1,1 ,100,0.1)
+                        ycen = return_line_center(-1,'Cl',0.7)
+                        yield from bps.mov(y_motor, ycen)
+                        '''
+                        pass
 
-                    print(f"COM correction Applied: {cx = :4f}, {cy = :4f}")
+                    if (align_com["do_align"] and e_t>align_com["energy_threshold"] and not i==0): 
+                    # for special scans if no align elem available
+                        
+                        try:
+                        #find com
+                            cx,cy = return_center_of_mass(-1,
+                                                        align_com["elem"],
+                                                        align_com["com_threshold"]
+                                                        )
+                            
 
-                except:
-                    pass
+                            #move if true
+                            if align_com["move_x"]:
+                                yield from bps.mov(x_motor,cx)
+                            if align_com["move_y"]:
+                                yield from bps.mov(y_motor,cy)
 
-            else:
-            
-                if alignY["do_align"]:
-                    yield from align_scan(  y_motor, 
-                                                alignY["start"],
-                                                alignY["end"],
-                                                alignY["num"],
-                                                alignY["exposure"],
-                                                alignY["elem"],
-                                                align_with=alignY["center_with"], 
-                                                threshold = alignY["threshold"],
-                                                neg_flag =alignY["negative_flag"],
-                                                offset=alignY["offset"]
-                                                ) 
-                
-                if alignX["do_align"]:
-                    yield from align_scan(  x_motor, 
-                                                alignX["start"],
-                                                alignX["end"],
-                                                alignX["num"],
-                                                alignX["exposure"],
-                                                alignX["elem"],
-                                                align_with=alignX["center_with"], 
-                                                threshold = alignX["threshold"],
-                                                neg_flag =alignX["negative_flag"],
-                                                offset=alignX["offset"] )                
+                            print(f"COM correction Applied: {cx = :4f}, {cy = :4f}")
+
+                        except:
+                            pass
+
+                    else:
+                    
+                        if alignY["do_align"]:
+                            yield from align_scan(  y_motor, 
+                                                        alignY["start"],
+                                                        alignY["end"],
+                                                        alignY["num"],
+                                                        alignY["exposure"],
+                                                        alignY["elem"],
+                                                        align_with=alignY["center_with"], 
+                                                        threshold = alignY["threshold"],
+                                                        neg_flag =alignY["negative_flag"],
+                                                        offset=alignY["offset"]
+                                                        ) 
+                        
+                        if alignX["do_align"]:
+                            yield from align_scan(  x_motor, 
+                                                        alignX["start"],
+                                                        alignX["end"],
+                                                        alignX["num"],
+                                                        alignX["exposure"],
+                                                        alignX["elem"],
+                                                        align_with=alignX["center_with"], 
+                                                        threshold = alignX["threshold"],
+                                                        neg_flag =alignX["negative_flag"],
+                                                        offset=alignX["offset"] )                
 
 
-            # alignment_scan(mtr, start,end,num,exp,elem_, align_with="line_center", threshold = 0.5):
-            
-                                                                       
+                    # alignment_scan(mtr, start,end,num,exp,elem_, align_with="line_center", threshold = 0.5):
+                    
+                                                                            
 
-            print(f'Current scan: {i+1}/{len(e_list)}')
-            image_scan = scan_params["fly2d_scan"]
+                    print(f'Current scan: {i+1}/{len(e_list)}')
+                    image_scan = scan_params["fly2d_scan"]
 
-            yield from fly2dpd( 
+                    yield from fly2dpd( 
+                                    eval(image_scan['det']),
+                                    x_motor,
+                                    image_scan["x_start"],
+                                    image_scan["x_end"],
+                                    image_scan["x_num"],
+                                    y_motor,
+                                    image_scan["y_start"],
+                                    image_scan["y_end"],    
+                                    image_scan["y_num"],
+                                    image_scan["exposure"]
+                                    )
+                    yield from bps.sleep(1)
+                    #eval(image_scan["det"])
+                    if add_low_res_scan:
+                    
+                        yield from fly2dpd( 
                             eval(image_scan['det']),
                             x_motor,
                             image_scan["x_start"],
                             image_scan["x_end"],
-                            image_scan["x_num"],
+                            image_scan["x_num"]//4,
                             y_motor,
                             image_scan["y_start"],
-                            image_scan["y_end"],    
-                            image_scan["y_num"],
+                            image_scan["y_end"],
+                            image_scan["y_num"]//4,
                             image_scan["exposure"]
                             )
-            yield from bps.sleep(1)
-            #eval(image_scan["det"])
-            if add_low_res_scan:
-            
-                yield from fly2dpd( 
-                    eval(image_scan['det']),
-                    x_motor,
-                    image_scan["x_start"],
-                    image_scan["x_end"],
-                    image_scan["x_num"]//4,
-                    y_motor,
-                    image_scan["y_start"],
-                    image_scan["y_end"],
-                    image_scan["y_num"]//4,
-                    image_scan["exposure"]
-                    )
-                yield from bps.sleep(1)
+                        yield from bps.sleep(1)
 
-            #close fast shutter
-            caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0) 
-            # get some scan details and add to the list of scan id and energy
-            last_sid = int(caget('XF:03IDC-ES{Status}ScanID-I'))
-            e_pos = e.position
-            
-            #Add more info to the dataframe
-            e_list['E Readback'].at[i] = e_pos #add real energy to the dataframe
-            e_list["zpsth"].at[i] = zpsth.position
-            e_list["scan_id"].at[i] = int(last_sid) #add scan id to the dataframe
-            e_list['TimeStamp'].at[i] = pd.Timestamp.now()
-            e_list['IC3'].at[i] = ic_3 #Ic values are useful for calibration
-            e_list['IC0'].at[i] = ic_0 #Ic values are useful for calibration
-            e_list['Peak Flux'].at[i] = fluxPeaked # recoed if peakflux was excecuted
-            e_list['IC3_before_peak'].at[i] = ic3_ #ic3 right after e change, no peaking
-            fluxPeaked = False #reset
-            scan_name = scan_params.get("scan_name",'')
-            if scan_params["pdf_log"]:
-                try:
-                    insert_xrf_map_to_pdf(-1,
-                                          scan_params["pdf_elems"],
-                                          title_=['energy', 'zpsth'],
-                                          note =scan_name,
-                                          norm = None)# plot data and add to pdf
-                    plt.close()
-                except:
-                    traceback.print_exc()
+                    #close fast shutter
+                    caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0) 
+                    # get some scan details and add to the list of scan id and energy
+                    last_sid = int(caget('XF:03IDC-ES{Status}ScanID-I'))
+                    e_pos = e.position
+                    
+                    #Add more info to the dataframe
+                    e_list['E Readback'].at[i] = e_pos #add real energy to the dataframe
+                    e_list["zpsth"].at[i] = zpsth.position
+                    e_list["scan_id"].at[i] = int(last_sid) #add scan id to the dataframe
+                    e_list['TimeStamp'].at[i] = pd.Timestamp.now()
+                    e_list['IC3'].at[i] = ic_3 #Ic values are useful for calibration
+                    e_list['IC0'].at[i] = ic_0 #Ic values are useful for calibration
+                    e_list['Peak Flux'].at[i] = fluxPeaked # recoed if peakflux was excecuted
+                    e_list['IC3_before_peak'].at[i] = ic3_ #ic3 right after e change, no peaking
+                    e_list["pos_ref_scan_id"].at[i] = int(sid)
+                    fluxPeaked = False #reset
+                    scan_name = scan_params.get("scan_name",'')
+                    if scan_params["pdf_log"]:
+                        try:
+                            insert_xrf_map_to_pdf(-1,
+                                                scan_params["pdf_elems"],
+                                                title_=['energy', 'zpsth'],
+                                                note =scan_name,
+                                                norm = None)# plot data and add to pdf
+                            plt.close()
+                        except:
+                            traceback.print_exc()
+                            pass
+                    
+                    # save the DF in the loop so quitting a scan won't affect
+                    filename = f"HXN_nanoXANES_pos_ref_{int(sid)}_{scan_name}_startID{int(e_list['scan_id'][0])}_{len(e_list)}_e_points.csv"
+                    e_list.to_csv(os.path.join(scan_params["save_log_to"], filename), float_format= '%.5f')
+
+                caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0) 
+                if scan_params["pdf_log"]: save_page() #save the pdf
+
+
+            else:
+
+                #open fast shutter to check if ic3 reading is satistactory
+                caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',1) 
+                yield from bps.sleep(3)
+                
+                #get ic3 value before peaking, e change
+                ic3_ = sclr2_ch4.get()
+                
+                # if ic3 value is below the threshold, peak the beam
+                #if ic3_ < ic_3_init*0.9:
+                if ic3_ < ic_3_init*scan_params["flux_threshold"]:
+                    
+                    if scan_params["peak_flux"]: 
+                        yield from bps.movr(smary,-10) 
+                        yield from peak_the_flux()
+                        yield from bps.movr(smary,10)                     
+                    fluxPeaked = True # for df record
+                else:
+                    fluxPeaked = False
+                
+                #for df
+                ic_3 = sclr2_ch4.get()
+                ic_0 = sclr2_ch2.get()
+                
+                alignX = scan_params["xalign"]
+                alignY = scan_params["yalign"]
+                align_com = scan_params["align_with_com"]        
+
+                if e_list['energy'][i]<0: # for special scans if no align elem available
+                    
+                    '''
+                    yield from fly1d(dets,x_motor,-1,1,100,0.1)
+                    xcen = return_line_center(-1,'Cl',0.7)
+                    yield from bps.mov(x_motor, xcen)
+                    yield from fly1d(dets,y_motor,-1,1 ,100,0.1)
+                    ycen = return_line_center(-1,'Cl',0.7)
+                    yield from bps.mov(y_motor, ycen)
+                    '''
                     pass
-            
-            # save the DF in the loop so quitting a scan won't affect
-            filename = f"HXN_nanoXANES_{scan_name}_startID{int(e_list['scan_id'][0])}_{len(e_list)}_e_points.csv"
-            e_list.to_csv(os.path.join(scan_params["save_log_to"], filename), float_format= '%.5f')
 
-        caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0) 
-        if scan_params["pdf_log"]: save_page() #save the pdf
+                if (align_com["do_align"] and e_t>align_com["energy_threshold"] and not i==0): 
+                # for special scans if no align elem available
+                    
+                    try:
+                    #find com
+                        cx,cy = return_center_of_mass(-1,
+                                                    align_com["elem"],
+                                                    align_com["com_threshold"]
+                                                    )
+                        
+
+                        #move if true
+                        if align_com["move_x"]:
+                            yield from bps.mov(x_motor,cx)
+                        if align_com["move_y"]:
+                            yield from bps.mov(y_motor,cy)
+
+                        print(f"COM correction Applied: {cx = :4f}, {cy = :4f}")
+
+                    except:
+                        pass
+
+                else:
+                
+                    if alignY["do_align"]:
+                        yield from align_scan(  y_motor, 
+                                                    alignY["start"],
+                                                    alignY["end"],
+                                                    alignY["num"],
+                                                    alignY["exposure"],
+                                                    alignY["elem"],
+                                                    align_with=alignY["center_with"], 
+                                                    threshold = alignY["threshold"],
+                                                    neg_flag =alignY["negative_flag"],
+                                                    offset=alignY["offset"]
+                                                    ) 
+                    
+                    if alignX["do_align"]:
+                        yield from align_scan(  x_motor, 
+                                                    alignX["start"],
+                                                    alignX["end"],
+                                                    alignX["num"],
+                                                    alignX["exposure"],
+                                                    alignX["elem"],
+                                                    align_with=alignX["center_with"], 
+                                                    threshold = alignX["threshold"],
+                                                    neg_flag =alignX["negative_flag"],
+                                                    offset=alignX["offset"] )                
+
+
+                # alignment_scan(mtr, start,end,num,exp,elem_, align_with="line_center", threshold = 0.5):
+                
+                                                                        
+
+                print(f'Current scan: {i+1}/{len(e_list)}')
+                image_scan = scan_params["fly2d_scan"]
+
+                yield from fly2dpd( 
+                                eval(image_scan['det']),
+                                x_motor,
+                                image_scan["x_start"],
+                                image_scan["x_end"],
+                                image_scan["x_num"],
+                                y_motor,
+                                image_scan["y_start"],
+                                image_scan["y_end"],    
+                                image_scan["y_num"],
+                                image_scan["exposure"]
+                                )
+                yield from bps.sleep(1)
+                #eval(image_scan["det"])
+                if add_low_res_scan:
+                
+                    yield from fly2dpd( 
+                        eval(image_scan['det']),
+                        x_motor,
+                        image_scan["x_start"],
+                        image_scan["x_end"],
+                        image_scan["x_num"]//4,
+                        y_motor,
+                        image_scan["y_start"],
+                        image_scan["y_end"],
+                        image_scan["y_num"]//4,
+                        image_scan["exposure"]
+                        )
+                    yield from bps.sleep(1)
+
+                #close fast shutter
+                caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0) 
+                # get some scan details and add to the list of scan id and energy
+                last_sid = int(caget('XF:03IDC-ES{Status}ScanID-I'))
+                e_pos = e.position
+                
+                #Add more info to the dataframe
+                e_list['E Readback'].at[i] = e_pos #add real energy to the dataframe
+                e_list["zpsth"].at[i] = zpsth.position
+                e_list["scan_id"].at[i] = int(last_sid) #add scan id to the dataframe
+                e_list['TimeStamp'].at[i] = pd.Timestamp.now()
+                e_list['IC3'].at[i] = ic_3 #Ic values are useful for calibration
+                e_list['IC0'].at[i] = ic_0 #Ic values are useful for calibration
+                e_list['Peak Flux'].at[i] = fluxPeaked # recoed if peakflux was excecuted
+                e_list['IC3_before_peak'].at[i] = ic3_ #ic3 right after e change, no peaking
+                fluxPeaked = False #reset
+                scan_name = scan_params.get("scan_name",'')
+                if scan_params["pdf_log"]:
+                    try:
+                        insert_xrf_map_to_pdf(-1,
+                                            scan_params["pdf_elems"],
+                                            title_=['energy', 'zpsth'],
+                                            note =scan_name,
+                                            norm = None)# plot data and add to pdf
+                        plt.close()
+                    except:
+                        traceback.print_exc()
+                        pass
+                
+                # save the DF in the loop so quitting a scan won't affect
+                filename = f"HXN_nanoXANES_{scan_name}_startID{int(e_list['scan_id'][0])}_{len(e_list)}_e_points.csv"
+                e_list.to_csv(os.path.join(scan_params["save_log_to"], filename), float_format= '%.5f')
+
+            caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0) 
+            if scan_params["pdf_log"]: save_page() #save the pdf
 
     else:
         return

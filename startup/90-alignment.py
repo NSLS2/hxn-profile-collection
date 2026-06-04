@@ -2239,7 +2239,7 @@ def feedback_auto_off(wait_time_sec = 0.5):
 
 
 def check_for_beam_dump(
-    threshold = 5000, 
+    threshold = 2000, 
     check_period = 60,
     stabilization_delay = 120):
     """
@@ -2257,7 +2257,7 @@ def check_for_beam_dump(
     i = 0
     beam_dum_occured = False
     # --- Beam-Off Loop ---
-    while (sclr2_ch2.get() < threshold) and sr_beam_current.get() <499:
+    while (sclr2_ch2.get() < threshold) and sr_beam_current.get() <450:
 
         beam_dum_occured = True
 
@@ -2269,7 +2269,7 @@ def check_for_beam_dump(
 
         i+=1
 
-        if sr_beam_current.get() >499 and det_beamstatus.status:
+        if sr_beam_current.get() >450 and det_beamstatus.status:
             print(f"Beam Current  = {sr_beam_current.get()}; Beam is back")
             print(f" Beamline Ready = {det_beamstatus.status}")
             break
@@ -3000,6 +3000,114 @@ def peak_xy_volt(iter = 1):
 
 
 
+def peak_bpm(start, end, n_steps, pv_name='XF:03ID-BI{EM:BPM1}fast_pidX.VAL', 
+             initial_sleep=3, final_sleep=5):
+    """
+    Peak BPM alignment function.
+    
+    Parameters
+    ----------
+    start : float
+        Start position relative to current position
+    end : float
+        End position relative to current position
+    n_steps : int
+        Number of steps
+    pv_name : str, optional
+        PV name for the axis to scan. Default is X axis.
+        Use 'XF:03ID-BI{EM:BPM1}fast_pidX.VAL' for X or 'XF:03ID-BI{EM:BPM1}fast_pidY.VAL' for Y
+    initial_sleep : float, optional
+        Sleep time for first iteration (default: 3)
+    final_sleep : float, optional
+        Sleep time after setting peak (default: 5)
+    """
+    shutter_b_cls_status = caget('XF:03IDB-PPS{PSh}Sts:Cls-Sts')
+    shutter_c_status = caget('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0')
+
+    if shutter_b_cls_status == 0:
+        caput('XF:03IDC-ES{Status}ScanRunning-I', 1)
+        bpm_0 = caget(pv_name)
+        x = np.linspace(bpm_0+start, bpm_0+end, n_steps+1)
+        y = np.arange(n_steps+1)
+        
+        for i in range(n_steps+1):
+            caput(pv_name, x[i])
+            if i == 0:
+                yield from bps.sleep(initial_sleep)
+            else:
+                yield from bps.sleep(2)
+
+            if shutter_c_status == 0:
+                if USE_RASMI:
+                    y[i] = sclr2_ch3.get()
+                else:
+                    y[i] = sclr2_ch2.get()
+            else:
+                y[i] = sclr2_ch4.get()
+
+            if i > 2:
+                change = np.diff(y)
+                if change[-1] < 0 and change[-2] < 0:
+                    break
+
+        peak = x[y == np.max(y)]
+        caput(pv_name, peak[0])
+        yield from bps.sleep(final_sleep)
+        caput('XF:03IDC-ES{Status}ScanRunning-I', 0)
+    else:
+        print('Shutter B is Closed')
+
+
+def peak_bpm_x(start, end, n_steps):
+    """Convenience wrapper for X axis alignment."""
+    yield from peak_bpm(start, end, n_steps, 
+                        pv_name='XF:03IDB-BI{EM:1}Reg215-Sp',
+                        initial_sleep=3, final_sleep=5)
+
+
+def peak_bpm_y(start, end, n_steps):
+    """Convenience wrapper for Y axis alignment."""
+    yield from peak_bpm(start, end, n_steps, 
+                        pv_name='XF:03IDB-BI{EM:1}Reg216-Sp',
+                        initial_sleep=5, final_sleep=2)
+
+def peak_all(x_start = -25,x_end=25,x_n_step=50, y_start = -15,y_end=15, y_n_step=30):
+
+	peak_bpm_y(y_start,y_end,y_n_step)
+	peak_bpm_x(x_start,x_end,x_n_step)
+	peak_bpm_y(y_start,y_end,y_n_step)
+
+
+def peak_the_flux():
+
+    """ Scan the c-bpm set points to find IC3 maximum """
+    try:
+        #open c
+        # caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0",1)
+
+        if abs(caget("XF:03IDC-OP{Stg:CAM6-Ax:X}Mtr.RBV")) <10:
+            raise ValueError ("CAM06 is IN, move it out and try again")
+
+        print("Peaking the flux.")
+        yield from bps.sleep(2)
+        yield from peak_bpm_y(-500,500,10)
+
+        yield from bps.sleep(1)
+        yield from peak_bpm_x(-500,500,10)
+
+        yield from bps.sleep(1)
+        yield from peak_bpm_y(-300,300,10)
+
+        #close c
+        # caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0",0)
+
+    except Exception:
+        import traceback
+        traceback.print_exc()
+
+'''
+
+
 def peak_bpm_x(start,end,n_steps):
     shutter_b_cls_status = caget('XF:03IDB-PPS{PSh}Sts:Cls-Sts')
     shutter_c_status = caget('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0')
@@ -3146,6 +3254,8 @@ def peak_the_flux():
 
     except: pass
 
+
+'''
 
 
 def toggle_merlin_filter(filter_to  = "in"):

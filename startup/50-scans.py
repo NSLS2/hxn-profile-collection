@@ -86,31 +86,51 @@ conflict_name = ['pmllf',
 #sd.baseline = [ugap,e,dcm,m1,m2,smll,vmll,hmll,ssa2,s5,mllosa,zp,
 #               zposa,zpbs,smlld,fdet1,diff,p,ps,pp,vms]
 
-sd.baseline = [ugap,
-               e,
-               dcm,
-               m1,
-               m2,
-               beamline_status,
-               smll,
-               vmll,
-               hmll,
-               ssa2,
-               s5,
-               mllosa,
-               zp,
-               zps,
-               zposa,
-               zpbs,
-               smlld,
-               fdet1,
-               diff,
-               p,
-               ps,
-               pp,
-               vms,
-               difftrans
-               ]
+
+if MLL_IN_USE:
+    sd.baseline = [ ugap,
+                    e,
+                    dcm,
+                    m1,
+                    m2,
+                    beamline_status,
+                    smll,
+                    vmll,
+                    hmll,
+                    ssa2,
+                    s5,
+                    mllosa,
+                    smlld,
+                    fdet1,
+                    diff,
+                    p,
+                    ps,
+                    pp,
+                    vms,
+                    difftrans
+                ]
+else:
+    #ZP microscope only
+    sd.baseline = [ ugap,
+                    e,
+                    dcm,
+                    m1,
+                    m2,
+                    beamline_status,
+                    ssa2,
+                    s5,
+                    zp,
+                    zps,
+                    zposa,
+                    zpbs,
+                    fdet1,
+                    diff,
+                    p,
+                    ps,
+                    pp,
+                    vms,
+                    difftrans
+                    ]
 
 # The following is a temporary solution, which replaces fixed list of devices passed to 'BlueskyMagics.positioners' (deprecated).
 #   TODO: The proper way to label devices is to pass 'labels' to the device (Ophyd object) constructor. Use meaningful labels.

@@ -201,16 +201,16 @@ class HXNEnergy():
             raise ValueError ("Incorrect gap calculation")
         else:
             #logger.info(f"Moving gap = {gap}")
-            yield from bps.mov(ugap, gap)
+            #yield from bps.mov(ugap, gap)
             logger.info("Gap moved")
         
             logger.info(f"Mono Energy Target = {targetE}")
             
             try:
-                yield from bps.mov(e,targetE, timeout = 180)
+                yield from bps.mov(e,targetE, ugap, gap, timeout = 180)
             except FailedStatus:
-                yield from bps.mov(e,targetE, timeout = 180)
-            except: raise Error("Mono motio failed")
+                yield from bps.mov(e,targetE, ugap, gap, timeout = 180)
+            except: raise Error("Mono motion failed")
                 
                 
             logger.info("Energy reached")

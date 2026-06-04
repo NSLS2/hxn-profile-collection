@@ -2,26 +2,28 @@
       "roi_elems": [
             "Cu",
             "S",
-            "Si",
+            "Mn",
+            "Ca",
             "Fe",
-            "Ni",
-            "Pt_M",
-            "Cl",
+            "P",
+            "K",
             "Ti",
             "Co",
             "Ni",
-            "K",
+            "Mg",
             "Ar",
-            "Mn",
+            "Cr",
             "Ca",
-            "P",
-            "Zn"
+            "Cl",
+            "Si"
       ],
       "live_plot_elems": [
             "Cu",
             "S",
-            "Si",
-            "Fe"
+            "Mn",
+            "Ca",
+            "Fe",
+            "P"
       ],
       "line_plot_elem": [
             "Cu"
