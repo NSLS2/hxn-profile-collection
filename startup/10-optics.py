@@ -188,7 +188,3 @@ qbpm_x = EpicsMotor('XF:03IDB-OP{Slt:SSA1-Ax:8}Mtr', name='qbpm_x')
 qbpm_y = EpicsMotor('XF:03IDB-OP{Slt:SSA1-Ax:7}Mtr', name='qbpm_y')
 
 #bpm_set_y = EpicsSignalRO('XF:03ID-BI{EM:BPM1}fast_pidY')
-
-
-    
-

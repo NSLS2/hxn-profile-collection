@@ -1,21 +1,25 @@
 print(f"Loading {__file__!r} ...")
-from ophyd.device import (Component as Cpt)
-from ophyd import (Signal, EpicsSignal, EpicsSignalRO, DerivedSignal)
 
-from nslsii.detectors.xspress3 import (Xspress3FileStore,
-                                       Xspress3Channel,
-                                       Xspress3DetectorSettings)
-from hxntools.detectors.hxn_xspress3 import HxnXspress3DetectorBase
-import threading
-from ophyd import DeviceStatus
-from ophyd.device import Staged
+from ophyd import Signal, EpicsSignal, DeviceStatus
+from ophyd.device import Component as Cpt, Staged
+from ophyd.areadetector import Xspress3Detector
 from ophyd.areadetector.filestore_mixins import FileStorePluginBase
 
-from ophyd.areadetector.plugins import HDF5Plugin
+from nslsii.detectors.xspress3 import Xspress3FileStore, Xspress3Channel
+from nslsii.areadetector.xspress3 import (
+    Xspress3HDF5Plugin, Xspress3Trigger, build_xspress3_class
+)
 
+from hxntools.detectors.hxn_xspress3 import HxnModalBase, HxnXspress3DetectorBase
+
+import threading
 import time
-
+import itertools
 import os
+
+from collections import OrderedDict
+
+
 if os.path.isfile('/data/users/startup_parameters/USE_RASMI'):
     USE_RASMI = True
 else:
@@ -29,7 +33,7 @@ class Xspress3FileStoreHXN(Xspress3FileStore):
         for k, v in self._datum_uids.items():
             res[k] = v.pop(0)
         return res
-    
+
     def stage(self):
                 # if should external trigger
         ext_trig = self.parent.external_trig.get()
@@ -111,8 +115,6 @@ class Xspress3FileStoreHXN(Xspress3FileStore):
         return ret
 
 
-
-
 class HxnXspress3Detector(HxnXspress3DetectorBase):
     channel1 = Cpt(Xspress3Channel, 'C1_', channel_num=1)
     channel2 = Cpt(Xspress3Channel, 'C2_', channel_num=2)
@@ -166,8 +168,6 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
         self.channel3.stage = lambda: []
         if USE_RASMI:
             self.channel4.stage = lambda: []
-
-
 
     def stage(self, *args, **kwargs):
         for j in itertools.count():
@@ -223,7 +223,7 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
         if self.mode_settings.scan_type.get() != 'step':
             sts._finished()
             return sts
-        
+
 
         if self.external_trig.get():
             self.trigger_external()
@@ -231,13 +231,13 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
             return sts
         else:
             s = self.trigger_internal()  # IS IT CORRECT WAY TO TRIGGER ACQUISITION?
-            
+
             while (self.settings.acquire.get() == 1):
                 time.sleep(0.5)
 
             sts._finished()
             return sts
-        
+
         # self._spec_saved.clear()
 
         def monitor():
@@ -247,7 +247,7 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
         # hold a ref for gc reasons
         self._th = threading.Thread(target=monitor)
         self._th.start()
-        
+
 
         return sts
 
@@ -274,42 +274,200 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
             return ret
 
 
-
-
 xspress3 = HxnXspress3Detector('XF:03IDC-ES{Xsp:1}:', name='xspress3')
 
 
-class HxnXspress3Mk2Detector(HxnXspress3Detector):
+class HXNXspress3HDF5Plugin(Xspress3HDF5Plugin):
     """
-    This class uses the new ioc for the xspress3 detector,
-    located here: https://github.com/epics-modules/xspress3
+    TODO - After data security, this class should be refactored to get
+    .root_path and .path_template dynamically from Redis based on
+    proposal information. Example in SRX profile collection:
+    https://github.com/NSLS2/srx-profile-collection/blob/main/startup/31-xspress3.py#L243
 
-    There are some differences from the old version in PV naming conventions.
-
-    settings - there is a block of PVs that uses a `det1:` PV suffix for
-    detector settings.
-    In particular:
-    XF:03IDC-ES{Xsp:2}:Acquire_RBV -> XF:03IDC-ES{Xsp:2}:det1:Acquire_RBV
-
-    hdf5 - the areadetector naming convention is used, so `HDF5` PVs in the old
-    ioc become `HDF1` PVs, where the "1" denotes the first HDF file writing plugin.
-    But only the name has changed. The underlying filewriting plugin is the same.
-    In particular:
-    XF:03IDC-ES{Xsp:2}:HDF5:BlockingCallbacks_RBV ->
-        XF:03IDC-ES{Xsp:2}:HDF1:BlockingCallbacks_RBV
+    For now, those attributes are hardcoded.
     """
 
-    settings = Cpt(Xspress3DetectorSettings, 'det1:')
+    def __init__(self, *args, **kwargs):
+        # TODO - this will change after data security is done
+        self.root_path_str = "/nsls2/data/hxn/legacy/"
+        self.path_template_str = "%Y/%m/%d"
+        if "root_path" not in kwargs:
+            kwargs["root_path"] = self.root_path_str
+        if "path_template" not in kwargs:
+            kwargs["path_template"] = self.path_template_str
+        super().__init__(*args, **kwargs)
 
-    hdf5 = Cpt(Xspress3FileStore, 'HDF1:',
-              write_path_template='/data/%Y/%m/%d/',
-              mds_key_format='xspress3_ch{chan}',
-              reg=db.reg,
-              root='/data',
-              )
+    def warmup(self):
+        """
+        Overwrites HDF5Plugin.warmup(), but removes det1:ImageMode and det1:AcquirePeriod from sigs since those PVs
+        are disabled in the community IOC. This is actually a bug upstream in nslsii and should be fixed there.
+        See https://github.com/NSLS2/nslsii/issues/257.
+
+        A convenience method for 'priming' the plugin.
+
+        The plugin has to 'see' one acquisition before it is ready to capture.
+        This sets the array size, etc.
+        """
+        self.enable.set(1).wait()
+        sigs = OrderedDict(
+            [
+                (self.parent.cam.array_callbacks, 1),
+                (self.parent.cam.trigger_mode, "Internal"),
+                (self.parent.cam.acquire_time, 1),
+                (self.parent.cam.acquire, 1),
+            ]
+        )
+
+        original_vals = {sig: sig.get() for sig in sigs}
+
+        for sig, val in sigs.items():
+            time.sleep(0.1)  # abundance of caution
+            sig.set(val, timeout=10).wait()
+
+        time.sleep(2)  # wait for acquisition
+
+        for sig, val in reversed(list(original_vals.items())):
+            time.sleep(0.1)
+            sig.set(val, timeout=10).wait()
+
+NUM_ROI = 48
+
+CommunityXspress3_4Channel = build_xspress3_class(
+    channel_numbers=(1, 2, 3, 4),
+    mcaroi_numbers=tuple(i for i in range(1, NUM_ROI+1)),
+    image_data_key=None,
+    xspress3_parent_classes=(Xspress3Detector, Xspress3Trigger, HxnModalBase),
+    extra_class_members={
+        "hdf5": Cpt(
+            HXNXspress3HDF5Plugin,
+            "HDF1:",
+            name="hdf5"
+        )
+    }
+)
 
 
-xspress3_mk2 = HxnXspress3Mk2Detector('XF:03IDC-ES{Xsp:2}:', name='xspress3_mk2')
+class CommunityHxnXspress3Detector(CommunityXspress3_4Channel):
+    # this is used as a latch to put the xspress3 into 'bulk' mode
+    # for fly scanning.  Do this is a signal (rather than as a local variable)
+    # or as a method so we can modify this as part of a plan
+    fly_next = Cpt(Signal, value=False)
+
+    def __init__(
+        self,
+        prefix,
+        *,
+        configuration_attrs=None,
+        read_attrs=None,
+        **kwargs,
+    ):
+        if configuration_attrs is None:
+            configuration_attrs = [
+                "external_trig",
+                "total_points",
+                "spectra_per_point",
+                "cam",  # replaced settings with cam
+                "rewindable",
+            ]
+        super().__init__(
+            prefix,
+            configuration_attrs=configuration_attrs,
+            read_attrs=read_attrs,
+            **kwargs,
+        )
+        if read_attrs is None:
+            pass
+
+        # if self.mode_settings.scan_type.get() != 'step':
+
+    def describe(self):
+        res = super().describe()
+        if self.scan_type == 'fly':
+            res['xs_fluor']["chunks"] = (1, "auto", -1, -1)
+        return res
+
+    @property
+    def scan_type(self):
+        return self.mode_settings.scan_type.get()
+
+    @scan_type.setter
+    def scan_type(self, scan_type):
+        if scan_type not in ('fly', 'step'):
+            raise ValueError("scan type must be 'fly' or 'step'")
+        if scan_type == 'step':
+            self.hdf5.bulk_data_spec = 'XSP3'
+            self.external_trig.put(False)
+            for channel in self.iterate_channels():
+                channel.get_external_file_ref().kind = 1
+            self.get_external_file_ref().kind = 0
+        if scan_type == 'fly':
+            self.hdf5.bulk_data_spec = 'XSP3_FLY'
+            self.external_trig.put(True)
+            for channel in self.iterate_channels():
+                channel.get_external_file_ref().kind = 0
+            self.get_external_file_ref().kind = 1
+        self._scan_type = scan_type
+
+    def stop(self, *, success=False):
+        ret = super().stop()
+        # TODO move this into the stop method of the settings object?
+        self.cam.acquire.put(0)
+        self.hdf5.stop(success=success)
+        return ret
+
+    def _compute_total_capture(self):
+        total_points = self.total_points.get()
+        if total_points < 1:
+            raise RuntimeError("You must set the total points")
+        spec_per_point = self.spectra_per_point.get()
+        total_capture = total_points * spec_per_point
+        return total_points, spec_per_point, total_capture
+
+    def stage(self):
+        # if should external trigger
+        ext_trig = self.external_trig.get()
+
+        # really force it to stop acquiring
+        self.cam.acquire.put(0, wait=True)
+
+        _, spec_per_point, total_capture = self._compute_total_capture()
+
+
+        if ext_trig:
+            self.stage_sigs[self.cam.trigger_mode] = 'TTL Veto Only'
+            self.stage_sigs[self.cam.num_images] = total_capture
+        else:
+            self.stage_sigs[self.cam.trigger_mode] = 'Internal'
+            self.stage_sigs[self.cam.num_images] = spec_per_point
+
+        if self.get_external_file_ref():
+            # Failed attempt to fix expected shape in tiled
+            self.get_external_file_ref().shape = (
+                self.hdf5.array_size_all.array_size1.get(),
+                self.hdf5.array_size_all.array_size0.get(),
+            )
+
+        self.stage_sigs[self.hdf5.auto_save] = 'Yes'
+
+        # do the latching
+        if self.fly_next.get():
+            self.fly_next.put(False)
+            self._scan_type = 'fly'
+        return super().stage()
+
+    def unstage(self):
+        try:
+            ret = super().unstage()
+        finally:
+            self._scan_type = 'step'
+        return ret
+
+
+xspress3_mk2 = CommunityHxnXspress3Detector('XF:03IDC-ES{Xsp:2}:', name='xspress3_mk2')
+# TODO - total points must be > 1 for stage() to work
+# but this should be replaced by the actual total_points later on.
+xspress3_mk2.total_points.set(1)
+xspress3_mk2.warmup() # prime the detector
 
 
 # Create directories on the xspress3 server, otherwise scans can fail:
@@ -368,7 +526,7 @@ def xspress3_roi_setup():
     num_elem = np.size(elem_list)
     if num_elem > 16:
         num_elem = 16
-    
+
     if not USE_RASMI:
         channel_used = [xspress3.channel1, xspress3.channel2, xspress3.channel3]
     else:
