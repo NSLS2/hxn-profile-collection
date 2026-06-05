@@ -1,22 +1,25 @@
 print(f"Loading {__file__!r} ...")
 
-from ophyd.device import (Component as Cpt)
-from ophyd import (Signal, EpicsSignal, EpicsSignalRO, DerivedSignal)
-
-from nslsii.detectors.xspress3 import (Xspress3FileStore,
-                                       Xspress3Channel,
-                                       Xspress3DetectorSettings)
-from hxntools.detectors.hxn_xspress3 import HxnModalBase, HxnXspress3DetectorBase
-import threading
-from ophyd import DeviceStatus
-from ophyd.device import Staged
+from ophyd import Signal, EpicsSignal, DeviceStatus
+from ophyd.device import Component as Cpt, Staged
+from ophyd.areadetector import Xspress3Detector
 from ophyd.areadetector.filestore_mixins import FileStorePluginBase
 
-from ophyd.areadetector.plugins import HDF5Plugin
+from nslsii.detectors.xspress3 import Xspress3FileStore, Xspress3Channel
+from nslsii.areadetector.xspress3 import (
+    Xspress3HDF5Plugin, Xspress3Trigger, build_xspress3_class
+)
 
+from hxntools.detectors.hxn_xspress3 import HxnModalBase, HxnXspress3DetectorBase
+
+import threading
 import time
-
+import itertools
 import os
+
+from collections import OrderedDict
+
+
 if os.path.isfile('/data/users/startup_parameters/USE_RASMI'):
     USE_RASMI = True
 else:
@@ -75,7 +78,7 @@ class Xspress3FileStoreHXN(Xspress3FileStore):
                      write_path, filename)
 
         logger.debug('Erasing old spectra')
-        # self.settings.erase.put(1, wait=True)
+        self.settings.erase.put(1, wait=True)
 
         # this must be set after self.settings.num_images because at the Epics
         # layer  there is a helpful link that sets this equal to that (but
@@ -110,8 +113,6 @@ class Xspress3FileStoreHXN(Xspress3FileStore):
         time.sleep(self._config_time)
 
         return ret
-
-
 
 
 class HxnXspress3Detector(HxnXspress3DetectorBase):
@@ -167,8 +168,6 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
         self.channel3.stage = lambda: []
         if USE_RASMI:
             self.channel4.stage = lambda: []
-
-
 
     def stage(self, *args, **kwargs):
         for j in itertools.count():
@@ -275,80 +274,35 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
             return ret
 
 
-
-
 xspress3 = HxnXspress3Detector('XF:03IDC-ES{Xsp:1}:', name='xspress3')
 
 
-# class HxnXspress3Mk2Detector(HxnXspress3Detector):
-#     """
-#     This class uses the new ioc for the xspress3 detector,
-#     located here: https://github.com/epics-modules/xspress3
+class HXNXspress3HDF5Plugin(Xspress3HDF5Plugin):
+    """
+    TODO - After data security, this class should be refactored to get
+    .root_path and .path_template dynamically from Redis based on
+    proposal information. Example in SRX profile collection:
+    https://github.com/NSLS2/srx-profile-collection/blob/main/startup/31-xspress3.py#L243
 
-#     There are some differences from the old version in PV naming conventions.
-
-#     settings - there is a block of PVs that uses a `det1:` PV suffix for
-#     detector settings.
-#     In particular:
-#     XF:03IDC-ES{Xsp:2}:Acquire_RBV -> XF:03IDC-ES{Xsp:2}:det1:Acquire_RBV
-
-#     hdf5 - the areadetector naming convention is used, so `HDF5` PVs in the old
-#     ioc become `HDF1` PVs, where the "1" denotes the first HDF file writing plugin.
-#     But only the name has changed. The underlying filewriting plugin is the same.
-#     In particular:
-#     XF:03IDC-ES{Xsp:2}:HDF5:BlockingCallbacks_RBV ->
-#         XF:03IDC-ES{Xsp:2}:HDF1:BlockingCallbacks_RBV
-#     """
-
-#     settings = Cpt(Xspress3DetectorSettings, 'det1:')
-
-#     hdf5 = Cpt(Xspress3FileStore, 'HDF1:',
-#               write_path_template='/data/%Y/%m/%d/',
-#               mds_key_format='xspress3_ch{chan}',
-#               reg=db.reg,
-#               root='/data',
-#               )
-import itertools
-from ophyd.areadetector import Xspress3Detector
-from nslsii.areadetector.xspress3 import (
-    Xspress3HDF5Plugin, Xspress3Trigger, build_xspress3_class,
-    Xspress3FileStore as CommunityXspress3FileStore
-)
-import httpx
-from collections import OrderedDict
-
-
-nslsii_api_client = httpx.Client(base_url="https://api.nsls2.bnl.gov")
-
-def get_proposal_type(proposal_id=None):
-    if (proposal_id is None):
-        proposal_id = RE.md["proposal"]["proposal_id"]
-
-    proposal_response = nslsii_api_client.get(f"/v1/proposal/{RE.md['proposal']['proposal_id']}")
-    proposal_response.raise_for_status()
-    proposal = proposal_response.json()["proposal"]
-
-    return proposal["type"]
-
-
-class Xspress3HDF5PluginWithRedis(Xspress3HDF5Plugin):
-    "Subclass to determine file location based on proposal info in Redis"
+    For now, those attributes are hardcoded.
+    """
 
     def __init__(self, *args, **kwargs):
         # TODO - this will change after data security is done
         self.root_path_str = "/nsls2/data/hxn/legacy/"
         self.path_template_str = "%Y/%m/%d"
         if "root_path" not in kwargs:
-            # self.root_path.put(self.root_path_str)
             kwargs["root_path"] = self.root_path_str
         if "path_template" not in kwargs:
-            # self.path_template.put(self.path_template_str)
             kwargs["path_template"] = self.path_template_str
         super().__init__(*args, **kwargs)
 
-
     def warmup(self):
         """
+        Overwrites HDF5Plugin.warmup(), but removes det1:ImageMode and det1:AcquirePeriod from sigs since those PVs
+        are disabled in the community IOC. This is actually a bug upstream in nslsii and should be fixed there.
+        See https://github.com/NSLS2/nslsii/issues/257.
+
         A convenience method for 'priming' the plugin.
 
         The plugin has to 'see' one acquisition before it is ready to capture.
@@ -358,12 +312,8 @@ class Xspress3HDF5PluginWithRedis(Xspress3HDF5Plugin):
         sigs = OrderedDict(
             [
                 (self.parent.cam.array_callbacks, 1),
-                # (self.parent.cam.image_mode, "Single"),
                 (self.parent.cam.trigger_mode, "Internal"),
-                # just in case tha acquisition time is set very long...
                 (self.parent.cam.acquire_time, 1),
-                # (self.parent.cam.acquire_period, 1),
-                (self.parent.cam.num_images, 1),
                 (self.parent.cam.acquire, 1),
             ]
         )
@@ -380,15 +330,16 @@ class Xspress3HDF5PluginWithRedis(Xspress3HDF5Plugin):
             time.sleep(0.1)
             sig.set(val, timeout=10).wait()
 
+NUM_ROI = 48
 
 CommunityXspress3_4Channel = build_xspress3_class(
     channel_numbers=(1, 2, 3, 4),
-    mcaroi_numbers=(1, 2, 3, 4, 5, 6, 7, 8), #TODO - this should be 48
+    mcaroi_numbers=tuple(i for i in range(1, NUM_ROI+1)),
     image_data_key=None,
     xspress3_parent_classes=(Xspress3Detector, Xspress3Trigger, HxnModalBase),
     extra_class_members={
         "hdf5": Cpt(
-            Xspress3HDF5PluginWithRedis,
+            HXNXspress3HDF5Plugin,
             "HDF1:",
             name="hdf5"
         )
@@ -397,9 +348,6 @@ CommunityXspress3_4Channel = build_xspress3_class(
 
 
 class CommunityHxnXspress3Detector(CommunityXspress3_4Channel):
-    # replace HDF5:FileCreateDir with HDF1:FileCreateDir
-    # create_dir = Cpt(EpicsSignal, "HDF1:FileCreateDir")
-
     # this is used as a latch to put the xspress3 into 'bulk' mode
     # for fly scanning.  Do this is a signal (rather than as a local variable)
     # or as a method so we can modify this as part of a plan
@@ -462,7 +410,7 @@ class CommunityHxnXspress3Detector(CommunityXspress3_4Channel):
 
     def stop(self, *, success=False):
         ret = super().stop()
-        # todo move this into the stop method of the settings object?
+        # TODO move this into the stop method of the settings object?
         self.cam.acquire.put(0)
         self.hdf5.stop(success=success)
         return ret
@@ -482,23 +430,13 @@ class CommunityHxnXspress3Detector(CommunityXspress3_4Channel):
         # really force it to stop acquiring
         self.cam.acquire.put(0, wait=True)
 
-        total_points, spec_per_point, total_capture = self._compute_total_capture()
+        _, spec_per_point, total_capture = self._compute_total_capture()
 
-        # # stop previous acquisition
-        # self.stage_sigs[self.parent.cam.acquire] = 0
-
-        # # re-order the stage signals and disable the calc record which is
-        # # interfering with the capture count
-        # self.stage_sigs.pop(self.num_capture, None)
-        # self.stage_sigs.pop(self.parent.cam.num_images, None)
-        # self.stage_sigs[self.num_capture_calc_disable] = 1
 
         if ext_trig:
             self.stage_sigs[self.cam.trigger_mode] = 'TTL Veto Only'
             self.stage_sigs[self.cam.num_images] = total_capture
         else:
-            # self.settings.trigger_mode.put('Internal')
-            # self.settings.num_images.put(1)
             self.stage_sigs[self.cam.trigger_mode] = 'Internal'
             self.stage_sigs[self.cam.num_images] = spec_per_point
 
@@ -518,7 +456,6 @@ class CommunityHxnXspress3Detector(CommunityXspress3_4Channel):
         return super().stage()
 
     def unstage(self):
-
         try:
             ret = super().unstage()
         finally:
@@ -527,6 +464,10 @@ class CommunityHxnXspress3Detector(CommunityXspress3_4Channel):
 
 
 xspress3_mk2 = CommunityHxnXspress3Detector('XF:03IDC-ES{Xsp:2}:', name='xspress3_mk2')
+# TODO - total points must be > 1 for stage() to work
+# but this should be replaced by the actual total_points later on.
+xspress3_mk2.total_points.set(1)
+xspress3_mk2.warmup() # prime the detector
 
 
 # Create directories on the xspress3 server, otherwise scans can fail:
