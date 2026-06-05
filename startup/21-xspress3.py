@@ -335,7 +335,7 @@ NUM_ROI = 48
 CommunityXspress3_4Channel = build_xspress3_class(
     channel_numbers=(1, 2, 3, 4),
     mcaroi_numbers=tuple(i for i in range(1, NUM_ROI+1)),
-    image_data_key=None,
+    image_data_key="data",  # TODO - get the right image_data_key
     xspress3_parent_classes=(Xspress3Detector, Xspress3Trigger, HxnModalBase),
     extra_class_members={
         "hdf5": Cpt(
@@ -467,7 +467,7 @@ xspress3_mk2 = CommunityHxnXspress3Detector('XF:03IDC-ES{Xsp:2}:', name='xspress
 # TODO - total points must be > 1 for stage() to work
 # but this should be replaced by the actual total_points later on.
 xspress3_mk2.total_points.set(1)
-xspress3_mk2.warmup() # prime the detector
+xspress3_mk2.hdf5.warmup() # prime the detector
 
 
 # Create directories on the xspress3 server, otherwise scans can fail:
