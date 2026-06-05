@@ -467,7 +467,7 @@ xspress3_mk2 = CommunityHxnXspress3Detector('XF:03IDC-ES{Xsp:2}:', name='xspress
 # TODO - total points must be > 1 for stage() to work
 # but this should be replaced by the actual total_points later on.
 xspress3_mk2.total_points.set(1)
-xspress3_mk2.warmup() # prime the detector
+xspress3_mk2.hdf5.warmup() # prime the detector
 
 
 # Create directories on the xspress3 server, otherwise scans can fail:
