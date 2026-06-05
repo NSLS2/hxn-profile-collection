@@ -766,7 +766,7 @@ def run_zp_xanes(path_to_parameter_file, do_confirm  =True,
                             pass
                     
                     # save the DF in the loop so quitting a scan won't affect
-                    filename = f"HXN_nanoXANES_pos_ref_{int(sid)}_{scan_name}_startID{int(e_list['scan_id'][0])}_{len(e_list)}_e_points.csv"
+                    filename = f"HXN_nanoXANES_pos_ref_{int(sid)}_{scan_name}_{len(e_list)}_e_points.csv"
                     e_list.to_csv(os.path.join(scan_params["save_log_to"], filename), float_format= '%.5f')
 
                 caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0) 
