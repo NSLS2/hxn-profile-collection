@@ -335,7 +335,7 @@ NUM_ROI = 48
 CommunityXspress3_4Channel = build_xspress3_class(
     channel_numbers=(1, 2, 3, 4),
     mcaroi_numbers=tuple(i for i in range(1, NUM_ROI+1)),
-    image_data_key=None,
+    image_data_key="data",  # TODO - get the right image_data_key
     xspress3_parent_classes=(Xspress3Detector, Xspress3Trigger, HxnModalBase),
     extra_class_members={
         "hdf5": Cpt(
