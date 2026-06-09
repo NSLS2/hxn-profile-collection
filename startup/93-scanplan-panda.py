@@ -794,6 +794,10 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
     if "xspress3_det2" in dets_by_name:
         dpc = dets_by_name["xspress3_det2"]
         dpc.total_points.set(total_points)
+        dpc.mode_settings.total_points.set(total_points)
+        dpc.mode_settings.mode.set('external')
+        dpc.hdf5.filestore_spec_restore = 'XSP3'
+        dpc.hdf5.filestore_spec = 'XSP3_BULK'
         del dpc
 
     if verbose:

@@ -375,9 +375,20 @@ class CommunityHxnXspress3Detector(CommunityXspress3_4Channel):
             read_attrs=read_attrs,
             **kwargs,
         )
-        if read_attrs is None:
-            pass
+        # if read_attrs is None:
+        #     pass
+        # get all sub-device instances
+        sub_devices = {attr: getattr(self, attr)
+                       for attr in self._sub_devices}
 
+        # filter those sub-devices, just giving channels
+        channels = {dev.channel_num: dev
+                    for attr, dev in sub_devices.items()
+                    if isinstance(dev, Xspress3Channel)
+                    }
+
+        # make an ordered dictionary with the channels in order
+        self._channels = OrderedDict(sorted(channels.items()))
         # if self.mode_settings.scan_type.get() != 'step':
 
     def describe(self):
@@ -389,6 +400,22 @@ class CommunityHxnXspress3Detector(CommunityXspress3_4Channel):
     @property
     def scan_type(self):
         return self.mode_settings.scan_type.get()
+    
+    @property
+    def channels(self):
+        return self._channels.copy()
+
+    @property
+    def all_rois(self):
+        for ch_num, channel in self._channels.items():
+            for roi in channel.all_rois:
+                yield roi
+
+    @property
+    def enabled_rois(self):
+        for roi in self.all_rois:
+            if roi.enable.get():
+                yield roi
 
     @scan_type.setter
     def scan_type(self, scan_type):
@@ -424,35 +451,12 @@ class CommunityHxnXspress3Detector(CommunityXspress3_4Channel):
         return total_points, spec_per_point, total_capture
 
     def stage(self):
-        # if should external trigger
-        ext_trig = self.external_trig.get()
-
-        # really force it to stop acquiring
-        self.cam.acquire.put(0, wait=True)
-
         _, spec_per_point, total_capture = self._compute_total_capture()
 
+        self.stage_sigs[self.cam.trigger_mode] = 'TTL Both'
+        self.stage_sigs[self.cam.num_images] = total_capture
+        # self.stage_sigs[self.cam.acquire_time] = 
 
-        if ext_trig:
-            self.stage_sigs[self.cam.trigger_mode] = 'TTL Veto Only'
-            self.stage_sigs[self.cam.num_images] = total_capture
-        else:
-            self.stage_sigs[self.cam.trigger_mode] = 'Internal'
-            self.stage_sigs[self.cam.num_images] = spec_per_point
-
-        if self.get_external_file_ref():
-            # Failed attempt to fix expected shape in tiled
-            self.get_external_file_ref().shape = (
-                self.hdf5.array_size_all.array_size1.get(),
-                self.hdf5.array_size_all.array_size0.get(),
-            )
-
-        self.stage_sigs[self.hdf5.auto_save] = 'Yes'
-
-        # do the latching
-        if self.fly_next.get():
-            self.fly_next.put(False)
-            self._scan_type = 'fly'
         return super().stage()
 
     def unstage(self):
@@ -463,11 +467,12 @@ class CommunityHxnXspress3Detector(CommunityXspress3_4Channel):
         return ret
 
 
-xspress3_mk2 = CommunityHxnXspress3Detector('XF:03IDC-ES{Xsp:2}:', name='xspress3_mk2')
+xspress3_det2 = CommunityHxnXspress3Detector('XF:03IDC-ES{Xsp:2}:', name='xspress3_det2')
+
 # TODO - total points must be > 1 for stage() to work
 # but this should be replaced by the actual total_points later on.
-xspress3_mk2.total_points.set(1)
-xspress3_mk2.hdf5.warmup() # prime the detector
+xspress3_det2.total_points.set(1)
+xspress3_det2.hdf5.warmup() # prime the detector
 
 
 # Create directories on the xspress3 server, otherwise scans can fail:
