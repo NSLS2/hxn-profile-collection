@@ -185,6 +185,7 @@ class RunNormalizerHXN(RunNormalizer):
 
 api_key = os.environ.get("TILED_BLUESKY_WRITING_API_KEY_HXN")
 tiled_writing_client = from_uri("https://tiled.nsls2.bnl.gov", api_key=api_key)['hxn']['migration']
+tiled_writing_client.context.http_client.headers['tiled-qos'] = 'acquisition'
 RE.md["tiled_access_tags"] = ["hxn_beamline"]
 
 tw = TiledWriter(client = tiled_writing_client,
