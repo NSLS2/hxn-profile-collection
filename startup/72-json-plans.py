@@ -156,10 +156,13 @@ def align_scan(mtr,start,end,num,exp,elem_, align_with="line_center",
     elif align_with == "edge":
         yield from bps.sleep(1)
         xc,_ = erf_fit(-1,elem_,linear_flag=False)
+        print("xc", xc, "initial_position", initial_position, "align_movement_limit", align_movement_limit)
         if abs(xc) - abs(initial_position) > align_movement_limit:
             xc = mtr.position + offset
+            print("xc", xc, "mtr.position", mtr.position, "offset", offset)
         else:
             xc = xc + offset
+            print("xc", xc, "offset", offset)
          
     else:
         xc = mtr.position
@@ -305,7 +308,7 @@ def align_2d_com_scan(mtr1,x_s,x_e,x_n,mtr2,y_s,y_e,y_n,exp,elem_,
 
 
     if not tomo_use_panda:
-        yield from fly2dpd(dets_fast,
+        yield from fly2dpd([fs,xspress3],
                         mtr1,
                         x_s,
                         x_e,
@@ -316,7 +319,7 @@ def align_2d_com_scan(mtr1,x_s,x_e,x_n,mtr2,y_s,y_e,y_n,exp,elem_,
                         y_n,
                         exp)
     else:
-        yield from fly2dpd(dets_fast,
+        yield from fly2dpd([fs,xspress3],
                         mtr1,
                         x_s,
                         x_e,
@@ -344,7 +347,7 @@ def align_2d_com_scan(mtr1,x_s,x_e,x_n,mtr2,y_s,y_e,y_n,exp,elem_,
         yield from bps.mov(mtr2,cy)
 
 def tomo_scan_to_loop(angle, tomo_params, ic_init, do_y_offset = True,
-                      tracking_file = None):
+                      tracking_file = None, axis_swap_flag = False):
 
         #caput("XF:03IDC-ES{Merlin:2}HDF1:NDArrayPort","ROI1") #patch for merlin2 issuee
 
@@ -378,6 +381,8 @@ def tomo_scan_to_loop(angle, tomo_params, ic_init, do_y_offset = True,
         if abs(angle) < axis_switch_angle:
             print(f'{fly_motors[0].name}scanning')
             if xalign["do_align"]:
+                if axis_swap_flag and xalign["zero_before_scan"]:
+                    yield from bps.mov(fly_motors[2],0,wait=True)
                 yield from align_scan(fly_motors[0],
                                 xalign["start"],
                                 xalign["end"],
@@ -390,12 +395,15 @@ def tomo_scan_to_loop(angle, tomo_params, ic_init, do_y_offset = True,
                                 xalign["neg_flag"],
                                 xalign["offset"],
                                 tomo_params["flying_panda"],
-                                xalign["zero_before_scan"]
+                                xalign["zero_before_scan"],
+                                xalign["initial_position"],
+                                xalign["align_movement_limit"]
                                 )
 
             #2d alignemnt using center of mass if condition is true
             elif align_2d["do_align"]:
-
+                if axis_swap_flag and xalign["zero_before_scan"]:
+                    yield from bps.mov(fly_motors[2],0,wait=True)
                 x_start_real = align_2d["x_start"] / np.cos(angle * np.pi / 180.)
                 x_end_real = align_2d["x_end"] / np.cos(angle * np.pi / 180.)
 
@@ -424,6 +432,8 @@ def tomo_scan_to_loop(angle, tomo_params, ic_init, do_y_offset = True,
         else:
             print(f'{fly_motors[2].name}scanning')
             if xalign["do_align"]:
+                if axis_swap_flag and xalign["zero_before_scan"]:
+                    yield from bps.mov(fly_motors[0],0,wait=True)
                 yield from align_scan(  fly_motors[2],
                                 xalign["start"],
                                 xalign["end"],
@@ -436,12 +446,15 @@ def tomo_scan_to_loop(angle, tomo_params, ic_init, do_y_offset = True,
                                 xalign["neg_flag"],
                                 xalign["offset"],
                                 tomo_params["flying_panda"],
-                                xalign["zero_before_scan"]
+                                xalign["zero_before_scan"],
+                                xalign["initial_position"],
+                                xalign["align_movement_limit"]
                                 )
 
             #2d alignemnt using center of mass if condition is true
             elif align_2d["do_align"]:
-
+                if axis_swap_flag and xalign["zero_before_scan"]:
+                    yield from bps.mov(fly_motors[0],0,wait=True)
                 x_start_real = align_2d["x_start"] / abs(np.sin(angle * np.pi / 180.))
                 x_end_real = align_2d["x_end"] / abs(np.sin(angle * np.pi / 180.))
 
@@ -477,11 +490,11 @@ def tomo_scan_to_loop(angle, tomo_params, ic_init, do_y_offset = True,
                                     yalign["center_with"],
                                     yalign["threshold"],
                                     yalign["move_coarse"],
-                                    xalign["neg_flag"],
+                                    yalign["neg_flag"],
                                     yalign["offset"],
                                     tomo_params["flying_panda"],
                                     yalign["zero_before_scan"],
-                                    tomo_params["y_init"],
+                                    yalign["initial_position"],
                                     yalign["align_movement_limit"]
                 )
 
@@ -624,6 +637,8 @@ def run_tomo_json(path_to_json,tracking_file = None):
     
 
     #loop with list of angles
+    angle_bef = angles[0]
+    axis_swap_flag = False
     for n,angle in enumerate(tqdm.tqdm(angles,desc = 'Tomo Scan')):
         yield from bps.sleep(1)
 
@@ -671,9 +686,16 @@ def run_tomo_json(path_to_json,tracking_file = None):
                  ic_0 = sclr2_ch2.get()
                  fluxPeaked = True
 
+        if (angle_bef - tomo_params['axis_switch_angle'])*(angle - tomo_params['axis_switch_angle']) <= 0:
+            axis_swap_flag = True
+            print("axis swap flagged")
+        else:
+            axis_swap_flag = False
+        angle_bef = angle
+
         if not angle in np.array(tomo_params["remove_angles"]):
             #tomo scan at a single angle
-            yield from tomo_scan_to_loop(angle,tomo_params,ic_0,do_y_offset = do_y_offset,tracking_file = tracking_file)
+            yield from tomo_scan_to_loop(angle,tomo_params,ic_0,do_y_offset = do_y_offset,tracking_file = tracking_file, axis_swap_flag=axis_swap_flag)
 
             last_sid = int(caget('XF:03IDC-ES{Status}ScanID-I'))
 
