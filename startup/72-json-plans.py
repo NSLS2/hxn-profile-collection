@@ -639,6 +639,7 @@ def run_tomo_json(path_to_json,tracking_file = None):
     #loop with list of angles
     angle_bef = angles[0]
     axis_swap_flag = False
+    first_sid = int(caget('XF:03IDC-ES{Status}ScanID-I') + 1)
     for n,angle in enumerate(tqdm.tqdm(angles,desc = 'Tomo Scan')):
         yield from bps.sleep(1)
 
@@ -698,6 +699,7 @@ def run_tomo_json(path_to_json,tracking_file = None):
             yield from tomo_scan_to_loop(angle,tomo_params,ic_0,do_y_offset = do_y_offset,tracking_file = tracking_file, axis_swap_flag=axis_swap_flag)
 
             last_sid = int(caget('XF:03IDC-ES{Status}ScanID-I'))
+            print(last_sid)
 
             #Add more info to the dataframe
             angle_list['energy_rbv'].at[n] = e.position #add real energy to the dataframe
@@ -711,13 +713,14 @@ def run_tomo_json(path_to_json,tracking_file = None):
             angle_list['Peak Flux'].at[n] = fluxPeaked # recoed if peakflux was excecuted
             #angle_list['IC3_before_peak'].at[n] = ic3 #ic3 right after e change, no peaking
             fluxPeaked = False #reset
+            print("name", fly_motors[1].name, "n", n, "position", fly_motors[1].position)
             angle_list[fly_motors[1].name].at[n] = fly_motors[1].position
             
             #close c shutter
             caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0)
 
             # save the DF in the loop so quitting a scan won't affect
-            filename = f"{tomo_params.get('scan_label','')}_startID{int(angle_list['scan_id'][0])}.csv"
+            filename = f"{tomo_params.get('scan_label','')}_startID{first_sid}.csv"
             angle_list.to_csv(os.path.join(tomo_params.get("save_log_to", "/data/users/current_user"), filename),
                               float_format= '%.5f')
         else:
