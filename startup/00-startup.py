@@ -430,7 +430,7 @@ import sys
 handler = logging.StreamHandler(sys.stderr)
 fmt = logging.Formatter("%(asctime)-15s [%(name)5s:%(levelname)s] %(message)s")
 handler.setFormatter(fmt)
-handler.setLevel(logging.INFO)
+handler.setLevel(logging.DEBUG)
 
 logging.getLogger('hxntools').addHandler(handler)
 logging.getLogger('hxnfly').addHandler(handler)
@@ -445,7 +445,7 @@ logging.getLogger('httpx').setLevel(logging.ERROR)
 logging.getLogger('hdf5plugin').setLevel(logging.WARNING)
 
 logging.getLogger('ophyd').addHandler(handler)
-logging.getLogger('ophyd').setLevel(logging.DEBUG)
+logging.getLogger('ophyd').setLevel(logging.INFO)
 
 # Flyscan results are shown using pandas. Maximum rows/columns to use when
 # printing the table:

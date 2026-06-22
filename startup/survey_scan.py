@@ -223,7 +223,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     print(np.shape(images))
     num_frame,nnx,nny = np.shape(images)
 
-    mask = np.load('/data/users/2026Q1/Shimao_2026Q1/diff_1/mask.npy')
+    mask = np.load('/data/users/2026Q2/WeiyuanHuang_2026Q2/diff_s3_1/mask.npy')
     #mask = np.load('/data/users/2025Q2/Liu_2025Q2/diff_3_O3NCM_3.4V/mask.npy')
 
     for i in range(num_frame):
@@ -239,14 +239,11 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
             nx,ny = np.shape(t)
             global diff_array
             diff_array = np.zeros((nx,ny,num_frame))
-            #diff_array = np.zeros((nx,248,num_frame))
-            #diff_array_d = np.zeros((nx,245,num_frame))
 
-        #diff_array[:,:,i] = np.flipud(t) #* mask
+
         tmp = np.flipud(t) #* mask
-        #diff_array[:,:,i] = tmp[:,245:]
-        #diff_array_d[:,:,i] = tmp[:,:245]
-        diff_array[:,:,i] = np.flipud(tmp) *mask
+
+        diff_array[:,:,i] = np.flipud(tmp) #*mask
     del images
     for i in range(num_frame):
         if i == 0:
@@ -262,7 +259,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     if elem in df:
         xrf = np.asarray(df[elem])
     else:
-        xrf = np.squeeze(np.asfarray(list(h.data('Det1_'+elem)))+np.asfarray(list(h.data('Det2_'+elem)))+np.asfarray(list(h.data('Det3_'+elem))))
+        xrf = np.squeeze(np.asarray(list(h.data('Det1_'+elem)))+np.asarray(list(h.data('Det2_'+elem)))+np.asarray(list(h.data('Det3_'+elem))))
 
         #xrf = np.asfarray(eval('df.Det1_'+elem)) + np.asarray(eval('df.Det2_'+elem)) + np.asarray(eval('df.Det3_'+elem))
     #print(np.shape(xrf),np.shape(ic))
@@ -341,7 +338,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
                 #print('no num')
 
 
-    fn = '/data/users/2026Q1/Shimao_2026Q1/diff_8/'
+    fn = '/data/users/2026Q2/Deng_2026Q2/diff/'
     
     if not os.path.exists(fn):
         os.makedirs(fn)
