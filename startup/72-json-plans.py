@@ -183,35 +183,51 @@ def align_scan(mtr,start,end,num,exp,elem_, align_with="line_center",
     return xc
 
 
-def tomo_2d_scan(angle,dets_,fly_motors,x_start,x_end,x_num,y_start,y_end,y_num,exp, 
-                     tomo_use_panda = False, axis_switch_angle = 44.99):
+def tomo_2d_scan(angle,dets_,fly_motors,
+                 x_start,x_end,x_num,
+                 y_start,y_end,y_num,exp, 
+                 tomo_use_panda = False, 
+                 axis_switch_angle = 44.99,
+                 scale_scan_range = False):
     
     '''
     fly_motors = [dssx,dssy,dssz]
     fly_motors = [zpssx,zpssy,zpssz]
     '''
-
     if abs(angle) < axis_switch_angle:
 
-        x_start_real = x_start / np.cos(angle * np.pi / 180.)
-        x_end_real = x_end / np.cos(angle * np.pi / 180.)
-        
-        
+        if scale_scan_range:
 
-        if fly_motors[0].name == 'zpssx':
-            x_scale_factor = 1
-            x_start_real /= x_scale_factor
-            x_end_real /= x_scale_factor
-        
-        print(x_start_real,x_end_real)
+            x_start_real = x_start / np.cos(angle * np.pi / 180.)
+            x_end_real = x_end / np.cos(angle * np.pi / 180.)
+            x_num_real = x_num
 
+
+            if fly_motors[0].name == 'zpssx':
+                x_scale_factor = 1
+                x_start_real /= x_scale_factor
+                x_end_real /= x_scale_factor
+            
+            print(x_start_real,x_end_real)
+
+        else:
+
+            x_num_real = round(x_num * np.cos(angle * np.pi / 180.))
+            x_start_real = x_start
+            x_end_real = x_end
+
+
+        print("#"*30)
+        print(f"{fly_motors[0].name = } @ {angle = :.2f}\n")
+        print(f"{x_start_real = :.2f},{x_end_real = :.2f},{x_num_real = :.2f}")
+        print("#"*30)  
 
         if not tomo_use_panda:
             yield from fly2d(dets_,
                             fly_motors[0],
                             x_start_real,
                             x_end_real,
-                            x_num,
+                            x_num_real,
                             fly_motors[1],
                             y_start,
                             y_end,
@@ -223,7 +239,7 @@ def tomo_2d_scan(angle,dets_,fly_motors,x_start,x_end,x_num,y_start,y_end,y_num,
                             fly_motors[0],
                             x_start_real,
                             x_end_real,
-                            x_num,
+                            x_num_real,
                             fly_motors[1],
                             y_start,
                             y_end,
@@ -233,33 +249,49 @@ def tomo_2d_scan(angle,dets_,fly_motors,x_start,x_end,x_num,y_start,y_end,y_num,
                             )
 
     else:
-        x_start_real = x_start / abs(np.sin(angle * np.pi / 180.))
-        x_end_real = x_end / abs(np.sin(angle * np.pi / 180.))
-        if fly_motors[2].name == 'dssz':
-            pass
-            # print('WARNING!!: Applying temporary scaling correction ratio to dssz motor.')
-            # x_start_real *= 0.955
-            # x_end_real *= 0.955
 
-        elif fly_motors[2].name == 'zpssz':
-            
+        if scale_scan_range:
 
-            # x_scale_factor = 0.9542
-            # z_scale_factor = 1.0309
+            x_start_real = x_start / abs(np.sin(angle * np.pi / 180.))
+            x_end_real = x_end / abs(np.sin(angle * np.pi / 180.))
+            if fly_motors[2].name == 'dssz':
+                pass
+                # print('WARNING!!: Applying temporary scaling correction ratio to dssz motor.')
+                # x_start_real *= 0.955
+                # x_end_real *= 0.955
 
-            
-            z_scale_factor = 1
-            x_start_real /= z_scale_factor
-            x_end_real /= z_scale_factor
+            elif fly_motors[2].name == 'zpssz':
+                
 
-            print(x_start_real,x_end_real)
+                # x_scale_factor = 0.9542
+                # z_scale_factor = 1.0309
+
+                
+                z_scale_factor = 1
+                x_start_real /= z_scale_factor
+                x_end_real /= z_scale_factor
+
+                x_num_real = x_num
+
+                print(x_start_real,x_end_real)
+
+        else:
+            x_num_real = round(x_num * np.sin(angle * np.pi / 180.))
+            x_start_real = x_start
+            x_end_real = x_end
+        
+        
+        print("#"*30)
+        print(f"{fly_motors[2].name = } @ {angle = :2f}\n")
+        print(f"{x_start_real = :.2f},{x_end_real = :.2f},{x_num_real = :.2f}")
+        print("#"*30)  
 
         if not tomo_use_panda:
             yield from fly2d(dets_,
                             fly_motors[2],
                             x_start_real,
                             x_end_real,
-                            x_num,
+                            x_num_real,
                             fly_motors[1],
                             y_start,
                             y_end,
@@ -271,7 +303,7 @@ def tomo_2d_scan(angle,dets_,fly_motors,x_start,x_end,x_num,y_start,y_end,y_num,
                             fly_motors[2],
                             x_start_real,
                             x_end_real,
-                            x_num,
+                            x_num_real,
                             fly_motors[1],
                             y_start,
                             y_end,
@@ -346,8 +378,12 @@ def align_2d_com_scan(mtr1,x_s,x_e,x_n,mtr2,y_s,y_e,y_n,exp,elem_,
     if move_y:
         yield from bps.mov(mtr2,cy)
 
-def tomo_scan_to_loop(angle, tomo_params, ic_init, do_y_offset = True,
-                      tracking_file = None, axis_swap_flag = False):
+def tomo_scan_to_loop(angle, 
+                      tomo_params, 
+                      ic_init, 
+                      do_y_offset = True,
+                      tracking_file = None, 
+                      axis_swap_flag = False):
 
         #caput("XF:03IDC-ES{Merlin:2}HDF1:NDArrayPort","ROI1") #patch for merlin2 issuee
 
@@ -513,10 +549,11 @@ def tomo_scan_to_loop(angle, tomo_params, ic_init, do_y_offset = True,
                                     image_scan["y_num"],
                                     image_scan["exposure"],
                                     tomo_params["flying_panda"],
-                                    axis_switch_angle = tomo_params["axis_switch_angle"]
+                                    axis_switch_angle = tomo_params["axis_switch_angle"],
+                                    scale_scan_range = tomo_params["scale_scan_range"]
                                     )
 
-        xspress3.unstage()
+        #xspress3.unstage()
 
         #save images to pdf if
         if not tomo_params["stop_pdf"]:
@@ -696,33 +733,43 @@ def run_tomo_json(path_to_json,tracking_file = None):
 
         if not angle in np.array(tomo_params["remove_angles"]):
             #tomo scan at a single angle
-            yield from tomo_scan_to_loop(angle,tomo_params,ic_0,do_y_offset = do_y_offset,tracking_file = tracking_file, axis_swap_flag=axis_swap_flag)
+            yield from tomo_scan_to_loop(angle,tomo_params,ic_0,
+                                         do_y_offset = do_y_offset,
+                                         tracking_file = tracking_file, 
+                                         axis_swap_flag=axis_swap_flag,
+                                         )
 
             last_sid = int(caget('XF:03IDC-ES{Status}ScanID-I'))
             print(last_sid)
 
-            #Add more info to the dataframe
-            angle_list['energy_rbv'].at[n] = e.position #add real energy to the dataframe
-            angle_list["angle"].at[n] = th_motor.position
-            angle_list['scan_id'].at[n] = int(last_sid) #add scan_id to the dataframe
-            angle_list['TimeStamp'].at[n] = pd.Timestamp.now()
+            # Add more info to the dataframe
+            angle_list.at[n, 'energy_rbv'] = e.position #add real energy to the dataframe
+            angle_rbv = th_motor.position
+            angle_list.at[n, "angle"] = angle_rbv
+            angle_list.at[n, 'scan_id'] = int(last_sid) #add scan_id to the dataframe
+            angle_list.at[n, 'TimeStamp'] = pd.Timestamp.now()
             ic_3 = sclr2_ch4.get()
             ic_0 = sclr2_ch2.get()
-            angle_list['IC3'].at[n] = ic_3 #Ic values are useful for calibration
-            angle_list['IC0'].at[n] = ic_0 #Ic values are useful for calibration
-            angle_list['Peak Flux'].at[n] = fluxPeaked # recoed if peakflux was excecuted
-            #angle_list['IC3_before_peak'].at[n] = ic3 #ic3 right after e change, no peaking
+            angle_list.at[n, 'IC3'] = ic_3 #Ic values are useful for calibration
+            angle_list.at[n, 'IC0'] = ic_0 #Ic values are useful for calibration
+            angle_list.at[n, 'Peak Flux'] = fluxPeaked # record if peakflux was excecuted
+            #angle_list.at[n, 'IC3_before_peak'] = ic3 #ic3 right after e change, no peaking
             fluxPeaked = False #reset
             print("name", fly_motors[1].name, "n", n, "position", fly_motors[1].position)
-            angle_list[fly_motors[1].name].at[n] = fly_motors[1].position
+            angle_list.at[n, fly_motors[1].name] = fly_motors[1].position
             
             #close c shutter
             caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0)
 
             # save the DF in the loop so quitting a scan won't affect
-            filename = f"{tomo_params.get('scan_label','')}_startID{first_sid}.csv"
-            angle_list.to_csv(os.path.join(tomo_params.get("save_log_to", "/data/users/current_user"), filename),
+            filename = f"{tomo_params.get('scan_label','')}_startID{first_sid}"
+            angle_list.to_csv(os.path.join(tomo_params.get("save_log_to", "/data/users/current_user"), filename+'.csv'),
                               float_format= '%.5f')
+            
+            flog = open(filename+'.txt','a')
+            flog.write("%d %.3f\n"%(int(last_sid),angle_rbv))
+            flog.close()
+            
         else:
             print(f"{angle} skipped")
             pass
@@ -756,28 +803,37 @@ def run_tomo_json(path_to_json,tracking_file = None):
                     break
 
             if not angle in np.array(tomo_params["remove_angles"]):
-                yield from tomo_scan_to_loop(angle, tomo_params,ic_0,do_y_offset = do_y_offset)
+                yield from tomo_scan_to_loop(angle, 
+                                             tomo_params,ic_0,
+                                             do_y_offset = do_y_offset)
 
                 last_sid = int(caget('XF:03IDC-ES{Status}ScanID-I'))
 
-                #Add more info to the dataframe
-                angle_list['energy_rbv'].at[n] = e.position #add real energy to the dataframe
-                angle_list["angle"].at[n] = th_motor.position
-                angle_list['scan_id'].at[n] = int(last_sid) #add scan_id to the dataframe
-                angle_list['TimeStamp'].at[n] = pd.Timestamp.now()
+                            # Add more info to the dataframe
+                angle_list.at[n, 'energy_rbv'] = e.position #add real energy to the dataframe
+                angle_rbv = th_motor.position
+                angle_list.at[n, "angle"] = angle_rbv
+                angle_list.at[n, 'scan_id'] = int(last_sid) #add scan_id to the dataframe
+                angle_list.at[n, 'TimeStamp'] = pd.Timestamp.now()
                 ic_3 = sclr2_ch4.get()
                 ic_0 = sclr2_ch2.get()
-                angle_list['IC3'].at[n] = ic_3 #Ic values are useful for calibration
-                angle_list['IC0'].at[n] = ic_0 #Ic values are useful for calibration
-                angle_list['Peak Flux'].at[n] = fluxPeaked # recoed if peakflux was excecuted
-                #angle_list['IC3_before_peak'].at[n] = ic3 #ic3 right after e change, no peaking
+                angle_list.at[n, 'IC3'] = ic_3 #Ic values are useful for calibration
+                angle_list.at[n, 'IC0'] = ic_0 #Ic values are useful for calibration
+                angle_list.at[n, 'Peak Flux'] = fluxPeaked # record if peakflux was excecuted
+                #angle_list.at[n, 'IC3_before_peak'] = ic3 #ic3 right after e change, no peaking
                 fluxPeaked = False #reset
-                angle_list[fly_motors[1].name].at[n] = fly_motors[1].position
+                print("name", fly_motors[1].name, "n", n, "position", fly_motors[1].position)
+                angle_list.at[n, fly_motors[1].name] = fly_motors[1].position
 
                 # save the DF in the loop so quitting a scan won't affect
-                filename = f"hxn_zp_diff_{tomo_params.get('scan_label','')}_startID{int(angle_list['scan_id'][0])}.csv"
-                angle_list.to_csv(os.path.join(tomo_params.get("save_log_to", "/data/users/current_user"), filename),
+                filename = f"{tomo_params.get('scan_label','')}_startID{first_sid}"
+                angle_list.to_csv(os.path.join(tomo_params.get("save_log_to", "/data/users/current_user"), filename+'.csv'),
                                 float_format= '%.5f')
+                flog = open(filename+'.txt','a')
+                flog.write("%d %.3f\n"%(int(last_sid),angle_rbv))
+                flog.close()
+                    
+
 
             else:
                 print(f"{angle} skipped")
