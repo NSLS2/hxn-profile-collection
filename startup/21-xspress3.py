@@ -400,7 +400,7 @@ class CommunityHxnXspress3Detector(CommunityXspress3_4Channel):
     @property
     def scan_type(self):
         return self.mode_settings.scan_type.get()
-    
+
     @property
     def channels(self):
         return self._channels.copy()
@@ -453,9 +453,17 @@ class CommunityHxnXspress3Detector(CommunityXspress3_4Channel):
     def stage(self):
         _, spec_per_point, total_capture = self._compute_total_capture()
 
-        self.stage_sigs[self.cam.trigger_mode] = 'TTL Both'
-        self.stage_sigs[self.cam.num_images] = total_capture
-        # self.stage_sigs[self.cam.acquire_time] = 
+        # For step scans (internal triggering) the detector must be told to
+        # trigger itself and only take `spec_per_point` frames per trigger().
+        # Setting 'TTL Both' + total_capture unconditionally causes step scans
+        # (e.g. bp.count) to hang forever waiting for a hardware trigger.
+        if self.external_trig.get():
+            self.stage_sigs[self.cam.trigger_mode] = 'TTL Both'
+            self.stage_sigs[self.cam.num_images] = total_capture
+        else:
+            self.stage_sigs[self.cam.trigger_mode] = 'Internal'
+            self.stage_sigs[self.cam.num_images] = spec_per_point
+        # self.stage_sigs[self.cam.acquire_time] =
 
         return super().stage()
 
