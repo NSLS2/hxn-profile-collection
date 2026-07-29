@@ -398,10 +398,6 @@ class CommunityHxnXspress3Detector(CommunityXspress3_4Channel):
         return res
 
     @property
-    def scan_type(self):
-        return self.mode_settings.scan_type.get()
-
-    @property
     def channels(self):
         return self._channels.copy()
 
@@ -416,6 +412,10 @@ class CommunityHxnXspress3Detector(CommunityXspress3_4Channel):
         for roi in self.all_rois:
             if roi.enable.get():
                 yield roi
+
+    @property
+    def scan_type(self):
+        return self.mode_settings.scan_type.get()
 
     @scan_type.setter
     def scan_type(self, scan_type):
@@ -433,7 +433,7 @@ class CommunityHxnXspress3Detector(CommunityXspress3_4Channel):
             for channel in self.iterate_channels():
                 channel.get_external_file_ref().kind = 0
             self.get_external_file_ref().kind = 1
-        self._scan_type = scan_type
+        self.mode_settings.scan_type.set(scan_type)
 
     def stop(self, *, success=False):
         ret = super().stop()
