@@ -17,6 +17,75 @@ from scipy.interpolate import interp1d, interp2d
 from hxnfly.callbacks.liveplot import add_toolbar_button
 from hxntools.scan_info import get_scan_positions
 
+
+# Helper functions for data padding and normalization
+def pad_array_with_valid_mean(array, target_length, num_valid=10):
+    """
+    Pad array to target_length using the mean of the last num_valid non-zero values.
+    
+    Parameters
+    ----------
+    array : np.ndarray
+        Array to pad
+    target_length : int
+        Desired length after padding
+    num_valid : int, optional
+        Number of valid values to use for calculating pad value (default: 10)
+    
+    Returns
+    -------
+    padded_array : np.ndarray
+        Padded array
+    pad_value : float
+        The value used for padding
+    missing_frames : int
+        Number of frames that were padded
+    """
+    if len(array) >= target_length:
+        return array, None, 0
+    
+    missing_frames = target_length - len(array)
+    valid_values = array[array > 0][-num_valid:] if np.sum(array > 0) >= num_valid else array[array > 0]
+    pad_value = np.nanmean(valid_values) if len(valid_values) > 0 else np.nanmean(array)
+    padded_array = np.pad(array, (0, missing_frames), constant_values=pad_value)
+    
+    return padded_array, pad_value, missing_frames
+
+
+def normalize_with_monitor(spectrum, monitor_data, verbose=True):
+    """
+    Normalize spectrum with monitor data, handling missing frames and zero values.
+    
+    Parameters
+    ----------
+    spectrum : np.ndarray
+        Spectrum data to normalize
+    monitor_data : np.ndarray
+        Monitor data for normalization
+    verbose : bool, optional
+        Print warnings about padding (default: True)
+    
+    Returns
+    -------
+    normalized_spectrum : np.ndarray
+        Normalized spectrum
+    """
+    monitor = np.copy(monitor_data)
+    
+    # Handle missing frames by padding with average of last 10 valid values
+    if len(monitor) < len(spectrum):
+        monitor, pad_value, missing_frames = pad_array_with_valid_mean(monitor, len(spectrum))
+        if verbose:
+            print(f'Warning: Padded {missing_frames} missing monitor frames with value {pad_value:.2f}')
+    
+    # Replace zeros with mean of valid values
+    monitor = np.where(monitor == 0, 
+                      np.nanmean(monitor[monitor > 0]) if np.sum(monitor > 0) > 0 else np.nanmean(monitor), 
+                      monitor)
+    
+    return spectrum / monitor
+
+
 def plt_update_figure(fig=None):
     if fig is None:
         fig = plt.gcf()
@@ -283,13 +352,13 @@ def plot(scan_id, elem='Pt', norm=None,
 
     if norm is not None:
         norm_v = np.asarray(list(h.data(norm)), dtype=np.float32).squeeze()
-        norm_v = np.where(norm_v == 0, np.nanmean(norm_v),norm_v) #patch for dropping first data point
+        data = normalize_with_monitor(data, norm_v, verbose=True)
         if log:
-            plt.plot(x, np.log10(data / (norm_v+1.e-8)))
-            plt.plot(x, np.log10(data / (norm_v + 1.e-8)), 'bo')
+            plt.plot(x, np.log10(data+1.e-8))
+            plt.plot(x, np.log10(data + 1.e-8), 'bo')
         else:
-            plt.plot(x, data / (norm_v + 1.e-8))
-            plt.plot(x, data / (norm_v + 1.e-8), 'bo')
+            plt.plot(x, data)
+            plt.plot(x, data, 'bo')
         if e_flag:
             plt.xlabel('Energy (keV)')
         else:
@@ -638,9 +707,7 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
 
     if norm is not None:
         monitor = np.asarray(list(hdr.data(norm)), dtype=np.float32).squeeze()
-        monitor = np.where(monitor == 0, np.nanmean(monitor),monitor) #patch for dropping first data point
-        spectrum = spectrum/(monitor)
-
+        spectrum = normalize_with_monitor(spectrum, monitor, verbose=True)
 
     nx, ny = get_flyscan_dimensions(hdr.start)
     total_points = nx * ny
@@ -665,12 +732,11 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
     print('Scan {}. Saving to: {}'.format(scan_id, folder))
 
     if len(spectrum) != total_points:
-        print('Padding data (points=%d expected=%d)' % (len(spectrum),
-                                                        total_points))
-
-        _spectrum = np.zeros(total_points, dtype=spectrum.dtype)
-        _spectrum[:len(spectrum)] = spectrum
-        spectrum = _spectrum
+        spectrum, pad_value, missing_points = pad_array_with_valid_mean(spectrum, total_points)
+        print('Padding XRF data (points=%d expected=%d, missing=%d)' % (len(spectrum) - missing_points,
+                                                        total_points, missing_points))
+        if pad_value is not None:
+            print('\tPadded with value: {:.2f}'.format(pad_value))
 
     if interp2d is not None:
         print('\tUsing 2D %s interpolation...' % (interp2d, ), end=' ')
