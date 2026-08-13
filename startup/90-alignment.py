@@ -425,7 +425,7 @@ def movr_zpz1(dz):
     # yield from bps.movr(zp.zpx, dz*(0.0009795))
 
     # For chamber at 700 mmHg
-    yield from bps.movr(zp.zpy, (-0.003402)*dz) #follow the sign for corr factors
+    yield from bps.movr(zp.zpy, (-0.0032182)*dz) #follow the sign for corr factors
     yield from bps.movr(zp.zpx, dz*(0.0006100))
 
 def mov_zpz1(pos):
@@ -685,7 +685,7 @@ def get_fluo_data(sid,elem):
     return get_scan_positions(h),xrf
 
 
-def return_line_center(sid,elem='Cr',threshold=0.2, neg_flag=0):
+def return_line_center(sid,elem='Cr',threshold=0.2, neg_flag=0, mode='binary'):
     h = db[sid]
 
     df2 = h.table()
@@ -722,7 +722,12 @@ def return_line_center(sid,elem='Cr',threshold=0.2, neg_flag=0):
     xrf[xrf<(np.max(xrf)*threshold)] = 0.
     #index = np.where(xrf == 0.)
     #xrf[:index[0][0]] = 0.
-    xrf[xrf>=(np.max(xrf)*threshold)] = 1.
+    if mode == 'binary':
+        xrf[xrf>=(np.max(xrf)*threshold)] = 1.
+    elif mode == 'as-is':
+        print('Use the signals as they are')
+    else:
+        xrf[xrf>=(np.max(xrf)*threshold)] = 1.
     mc = find_mass_center_1d(xrf[:-2],x[:-2])
     return mc
 

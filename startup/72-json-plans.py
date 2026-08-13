@@ -110,7 +110,7 @@ def make_tomo_plan(save_as = "/nsls2/data/hxn/legacy/user_macros/HXN_GUI/Scan/te
 def align_scan(mtr,start,end,num,exp,elem_, align_with="line_center",
                threshold = 0.5,move_coarse = False, neg_flag = False, offset = 0,
                tomo_use_panda= True, reset_piezos_to_zero = False, initial_position=0, 
-               align_movement_limit=0):
+               align_movement_limit=0, line_center_mode='binary'):
 
     """
     scan to align samples to field of view using using fly1d scan
@@ -150,7 +150,7 @@ def align_scan(mtr,start,end,num,exp,elem_, align_with="line_center",
                         )
     if align_with == "line_center":
         yield from bps.sleep(1)
-        xc = return_line_center(-1,elem_,threshold, neg_flag = neg_flag)
+        xc = return_line_center(-1,elem_,threshold, neg_flag = neg_flag, mode=line_center_mode)
         xc = xc+offset
         
     elif align_with == "edge":
@@ -1039,7 +1039,7 @@ def diff_scan_to_loop(angle, diff_params, ic_init,tracking_file = None):
         #                             yalign["center_with"],
         #                             yalign["threshold"],
         #                             yalign["move_coarse"],
-        #                             xalign["neg_flag"],
+        #                             yalign["neg_flag"],
         #                             yalign["offset"],
         #                             diff_params["flying_panda"],
         #                             yalign["zero_before_scan"],
@@ -1191,6 +1191,8 @@ def run_diff_json(path_to_json,tracking_file = None,do_confirm =True):
     tot_time = tot_time_/3600
     overhead = 1.2
     end_datetime = time.ctime(time.time()+tot_time_*overhead)
+    print("add angles of ", diff_params["add_angles"])
+    print("remove angles of ", diff_params["remove_angles"])
     
     if do_confirm:
         check = 'n'
@@ -1248,7 +1250,8 @@ def run_diff_json(path_to_json,tracking_file = None,do_confirm =True):
                                 diff_params["flying_panda"],
                                 xalign["zero_before_scan"],
                                 xalign["initial_position"],
-                                xalign["align_movement_limit"]
+                                xalign["align_movement_limit"],
+                                xalign["line_center_mode"]
                                 )
 
                 #2d alignemnt using center of mass if condition is true
@@ -1282,12 +1285,13 @@ def run_diff_json(path_to_json,tracking_file = None,do_confirm =True):
                                         yalign["center_with"],
                                         yalign["threshold"],
                                         yalign["move_coarse"],
-                                        xalign["neg_flag"],
+                                        yalign["neg_flag"],
                                         yalign["offset"],
                                         diff_params["flying_panda"],
                                         yalign["zero_before_scan"],
                                         yalign["initial_position"],
-                                        yalign["align_movement_limit"]
+                                        yalign["align_movement_limit"],
+                                        yalign["line_center_mode"]
                     )
 
                 
@@ -1337,7 +1341,7 @@ def run_diff_json(path_to_json,tracking_file = None,do_confirm =True):
                     yield from peak_the_flux()
                     ic_0 = sclr2_ch2.get()
                     fluxPeaked = True
-
+            
             if not angle in np.array(diff_params["remove_angles"]):
                 #diff scan at a single angle
                 yield from diff_scan_to_loop(angle,diff_params,ic_0,tracking_file = tracking_file)

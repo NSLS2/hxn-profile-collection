@@ -934,8 +934,8 @@ def run_zp_xanes(path_to_parameter_file, do_confirm  =True,
                 filename = f"HXN_nanoXANES_{scan_name}_startID{int(e_list['scan_id'][0])}_{len(e_list)}_e_points.csv"
                 e_list.to_csv(os.path.join(scan_params["save_log_to"], filename), float_format= '%.5f')
 
-            caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0) 
-            if scan_params["pdf_log"]: save_page() #save the pdf
+        caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0) 
+        if scan_params["pdf_log"]: save_page() #save the pdf
 
     else:
         return

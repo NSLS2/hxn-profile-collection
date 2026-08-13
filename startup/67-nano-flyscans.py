@@ -1,4 +1,5 @@
-if not USE_RASMI:
+if True:
+# if not USE_RASMI:
     print(f"RASMI not used, skipping {__file__!r} ...")
     import sys
     sys.exit()
