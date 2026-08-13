@@ -30,17 +30,24 @@ class PseudoEnergyCal(PseudoPositioner, NamedDevice):
         self.mono_angle.subscribe(self.parameter_updated)
         # self.energy.subscribe(self.parameter_updated)
 
+        # The subscribe callback expects methods to exist during
+        # session teardown that get removed, which causes errors
+        # on exiting bsui. Solution is to bind those methods beforehand
+        self._sin = math.sin
+        self._pi = math.pi
+        self._asin = math.asin
+
     def parameter_updated(self, value=None, **kwargs):
         self._update_position()
 
     @pseudo_position_argument
     def forward(self, position):
-        angle = math.asin((12.39842)/(2 * 3.1355893 * position.energy)) * (180/math.pi)
+        angle = self._asin((12.39842)/(2 * 3.1355893 * position.energy)) * (180/self._pi)
         return self.RealPosition(mono_angle=angle)
 
     @real_position_argument
     def inverse(self, position):
-        energy_kev = 12.39842 / (2. * 3.1355893 * math.sin(position.mono_angle*math.pi/180.))
+        energy_kev = 12.39842 / (2. * 3.1355893 * self._sin(position.mono_angle*self._pi/180.))
         return self.PseudoPosition(energy=energy_kev)
 
 
