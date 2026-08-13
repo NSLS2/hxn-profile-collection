@@ -453,11 +453,20 @@ class CommunityHxnXspress3Detector(CommunityXspress3_4Channel):
     def stage(self):
         _, spec_per_point, total_capture = self._compute_total_capture()
 
-        # For step scans (internal triggering) the detector must be told to
-        # trigger itself and only take `spec_per_point` frames per trigger().
-        # Setting 'TTL Both' + total_capture unconditionally causes step scans
-        # (e.g. bp.count) to hang forever waiting for a hardware trigger.
-        if self.external_trig.get():
+        # Decide between externally-triggered (fly scan) and internally-triggered
+        # (step scan) acquisition. Fly scan setup only sets
+        # `mode_settings.mode = 'external'` (see 93-scanplan-panda.py) and does
+        # NOT set `external_trig` or use the `scan_type` setter, so we must
+        # honor both flags here. Setting 'TTL Both' + total_capture
+        # unconditionally causes step scans (e.g. bp.count) to hang forever
+        # waiting for a hardware trigger; setting 'Internal' unconditionally
+        # causes fly scans to hang because the detector triggers itself once
+        # instead of on each hardware pulse.
+        external = (
+            self.external_trig.get()
+            or self.mode_settings.mode.get() == 'external'
+        )
+        if external:
             self.stage_sigs[self.cam.trigger_mode] = 'TTL Both'
             self.stage_sigs[self.cam.num_images] = total_capture
         else:
