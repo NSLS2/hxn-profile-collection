@@ -183,18 +183,25 @@ class PseudoAngleCorrection(PseudoPositioner, NamedDevice):
         # if theta changes, update the pseudo position
         self.theta.subscribe(self.parameter_updated)
 
+        # The subscribe callback expects methods to exist during
+        # session teardown that get removed, which causes errors
+        # on exiting bsui. Solution is to bind those methods beforehand
+        self._radians = math.radians
+        self._cos = math.cos
+        self._sin = math.sin
+
     def parameter_updated(self, value=None, **kwargs):
         self._update_position()
 
     @property
     def radian_theta(self):
-        return math.radians(self.theta.get())
+        return self._radians(self.theta.get())
 
     @pseudo_position_argument
     def forward(self, position):
         theta = self.radian_theta
-        c = math.cos(theta)
-        s = math.sin(theta)
+        c = self._cos(theta)
+        s = self._sin(theta)
 
         x = c * position.px + s * position.pz
         z = -s * position.px + c * position.pz
@@ -203,8 +210,8 @@ class PseudoAngleCorrection(PseudoPositioner, NamedDevice):
     @real_position_argument
     def inverse(self, position):
         theta = self.radian_theta
-        c = math.cos(theta)
-        s = math.sin(theta)
+        c = self._cos(theta)
+        s = self._sin(theta)
         x = c * position.x - s * position.z
         z = s * position.x + c * position.z
         return self.PseudoPosition(px=x, pz=z)

@@ -166,13 +166,27 @@ class DetectorStation(PseudoPositioner):
     delta = Cpt(PseudoSingle)
     r = Cpt(PseudoSingle)
 
+    def __init__(self, prefix, **kwargs):
+        super().__init__(prefix, **kwargs)
+
+        # The subscribe callback expects methods to exist during
+        # session teardown that get removed, which causes errors
+        # on exiting bsui. Solution is to bind those methods beforehand
+        self._deg2rad = np.deg2rad
+        self._sin = np.sin
+        self._pi = np.pi
+        self._nan = np.nan
+        self._arctan = np.arctan
+        self._cos = np.cos
+        self._rad2deg = np.rad2deg
+
     @pseudo_position_argument
     def forward(self, position):
-        gamma = np.deg2rad(position.gamma)
-        delta = np.deg2rad(position.delta)
+        gamma = self._deg2rad(position.gamma)
+        delta = self._deg2rad(position.delta)
         r = position.r
 
-        beta = np.deg2rad(89.337)
+        beta = self._deg2rad(89.337)
 
         diff_z = self.z.position
 
@@ -188,8 +202,8 @@ class DetectorStation(PseudoPositioner):
         # d = 395.2
 
 
-        x_yaw = np.sin(gamma) * z_yaw / np.sin(beta + gamma)
-        R_yaw = np.sin(beta) * z_yaw / np.sin(beta + gamma)
+        x_yaw = self._sin(gamma) * z_yaw / self._sin(beta + gamma)
+        R_yaw = self._sin(beta) * z_yaw / self._sin(beta + gamma)
         R1 = R_yaw - (z_yaw - z1)
         R2 = R_yaw - (z_yaw - z2)
         y1 = np.tan(delta) * R1
@@ -222,35 +236,35 @@ class DetectorStation(PseudoPositioner):
     @real_position_argument
     def inverse(self, position):
         diff_z = position.z
-        diff_yaw = np.deg2rad(position.yaw)
+        diff_yaw = self._deg2rad(position.yaw)
         diff_cz = position.cz
         diff_x = position.x
         diff_y1 = position.y1
         diff_y2 = position.y2
 
         gamma = diff_yaw
-        beta = 89.337 * np.pi / 180
+        beta = 89.337 * self._pi / 180
         z_yaw = 574.668 + 581.20 + diff_z
         z1 = 574.668 + 395.2 + diff_z
         z2 = z1 + 380
         d = 395.2
 
-        x_yaw = np.sin(gamma) * z_yaw / np.sin(beta + gamma)
-        R_yaw = np.sin(beta) * z_yaw / np.sin(beta + gamma)
+        x_yaw = self._sin(gamma) * z_yaw / self._sin(beta + gamma)
+        R_yaw = self._sin(beta) * z_yaw / self._sin(beta + gamma)
         R1 = R_yaw - (z_yaw - z1)
         R2 = R_yaw - (z_yaw - z2)
 
 
         if abs(x_yaw + diff_x) > 3:
-            gamma = delta = r = np.nan
+            gamma = delta = r = self._nan
         elif abs(diff_y1 / R1 - diff_y2 / R2) > 0.01:
-            gamma = delta = r = np.nan
+            gamma = delta = r = self._nan
         else:
-            delta = np.arctan(diff_y1 / R1)
-            r = R1 / np.cos(delta) - d + diff_cz
+            delta = self._arctan(diff_y1 / R1)
+            r = R1 / self._cos(delta) - d + diff_cz
 
-        return self.PseudoPosition(gamma=np.rad2deg(gamma),
-                                   delta=np.rad2deg(delta),
+        return self.PseudoPosition(gamma=self._rad2deg(gamma),
+                                   delta=self._rad2deg(delta),
                                    r=r)
 
 

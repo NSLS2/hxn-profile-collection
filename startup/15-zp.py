@@ -142,18 +142,25 @@ class FineSampleLabX(PseudoPositioner, NamedDevice):
         # if theta changes, update the pseudo position
         self.theta0.subscribe(self.parameter_updated)
 
+        # The subscribe callback expects methods to exist during
+        # session teardown that get removed, which causes errors
+        # on exiting bsui. Solution is to bind those methods beforehand
+        self._radians = math.radians
+        self._cos = math.cos
+        self._sin = math.sin
+
     def parameter_updated(self, value=None, **kwargs):
         self._update_position()
 
     @property
     def radian_theta(self):
-        return math.radians(self.zpsth.position + self.theta0.get())
+        return self._radians(self.zpsth.position + self.theta0.get())
 
     @pseudo_position_argument
     def forward(self, position):
         theta = self.radian_theta
-        c = math.cos(theta)
-        s = math.sin(theta)
+        c = self._cos(theta)
+        s = self._sin(theta)
 
         x = c * position.zpssx_lab + s * position.zpssz_lab
         z = -s * position.zpssx_lab + c * position.zpssz_lab
@@ -162,8 +169,8 @@ class FineSampleLabX(PseudoPositioner, NamedDevice):
     @real_position_argument
     def inverse(self, position):
         theta = self.radian_theta
-        c = math.cos(theta)
-        s = math.sin(theta)
+        c = self._cos(theta)
+        s = self._sin(theta)
         x = c * position.zpssx - s * position.zpssz
         z = s * position.zpssx + c * position.zpssz
         return self.PseudoPosition(zpssx_lab=x, zpssz_lab=z)
