@@ -280,6 +280,8 @@ def panda_zero_all_encoders():
     print("Panda encoder resets have been finished.")
 
 panda_live_plot = PandaLivePlot()
+panda_flyer.live_plot_callback = panda_live_plot.update_plot
+panda_flyer_fip.live_plot_callback = panda_live_plot.update_plot
 
 time.sleep(0.05)
 plt.close(panda_live_plot.fig)

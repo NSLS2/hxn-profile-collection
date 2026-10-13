@@ -181,7 +181,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     #print('get h')
     
     #ic = np.asarray(df['sclr1_ch4'])
-    ic = np.squeeze(np.asarray(list(hdr.data('sclr1_ch4'))))
+    ic = np.squeeze(np.asarray(list(hdr.data('sclr1_ch4')))).astype(np.float32)
     num_frame = np.size(ic)
     print(np.shape(ic))
     '''
@@ -223,14 +223,14 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
     print(np.shape(images))
     num_frame,nnx,nny = np.shape(images)
 
-    mask = np.load('/data/users/2026Q2/WeiyuanHuang_2026Q2/diff_s3_1/mask.npy')
+    mask = np.load('/data/users/2026Q3/Xue_2026Q3/Nanodiffraction/S1/003/mask.npy')
     #mask = np.load('/data/users/2025Q2/Liu_2025Q2/diff_3_O3NCM_3.4V/mask.npy')
 
     for i in range(num_frame):
         if np.mod(i,500) ==0:
             print('load frame ',i, '/', num_frame)
         #t = np.flipud(images.get_frame(i)[0]).T
-        t = np.flipud(images[i,:,:]).T
+        t = (np.flipud(images[i,:,:]).T).astype(np.float32)
         t = t  #* mask
         t = t*ic[0] / ic[i]
        
@@ -238,12 +238,12 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
         if i == 0:
             nx,ny = np.shape(t)
             global diff_array
-            diff_array = np.zeros((nx,ny,num_frame))
+            diff_array = np.zeros((nx,ny,num_frame)).astype(np.float32)
 
 
         tmp = np.flipud(t) #* mask
 
-        diff_array[:,:,i] = np.flipud(tmp) #*mask
+        diff_array[:,:,i] = np.flipud(tmp) *mask
     del images
     for i in range(num_frame):
         if i == 0:
@@ -338,7 +338,7 @@ def show_diff_data(sid,element,det_name='merlin1',fermat_flag=False, save_flag=F
                 #print('no num')
 
 
-    fn = '/data/users/2026Q2/Deng_2026Q2/diff/'
+    fn = '/data/users/2026Q3/Xue_2026Q3/Nanodiffraction/S1/003/'
     
     if not os.path.exists(fn):
         os.makedirs(fn)

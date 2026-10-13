@@ -1251,7 +1251,7 @@ def run_diff_json(path_to_json,tracking_file = None,do_confirm =True):
                                 xalign["zero_before_scan"],
                                 xalign["initial_position"],
                                 xalign["align_movement_limit"],
-                                xalign["line_center_mode"]
+                                xalign["center_with"]
                                 )
 
                 #2d alignemnt using center of mass if condition is true
@@ -1291,7 +1291,7 @@ def run_diff_json(path_to_json,tracking_file = None,do_confirm =True):
                                         yalign["zero_before_scan"],
                                         yalign["initial_position"],
                                         yalign["align_movement_limit"],
-                                        yalign["line_center_mode"]
+                                        yalign["center_with"]
                     )
 
                 

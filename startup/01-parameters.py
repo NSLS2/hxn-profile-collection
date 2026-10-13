@@ -38,9 +38,11 @@ def create_user_dir(users_name):
 
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)
+        os.chmod(dir_name, 0o777)
         return dir_name
     else:
         print("user directory already exists")
+        os.chmod(dir_name, 0o777)
         return dir_name
 
 def create_user_symlink(src_dir = "/data/2023Q1/"):

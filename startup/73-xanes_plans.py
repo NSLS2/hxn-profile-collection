@@ -424,7 +424,8 @@ def generateEList_MLL_2(path_to_parameter_file, highEStart = False):
 
 
 def run_zp_xanes(path_to_parameter_file, do_confirm  =True, 
-                 add_low_res_scan = False, multi_pos_scan = False, pos_refs_scan_nums = []):
+                 add_low_res_scan = False, 
+                 multi_pos_scan = False, pos_refs_scan_nums = []):
 
     """ 
     Function to run XANES Scan. 
@@ -474,6 +475,8 @@ def run_zp_xanes(path_to_parameter_file, do_confirm  =True,
                     
     e_list = generateEList(elemParam, 
                            highEStart = True)
+
+    print(e_list)
 
     #find energy scan direction
     current_energy = e.position
@@ -870,19 +873,33 @@ def run_zp_xanes(path_to_parameter_file, do_confirm  =True,
 
                 print(f'Current scan: {i+1}/{len(e_list)}')
                 image_scan = scan_params["fly2d_scan"]
+                mosaic_scan = scan_params["mosaic_scan"]
 
-                yield from fly2dpd( 
-                                eval(image_scan['det']),
-                                x_motor,
-                                image_scan["x_start"],
-                                image_scan["x_end"],
-                                image_scan["x_num"],
-                                y_motor,
-                                image_scan["y_start"],
-                                image_scan["y_end"],    
-                                image_scan["y_num"],
-                                image_scan["exposure"]
-                                )
+                #add mosaic scan here
+
+                if scan_params["do_mosaic_scan"]:
+                    yield from mosaic_overlap_scan(dets = eval(mosaic_scan['det']), 
+                                                   ylen = mosaic_scan['ylen'], 
+                                                   xlen = mosaic_scan['xlen'], 
+                                                   overlap_per = mosaic_scan['overlap_per'], 
+                                                   dwell = mosaic_scan['dwell'],
+                                                   step_size = mosaic_scan['step_size'], 
+                                                   plot_elem = ["Cr"],
+                                                   mll = mosaic_scan['mll'], 
+                                                   do_confirm=False)
+                else:
+                    yield from fly2dpd( 
+                                    eval(image_scan['det']),
+                                    x_motor,
+                                    image_scan["x_start"],
+                                    image_scan["x_end"],
+                                    image_scan["x_num"],
+                                    y_motor,
+                                    image_scan["y_start"],
+                                    image_scan["y_end"],    
+                                    image_scan["y_num"],
+                                    image_scan["exposure"]
+                                    )
                 yield from bps.sleep(1)
                 #eval(image_scan["det"])
                 if add_low_res_scan:
