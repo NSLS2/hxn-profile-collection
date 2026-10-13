@@ -973,7 +973,8 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
             del dpc
         if "xspress3_det2" in dets_by_name:
             dpc = dets_by_name["xspress3_det2"]
-            scan_counter.append(dpc.cam.array_counter)
+            # scan_counter.append(dpc.cam.array_counter)
+            scan_counter.append(dpc.hdf5.num_captured)
             del dpc
 
 
@@ -1128,6 +1129,9 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
                      'dssy':10,
                      'dssz':11}
 
+    motor_numbers['motorx'] = 12
+    motor_numbers['motory'] = 13
+
 
     do_scan = True
     while do_scan:
@@ -1173,6 +1177,7 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
                 raise ValueError('Stage return speed too fast, check your input')
 
             start1_scan = float(start1) - vx*line_overhead[0]
+            print(f"{start1_scan = }")
             range1_scan = float(range1) + vx*(line_overhead[0] + line_overhead[1])
             step2 = float(range2)/num2
 

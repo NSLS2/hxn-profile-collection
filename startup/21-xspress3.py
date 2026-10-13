@@ -1,6 +1,6 @@
 print(f"Loading {__file__!r} ...")
 
-from ophyd import Signal, EpicsSignal, DeviceStatus
+from ophyd import Signal, EpicsSignal, DeviceStatus, EpicsSignalRO
 from ophyd.device import Component as Cpt, Staged
 from ophyd.areadetector import Xspress3Detector
 from ophyd.areadetector.filestore_mixins import FileStorePluginBase
@@ -352,6 +352,7 @@ class CommunityHxnXspress3Detector(CommunityXspress3_4Channel):
     # for fly scanning.  Do this is a signal (rather than as a local variable)
     # or as a method so we can modify this as part of a plan
     fly_next = Cpt(Signal, value=False)
+    det_state = Cpt(EpicsSignalRO, "det1:DetectorState_RBV")
 
     def __init__(
         self,
@@ -485,6 +486,10 @@ class CommunityHxnXspress3Detector(CommunityXspress3_4Channel):
 
 
 xspress3_det2 = CommunityHxnXspress3Detector('XF:03IDC-ES{Xsp:2}:', name='xspress3_det2')
+
+from nslsii.ophyd_async.devices import Xspress3Detector as XS3D2
+
+xs3 = XS3D2('XF:03IDC-ES{Xsp:2}:', name="xspress3_det2")
 
 # TODO - total points must be > 1 for stage() to work
 # but this should be replaced by the actual total_points later on.
