@@ -682,12 +682,12 @@ def diode_measure_flux():
     while v<0.1 or v>3:
         print('Adjusting diode amplifier gain...')
         if v<0.1:
-            st = amp_increase_gain(5)
+            st = amp_increase_gain(4)
             if st == 0:
                 print('No signal on diode 1, check that diode is in and shutters are open')
                 return 0
         if v>3:
-            st = amp_decrease_gain(5)
+            st = amp_decrease_gain(4)
             if st == 0:
                 print('Minimal gain reached, signal might be saturated')
                 break

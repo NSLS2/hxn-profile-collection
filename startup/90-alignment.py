@@ -1820,6 +1820,12 @@ def update_det_pos(det = "merlin", do_confirm = True):
             diff_pos["eiger_pos2"]['diff_z'] = np.round(diff.z.position,2)
             diff_pos["eiger_pos2"]['diff_cz'] = np.round(diff.cz.position,2)
 
+        elif det == "diode":
+            diff_pos["diode_pos"]['diff_x'] = np.round(diff.x.position,2)
+            diff_pos["diode_pos"]['diff_y1'] = np.round(diff.y1.position,2)
+            diff_pos["diode_pos"]['diff_y2'] = np.round(diff.y2.position,2)
+
+
 
 
         else:
@@ -1940,9 +1946,12 @@ def find_45_offset(data_path = "/nsls2/data/hxn/legacy/users/Beamline_Performanc
     return optimal_offset
 
 
-def rot_stage_calib_scan(th_mtr,start_angle,end_angle,angle_step, x_start, x_end, x_num, exp_time=0.02, elem="Pt_L", sample="Diving board"):
+def rot_stage_calib_scan(th_mtr,start_angle,end_angle,angle_step, \
+                         x_start, x_end, x_num, exp_time=0.02, 
+                         elem="Pt_L", sample="Diving board"):
 
     ''' Usage:  <rot_stage_calib_scan(dsth, -50, -40, 0.2, -12, 12, 240, 0.05, elem="Pt_L", sample="Diving board" )
+    or <rot_stage_calib_scan(zpsth, -70, 70, 0.2, -12, 12, 240, 0.02, elem="Cr", sample="Diving board")
     Watch out for the pitch sign; if the scan should go positive, the scan pitch must also be positive
     '''
     print("Diving board line of 5 um is assumed in the fitting")
@@ -3336,7 +3345,7 @@ def recover_from_beamdump(peak_after = True):
 def calc_zpz_with_energy(energy=9):
 
     ref_energy = 10
-    ref_zpz1 = -15.567
+    ref_zpz1 = -15.69
     per_ev_corr = 6.093
 
     calc_zpz1 = ref_zpz1 +((ref_energy-energy)* per_ev_corr)
@@ -3465,7 +3474,6 @@ def cam6_in():
 def cam6_to_laser():
     return move_cam6(x = -34.8, y = 0.45)
 
-
 def move_fs1_y(target_pos):
     yield from bps.mov(fs1_y, target_pos)
 
@@ -3481,6 +3489,12 @@ def fs_in():
 
 def move_dexela(x = 0, y = 0):
     yield from bps.mov(FPDet.x, x, FPDet.y , y)
+
+def optimize_flux(iter = 3):
+    for i in range(iter):
+        yield from peak_the_flux()
+        yield from center_ssa2()
+    
 
 
 

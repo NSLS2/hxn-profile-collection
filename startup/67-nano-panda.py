@@ -1,5 +1,5 @@
 if True:
-    print(f"RASMI not used, skipping {__file__!r} ...")
+    print(f"This code is temporarily not used, skipping {__file__!r} ...")
     import sys
     sys.exit()
 

@@ -12,6 +12,8 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
 wd = "/data/users/startup_parameters/"
+PLOT_FITS = False
+UGAP_OFFSET = 0
 
 class HXNEnergy():
     
@@ -23,7 +25,7 @@ class HXNEnergy():
         self.ic1 = ic1
         self.calib_file = calib_file_csv
         self.df = pd.read_csv(self.calib_file)
-        self.calibrate_optics(False)
+        self.calibrate_optics(PLOT_FITS)
         self.defineFeedBackPVs()
 
     def defineFeedBackPVs(self):
@@ -52,7 +54,7 @@ class HXNEnergy():
 
 
 
-    def calcGap(self,E,harmonics = 5, offset = 0):
+    def calcGap(self,E,harmonics = 5, offset = UGAP_OFFSET):
         E1 = E/harmonics
         calc_gap =  np.polyval(self.ugap_coeffs, E1) + offset
         return (np.around(calc_gap,1))
@@ -325,7 +327,7 @@ class HXNEnergy():
                 yield from Energy.fluxOptimizerScan(dcm.r,-0.2, 0.2, 12, ic = sclr2_ch2, moveToMax = True)
                 yield from Energy.fluxOptimizerScan(m2.p,-0.05, 0.05, 10, ic = sclr2_ch2, moveToMax = True)
             yield from bps.sleep(2)
-            yield from Energy.fluxOptimizerScan(ugap,-40, 40, 40, ic = sclr2_ch2, moveToMax = True)
+            yield from Energy.fluxOptimizerScan(ugap,-60, 60, 50, ic = sclr2_ch2, moveToMax = True)
             #yield from fluxOptimizerScan(ugap,-5, 5, 10, ic = xbpm, moveToMax = True)
             #if i%2 == 0
 
@@ -789,5 +791,5 @@ def change_dets_energy(targetE):
     caput("XF:03IDC-ES{Det:Eiger1M}cam1:Acquire",0)
     caput("XF:03IDC-ES{Det:Eiger1M}cam1:PhotonEnergy", targetE*1000)
 
-Energy = HXNEnergy(ugap,e,dcm.p, "ic3", wd+"ugap_calib20260519_1739.csv")
+Energy = HXNEnergy(ugap,e,dcm.p, "ic3", wd+"ugap_calib20260915_0812.csv")
 

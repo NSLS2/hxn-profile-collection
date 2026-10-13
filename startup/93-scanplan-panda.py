@@ -593,7 +593,7 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
         progress_bar = tqdm.tqdm(total = total_points,unit='points')
 
         if wait_for_start_input:
-            input("Waiting for start scan input...Hit Enter when ready.")
+            input("Waiting for start input...hit Enter when ready.")
         # Scan!
         if trigger_funcgen:
             print("Sending manual trigger to function generator......")
@@ -713,6 +713,10 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
         try:
             start1, range1 = m1_pos + scan_start1, scan_end1 - scan_start1
             start2, range2 = m2_pos + scan_start2, scan_end2 - scan_start2
+            if np.abs(range1) < 1e-6:
+                raise ValueError('Scan range for motor1 is too small, and Power PMAC cannot trigger detectors')
+            if np.abs(range2) < 1e-6:
+                raise ValueError('Scan range for motor2 is too small, and Power PMAC cannot trigger detectors')
 
             vx = range1/(exposure_time*num1)
 
@@ -940,7 +944,7 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
 
 def fly2dpd_repeat(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, scan_end2, num2,  exposure_time,panda_flyer = None, repeat = 10, pos_return = True, apply_tomo_drift = False,
                 tomo_angle = None, auto_rescan = False, dead_time = 0.0005, line_overhead = [0.01,0.01], line_dwell = 0.005, return_speed = 150.0, position_supersample = 10,
-                md = None, merlin_cont_mode = False, **kwargs):
+                md = None, merlin_cont_mode = False, num_warmup_frame=10, **kwargs):
     """
     Relative scan
     """
@@ -1073,6 +1077,26 @@ def fly2dpd_repeat(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_star
             yield from bps.abs_set(panda.pulse3.delay_units,'s')
             yield from bps.abs_set(panda.pulse3.pulses,position_supersample)
 
+            # PULSE 1 and PULSE 4 is modified on PandABox to read Zebra output pulse and add a delay to that for triggering scalers
+            yield from bps.abs_set(panda.pulse1.width,0.00001000)
+            yield from bps.abs_set(panda.pulse1.width_units,'s')
+            yield from bps.abs_set(panda.pulse1.pulses,1)
+            yield from bps.abs_set(panda.pulse1.trig_edge,'Rising')
+            # yield from bps.abs_set(panda.pulse1.step,0)
+            # yield from bps.abs_set(panda.pulse1.step_units,'s')
+            yield from bps.abs_set(panda.pulse4.width,0.00001000)
+            yield from bps.abs_set(panda.pulse4.width_units,'s')
+            yield from bps.abs_set(panda.pulse4.pulses,1)
+            yield from bps.abs_set(panda.pulse4.trig_edge,'Falling')
+
+            # DIV1 needs to be set to the number of warmup frames before starting the main acquisition
+            yield from bps.abs_set(panda.div1.divisor,num_warmup_frame)
+            yield from bps.abs_set(panda.div1.enable,'ZERO')
+            yield from bps.abs_set(panda.srgate2.set_edge,'Rising')
+            yield from bps.abs_set(panda.srgate2.rst,'ZERO')
+            yield from bps.sleep(1)
+            yield from bps.abs_set(panda.srgate2.rst,'ONE')
+            yield from bps.abs_set(panda.div1.enable,'ONE')
             # PULSE 4 is modified on PandABox to read Zebra output pulse and add a delay to that for triggering scalers
             # yield from bps.abs_set(panda.pulse4.width,exposure_time-dead_time)
             # yield from bps.abs_set(panda.pulse4.width_units,'s')

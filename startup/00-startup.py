@@ -20,7 +20,7 @@ if os.path.isfile('/data/users/startup_parameters/TILED_OFF'):
 else:
     TILED_OFF = False
 
-
+TILED_OFF = True
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 
 
