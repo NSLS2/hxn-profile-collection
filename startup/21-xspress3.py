@@ -218,18 +218,24 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
         return ret
 
     def trigger(self):
+        print(1)
+        print(f"inside {self.name} trigger() ")
         self.sts = sts = DeviceStatus(self)
+        print(self.sts)
         # in the not step case, just return a done status object
         if self.mode_settings.scan_type.get() != 'step':
             sts._finished()
             return sts
 
 
+        print(f"{self.external_trig=}")
         if self.external_trig.get():
+            print(2)
             self.trigger_external()
             sts._finished()
             return sts
         else:
+            print(3)
             s = self.trigger_internal()  # IS IT CORRECT WAY TO TRIGGER ACQUISITION?
 
             while (self.settings.acquire.get() == 1):
@@ -390,6 +396,7 @@ class CommunityHxnXspress3Detector(CommunityXspress3_4Channel):
         # make an ordered dictionary with the channels in order
         self._channels = OrderedDict(sorted(channels.items()))
         # if self.mode_settings.scan_type.get() != 'step':
+        self._acquisition_signal = self.cam.acquire
 
     def describe(self):
         res = super().describe()
@@ -482,6 +489,48 @@ class CommunityHxnXspress3Detector(CommunityXspress3_4Channel):
         finally:
             self._scan_type = 'step'
         return ret
+
+    def _dispatch_channels(self, trigger_time):
+        channels = self._channels.values()
+        for sn in self.read_attrs:
+            ch = getattr(self, sn)
+            if ch in channels:
+                self.generate_datum(ch.name, trigger_time, {})
+        self._abs_trigger_count += 1
+
+    def trigger_internal(self):
+        if self._staged != Staged.yes:
+            raise RuntimeError("not staged")
+        self._status = DeviceStatus(self)
+        self._acquisition_signal.put(1, wait=True)
+        self._dispatch_channels(trigger_time=time.time())
+        return self._status
+
+    def trigger(self):
+        print(1)
+        print(f"inside {self.name} trigger() ")
+        self.sts = sts = DeviceStatus(self)
+        print(self.sts)
+        # in the not step case, just return a done status object
+        if self.mode_settings.scan_type.get() != 'step':
+            sts._finished()
+            return sts
+
+        print(f"{self.external_trig=}")
+        if self.external_trig.get():
+            print(2)
+            self.trigger_external()
+            sts._finished()
+            return sts
+        else:
+            print(3)
+            s = self.trigger_internal()  # IS IT CORRECT WAY TO TRIGGER ACQUISITION?
+
+            while (self.settings.acquire.get() == 1):
+                time.sleep(0.5)
+
+            sts._finished()
+            return sts
 
 
 xspress3_det2 = CommunityHxnXspress3Detector('XF:03IDC-ES{Xsp:2}:', name='xspress3_det2')
