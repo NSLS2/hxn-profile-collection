@@ -226,7 +226,7 @@ class ExportSISDataPanda:
         for n in range(1, n_mcas + 1):
             mca = self._ion.mca_by_index[n].spectrum.get(timeout=5.0)
             mca_data.append(mca)
-        
+
         #some problem here ROI data is saved correctly but correct len is 0:  AP 04/24/2026
         correct_length = int(self._panda.data.num_captured.get()/self._panda.position_supersample)
         # correct_length = int(self._panda.data.num_capture.get()/self._panda.position_supersample) trial on 4/26/2026
@@ -795,7 +795,8 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
         dpc = dets_by_name["xspress3_det2"]
         dpc.total_points.set(total_points)
         dpc.mode_settings.total_points.set(total_points)
-        dpc.mode_settings.mode.set('external')
+        # dpc.mode_settings.mode.set('external')
+        dpc.mode_settings.mode.set('internal')
         dpc.hdf5.filestore_spec_restore = 'XSP3'
         dpc.hdf5.filestore_spec = 'XSP3_BULK'
         del dpc
@@ -1103,16 +1104,16 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
     return uid
 
 
-def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, scan_end2, num2, exposure_time, panda_flyer = None, 
+def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, scan_end2, num2, exposure_time, panda_flyer = None,
             pos_return = True, apply_tomo_drift = False,
-            tomo_angle = None, auto_rescan = False, dead_time = 0.0005, 
+            tomo_angle = None, auto_rescan = False, dead_time = 0.0005,
             line_overhead = [0.01,0.01], line_dwell = 0.1, return_speed = 100.0, position_supersample = 10,
             md = None, merlin_cont_mode = False, num_sclr_ch = None, **kwargs):
     """
     Relative scan
     """
 
-    panda_flyer = panda_flyer or globals()["panda_flyer"] 
+    panda_flyer = panda_flyer or globals()["panda_flyer"]
 
     # PPMAC control signal
     sl = ppmac.gpascii.send_line
@@ -1158,7 +1159,7 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
             if (('merlin1' in [d.name for d in dets])) and not merlin_cont_mode:
 
                 yield from bps.abs_set(merlin1.cam.quad_merlin_mode,1) # 0-12 bit; 1-24bit;
-                
+
                 min_dead_time = 0.005
                 if dead_time<min_dead_time:
                     print('Dead time set to %.1f ms for Merlin response time'%(min_dead_time*1000))
@@ -1183,7 +1184,7 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
 
 
             range_min, range_max = -16, 16
-                
+
             for pos in [start1_scan, start1_scan + range1_scan, start2, start2 + range2]:
                 if pos < range_min or pos > range_max:
 
@@ -1191,7 +1192,7 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
                         f"Scan range exceed limits for the motors: "
                         f"start1={scan_start1} end1={scan_end1} start2={scan_start2} end2={scan_end2}"
                     )
-                
+
 
 
             scan_input = [float(x) for x in [start1, start1+range1, num1, start2, start2+range2, num2]]
@@ -1292,10 +1293,10 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
 
                     if count>50:
                         raise ValueError("Motors failed to reach start position, exiting the plan. Check scan range.")
-                        
 
-                    #may avoid when scan stucks if user had a non-zero strat position or motor is stuck 
-                    #may need improvent if intial piezo positions are important  
+
+                    #may avoid when scan stucks if user had a non-zero strat position or motor is stuck
+                    #may need improvent if intial piezo positions are important
                     # if motor2.name.startswith('zp'):
                     #    yield from piezos_to_zero(zp_flag = True)
                     # elif motor2.name.startswith('ds'):
@@ -1335,7 +1336,7 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
             for d in dets:
                 if d.name == 'xspress3' or d.name == 'xspress3_det2':
                     panda_live_plot.setup_plot(scan_input,d,panda_flyer.sclr)
-            
+
             if motor1.name == 'dssx' or motor1.name == 'dssz':
                 angle = dsth.user_readback.get()
             elif motor1.name == 'zpssx' or motor1.name == 'zpssz':
@@ -1592,9 +1593,9 @@ def fly2dpd_repeat(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_star
                     yield from bps.abs_set(motor2,m2_pos,group=mv_back)
                     yield from bps.wait(group=mv_back)
 
-def fly1dpd(dets, motor1, scan_start1, scan_end1, num1, exposure_time, panda_flyer = None, 
+def fly1dpd(dets, motor1, scan_start1, scan_end1, num1, exposure_time, panda_flyer = None,
             pos_return = True, apply_tomo_drift = False,
-                tomo_angle = None, auto_rescan = False, dead_time = 0.0005, 
+                tomo_angle = None, auto_rescan = False, dead_time = 0.0005,
                 line_overhead = [0.01,0.01], line_dwell = 0.1, return_speed = 100.0, position_supersample = 10,
                 md = None, merlin_cont_mode = False, **kwargs):
     """
