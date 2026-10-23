@@ -1473,6 +1473,10 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
             kwargs.setdefault('panda_flyer', panda_flyer)
             yield from bps.sleep(0.1)
             yield from set_panda_zebra(line_overhead, exposure_time, dead_time, num1, position_supersample, delay_ion_chamber=delay_ion_chamber, merlin_cont_mode=merlin_cont_mode, zebra=zebra, panda=panda, mode="flypd")
+            panda = panda_flyer.panda
+            delay_ion_chamber=0.00001
+            yield from bps.sleep(0.1)
+            yield from set_panda_zebra(line_overhead, exposure_time, dead_time, num1, position_supersample, delay_ion_chamber=delay_ion_chamber, merlin_cont_mode=merlin_cont_mode, zebra=zebra, panda=panda_flyer.panda, mode="flypd")
 
             ## Move to start
             sl('#%djog=%f'%(m1_num,start1_scan))
