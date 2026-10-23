@@ -169,6 +169,11 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
         if USE_RASMI:
             self.channel4.stage = lambda: []
 
+    def configure_for_panda(self):
+        """WIP"""
+        # self.hdf5.filestore_spec
+        pass
+
     def stage(self, *args, **kwargs):
         for j in itertools.count():
             try:

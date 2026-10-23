@@ -974,6 +974,8 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
             del dpc
         if "xspress3_det2" in dets_by_name:
             dpc = dets_by_name["xspress3_det2"]
+            dpc.hdf5.filestore_spec = dpc.hdf5.filestore_spec_restore
+            dpc.mode_settings.scan_type.put('step')
             scan_counter.append(dpc.cam.array_counter)
             del dpc
 
