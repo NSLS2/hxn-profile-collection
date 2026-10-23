@@ -706,6 +706,9 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
        If True, try to align the beamline
     """
 
+    print("inside flyscan_pd")
+    print(start_signal, total_points, dwell)
+
     t_scan = tic()
 
     if wait_before_scan is None:
@@ -797,8 +800,9 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
         dpc.mode_settings.total_points.set(total_points)
         # dpc.mode_settings.mode.set('external')
         dpc.mode_settings.mode.set('internal')
-        dpc.hdf5.filestore_spec_restore = 'XSP3'
-        dpc.hdf5.filestore_spec = 'XSP3_BULK'
+        dpc.external_trig.put(False)
+        dpc.hdf5.spec_restore = dpc.hdf5.spec # 'XSP3'
+        dpc.hdf5.spec = 'XSP3_BULK'
         del dpc
 
     if verbose:
@@ -973,10 +977,19 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
             scan_counter.append(dpc.hdf5.num_captured)
             del dpc
         if "xspress3_det2" in dets_by_name:
+            print(0)
             dpc = dets_by_name["xspress3_det2"]
+<<<<<<< HEAD
             dpc.hdf5.filestore_spec = dpc.hdf5.filestore_spec_restore
             dpc.mode_settings.scan_type.put('step')
             scan_counter.append(dpc.cam.array_counter)
+=======
+            dpc.hdf5.spec = dpc.hdf5.spec_restore
+            dpc.mode_settings.scan_type.put('step')
+            # scan_counter.append(dpc.cam.array_counter)
+            scan_counter.append(dpc.hdf5.num_captured)
+            print(f"{scan_counter = }")
+>>>>>>> refs/remotes/origin/xspress3mk2-detector
             del dpc
 
 
@@ -1025,6 +1038,7 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
             print(f'  triggered {d.name}')
             #st.add_callback(lambda x: toc(t_startfly, str=f"  DETECTOR  {datetime.strftime(datetime.now(), '%Y-%m-%d %H:%M:%S.%f')}"))
 
+        # breakpoint()
         ## Wait a bit for detectors
         yield from bps.sleep(np.minimum(np.maximum(0.5,0.001*total_points),2))
         # st = yield from abs_set(xmotor, row_stop)
@@ -1046,7 +1060,7 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
             progress_bar.update(scan_counter[0].get() - progress_bar.n)
             counter +=1
             yield from bps.sleep(0.5)
-            if 'xspress3' in dets_by_name:# or 'xspress3_det2' in dets_by_name:
+            if 'xspress3' in dets_by_name or 'xspress3_det2' in dets_by_name:
                 panda_live_plot.update_plot()
 
             # if counter>3600:
@@ -1059,7 +1073,7 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
         while not all([counter.get() >= total_points for counter in scan_counter]):
             print('Waiting for detector(s) to finish all frames...')
             yield from bps.sleep(1)
-            if 'xspress3' in dets_by_name:# or 'xspress3_det2' in dets_by_name:
+            if 'xspress3' in dets_by_name or 'xspress3_det2' in dets_by_name:
                 panda_live_plot.update_plot()
         # we still know about ion from above
         if ion:
