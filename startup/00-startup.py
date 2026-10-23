@@ -121,33 +121,30 @@ if not TILED_OFF:
         def __init__(self):
             self._resource_deque = deque()
             self._datum_deque = deque()
-            self._resource_lock = threading.Lock()
-            self._datum_lock = threading.Lock()
+            self._lock = threading.Lock()
 
         def append(self, name, doc):
-            if name == "resource":
-                with self._resource_lock:
+            with self._lock:
+                if name == "resource":
                     self._resource_deque.append(doc)
-            elif name == "datum":
-                with self._datum_lock:
+                elif name == "datum":
                     self._datum_deque.append(doc)
-            else:
-                raise ValueError(f"ThredSafeDocumentCache does not support document type: {name}")
+                else:
+                    raise ValueError(f"ThredSafeDocumentCache does not support document type: {name}")
 
         def popleft(self):
             # Try to emmit a Resource first; if empty -- emmit Datum
-            with self._resource_lock:
+            with self._lock:
                 if self._resource_deque:
                     return "resource", self._resource_deque.popleft()
 
-            with self._datum_lock:
                 if self._datum_deque:
                     return "datum", self._datum_deque.popleft()
 
             return None
 
         def size(self):
-            with self._resource_lock, self._datum_lock:
+            with self._lock:
                 return len(self._resource_deque) + len(self._datum_deque)
 
     tiled_document_cache = ThreadSafeDocumentCache()
