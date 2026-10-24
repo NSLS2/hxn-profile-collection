@@ -2,9 +2,13 @@ print(f"Loading {__file__!r} ...")
 from collections import OrderedDict
 
 from epics import caput, caget
+import logging
+import math
 import os
+import sys
 import tqdm
 import threading
+import warnings
 import h5py
 import numpy as np
 import time as ttime
@@ -98,6 +102,8 @@ class COUNTER(Device):
     step = Cpt(EpicsSignal, "STEP")
     max = Cpt(EpicsSignal, "MAX")
     min = Cpt(EpicsSignal, "MIN")
+    out = Cpt(EpicsSignal, "OUT")
+
 
 
 class INENC(Device):
@@ -125,6 +131,8 @@ class PULSE(Device):
     step_units = Cpt(EpicsSignal, "STEP:UNITS", string=True)
     step = Cpt(EpicsSignal, "STEP")
     trig_edge = Cpt(EpicsSignal, "TRIG_EDGE", string=True)
+    queued = Cpt(EpicsSignal, "QUEUED")
+    dropped = Cpt(EpicsSignal, "DROPPED")
 
 
 class BITS(Device):
@@ -133,6 +141,11 @@ class BITS(Device):
     C = Cpt(EpicsSignal, "C")
     D = Cpt(EpicsSignal, "D")
 
+class TTLIN(Device):
+    val = Cpt(EpicsSignal, "VAL")
+
+class TTLOUT(Device):
+    val = Cpt(EpicsSignal, "VAL")
 
 class PandA_Ophyd1(Device):
     pcap = Cpt(PCAP, "PCAP:")
@@ -144,6 +157,9 @@ class PandA_Ophyd1(Device):
     counter1 = Cpt(COUNTER, "COUNTER1:")
     counter2 = Cpt(COUNTER, "COUNTER2:")
     counter3 = Cpt(COUNTER, "COUNTER3:")
+    counter4 = Cpt(COUNTER, "COUNTER4:")
+    counter5 = Cpt(COUNTER, "COUNTER5:")
+    counter6 = Cpt(COUNTER, "COUNTER6:")
     inenc1 = Cpt(INENC, "INENC1:")
     inenc2 = Cpt(INENC, "INENC2:")
     inenc3 = Cpt(INENC, "INENC3:")
@@ -162,7 +178,22 @@ class PandA_Ophyd1(Device):
     div2 = Cpt(DIV, "DIV2:")
     div3 = Cpt(DIV, "DIV3:")
     div4 = Cpt(DIV, "DIV4:")
-
+    ttlin1 = Cpt(TTLIN, "TTLIN1:")
+    ttlin2 = Cpt(TTLIN, "TTLIN2:")
+    ttlin3 = Cpt(TTLIN, "TTLIN3:")
+    ttlin4 = Cpt(TTLIN, "TTLIN4:")
+    ttlin5 = Cpt(TTLIN, "TTLIN5:")
+    ttlin6 = Cpt(TTLIN, "TTLIN6:")
+    ttlout1 = Cpt(TTLIN, "TTLOUT1:")
+    ttlout2 = Cpt(TTLIN, "TTLOUT2:")
+    ttlout3 = Cpt(TTLIN, "TTLOUT3:")
+    ttlout4 = Cpt(TTLIN, "TTLOUT4:")
+    ttlout5 = Cpt(TTLIN, "TTLOUT5:")
+    ttlout6 = Cpt(TTLIN, "TTLOUT6:")
+    ttlout7 = Cpt(TTLIN, "TTLOUT7:")
+    ttlout8 = Cpt(TTLIN, "TTLOUT8:")
+    ttlout9 = Cpt(TTLIN, "TTLOUT9:")
+    ttlout10 = Cpt(TTLIN, "TTLOUT10:")
 
 panda1 = PandA_Ophyd1("XF03IDC-ES-PANDA-1:", name="panda1")
 
@@ -547,7 +578,7 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
             yield from abs_set(ion.nuse_all, total_points, wait=True)
             yield from abs_set(ion.input_mode, 2, wait=True)
             #yield from abs_set(ion.nuse_all, 2*xnum, wait=True)
-
+    
         def panda_kickoff():
             yield from kickoff(panda_flyer,
                                 num=total_points*position_supersample,
@@ -667,17 +698,208 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
     toc(t_scan, 'scan_finished')
     return uid
 
+def scan_check_in(num1=None, exposure_time=None, dead_time=None, position_supersample=None, delay_ion_chamber=None, zebra=zebra, panda=None, mode='flypd', strict=True):
+    """Validate configuration; strict=False warns on mismatches and continues."""
+    delta = 0.000001
+    failures = 0
+
+    def report(error):
+        nonlocal failures
+        if strict:
+            raise error
+        failures += 1
+        with warnings.catch_warnings():
+            warnings.simplefilter('always', UserWarning)
+            warnings.warn(str(error), UserWarning, stacklevel=3)
+
+    print("\n###### Starting scan check-in ######")
+    if mode=='flypd':
+        panda = panda1 if panda is None else panda
+        print("Running in flypd mode")
+        # check Zebra configuration
+        num_zebra_ttl_port_used = 4
+        for i in range(num_zebra_ttl_port_used):
+            if zebra.output[i+1].ttl.addr.get() != 4:
+                report(RuntimeError(f"Zebra TTL port {i+1} does not have address 4 (IN2_TTL). Reboot the Zebra1 IOC?"))
+        print("Zebra TTL port configuration checked")
+        # check Panda1 TTLIN status
+        if panda.ttlin2.val.get() != 0:
+            report(RuntimeError("Panda TTL IN2 does not have value 0. Check the Power PMAC status?"))
+        #if panda.ttlin3.val.get() != 0:
+        #    raise RuntimeError("Panda TTL IN3 does not have value 0. Check the Zebra1 status or the PANDA1 IOC?")
+        if panda.ttlin4.val.get() != 0:
+            report(RuntimeError("Panda TTL IN4 does not have value 0. Check the status for Panda2 for RASMI?"))
+        if caget("XF:03IDC-ES{Zeb:1}:SYS_STATERR") != 0:
+            report(UserWarning("Zebra system status error detected"))
+        print("Panda TTL IN status checked")
+        # sanity-check Panda1 configuration
+        if panda.data.capture.get() != 0:
+            report(RuntimeError("Panda data capture is not 0. Reboot the Panda1 IOC?"))
+        if panda.pulse2.width_units.get() != 's':
+            report(RuntimeError("Panda pulse2 width units is not 's'. Check the Panda1 IOC?"))
+        if panda.pulse2.step_units.get() != 's':
+            report(RuntimeError("Panda pulse2 step units is not 's'. Check the Panda1 IOC?"))
+        if panda.pulse3.width_units.get() != 's':
+            report(RuntimeError("Panda pulse3 width units is not 's'. Check the Panda1 IOC?"))
+        if panda.pulse3.step_units.get() != 's':
+            report(RuntimeError("Panda pulse3 step units is not 's'. Check the Panda1 IOC?"))
+        if panda.pulse3.delay_units.get() != 's':
+            report(RuntimeError("Panda pulse3 delay units is not 's'. Check the Panda1 IOC?"))
+        print("Panda pulse units checked")
+        if num1 is not None:
+            if panda.pulse2.pulses.get() != num1:
+                report(RuntimeError(f"Panda pulse2 pulses is not {num1}. Check the Panda1 IOC?"))
+        if exposure_time is not None:
+            if not math.isclose(panda.pulse2.step.get(), exposure_time, rel_tol=0.0, abs_tol=delta):
+                report(RuntimeError(f"Panda pulse2 step is not {exposure_time}. Check the Panda1 IOC?"))
+        if exposure_time is not None and dead_time is not None:
+            if not math.isclose(panda.pulse2.width.get(), exposure_time-dead_time, rel_tol=0.0, abs_tol=delta):
+                report(RuntimeError(f"Panda pulse2 width is not {exposure_time-dead_time}. Check the Panda1 IOC?"))
+        print("Panda pulse2 configuration for detectors checked")
+        if exposure_time is not None and dead_time is not None and position_supersample is not None:
+            if not math.isclose(panda.pulse3.width.get(), (exposure_time-dead_time)/2.0/position_supersample, rel_tol=0.0, abs_tol=delta):
+                report(RuntimeError(f"Panda pulse3 width is not {(exposure_time-dead_time)/2.0/position_supersample}. Check the Panda1 IOC?"))
+            if not math.isclose(panda.pulse3.step.get(), (exposure_time-dead_time)/position_supersample, rel_tol=0.0, abs_tol=delta):
+                report(RuntimeError(f"Panda pulse3 step is not {(exposure_time-dead_time)/position_supersample}. Check the Panda1 IOC?"))
+            if not math.isclose(panda.pulse3.delay.get(), (exposure_time-dead_time)/2.0/position_supersample, rel_tol=0.0, abs_tol=delta):
+                report(RuntimeError(f"Panda pulse3 delay is not {(exposure_time-dead_time)/2.0/position_supersample}. Check the Panda1 IOC?"))
+            if panda.pulse3.pulses.get() != position_supersample:
+                report(RuntimeError(f"Panda pulse3 pulses is not {position_supersample}. Check the Panda1 IOC?"))
+        print("Panda pulse3 configuration for position encoders checked")
+        if delay_ion_chamber is not None:
+            if not math.isclose(panda.pulse1.width.get(), delay_ion_chamber, rel_tol=0.0, abs_tol=delta):
+                report(RuntimeError(f"Panda pulse1 width is not {delay_ion_chamber}. Check the Panda1 IOC?"))
+            if not math.isclose(panda.pulse4.width.get(), delay_ion_chamber, rel_tol=0.0, abs_tol=delta):
+                report(RuntimeError(f"Panda pulse4 width is not {delay_ion_chamber}. Check the Panda1 IOC?"))
+        if panda.pulse1.width_units.get() != 's':
+            report(RuntimeError("Panda pulse1 width units is not 's'. Check the Panda1 IOC?"))
+        if panda.pulse1.pulses.get() != 1:
+            report(RuntimeError("Panda pulse1 pulses is not 1. Check the Panda1 IOC?"))
+        if panda.pulse1.trig_edge.get() != 'Rising':
+            report(RuntimeError("Panda pulse1 trig edge is not 'Rising'. Check the Panda1 IOC?"))
+        print("Panda pulse1 configuration for starting scalers checked")
+        if panda.pulse4.width_units.get() != 's':
+            report(RuntimeError("Panda pulse4 width units is not 's'. Check the Panda1 IOC?"))
+        if panda.pulse4.pulses.get() != 1:
+            report(RuntimeError("Panda pulse4 pulses is not 1. Check the Panda1 IOC?"))
+        if panda.pulse4.trig_edge.get() != 'Falling':
+            report(RuntimeError("Panda pulse4 trig edge is not 'Falling'. Check the Panda1 IOC?"))
+        print("Panda pulse4 configuration for stopping scalers checked")
+    else:
+        raise ValueError(f"Unsupported mode: {mode}")
+    print(f"###### Scan configuration check completed with {failures} warnings ######\n")
+
+    
+def scan_check_out(zebra=zebra, panda=None, mode="flypd"):
+    print("\n###### Starting scan check-out ######")
+    if mode=='flypd':
+        panda = panda1 if panda is None else panda
+    else:
+        raise ValueError(f"Unsupported mode: {mode}")
+    for number in (1, 2, 3, 4):
+        pulse = getattr(panda, f"pulse{number}")
+        print(f"Configured pulse count at PULSE{number}: ", pulse.pulses.get())
+        print(f"Number of pulses dropped at PULSE{number}: ", pulse.dropped.get())
+    print("Number of triggers sent to TTLOUT1 (zebra, merlin1, eiger2, xspress3): ", panda.counter1.out.get())
+    print("Number of triggers sent to TTLOUT2 and TTLOUT3 (scaler): ", panda.counter2.out.get())
+    print("Number of triggers sent to PCAP (Panda encoders) at COUNTER3: ", panda.counter3.out.get())
+    print("Number of triggers received from LUT1 (zebra) at COUNTER4: ", panda.counter4.out.get())
+    print("Number of triggers received from Power PMAC at COUNTER5: ", panda.counter5.out.get())
+    print("\n###### Scan check-out completed ######")
+
+
+def _finalize_scan_checks(panda):
+    active_error = sys.exc_info()[0] is not None
+    try:
+        scan_check_out(panda=panda, mode="flypd")
+    except Exception:
+        if not active_error:
+            raise
+        logging.getLogger(__name__).exception("Scan check-out failed while another exception was active")
+
+
+def set_panda_zebra(line_overhead, exposure_time, dead_time, num1, position_supersample, delay_ion_chamber, merlin_cont_mode=False,zebra=zebra, panda=None, mode="flypd"):
+    if mode=='flypd':
+        panda = panda1 if panda is None else panda  
+        ## Zebra is used to copy trigger pulses from panda to detectors and scaler
+        yield from bps.abs_set(zebra.output[1].ttl.addr,4)
+        yield from bps.abs_set(zebra.output[2].ttl.addr,4)
+        if merlin_cont_mode:
+            yield from bps.abs_set(zebra.output[3].ttl.addr,4)
+        else:
+            yield from bps.abs_set(zebra.output[3].ttl.addr,4)
+        yield from bps.abs_set(zebra.output[4].ttl.addr,4)
+        yield from bps.sleep(0.1)
+
+        ## Setup panda
+        yield from bps.abs_set(panda.data.capture,0)
+
+        yield from bps.abs_set(panda.pulse2.delay,line_overhead[0])
+        yield from bps.abs_set(panda.pulse2.delay_units,'s')
+        yield from bps.abs_set(panda.pulse2.width,exposure_time-dead_time)
+        yield from bps.abs_set(panda.pulse2.width_units,'s')
+        yield from bps.abs_set(panda.pulse2.step,exposure_time)
+        yield from bps.abs_set(panda.pulse2.step_units,'s')
+        yield from bps.abs_set(panda.pulse2.pulses,num1)
+
+        yield from bps.abs_set(panda.pulse3.width,(exposure_time-dead_time)/2.0/position_supersample)
+        yield from bps.abs_set(panda.pulse3.width_units,'s')
+        yield from bps.abs_set(panda.pulse3.step,(exposure_time-dead_time)/position_supersample)
+        yield from bps.abs_set(panda.pulse3.step_units,'s')
+        yield from bps.abs_set(panda.pulse3.delay,(exposure_time-dead_time)/2.0/position_supersample)
+        yield from bps.abs_set(panda.pulse3.delay_units,'s')
+        yield from bps.abs_set(panda.pulse3.pulses,position_supersample)
+
+        # PULSE 1 and PULSE 4 is modified on PandABox to read Zebra output pulse and add a delay to that for triggering scalers
+        yield from bps.abs_set(panda.pulse1.width,delay_ion_chamber)
+        yield from bps.abs_set(panda.pulse1.width_units,'s')
+        yield from bps.abs_set(panda.pulse1.pulses,1)
+        yield from bps.abs_set(panda.pulse1.trig_edge,'Rising')
+        # yield from bps.abs_set(panda.pulse1.step,0)
+        # yield from bps.abs_set(panda.pulse1.step_units,'s')
+        yield from bps.abs_set(panda.pulse4.width,delay_ion_chamber)
+        yield from bps.abs_set(panda.pulse4.width_units,'s')
+        yield from bps.abs_set(panda.pulse4.pulses,1)
+        yield from bps.abs_set(panda.pulse4.trig_edge,'Falling')
+        if panda.pulse1.dropped.get() > 0.1:
+            print("Warning: PULSE 1 (scaler set) has dropped more than 1 triggers.")
+        if panda.pulse2.dropped.get() > 0.1:
+            print("Warning: PULSE 2 (detectors)has dropped more than 1 triggers.")
+        if panda.pulse3.dropped.get() > 0.1:
+            print("Warning: PULSE 3 (position encoders) has dropped more than 1 triggers.")
+        if panda.pulse4.dropped.get() > 0.1:
+            print("Warning: PULSE 4 (scaler reset) has dropped more than 1 triggers.")
+
+        # set the counter for debugging purpose
+        yield from bps.abs_set(panda.counter1.enable,'ZERO')
+        yield from bps.abs_set(panda.counter2.enable,'ZERO')
+        yield from bps.abs_set(panda.counter3.enable,'ZERO')
+        yield from bps.abs_set(panda.counter4.enable,'ZERO')
+        yield from bps.abs_set(panda.counter5.enable,'ZERO')
+        yield from bps.sleep(0.5)
+        yield from bps.abs_set(panda.counter1.enable,'ONE')
+        yield from bps.abs_set(panda.counter2.enable,'ONE')
+        yield from bps.abs_set(panda.counter3.enable,'ONE')
+        yield from bps.abs_set(panda.counter4.enable,'ONE')
+        yield from bps.abs_set(panda.counter5.enable,'ONE')
+        yield from bps.sleep(0.5)
+        # yield from bps.abs_set(panda.pulse4.step,0)
+        # yield from bps.abs_set(panda.pulse4.step_units,'s')
 
 def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, scan_end2, num2, exposure_time, panda_flyer = None, 
             pos_return = True, apply_tomo_drift = False,
             tomo_angle = None, auto_rescan = False, dead_time = 0.0005, 
             line_overhead = [0.01,0.01], line_dwell = 0.1, return_speed = 100.0, position_supersample = 10,
-            md = None, merlin_cont_mode = False, num_sclr_ch = None, **kwargs):
+            md = None, merlin_cont_mode = False, num_sclr_ch = None, strict_scan_checkup = True, **kwargs):
     """
     Relative scan
+
+    Diagnostics always run; strict_scan_checkup=False warns on configuration mismatches.
     """
 
     panda_flyer = panda_flyer or globals()["panda_flyer"] 
+    panda = panda_flyer.panda
+    delay_ion_chamber = 0.00001
 
     # PPMAC control signal
     sl = ppmac.gpascii.send_line
@@ -791,54 +1013,8 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
             md['scan']['shape'] = (num1, num2)
 
             kwargs.setdefault('panda_flyer', panda_flyer)
+            yield from set_panda_zebra(line_overhead, exposure_time, dead_time, num1, position_supersample, delay_ion_chamber=delay_ion_chamber, merlin_cont_mode=merlin_cont_mode, zebra=zebra, panda=panda, mode="flypd")
 
-            ## Zebra is used to copy trigger pulses from panda to detectors and scaler
-            yield from bps.abs_set(zebra.output[1].ttl.addr,4)
-            yield from bps.abs_set(zebra.output[2].ttl.addr,4)
-            if merlin_cont_mode:
-                yield from bps.abs_set(zebra.output[3].ttl.addr,4)
-            else:
-                yield from bps.abs_set(zebra.output[3].ttl.addr,4)
-            yield from bps.abs_set(zebra.output[4].ttl.addr,4)
-
-            # Wait for Zebra
-            yield from bps.sleep(0.1)
-
-            panda = panda_flyer.panda
-
-            ## Setup panda
-            yield from bps.abs_set(panda.data.capture,0)
-
-            yield from bps.abs_set(panda.pulse2.delay,line_overhead[0])
-            yield from bps.abs_set(panda.pulse2.delay_units,'s')
-            yield from bps.abs_set(panda.pulse2.width,exposure_time-dead_time)
-            yield from bps.abs_set(panda.pulse2.width_units,'s')
-            yield from bps.abs_set(panda.pulse2.step,exposure_time)
-            yield from bps.abs_set(panda.pulse2.step_units,'s')
-            yield from bps.abs_set(panda.pulse2.pulses,num1)
-
-            yield from bps.abs_set(panda.pulse3.width,(exposure_time-dead_time)/2.0/position_supersample)
-            yield from bps.abs_set(panda.pulse3.width_units,'s')
-            yield from bps.abs_set(panda.pulse3.step,(exposure_time-dead_time)/position_supersample)
-            yield from bps.abs_set(panda.pulse3.step_units,'s')
-            yield from bps.abs_set(panda.pulse3.delay,(exposure_time-dead_time)/2.0/position_supersample)
-            yield from bps.abs_set(panda.pulse3.delay_units,'s')
-            yield from bps.abs_set(panda.pulse3.pulses,position_supersample)
-
-            # PULSE 1 and PULSE 4 is modified on PandABox to read Zebra output pulse and add a delay to that for triggering scalers
-            yield from bps.abs_set(panda.pulse1.width,0.00001000)
-            yield from bps.abs_set(panda.pulse1.width_units,'s')
-            yield from bps.abs_set(panda.pulse1.pulses,1)
-            yield from bps.abs_set(panda.pulse1.trig_edge,'Rising')
-            # yield from bps.abs_set(panda.pulse1.step,0)
-            # yield from bps.abs_set(panda.pulse1.step_units,'s')
-            yield from bps.abs_set(panda.pulse4.width,0.00001000)
-            yield from bps.abs_set(panda.pulse4.width_units,'s')
-            yield from bps.abs_set(panda.pulse4.pulses,1)
-            yield from bps.abs_set(panda.pulse4.trig_edge,'Falling')
-
-            # yield from bps.abs_set(panda.pulse4.step,0)
-            # yield from bps.abs_set(panda.pulse4.step_units,'s')
             ## Move to start
             sl('#%djog=%f'%(m1_num,start1_scan))
             sl('#%djog=%f'%(m2_num,start2))
@@ -913,43 +1089,50 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
                 angle = 0
 
             scan_header = [motor1,range1,num1,motor2,range2,num2,angle]
-
+            scan_check_in(num1=num1, exposure_time=exposure_time, dead_time=dead_time, position_supersample=position_supersample, delay_ion_chamber=delay_ion_chamber, panda=panda, mode="flypd", strict=strict_scan_checkup)
             yield from flyscan_pd(dets, '&6begin41r', num1*num2, exposure_time, dead_time = dead_time, md=md, scan_dim = [num1,num2], position_supersample = position_supersample, merlin_cont_mode=merlin_cont_mode, scan_header = scan_header, **kwargs)
 
             # yield from bps.sleep(1)
             #yield from set_scanner_velocity(5)
         finally:
-            # Undefine motors
-            sl('&6abort;undefine;')
-            if pos_return:
-                mv_back = short_uid('back')
-                if True: #motor1.name.startswith('zp'):
-                    sl('#%djog=%f'%(m1_num,m1_pos))
-                    sl('#%djog=%f'%(m2_num,m2_pos))
+            try:
+                # Undefine motors
+                sl('&6abort;undefine;')
+                if pos_return:
+                    mv_back = short_uid('back')
+                    if True: #motor1.name.startswith('zp'):
+                        sl('#%djog=%f'%(m1_num,m1_pos))
+                        sl('#%djog=%f'%(m2_num,m2_pos))
 
-                    ## Wait for stages in bluesky
-                    count = 0
-                    while np.abs(motor1.position-m1_pos) + np.abs(motor2.position-m2_pos) > 0.02:
-                        count += 1
-                        if count % 10 == 0:
-                            print("Motors didn't go back to starting position, moving again...")
-                            sl('#%djog=%f'%(m1_num,m1_pos))
-                            sl('#%djog=%f'%(m2_num,m2_pos))
-                        yield from bps.sleep(0.2)
-                else:
-                    yield from bps.abs_set(motor1,m1_pos,group=mv_back)
-                    yield from bps.abs_set(motor2,m2_pos,group=mv_back)
-                    yield from bps.wait(group=mv_back)
+                        ## Wait for stages in bluesky
+                        count = 0
+                        while np.abs(motor1.position-m1_pos) + np.abs(motor2.position-m2_pos) > 0.02:
+                            count += 1
+                            if count % 10 == 0:
+                                print("Motors didn't go back to starting position, moving again...")
+                                sl('#%djog=%f'%(m1_num,m1_pos))
+                                sl('#%djog=%f'%(m2_num,m2_pos))
+                            yield from bps.sleep(0.2)
+                    else:
+                        yield from bps.abs_set(motor1,m1_pos,group=mv_back)
+                        yield from bps.abs_set(motor2,m2_pos,group=mv_back)
+                        yield from bps.wait(group=mv_back)
+            finally:
+                _finalize_scan_checks(panda)
 
 
 def fly2dpd_repeat(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, scan_end2, num2,  exposure_time,panda_flyer = None, repeat = 10, pos_return = True, apply_tomo_drift = False,
                 tomo_angle = None, auto_rescan = False, dead_time = 0.0005, line_overhead = [0.01,0.01], line_dwell = 0.005, return_speed = 150.0, position_supersample = 10,
-                md = None, merlin_cont_mode = False, num_warmup_frame=10, **kwargs):
+                md = None, merlin_cont_mode = False, strict_scan_checkup = True, **kwargs):
     """
     Relative scan
+
+    Diagnostics always run; strict_scan_checkup=False warns on configuration mismatches.
     """
 
     panda_flyer = panda_flyer or globals()["panda_flyer"]
+    panda = panda_flyer.panda
+    delay_ion_chamber = 0.00001
 
     # PPMAC control signal
     sl = ppmac.gpascii.send_line
@@ -1043,6 +1226,7 @@ def fly2dpd_repeat(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_star
             md['scan']['shape'] = (num1, num2*repeat)
 
             kwargs.setdefault('panda_flyer', panda_flyer)
+<<<<<<< HEAD
 
             ## Zebra is used to copy trigger pulses from panda to detectors and scaler
             yield from bps.abs_set(zebra.output[1].ttl.addr,4)
@@ -1104,6 +1288,9 @@ def fly2dpd_repeat(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_star
             # yield from bps.abs_set(panda.pulse4.step_units,'s')
             # yield from bps.abs_set(panda.pulse4.pulses,1)
 
+=======
+            yield from set_panda_zebra(line_overhead, exposure_time, dead_time, num1, position_supersample, delay_ion_chamber=delay_ion_chamber, merlin_cont_mode=merlin_cont_mode, zebra=zebra, panda=panda, mode="flypd")
+>>>>>>> main
             ## Move to start
             sl('#%djog=%f'%(m1_num,start1_scan))
             sl('#%djog=%f'%(m2_num,start2))
@@ -1154,41 +1341,49 @@ def fly2dpd_repeat(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_star
                 if d.name == 'xspress3' or d.name == 'xspress3_det2':
                     panda_live_plot.setup_plot(scan_input,d,panda_flyer.sclr)
 
+            scan_check_in(num1=num1, exposure_time=exposure_time, dead_time=dead_time, position_supersample=position_supersample, delay_ion_chamber=delay_ion_chamber, panda=panda, mode="flypd", strict=strict_scan_checkup)
             yield from flyscan_pd(dets, '&6begin41r', num1*num2*repeat, exposure_time, dead_time = dead_time, md=md, scan_dim = [num1,num2*repeat], position_supersample = position_supersample, merlin_cont_mode=merlin_cont_mode, **kwargs)
 
             # yield from bps.sleep(1)
             #yield from set_scanner_velocity(5)
         finally:
-            # Undefine motors
-            sl('&5abort;undefine;&6abort;undefine;&7abort;undefine;')
-            if pos_return:
-                mv_back = short_uid('back')
-                if motor1.name.startswith('zp'):
-                    sl('#%djog=%f'%(m1_num,m1_pos))
-                    sl('#%djog=%f'%(m2_num,m2_pos))
+            try:
+                # Undefine motors
+                sl('&5abort;undefine;&6abort;undefine;&7abort;undefine;')
+                if pos_return:
+                    mv_back = short_uid('back')
+                    if motor1.name.startswith('zp'):
+                        sl('#%djog=%f'%(m1_num,m1_pos))
+                        sl('#%djog=%f'%(m2_num,m2_pos))
 
-                    ## Wait for stages in bluesky
-                    count = 0
-                    while np.abs(motor1.position-m1_pos) + np.abs(motor2.position-m2_pos) > 0.02:
-                        count += 1
-                        if count % 10 == 0:
-                            print("Motors didn't go back to starting position, moving again...")
-                            sl('#%djog=%f'%(m1_num,m1_pos))
-                            sl('#%djog=%f'%(m2_num,m2_pos))
-                        yield from bps.sleep(0.2)
-                else:
-                    yield from bps.abs_set(motor1,m1_pos,group=mv_back)
-                    yield from bps.abs_set(motor2,m2_pos,group=mv_back)
-                    yield from bps.wait(group=mv_back)
+                        ## Wait for stages in bluesky
+                        count = 0
+                        while np.abs(motor1.position-m1_pos) + np.abs(motor2.position-m2_pos) > 0.02:
+                            count += 1
+                            if count % 10 == 0:
+                                print("Motors didn't go back to starting position, moving again...")
+                                sl('#%djog=%f'%(m1_num,m1_pos))
+                                sl('#%djog=%f'%(m2_num,m2_pos))
+                            yield from bps.sleep(0.2)
+                    else:
+                        yield from bps.abs_set(motor1,m1_pos,group=mv_back)
+                        yield from bps.abs_set(motor2,m2_pos,group=mv_back)
+                        yield from bps.wait(group=mv_back)
+            finally:
+                _finalize_scan_checks(panda)
 
 def fly1dpd(dets, motor1, scan_start1, scan_end1, num1, exposure_time, panda_flyer = None, pos_return = True, apply_tomo_drift = False,
                 tomo_angle = None, auto_rescan = False, dead_time = 0.0005, line_overhead = [0.01,0.01], line_dwell = 0.1, return_speed = 100.0, position_supersample = 10,
-                md = None, merlin_cont_mode = False, **kwargs):
+                md = None, merlin_cont_mode = False, strict_scan_checkup = True, **kwargs):
     """
     Relative scan
+
+    Diagnostics always run; strict_scan_checkup=False warns on configuration mismatches.
     """
 
     panda_flyer = panda_flyer or globals()["panda_flyer"]
+    panda = panda_flyer.panda
+    delay_ion_chamber = 0.00001
 
     # PPMAC control signal
     sl = ppmac.gpascii.send_line
@@ -1275,46 +1470,7 @@ def fly1dpd(dets, motor1, scan_start1, scan_end1, num1, exposure_time, panda_fly
 
             kwargs.setdefault('panda_flyer', panda_flyer)
 
-            ## Zebra is used to copy trigger pulses from panda to detectors and scaler
-            yield from bps.abs_set(zebra.output[1].ttl.addr,4)
-            yield from bps.abs_set(zebra.output[2].ttl.addr,4)
-            if merlin_cont_mode:
-                yield from bps.abs_set(zebra.output[3].ttl.addr,55)
-            else:
-                yield from bps.abs_set(zebra.output[3].ttl.addr,4)
-            yield from bps.abs_set(zebra.output[4].ttl.addr,4)
-
-            # Wait for Zebra
-            yield from bps.sleep(0.1)
-
-            panda = panda_flyer.panda
-
-            ## Setup panda
-            yield from bps.abs_set(panda.data.capture,0)
-
-            yield from bps.abs_set(panda.pulse2.delay,line_overhead[0])
-            yield from bps.abs_set(panda.pulse2.delay_units,'s')
-            yield from bps.abs_set(panda.pulse2.width,exposure_time-dead_time)
-            yield from bps.abs_set(panda.pulse2.width_units,'s')
-            yield from bps.abs_set(panda.pulse2.step,exposure_time)
-            yield from bps.abs_set(panda.pulse2.step_units,'s')
-            yield from bps.abs_set(panda.pulse2.pulses,num1)
-
-            yield from bps.abs_set(panda.pulse3.width,(exposure_time-dead_time)/2.0/position_supersample)
-            yield from bps.abs_set(panda.pulse3.width_units,'s')
-            yield from bps.abs_set(panda.pulse3.step,(exposure_time-dead_time)/position_supersample)
-            yield from bps.abs_set(panda.pulse3.step_units,'s')
-            yield from bps.abs_set(panda.pulse3.delay,(exposure_time-dead_time)/2.0/position_supersample)
-            yield from bps.abs_set(panda.pulse3.delay_units,'s')
-            yield from bps.abs_set(panda.pulse3.pulses,position_supersample)
-
-            # PULSE 4 is modified on PandABox to read Zebra output pulse and add a delay to that for triggering scalers
-            # yield from bps.abs_set(panda.pulse4.width,exposure_time-dead_time)
-            # yield from bps.abs_set(panda.pulse4.width_units,'s')
-            # yield from bps.abs_set(panda.pulse4.step,exposure_time)
-            # yield from bps.abs_set(panda.pulse4.step_units,'s')
-            # yield from bps.abs_set(panda.pulse4.pulses,1)
-
+            yield from set_panda_zebra(line_overhead, exposure_time, dead_time, num1, position_supersample, delay_ion_chamber=delay_ion_chamber, merlin_cont_mode=merlin_cont_mode, zebra=zebra, panda=panda, mode="flypd")
             ## Move to start
             sl('#%djog=%f'%(m1_num,start1_scan))
 
@@ -1352,30 +1508,34 @@ def fly1dpd(dets, motor1, scan_start1, scan_end1, num1, exposure_time, panda_fly
             for d in dets:
                 if d.name == 'xspress3' or d.name == 'xspress3_det2':
                     panda_live_plot.setup_plot(scan_input,d,panda_flyer.sclr)
+            scan_check_in(num1=num1, exposure_time=exposure_time, dead_time=dead_time, position_supersample=position_supersample, delay_ion_chamber=delay_ion_chamber, panda=panda, mode="flypd", strict=strict_scan_checkup)
             yield from flyscan_pd(dets, '&6begin41r', num1*num2, exposure_time, dead_time = dead_time, md=md, scan_dim = [num1,num2], position_supersample = position_supersample, merlin_cont_mode=merlin_cont_mode, **kwargs)
 
 
             # yield from bps.sleep(1)
             #yield from set_scanner_velocity(5)
         finally:
-            # Undefine motors
-            sl('&6abort;undefine;')
-            if pos_return:
-                mv_back = short_uid('back')
-                if motor1.name.startswith('zp'):
-                    sl('#%djog=%f'%(m1_num,m1_pos))
+            try:
+                # Undefine motors
+                sl('&6abort;undefine;')
+                if pos_return:
+                    mv_back = short_uid('back')
+                    if motor1.name.startswith('zp'):
+                        sl('#%djog=%f'%(m1_num,m1_pos))
 
-                    ## Wait for stages in bluesky
-                    count = 0
-                    while np.abs(motor1.position-m1_pos)> 0.02:
-                        count += 1
-                        if count % 10 == 0:
-                            print("Motors didn't go back to starting position, moving again...")
-                            sl('#%djog=%f'%(m1_num,m1_pos))
-                        yield from bps.sleep(0.2)
-                else:
-                    yield from bps.abs_set(motor1,m1_pos,group=mv_back)
-                    yield from bps.wait(group=mv_back)
+                        ## Wait for stages in bluesky
+                        count = 0
+                        while np.abs(motor1.position-m1_pos)> 0.02:
+                            count += 1
+                            if count % 10 == 0:
+                                print("Motors didn't go back to starting position, moving again...")
+                                sl('#%djog=%f'%(m1_num,m1_pos))
+                            yield from bps.sleep(0.2)
+                    else:
+                        yield from bps.abs_set(motor1,m1_pos,group=mv_back)
+                        yield from bps.wait(group=mv_back)
+            finally:
+                _finalize_scan_checks(panda)
 
 def fly2dcontpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, scan_end2, num2, exposure_time,panda_flyer = None,  pos_return = True, apply_tomo_drift = False,
                 tomo_angle = None, auto_rescan = False, dead_time = 0.0002, scan_overhead = [0.1,0.05],
