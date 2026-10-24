@@ -733,7 +733,7 @@ panda_flyer_fip = HXNFlyerPanda(panda2,[],sclr1,name="PandaFlyer_FIP")
 def flyscan_pd(detectors, start_signal, total_points, dwell, *,
                       panda_flyer,
                       delta=None, shutter=False, align=False, plot=False, dead_time = 0, scan_dim = None,
-                      md=None, snake=False, verbose=True, wait_before_scan=None, position_supersample = 1,
+                      md=None, snake=False, verbose=False, wait_before_scan=None, position_supersample = 1,
                       merlin_cont_mode=False, wait_for_start_input = False, trigger_funcgen = False, scan_header = None):
     """Read IO from SIS3820.
     Zebra buffers x(t) points as a flyer.
@@ -1471,12 +1471,7 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
             md['scan']['shape'] = (num1, num2)
 
             kwargs.setdefault('panda_flyer', panda_flyer)
-            yield from bps.sleep(0.1)
             yield from set_panda_zebra(line_overhead, exposure_time, dead_time, num1, position_supersample, delay_ion_chamber=delay_ion_chamber, merlin_cont_mode=merlin_cont_mode, zebra=zebra, panda=panda, mode="flypd")
-            panda = panda_flyer.panda
-            delay_ion_chamber=0.00001
-            yield from bps.sleep(0.1)
-            yield from set_panda_zebra(line_overhead, exposure_time, dead_time, num1, position_supersample, delay_ion_chamber=delay_ion_chamber, merlin_cont_mode=merlin_cont_mode, zebra=zebra, panda=panda_flyer.panda, mode="flypd")
 
             ## Move to start
             sl('#%djog=%f'%(m1_num,start1_scan))
@@ -1689,7 +1684,6 @@ def fly2dpd_repeat(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_star
             md['scan']['shape'] = (num1, num2*repeat)
 
             kwargs.setdefault('panda_flyer', panda_flyer)
-
             yield from set_panda_zebra(line_overhead, exposure_time, dead_time, num1, position_supersample, delay_ion_chamber=delay_ion_chamber, merlin_cont_mode=merlin_cont_mode, zebra=zebra, panda=panda, mode="flypd")
             ## Move to start
             sl('#%djog=%f'%(m1_num,start1_scan))
