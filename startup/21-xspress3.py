@@ -388,6 +388,7 @@ def xspress3_roi_setup():
             else:
                 print(elem_list[i], 'is not defined.')
                 break
+            energy=energy.item()
             channel.set_roi(i+1, energy-150, energy+150, name=elem_list[i])
 
             # Uncomment the following lines for debugging liveplots without beam.
@@ -404,7 +405,6 @@ def expand_roi(element, energy_low=0, energy_high=40000):
     Element name must be one of the names used during instantiation of
     ``live_im_plot`` (to test 2D visualization) and/or ``pt_plot``
     (to test 1D visualization during flyscans).
-q
     Parameters
     ----------
     element: str
