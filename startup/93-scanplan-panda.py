@@ -1226,71 +1226,7 @@ def fly2dpd_repeat(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_star
             md['scan']['shape'] = (num1, num2*repeat)
 
             kwargs.setdefault('panda_flyer', panda_flyer)
-<<<<<<< HEAD
-
-            ## Zebra is used to copy trigger pulses from panda to detectors and scaler
-            yield from bps.abs_set(zebra.output[1].ttl.addr,4)
-            yield from bps.abs_set(zebra.output[2].ttl.addr,4)
-            if merlin_cont_mode:
-                yield from bps.abs_set(zebra.output[3].ttl.addr,4)
-            else:
-                yield from bps.abs_set(zebra.output[3].ttl.addr,4)
-            yield from bps.abs_set(zebra.output[4].ttl.addr,4)
-
-            # Wait for Zebra
-            yield from bps.sleep(0.1)
-
-            panda = panda_flyer.panda
-
-            ## Setup panda
-            yield from bps.abs_set(panda.data.capture,0)
-
-            yield from bps.abs_set(panda.pulse2.delay,line_overhead[0])
-            yield from bps.abs_set(panda.pulse2.delay_units,'s')
-            yield from bps.abs_set(panda.pulse2.width,exposure_time-dead_time)
-            yield from bps.abs_set(panda.pulse2.width_units,'s')
-            yield from bps.abs_set(panda.pulse2.step,exposure_time)
-            yield from bps.abs_set(panda.pulse2.step_units,'s')
-            yield from bps.abs_set(panda.pulse2.pulses,num1)
-
-            yield from bps.abs_set(panda.pulse3.width,(exposure_time-dead_time)/2.0/position_supersample)
-            yield from bps.abs_set(panda.pulse3.width_units,'s')
-            yield from bps.abs_set(panda.pulse3.step,(exposure_time-dead_time)/position_supersample)
-            yield from bps.abs_set(panda.pulse3.step_units,'s')
-            yield from bps.abs_set(panda.pulse3.delay,(exposure_time-dead_time)/2.0/position_supersample)
-            yield from bps.abs_set(panda.pulse3.delay_units,'s')
-            yield from bps.abs_set(panda.pulse3.pulses,position_supersample)
-
-            # PULSE 1 and PULSE 4 is modified on PandABox to read Zebra output pulse and add a delay to that for triggering scalers
-            yield from bps.abs_set(panda.pulse1.width,0.00001000)
-            yield from bps.abs_set(panda.pulse1.width_units,'s')
-            yield from bps.abs_set(panda.pulse1.pulses,1)
-            yield from bps.abs_set(panda.pulse1.trig_edge,'Rising')
-            # yield from bps.abs_set(panda.pulse1.step,0)
-            # yield from bps.abs_set(panda.pulse1.step_units,'s')
-            yield from bps.abs_set(panda.pulse4.width,0.00001000)
-            yield from bps.abs_set(panda.pulse4.width_units,'s')
-            yield from bps.abs_set(panda.pulse4.pulses,1)
-            yield from bps.abs_set(panda.pulse4.trig_edge,'Falling')
-
-            # DIV1 needs to be set to the number of warmup frames before starting the main acquisition
-            yield from bps.abs_set(panda.div1.divisor,num_warmup_frame)
-            yield from bps.abs_set(panda.div1.enable,'ZERO')
-            yield from bps.abs_set(panda.srgate2.set_edge,'Rising')
-            yield from bps.abs_set(panda.srgate2.rst,'ZERO')
-            yield from bps.sleep(1)
-            yield from bps.abs_set(panda.srgate2.rst,'ONE')
-            yield from bps.abs_set(panda.div1.enable,'ONE')
-            # PULSE 4 is modified on PandABox to read Zebra output pulse and add a delay to that for triggering scalers
-            # yield from bps.abs_set(panda.pulse4.width,exposure_time-dead_time)
-            # yield from bps.abs_set(panda.pulse4.width_units,'s')
-            # yield from bps.abs_set(panda.pulse4.step,exposure_time)
-            # yield from bps.abs_set(panda.pulse4.step_units,'s')
-            # yield from bps.abs_set(panda.pulse4.pulses,1)
-
-=======
             yield from set_panda_zebra(line_overhead, exposure_time, dead_time, num1, position_supersample, delay_ion_chamber=delay_ion_chamber, merlin_cont_mode=merlin_cont_mode, zebra=zebra, panda=panda, mode="flypd")
->>>>>>> main
             ## Move to start
             sl('#%djog=%f'%(m1_num,start1_scan))
             sl('#%djog=%f'%(m2_num,start2))
