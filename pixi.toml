@@ -37,12 +37,13 @@ ppmac = "*"
 ca-certificates = ">=2026.10.19"
 certifi = ">=2026.10.19"
 pip = ">=26.2.2"
+paramiko = ">=4,<5"
 
 [feature.profile.pypi-dependencies]
 pvxslibs = ">=1.3.2, <2"
 xray-vision = "*"
 hxnfly = "*"
-hxntools = { git="https://github.com/NSLS2/hxntools", rev="move-panda-flyer" }
+hxntools = { git="https://github.com/NSLS2/hxntools"}
 
 [feature.qs.dependencies]
 bluesky-queueserver = ">=0.0.25,<0.0.26"
