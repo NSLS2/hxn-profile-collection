@@ -1348,27 +1348,32 @@ def run_diff_json(path_to_json,tracking_file = None,do_confirm =True):
 
                 last_sid = int(caget('XF:03IDC-ES{Status}ScanID-I'))
 
-                #Add more info to the dataframe
-                angle_list['energy_rbv'].at[n] = e.position #add real energy to the dataframe
-                angle_list["angle"].at[n] = th_motor.position
-                angle_list['scan_id'].at[n] = int(last_sid) #add scan_id to the dataframe
-                angle_list['TimeStamp'].at[n] = pd.Timestamp.now()
+                angle_list.at[n, "energy_rbv"] = e.position
+                angle_list.at[n, "angle"] = th_motor.position
+                angle_list.at[n, "scan_id"] = int(last_sid)
+                angle_list.at[n, "TimeStamp"] = pd.Timestamp.now()
+
                 ic_3 = sclr2_ch4.get()
                 ic_0 = sclr2_ch2.get()
-                angle_list['IC3'].at[n] = ic_3 #Ic values are useful for calibration
-                angle_list['IC0'].at[n] = ic_0 #Ic values are useful for calibration
-                angle_list['Peak Flux'].at[n] = fluxPeaked # recoed if peakflux was excecuted
-                #angle_list['IC3_before_peak'].at[n] = ic3 #ic3 right after e change, no peaking
-                fluxPeaked = False #reset
+
+                angle_list.at[n, "IC3"] = ic_3
+                angle_list.at[n, "IC0"] = ic_0
+                angle_list.at[n, "Peak Flux"] = fluxPeaked
+                angle_list.at[n, fly_motors[1].name] = fly_motors[1].position
+                fluxPeaked = False
+
+                logger.info("Recorded scan_id=%s at row=%s", last_sid, n)
+
                 angle_list[fly_motors[1].name].at[n] = fly_motors[1].position
                 
                 #close c shutter
                 caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0)
 
-                # save the DF in the loop so quitting a scan won't affect
-                filename = f"{diff_params.get('scan_label','')}_startID{int(angle_list['scan_id'][0])}.csv"
+                scan_id_val = angle_list['scan_id'].iloc[0]
+                scan_id_str = str(int(scan_id_val)) if not pd.isna(scan_id_val) else "unknown"
+                filename = f"{diff_params.get('scan_label','')}_startID{scan_id_str}.csv"
                 angle_list.to_csv(os.path.join(diff_params.get("save_log_to", "/data/users/current_user"), filename),
-                                float_format= '%.5f')
+                float_format= '%.5f')
             else:
                 print(f"{angle} skipped")
                 pass

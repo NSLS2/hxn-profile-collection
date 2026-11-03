@@ -73,6 +73,7 @@ pyqt6 = ">=6.8.1,<7"
 ca-certificates = ">=2026.10.19"
 certifi = ">=2026.10.19"
 pip = ">=26.2.2"
+redis-py = "<8"
 
 [environments]
 terminal = {features=["profile", "terminal"], solve-group="profile"}

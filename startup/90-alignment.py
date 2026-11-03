@@ -1128,6 +1128,56 @@ def refit_rot_align(scan_list, elem, threshold):
     print(f'{dx = :.2f}, {dz = :.2f}')
 
 
+def get_mll_rot_alignment_result(first_sid=-13, last_sid=-1, elem='Pt_L',
+                                 threshold=0.5, mon='sclr1_ch4', plot_flag=False):
+    """
+    Recompute the MLL rotation-alignment correction (dx, dz) from scans already
+    in the databroker, without re-scanning. Mirrors mll_rot_alignment's fit.
+
+    first_sid, last_sid : scan ids. Negative values count back from the latest
+        scan (e.g. first_sid=-(a_num), last_sid=-1 -> the last a_num+1 scans).
+        The GUI calls this as get_mll_rot_alignment_result(int(-1*a_num), ...).
+    """
+    latest = int(db[-1].start['scan_id'])
+    if first_sid < 0:
+        first_sid = latest + first_sid
+    if last_sid < 0:
+        last_sid = latest + last_sid + 1
+
+    num_scans = abs(last_sid - first_sid) + 1
+    sid_list = np.linspace(first_sid, last_sid, num_scans, dtype=int)
+
+    x = np.zeros(num_scans)
+    y = np.zeros(num_scans)
+    for i, sid in enumerate(sid_list):
+        # dsth was moved to the alignment angle for each scan; read it back.
+        angle = db.get_table(db[int(sid)], stream_name='baseline')['dsth'][1]
+        cen = return_line_center(int(sid), elem=elem, threshold=threshold)
+        x[i] = angle
+        if np.abs(angle) > 45.01:
+            y[i] = cen * np.sin(angle * np.pi / 180.0)
+        else:
+            y[i] = cen * np.cos(angle * np.pi / 180.0)
+
+    y = -1 * y
+    r0, dr, offset = rot_fit_2(x, y)
+
+    dx = -dr * np.sin(offset * np.pi / 180)
+    dz = -dr * np.cos(offset * np.pi / 180)
+
+    print(f'{dx = :.4f} um,   {dz = :.4f} um')
+    print(f'MOVE relative: dsx = {dx:.1f} um, dsz = {dz:.1f} um, sbx = {-dx:.1f} um')
+
+    if plot_flag:
+        plt.figure()
+        plt.plot(x, y, 'bo')
+        plt.xlabel('dsth (deg)')
+        plt.ylabel('projected center (um)')
+        plt.show()
+
+    return dx, dz
+
+
 def mll_rot_alignment_2D(th_start, th_end, th_num, x_start, x_end, x_num,
                          y_start, y_end, y_num, acq_time, elem='Pt_L', move_flag=0):
 

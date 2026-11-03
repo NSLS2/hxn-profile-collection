@@ -818,7 +818,12 @@ def _finalize_scan_checks(panda):
         logging.getLogger(__name__).exception("Scan check-out failed while another exception was active")
 
 
-def set_panda_zebra(line_overhead, exposure_time, dead_time, num1, position_supersample, delay_ion_chamber, merlin_cont_mode=False,zebra=zebra, panda=None, mode="flypd"):
+def set_panda_zebra(line_overhead, exposure_time, dead_time, 
+                    num1, position_supersample, delay_ion_chamber, 
+                    merlin_cont_mode=False,zebra=None, panda=None, mode="flypd"):
+    if zebra is None:
+        zebra=zebra
+    
     if mode=='flypd':
         panda = panda1 if panda is None else panda  
         ## Zebra is used to copy trigger pulses from panda to detectors and scaler
