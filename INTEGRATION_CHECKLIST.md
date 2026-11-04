@@ -1,24 +1,23 @@
 # Plan Logging Integration Checklist
 
-This checklist guides the integration of the plan logging system into the existing `run_*` plans.
+This checklist guides the integration of the plan logging system into the `run_*` plans.
 
 ## ✅ System Setup (COMPLETED)
 
-- [x] Created `startup/99-plan-logger.py` with `PlanLogger` class
+- [x] Integrated `PlanLogger` class into `startup/72-json-plans.py`
 - [x] Log directory path: `/nsls2/data/hxn/legacy/users/json_plans_log/`
 - [x] JSONL format with monthly rotation (plan_name_MMYYYY.jsonl)
-- [x] Created comprehensive documentation in `PLAN_LOGGING_GUIDE.md`
+- [x] Complete documentation as docstrings in the code
 
 ## 📝 Integration Steps (TO DO)
 
-### Step 1: Update `startup/72-json-plans.py`
+### Step 1: Import the Logger
 
-- [ ] Add import at the top:
-  ```python
-  from plan_logger import PlanLogger
-  ```
+The `PlanLogger` class is already available in `startup/72-json-plans.py`. No additional import needed.
 
 ### Step 2: Add Logging to `run_tomo_json`
+
+Location: `startup/72-json-plans.py`, line ~575
 
 - [ ] Add at function start (after docstring):
   ```python
@@ -48,6 +47,8 @@ This checklist guides the integration of the plan logging system into the existi
   ```
 
 ### Step 3: Add Logging to `run_diff_json`
+
+Location: `startup/72-json-plans.py`, line ~1094
 
 - [ ] Add at function start (after docstring):
   ```python
@@ -80,6 +81,8 @@ This checklist guides the integration of the plan logging system into the existi
 
 ### Step 4: Add Logging to `run_repeat_2d_json`
 
+Location: `startup/72-json-plans.py`, line ~1445
+
 - [ ] Add at function start (after docstring):
   ```python
   PlanLogger.log_plan_start(
@@ -111,14 +114,9 @@ This checklist guides the integration of the plan logging system into the existi
 
 ## 🧪 Testing
 
-### Unit Testing
+### Syntax Verification
 
-- [ ] Verify `startup/99-plan-logger.py` syntax:
-  ```bash
-  python3 -m py_compile startup/99-plan-logger.py
-  ```
-
-- [ ] Verify modified `startup/72-json-plans.py` syntax:
+- [ ] Verify modified file compiles:
   ```bash
   python3 -m py_compile startup/72-json-plans.py
   ```
@@ -126,26 +124,26 @@ This checklist guides the integration of the plan logging system into the existi
 ### Integration Testing
 
 - [ ] Create test JSON configuration files
-- [ ] Run a test plan (e.g., with minimal angles/repeats)
+- [ ] Run a test plan (with minimal angles/repeats)
 - [ ] Verify log file is created at:
   ```bash
-  /nsls2/data/hxn/legacy/users/json_plans_log/
+  ls -la /nsls2/data/hxn/legacy/users/json_plans_log/
   ```
 
-- [ ] Check log file format and content:
+- [ ] Check log file content:
   ```bash
   head -5 /nsls2/data/hxn/legacy/users/json_plans_log/run_diff_json_*.jsonl
   ```
 
-- [ ] Verify each log entry is valid JSON:
+- [ ] Verify log entries are valid JSON:
   ```bash
-  python3 -c "
+  python3 << 'EOF'
   import json
   with open('/nsls2/data/hxn/legacy/users/json_plans_log/run_diff_json_*.jsonl') as f:
       for line in f:
-          json.loads(line)  # Will raise if invalid
-  print('✓ All log entries are valid JSON')
-  "
+          json.loads(line)
+  print("✓ All log entries are valid JSON")
+  EOF
   ```
 
 ### Failure Recovery Testing
@@ -157,9 +155,16 @@ This checklist guides the integration of the plan logging system into the existi
 
 ## 📊 Documentation
 
-- [x] Main guide: `PLAN_LOGGING_GUIDE.md`
-- [ ] Add code comments in `startup/72-json-plans.py` explaining logging
-- [ ] Update beamline wiki/documentation if applicable
+The complete PlanLogger documentation is available as docstrings in:
+- `startup/72-json-plans.py` - Search for "class PlanLogger"
+
+View the docstrings:
+```python
+from startup.file_72-json-plans import PlanLogger
+help(PlanLogger)
+help(PlanLogger.log_plan_start)
+help(PlanLogger.log_plan_end)
+```
 
 ## 🚀 Deployment
 
@@ -173,28 +178,64 @@ This checklist guides the integration of the plan logging system into the existi
 - [ ] Monitor first week of logs
 - [ ] Document any issues or improvements needed
 
+## 📋 Usage Reference
+
+### Log Start Event
+
+```python
+PlanLogger.log_plan_start(
+    plan_name="run_diff_json",
+    json_path=path_to_json,
+    extra_params={"param_name": param_value}  # optional
+)
+```
+
+### Log End Event - Success
+
+```python
+PlanLogger.log_plan_end(
+    plan_name="run_diff_json",
+    status="completed",
+    extra_data={"scan_ids": [100, 101], "angles_completed": 45}  # optional
+)
+```
+
+### Log End Event - Failure
+
+```python
+PlanLogger.log_plan_end(
+    plan_name="run_diff_json",
+    status="failed",
+    error_msg="Beam dump at angle 30.5"
+)
+```
+
+## 📂 Log File Organization
+
+```
+/nsls2/data/hxn/legacy/users/json_plans_log/
+├── run_tomo_json_112026.jsonl         (November 2026)
+├── run_diff_json_112026.jsonl
+├── run_repeat_2d_json_112026.jsonl
+├── run_tomo_json_122026.jsonl         (December 2026)
+└── ... (one file per plan per month)
+```
+
 ## 📋 Maintenance
 
 ### Regular Tasks
 
 - [ ] Monthly: Review log file sizes and archive if needed
-- [ ] Quarterly: Review recovery procedures and document lessons learned
-- [ ] As needed: Update logging parameters or add additional tracked metrics
+- [ ] Quarterly: Review recovery procedures
+- [ ] As needed: Add additional tracked metrics
 
-### Troubleshooting Checklist
+### Troubleshooting
 
-- [ ] If logs not created: Check directory permissions at `/nsls2/data/hxn/legacy/users/json_plans_log/`
-- [ ] If import fails: Verify `startup/99-plan-logger.py` is in startup folder
-- [ ] If JSON parsing fails: Validate log file format with `python3 -m json.tool`
-
-## Notes
-
-- The logging system is designed to be non-intrusive and won't break plans if logging fails
-- Logs are organized by month to prevent files from becoming too large
-- Each month creates new files (e.g., `run_diff_json_112026.jsonl`)
-- Log entries can be easily parsed and analyzed programmatically
+- If logs not created: Check directory permissions at `/nsls2/data/hxn/legacy/users/json_plans_log/`
+- If JSON parsing fails: Validate log file format with `python3 -m json.tool <logfile>`
+- The logging system is non-intrusive - failures in logging won't break plans
 
 ---
 
 **Last Updated:** 2026-11-04
-**Status:** Ready for integration
+**Status:** Code integrated and ready for plan function integration
