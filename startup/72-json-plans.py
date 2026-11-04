@@ -840,6 +840,13 @@ def run_tomo_json(path_to_json,tracking_file = None):
     TODO add angles smartly
 
     """
+    # Log plan start
+    PlanLogger.log_plan_start(
+        plan_name="run_tomo_json",
+        json_path=path_to_json,
+        extra_params={"tracking_file": tracking_file}
+    )
+    
     beamDumpOccured = False
 
     #open json file for angle info first
@@ -1105,6 +1112,13 @@ def run_tomo_json(path_to_json,tracking_file = None):
 
     #save pdf
     save_page()
+    
+    # Log plan completion
+    PlanLogger.log_plan_end(
+        plan_name="run_tomo_json",
+        status="completed",
+        extra_data={"total_angles": len(angles)}
+    )
 
 ###################Diffraction######################
 
@@ -1359,6 +1373,13 @@ def run_diff_json(path_to_json,tracking_file = None,do_confirm =True):
     TODO add angles smartly
 
     """
+    # Log plan start
+    PlanLogger.log_plan_start(
+        plan_name="run_diff_json",
+        json_path=path_to_json,
+        extra_params={"tracking_file": tracking_file, "do_confirm": do_confirm}
+    )
+    
     beamDumpOccured = False
 
     #open json file for angle info first
@@ -1698,6 +1719,13 @@ def run_diff_json(path_to_json,tracking_file = None,do_confirm =True):
 
         #save pdf
         save_page()
+        
+        # Log plan completion
+        PlanLogger.log_plan_end(
+            plan_name="run_diff_json",
+            status="completed",
+            extra_data={"total_angles": len(angles)}
+        )
 
 
 
@@ -1710,6 +1738,13 @@ def run_repeat_2d_json(path_to_json, n_repeat=10, tracking_file=None, do_confirm
     Example:
         RE(run_diff_json_repeat('/path/to/diff_params.json', n_repeat=10))
     """
+    # Log plan start
+    PlanLogger.log_plan_start(
+        plan_name="run_repeat_2d_json",
+        json_path=path_to_json,
+        extra_params={"n_repeat": n_repeat, "tracking_file": tracking_file, "do_confirm": do_confirm}
+    )
+    
     beamDumpOccured = False
     fluxPeaked = False
 
@@ -1874,3 +1909,10 @@ def run_repeat_2d_json(path_to_json, n_repeat=10, tracking_file=None, do_confirm
     # Final save
     save_page()
     print("All repeated scans completed successfully.")
+    
+    # Log plan completion
+    PlanLogger.log_plan_end(
+        plan_name="run_repeat_2d_json",
+        status="completed",
+        extra_data={"repeats_completed": n_repeat}
+    )
