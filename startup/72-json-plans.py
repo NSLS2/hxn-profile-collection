@@ -841,11 +841,15 @@ def run_tomo_json(path_to_json,tracking_file = None):
 
     """
     # Log plan start
-    PlanLogger.log_plan_start(
-        plan_name="run_tomo_json",
-        json_path=path_to_json,
-        extra_params={"tracking_file": tracking_file}
-    )
+    # Log plan start (graceful failure - won't block plan execution)
+    try:
+        PlanLogger.log_plan_start(
+            plan_name="run_tomo_json",
+            json_path=path_to_json,
+            extra_params={"tracking_file": tracking_file}
+        )
+    except Exception as e:
+        print(f"  Warning: Failed to log plan start: {e}")
     
     beamDumpOccured = False
 
@@ -1113,12 +1117,15 @@ def run_tomo_json(path_to_json,tracking_file = None):
     #save pdf
     save_page()
     
-    # Log plan completion
-    PlanLogger.log_plan_end(
-        plan_name="run_tomo_json",
-        status="completed",
-        extra_data={"total_angles": len(angles)}
-    )
+    # Log plan completion (graceful failure - won't block plan execution)
+    try:
+        PlanLogger.log_plan_end(
+            plan_name="run_tomo_json",
+            status="completed",
+            extra_data={"total_angles": len(angles)}
+        )
+    except Exception as e:
+        print(f"  Warning: Failed to log plan completion: {e}")
 
 ###################Diffraction######################
 
@@ -1373,12 +1380,15 @@ def run_diff_json(path_to_json,tracking_file = None,do_confirm =True):
     TODO add angles smartly
 
     """
-    # Log plan start
-    PlanLogger.log_plan_start(
-        plan_name="run_diff_json",
-        json_path=path_to_json,
-        extra_params={"tracking_file": tracking_file, "do_confirm": do_confirm}
-    )
+    # Log plan start (graceful failure - won't block plan execution)
+    try:
+        PlanLogger.log_plan_start(
+            plan_name="run_diff_json",
+            json_path=path_to_json,
+            extra_params={"tracking_file": tracking_file, "do_confirm": do_confirm}
+        )
+    except Exception as e:
+        print(f"  Warning: Failed to log plan start: {e}")
     
     beamDumpOccured = False
 
@@ -1720,12 +1730,15 @@ def run_diff_json(path_to_json,tracking_file = None,do_confirm =True):
         #save pdf
         save_page()
         
-        # Log plan completion
-        PlanLogger.log_plan_end(
-            plan_name="run_diff_json",
-            status="completed",
-            extra_data={"total_angles": len(angles)}
-        )
+        # Log plan completion (graceful failure - won't block plan execution)
+        try:
+            PlanLogger.log_plan_end(
+                plan_name="run_diff_json",
+                status="completed",
+                extra_data={"total_angles": len(angles)}
+            )
+        except Exception as e:
+            print(f" Warning: Failed to log plan completion: {e}")
 
 
 
@@ -1738,12 +1751,15 @@ def run_repeat_2d_json(path_to_json, n_repeat=10, tracking_file=None, do_confirm
     Example:
         RE(run_diff_json_repeat('/path/to/diff_params.json', n_repeat=10))
     """
-    # Log plan start
-    PlanLogger.log_plan_start(
-        plan_name="run_repeat_2d_json",
-        json_path=path_to_json,
-        extra_params={"n_repeat": n_repeat, "tracking_file": tracking_file, "do_confirm": do_confirm}
-    )
+    # Log plan start (graceful failure - won't block plan execution)
+    try:
+        PlanLogger.log_plan_start(
+            plan_name="run_repeat_2d_json",
+            json_path=path_to_json,
+            extra_params={"n_repeat": n_repeat, "tracking_file": tracking_file, "do_confirm": do_confirm}
+        )
+    except Exception as e:
+        print(f"  Warning: Failed to log plan start: {e}")
     
     beamDumpOccured = False
     fluxPeaked = False
@@ -1910,9 +1926,12 @@ def run_repeat_2d_json(path_to_json, n_repeat=10, tracking_file=None, do_confirm
     save_page()
     print("All repeated scans completed successfully.")
     
-    # Log plan completion
-    PlanLogger.log_plan_end(
-        plan_name="run_repeat_2d_json",
-        status="completed",
-        extra_data={"repeats_completed": n_repeat}
-    )
+    # Log plan completion (graceful failure - won't block plan execution)
+    try:
+        PlanLogger.log_plan_end(
+            plan_name="run_repeat_2d_json",
+            status="completed",
+            extra_data={"repeats_completed": n_repeat}
+        )
+    except Exception as e:
+        print(f" Warning: Failed to log plan completion: {e}")
