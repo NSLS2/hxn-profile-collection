@@ -217,7 +217,54 @@ else:
 
 
 # ============================================================================
-# END PLAN LOGGING SYSTEM
+# PLAN LOGGING INTEGRATION GUIDE
+# ============================================================================
+# The PlanLogger class above is ready to use. To integrate logging into the
+# run_* functions (run_tomo_json, run_diff_json, run_repeat_2d_json):
+#
+# STEP 1: At the start of each run_* function (after docstring), add:
+#     PlanLogger.log_plan_start(
+#         plan_name="run_diff_json",
+#         json_path=path_to_json,
+#         extra_params={"do_confirm": do_confirm}  # optional
+#     )
+#
+# STEP 2: At the end of each function, wrap in try/except:
+#     try:
+#         # ... existing function code ...
+#         PlanLogger.log_plan_end(
+#             plan_name="run_diff_json",
+#             status="completed",
+#             extra_data={"angles_completed": len(angles)}  # optional
+#         )
+#     except Exception as e:
+#         PlanLogger.log_plan_end(
+#             plan_name="run_diff_json",
+#             status="failed",
+#             error_msg=str(e)
+#         )
+#         raise
+#
+# TESTING:
+#   1. Verify syntax: python3 -m py_compile startup/72-json-plans.py
+#   2. Run a test plan
+#   3. Check logs: ls -la /nsls2/data/hxn/legacy/users/json_plans_log/
+#   4. View logs: tail run_diff_json_*.jsonl
+#   5. Verify JSON: python3 -c "import json; [json.loads(l) for l in open('run_diff_json_*.jsonl')]"
+#
+# RECOVERY WORKFLOW:
+#   1. Check logs: tail /nsls2/data/hxn/legacy/users/json_plans_log/run_diff_json_*.jsonl
+#   2. Review parameters and identify failure point
+#   3. Modify JSON config if needed (e.g., change start angle)
+#   4. Re-run plan - new entries will be appended to same month's file
+#
+# FUNCTIONS NEEDING LOGGING:
+#   • run_tomo_json(path_to_json, tracking_file=None) - Line ~575
+#   • run_diff_json(path_to_json, tracking_file=None, do_confirm=True) - Line ~1094
+#   • run_repeat_2d_json(path_to_json, n_repeat=10, tracking_file=None, do_confirm=True) - Line ~1445
+#
+# ============================================================================
+# END PLAN LOGGING INTEGRATION GUIDE
 # ============================================================================
 
 det_dict = {"dets1":dets1,
