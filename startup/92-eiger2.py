@@ -263,7 +263,7 @@ class EigerDetectorCam(AreaDetectorCam, CamV33Mixin):
     Array_callbacks = ADComponent(EpicsSignal, "ArrayCallbacks")
     Data_source = ADComponent(EpicsSignal, "DataSource")
     Bitdepth_image = ADComponent(EpicsSignalRO, "BitDepthImage_RBV")
-
+ 
 
 class EigerDetector(AreaDetector):
     cam = Cpt(EigerDetectorCam, 'cam1:',
