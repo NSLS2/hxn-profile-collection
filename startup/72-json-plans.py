@@ -4,7 +4,271 @@ import json
 import numpy as np
 import tqdm
 from datetime import datetime
+from pathlib import Path
 from hxntools.motor_info import motor_table
+
+
+# ============================================================================
+# PLAN LOGGING SYSTEM
+# ============================================================================
+# Tracks execution of run_* plans to enable recovery if interrupted.
+# Logs are saved to /nsls2/data/hxn/legacy/users/json_plans_log/ in JSONL 
+# format with monthly rotation (plan_name_MMYYYY.jsonl) to prevent files 
+# from becoming too large.
+# ============================================================================
+
+class PlanLogger:
+    """Logger for tracking plan executions to JSONL files organized by month/year.
+    
+    This class manages execution history for run_* plans, enabling recovery and
+    debugging if plans are interrupted. Logs are automatically organized by plan
+    name and month to keep file sizes manageable.
+    
+    Usage:
+        from 72-json-plans import PlanLogger
+        
+        # At plan start
+        PlanLogger.log_plan_start(
+            plan_name="run_diff_json",
+            json_path=path_to_json,
+            extra_params={"do_confirm": do_confirm}
+        )
+        
+        # At plan end
+        try:
+            # ... plan execution ...
+            PlanLogger.log_plan_end(
+                plan_name="run_diff_json",
+                status="completed",
+                extra_data={"angles_completed": len(angles)}
+            )
+        except Exception as e:
+            PlanLogger.log_plan_end(
+                plan_name="run_diff_json",
+                status="failed",
+                error_msg=str(e)
+            )
+            raise
+    
+    Log Format (JSONL):
+        Each line is a complete JSON object with:
+        - timestamp: ISO format datetime of the event
+        - event: 'started', 'completed', or 'failed'
+        - json_path: Path to the JSON configuration file (start event only)
+        - params: Additional parameters (optional)
+        - error: Error message if status is 'failed' (optional)
+        - data: Additional data like scan IDs (optional)
+        
+        Example:
+            {"timestamp": "2026-11-04T15:30:45.123456", "event": "started", 
+             "json_path": "/data/users/current_user/diff_params.json"}
+            {"timestamp": "2026-11-04T15:45:30.654321", "event": "completed", 
+             "data": {"angles_completed": 45}}
+    
+    File Organization:
+        /nsls2/data/hxn/legacy/users/json_plans_log/
+        ├── run_tomo_json_112026.jsonl         (November 2026)
+        ├── run_diff_json_112026.jsonl
+        ├── run_repeat_2d_json_112026.jsonl
+        ├── run_tomo_json_122026.jsonl         (December 2026)
+        └── ...
+    
+    Recovery Workflow:
+        1. Check logs to identify failure point:
+           tail /nsls2/data/hxn/legacy/users/json_plans_log/run_diff_json_*.jsonl
+        
+        2. Review parameters and last completed event
+        
+        3. Modify JSON config if needed (e.g., change start angle)
+        
+        4. Re-run plan - new entries will be appended to the same month's file
+    """
+    
+    LOG_BASE_PATH = "/nsls2/data/hxn/legacy/users/json_plans_log"
+    
+    @classmethod
+    def ensure_log_directory(cls):
+        """Create log directory if it doesn't exist.
+        
+        Returns:
+            bool: True if directory exists or was created successfully, False otherwise
+        """
+        try:
+            log_dir = Path(cls.LOG_BASE_PATH)
+            log_dir.mkdir(parents=True, exist_ok=True)
+            return True
+        except Exception as e:
+            print(f"Warning: Could not create log directory {cls.LOG_BASE_PATH}: {e}")
+            return False
+    
+    @classmethod
+    def get_log_filepath(cls, plan_name):
+        """Get the JSONL filepath for a plan, named with month/year.
+        
+        Args:
+            plan_name (str): Name of the plan (e.g., 'run_diff_json')
+        
+        Returns:
+            str: Full path to the JSONL log file
+        
+        Examples:
+            run_diff_json -> /nsls2/data/.../run_diff_json_112026.jsonl (Nov 2026)
+            run_tomo_json -> /nsls2/data/.../run_tomo_json_112026.jsonl
+        """
+        now = datetime.now()
+        month_year = now.strftime("%m%Y")  # Format: MMYYYY
+        filename = f"{plan_name}_{month_year}.jsonl"
+        return Path(cls.LOG_BASE_PATH) / filename
+    
+    @classmethod
+    def log_plan_start(cls, plan_name, json_path, extra_params=None):
+        """Log the start of a plan execution.
+        
+        Args:
+            plan_name (str): Name of the plan (e.g., 'run_diff_json')
+            json_path (str): Path to the JSON configuration file
+            extra_params (dict, optional): Additional parameters to log
+                (e.g., {'do_confirm': True, 'n_repeat': 10})
+        
+        Returns:
+            None
+        
+        Example:
+            PlanLogger.log_plan_start(
+                plan_name="run_repeat_2d_json",
+                json_path="/data/users/current/diff_params.json",
+                extra_params={"n_repeat": 10, "scan_angle": 45.5}
+            )
+        """
+        if not cls.ensure_log_directory():
+            return
+        
+        log_entry = {
+            "timestamp": datetime.now().isoformat(),
+            "event": "started",
+            "json_path": str(json_path),
+        }
+        if extra_params:
+            log_entry["params"] = {
+                key: str(value) if isinstance(value, Path) else value
+                for key, value in extra_params.items()
+            }
+        
+        try:
+            log_filepath = cls.get_log_filepath(plan_name)
+            with open(log_filepath, 'a') as f:
+                f.write(json.dumps(log_entry) + '\n')
+        except Exception as e:
+            print(f"Error logging plan start: {e}")
+    
+    @classmethod
+    def log_plan_end(cls, plan_name, status="completed", error_msg=None, extra_data=None):
+        """Log the completion or failure of a plan.
+        
+        Args:
+            plan_name (str): Name of the plan (e.g., 'run_diff_json')
+            status (str): 'completed' or 'failed' (default: 'completed')
+            error_msg (str, optional): Error message if status is 'failed'
+            extra_data (dict, optional): Additional data like scan IDs, angles completed, etc.
+        
+        Returns:
+            None
+        
+        Example - Successful completion:
+            PlanLogger.log_plan_end(
+                plan_name="run_diff_json",
+                status="completed",
+                extra_data={
+                    "scan_ids": [100, 101, 102],
+                    "angles_completed": 45,
+                    "total_angles": 50
+                }
+            )
+        
+        Example - Failure:
+            PlanLogger.log_plan_end(
+                plan_name="run_diff_json",
+                status="failed",
+                error_msg="Beam dump occurred at angle 30.5"
+            )
+        """
+        if not cls.ensure_log_directory():
+            return
+        
+        log_entry = {
+            "timestamp": datetime.now().isoformat(),
+            "event": status,
+        }
+        if error_msg:
+            log_entry["error"] = error_msg
+        if extra_data:
+            log_entry["data"] = extra_data
+        
+        try:
+            log_filepath = cls.get_log_filepath(plan_name)
+            with open(log_filepath, 'a') as f:
+                f.write(json.dumps(log_entry) + '\n')
+        except Exception as e:
+            print(f"Error logging plan end: {e}")
+
+
+# Initialize logging directory on startup
+if PlanLogger.ensure_log_directory():
+    print(f"Plan logger initialized: {PlanLogger.LOG_BASE_PATH}")
+else:
+    print(f"Warning: Plan logger disabled - could not access {PlanLogger.LOG_BASE_PATH}")
+
+
+# ============================================================================
+# PLAN LOGGING INTEGRATION GUIDE
+# ============================================================================
+# The PlanLogger class above is ready to use. To integrate logging into the
+# run_* functions (run_tomo_json, run_diff_json, run_repeat_2d_json):
+#
+# STEP 1: At the start of each run_* function (after docstring), add:
+#     PlanLogger.log_plan_start(
+#         plan_name="run_diff_json",
+#         json_path=path_to_json,
+#         extra_params={"do_confirm": do_confirm}  # optional
+#     )
+#
+# STEP 2: At the end of each function, wrap in try/except:
+#     try:
+#         # ... existing function code ...
+#         PlanLogger.log_plan_end(
+#             plan_name="run_diff_json",
+#             status="completed",
+#             extra_data={"angles_completed": len(angles)}  # optional
+#         )
+#     except Exception as e:
+#         PlanLogger.log_plan_end(
+#             plan_name="run_diff_json",
+#             status="failed",
+#             error_msg=str(e)
+#         )
+#         raise
+#
+# TESTING:
+#   1. Verify syntax: python3 -m py_compile startup/72-json-plans.py
+#   2. Run a test plan
+#   3. Check logs: ls -la /nsls2/data/hxn/legacy/users/json_plans_log/
+#   4. View logs: tail run_diff_json_*.jsonl
+#   5. Verify JSON: python3 -c "import json; [json.loads(l) for l in open('run_diff_json_*.jsonl')]"
+#
+# RECOVERY WORKFLOW:
+#   1. Check logs: tail /nsls2/data/hxn/legacy/users/json_plans_log/run_diff_json_*.jsonl
+#   2. Review parameters and identify failure point
+#   3. Modify JSON config if needed (e.g., change start angle)
+#   4. Re-run plan - new entries will be appended to same month's file
+#
+# FUNCTIONS NEEDING LOGGING:
+#   • run_tomo_json(path_to_json, tracking_file=None) - Line ~575
+#   • run_diff_json(path_to_json, tracking_file=None, do_confirm=True) - Line ~1094
+#   • run_repeat_2d_json(path_to_json, n_repeat=10, tracking_file=None, do_confirm=True) - Line ~1445
+#
+# ============================================================================
+# END PLAN LOGGING INTEGRATION GUIDE
+# ============================================================================
 
 det_dict = {"dets1":dets1,
             "dets2":dets2,
@@ -579,6 +843,17 @@ def run_tomo_json(path_to_json,tracking_file = None):
     TODO add angles smartly
 
     """
+    # Log plan start
+    # Log plan start (graceful failure - won't block plan execution)
+    try:
+        PlanLogger.log_plan_start(
+            plan_name="run_tomo_json",
+            json_path=path_to_json,
+            extra_params={"tracking_file": tracking_file}
+        )
+    except Exception as log_error:
+        print(f"  Warning: Failed to log plan start: {log_error}")
+    
     beamDumpOccured = False
 
     #open json file for angle info first
@@ -844,6 +1119,16 @@ def run_tomo_json(path_to_json,tracking_file = None):
 
     #save pdf
     save_page()
+    
+    # Log plan completion (graceful failure - won't block plan execution)
+    try:
+        PlanLogger.log_plan_end(
+            plan_name="run_tomo_json",
+            status="completed",
+            extra_data={"total_angles": len(angles)}
+        )
+    except Exception as log_error:
+        print(f"  Warning: Failed to log plan completion: {log_error}")
 
 ###################Diffraction######################
 
@@ -1098,6 +1383,16 @@ def run_diff_json(path_to_json,tracking_file = None,do_confirm =True):
     TODO add angles smartly
 
     """
+    # Log plan start (graceful failure - won't block plan execution)
+    try:
+        PlanLogger.log_plan_start(
+            plan_name="run_diff_json",
+            json_path=path_to_json,
+            extra_params={"tracking_file": tracking_file, "do_confirm": do_confirm}
+        )
+    except Exception as log_error:
+        print(f"  Warning: Failed to log plan start: {log_error}")
+    
     beamDumpOccured = False
 
     #open json file for angle info first
@@ -1442,6 +1737,16 @@ def run_diff_json(path_to_json,tracking_file = None,do_confirm =True):
 
         #save pdf
         save_page()
+        
+        # Log plan completion (graceful failure - won't block plan execution)
+        try:
+            PlanLogger.log_plan_end(
+                plan_name="run_diff_json",
+                status="completed",
+                extra_data={"total_angles": len(angles)}
+            )
+        except Exception as log_error:
+            print(f" Warning: Failed to log plan completion: {log_error}")
 
 
 
@@ -1454,6 +1759,16 @@ def run_repeat_2d_json(path_to_json, n_repeat=10, tracking_file=None, do_confirm
     Example:
         RE(run_diff_json_repeat('/path/to/diff_params.json', n_repeat=10))
     """
+    # Log plan start (graceful failure - won't block plan execution)
+    try:
+        PlanLogger.log_plan_start(
+            plan_name="run_repeat_2d_json",
+            json_path=path_to_json,
+            extra_params={"n_repeat": n_repeat, "tracking_file": tracking_file, "do_confirm": do_confirm}
+        )
+    except Exception as log_error:
+        print(f"  Warning: Failed to log plan start: {log_error}")
+    
     beamDumpOccured = False
     fluxPeaked = False
 
@@ -1618,3 +1933,13 @@ def run_repeat_2d_json(path_to_json, n_repeat=10, tracking_file=None, do_confirm
     # Final save
     save_page()
     print("All repeated scans completed successfully.")
+    
+    # Log plan completion (graceful failure - won't block plan execution)
+    try:
+        PlanLogger.log_plan_end(
+            plan_name="run_repeat_2d_json",
+            status="completed",
+            extra_data={"repeats_completed": n_repeat}
+        )
+    except Exception as log_error:
+        print(f" Warning: Failed to log plan completion: {log_error}")
