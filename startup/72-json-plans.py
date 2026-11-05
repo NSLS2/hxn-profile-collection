@@ -851,8 +851,8 @@ def run_tomo_json(path_to_json,tracking_file = None):
             json_path=path_to_json,
             extra_params={"tracking_file": tracking_file}
         )
-    except Exception as e:
-        print(f"  Warning: Failed to log plan start: {e}")
+    except Exception as log_error:
+        print(f"  Warning: Failed to log plan start: {log_error}")
     
     beamDumpOccured = False
 
@@ -1127,8 +1127,8 @@ def run_tomo_json(path_to_json,tracking_file = None):
             status="completed",
             extra_data={"total_angles": len(angles)}
         )
-    except Exception as e:
-        print(f"  Warning: Failed to log plan completion: {e}")
+    except Exception as log_error:
+        print(f"  Warning: Failed to log plan completion: {log_error}")
 
 ###################Diffraction######################
 
@@ -1390,8 +1390,8 @@ def run_diff_json(path_to_json,tracking_file = None,do_confirm =True):
             json_path=path_to_json,
             extra_params={"tracking_file": tracking_file, "do_confirm": do_confirm}
         )
-    except Exception as e:
-        print(f"  Warning: Failed to log plan start: {e}")
+    except Exception as log_error:
+        print(f"  Warning: Failed to log plan start: {log_error}")
     
     beamDumpOccured = False
 
@@ -1740,8 +1740,8 @@ def run_diff_json(path_to_json,tracking_file = None,do_confirm =True):
                 status="completed",
                 extra_data={"total_angles": len(angles)}
             )
-        except Exception as e:
-            print(f" Warning: Failed to log plan completion: {e}")
+        except Exception as log_error:
+            print(f" Warning: Failed to log plan completion: {log_error}")
 
 
 
@@ -1761,8 +1761,8 @@ def run_repeat_2d_json(path_to_json, n_repeat=10, tracking_file=None, do_confirm
             json_path=path_to_json,
             extra_params={"n_repeat": n_repeat, "tracking_file": tracking_file, "do_confirm": do_confirm}
         )
-    except Exception as e:
-        print(f"  Warning: Failed to log plan start: {e}")
+    except Exception as log_error:
+        print(f"  Warning: Failed to log plan start: {log_error}")
     
     beamDumpOccured = False
     fluxPeaked = False
@@ -1936,5 +1936,5 @@ def run_repeat_2d_json(path_to_json, n_repeat=10, tracking_file=None, do_confirm
             status="completed",
             extra_data={"repeats_completed": n_repeat}
         )
-    except Exception as e:
-        print(f" Warning: Failed to log plan completion: {e}")
+    except Exception as log_error:
+        print(f" Warning: Failed to log plan completion: {log_error}")
