@@ -149,7 +149,10 @@ class PlanLogger:
             "json_path": str(json_path),
         }
         if extra_params:
-            log_entry["params"] = extra_params
+            log_entry["params"] = {
+                key: str(value) if isinstance(value, Path) else value
+                for key, value in extra_params.items()
+            }
         
         try:
             log_filepath = cls.get_log_filepath(plan_name)
