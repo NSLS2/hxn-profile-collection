@@ -74,19 +74,26 @@ def get_xrf_data(h,elem ="Cr",mon ='sclr1_ch4'):
         
     return xdata,xrf
 
-def erf_fit(sid, elem, mon='sclr1_ch4', linear_flag=True, show_figure=True, on_fit_error=None):
+def erf_fit(sid, elem, mon='sclr1_ch4', linear_flag=True, 
+            show_figure=True, on_fit_error=None):
     """Fit error function to edge data.
     
     Parameters
     ----------
-    on_fit_error : None, float, or tuple, optional
-        Value to return if fit fails. Default None returns (None, None).
-        Pass a specific value to return on error (e.g., 0 for zero, -1 for skip marker).
+    on_fit_error : tuple or None, optional
+        Value to return if fit fails. Must be a tuple matching return type.
+        Default None returns (None, None).
+        Pass a 2-tuple to return on error: e.g., (0.0, 0.0), (-1, -1), (2.5, 0.1)
     
     Returns
     -------
     tuple
         (edge_position, FWHM) on success, or on_fit_error value on failure
+    
+    Examples
+    --------
+    >>> edge, fwhm = erf_fit(sid, 'Cr', on_fit_error=(-1, -1))  # Return (-1,-1) on failure
+    >>> edge, fwhm = erf_fit(sid, 'Cr')  # Default returns (None, None) on failure
     """
     try:
         h = db[sid]
@@ -230,14 +237,20 @@ def sici_fit(sid, elem, mon='sclr1_ch4', linear_flag=True, on_fit_error=None):
     
     Parameters
     ----------
-    on_fit_error : None, float, or tuple, optional
-        Value to return if fit fails. Default None returns (None, None).
-        Pass a specific value to return on error (e.g., 0 for zero, -1 for skip marker).
+    on_fit_error : tuple or None, optional
+        Value to return if fit fails. Must be a tuple matching return type.
+        Default None returns (None, None).
+        Pass a 2-tuple to return on error: e.g., (0.0, 0.0), (-1, -1), (2.5, 0.1)
     
     Returns
     -------
     tuple
         (edge_position, FWHM) on success, or on_fit_error value on failure
+    
+    Examples
+    --------
+    >>> edge, fwhm = sici_fit(sid, 'Cr', on_fit_error=(-1, -1))  # Return (-1,-1) on failure
+    >>> edge, fwhm = sici_fit(sid, 'Cr')  # Default returns (None, None) on failure
     """
     try:
         h=db[sid]
@@ -298,14 +311,20 @@ def square_fit(sid, elem, mon='sclr1_ch4', linear_flag=True, on_fit_error=None):
     
     Parameters
     ----------
-    on_fit_error : None, float, or tuple, optional
-        Value to return if fit fails. Default None returns (None, None, None).
-        Pass a specific value to return on error (e.g., (0,0,0) for zeros, -1 for skip).
+    on_fit_error : tuple or None, optional
+        Value to return if fit fails. Must be a tuple matching return type.
+        Default None returns (None, None, None).
+        Pass a 3-tuple to return on error: e.g., (0.0, 0.0, 0.0), (-1, -1, -1), (1.5, 2.5, 2.0)
     
     Returns
     -------
     tuple
         (edge1_pos, edge2_pos, center_pos) on success, or on_fit_error value on failure
+    
+    Examples
+    --------
+    >>> e1, e2, center = square_fit(sid, 'Cr', on_fit_error=(-1, -1, -1))  # Return (-1,-1,-1) on failure
+    >>> e1, e2, center = square_fit(sid, 'Cr')  # Default returns (None, None, None) on failure
     """
     try:
         h=db[sid]
