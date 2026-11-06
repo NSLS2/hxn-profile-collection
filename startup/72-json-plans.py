@@ -399,8 +399,12 @@ def align_scan(mtr, start, end, num, exp, elem_, align_with="line_center",
     float
         Final motor position set by alignment
     """
-    fly_to_coarse = {"zpssx":smarx,"zpssy":smary,"zpssz":smarz,
-                     "dssx":dsx,"dssy":dsy,"dssz":dsz}
+    fly_to_coarse = {"zpssx":smarx,
+                     "zpssy":smary,
+                     "zpssz":smarz,
+                     "dssx":dsx,
+                     "dssy":dsy,
+                     "dssz":dsz}
 
     if reset_piezos_to_zero:
             yield from bps.mov(mtr,0,wait=True)
@@ -424,12 +428,18 @@ def align_scan(mtr, start, end, num, exp, elem_, align_with="line_center",
                         )
     if align_with == "line_center":
         yield from bps.sleep(1)
-        xc = return_line_center(-1,elem_,threshold, neg_flag=neg_flag, mode=line_center_mode)
+        xc = return_line_center(-1,elem_,
+                                threshold, 
+                                neg_flag=neg_flag, 
+                                mode=line_center_mode)
         xc = xc+offset
         
     elif align_with == "edge":
         yield from bps.sleep(1)
-        xc, fwhm = erf_fit(-1, elem_, linear_flag=False, on_fit_error=on_fit_error)
+        xc, fwhm = erf_fit(-1, 
+                           elem_, 
+                           linear_flag=False, 
+                           on_fit_error=on_fit_error)
         
         if xc is None:
             print(f"Warning: Edge fit failed for alignment. on_fit_error={on_fit_error}")
