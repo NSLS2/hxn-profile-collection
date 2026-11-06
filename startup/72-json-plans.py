@@ -436,10 +436,9 @@ def align_scan(mtr, start, end, num, exp, elem_, align_with="line_center",
         
     elif align_with == "edge":
         yield from bps.sleep(1)
-        xc, fwhm = erf_fit(-1, 
-                           elem_, 
-                           linear_flag=False, 
-                           on_fit_error=on_fit_error)
+        xc, fwhm = erf_fit(-1,
+                           elem_,
+                           linear_flag=False)
         
         if xc is None:
             print(f"Warning: Edge fit failed for alignment. on_fit_error={on_fit_error}")
