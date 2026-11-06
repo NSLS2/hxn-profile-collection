@@ -518,6 +518,7 @@ def tomo_2d_scan(angle,dets_,fly_motors,
 
             x_start_real = x_start / abs(np.sin(angle * np.pi / 180.))
             x_end_real = x_end / abs(np.sin(angle * np.pi / 180.))
+            x_num_real = x_num
             if fly_motors[2].name == 'dssz':
                 pass
                 # print('WARNING!!: Applying temporary scaling correction ratio to dssz motor.')
@@ -1041,7 +1042,7 @@ def run_tomo_json(path_to_json,tracking_file = None):
             angle_list.to_csv(os.path.join(tomo_params.get("save_log_to", "/data/users/current_user"), filename+'.csv'),
                               float_format= '%.5f')
             
-            flog = open(filename+'.txt','a')
+            flog = open("/data/users/current_user/"+filename+'.txt','a')
             flog.write("%d %.3f\n"%(int(last_sid),angle_rbv))
             flog.close()
             

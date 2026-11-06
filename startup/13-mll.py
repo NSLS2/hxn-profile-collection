@@ -90,7 +90,7 @@ dsth = smlld.dsth
 sbx = smlld.sbx
 sbz = smlld.sbz
 
-smlld = remove_names_maybe(smlld, ['kill', 'zero'])
+#smlld = remove_names_maybe(smlld, ['kill', 'zero'])
 
 
 class HxnAnc350_3(Device):

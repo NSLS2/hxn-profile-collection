@@ -2072,6 +2072,7 @@ def smll_sync_piezos():
     yield from bps.mov(ssy, smll.ssy.position + 0.0001)
     yield from bps.mov(ssz, smll.ssz.position + 0.0001)
 
+
 def movr_sx(dist):
     alpha = 15*np.pi/180.0
     c_ssx = smll.ssx.position
@@ -2333,6 +2334,20 @@ def zps_sync_piezos():
     yield from bps.mov(zps.zpssx, zps.zpssx.position + 0.0001)
     yield from bps.mov(zps.zpssy, zps.zpssy.position + 0.0001)
     yield from bps.mov(zps.zpssz, zps.zpssz.position + 0.0001)
+
+def mll_kill_piezos():
+    smlld.kill.put(1)
+    yield from bps.sleep(5)
+
+def mll_zero_piezos():
+    smlld.zero.put(1)
+    yield from bps.sleep(3)
+
+def mll_sync_piezos():
+    #sync positions
+    yield from bps.mov(dssx, dssx.position + 0.0001)
+    yield from bps.mov(dssy, dssy.position + 0.0001)
+    yield from bps.mov(dssz, dssz.position + 0.0001)
 
 
 def movr_zpsx(dist):

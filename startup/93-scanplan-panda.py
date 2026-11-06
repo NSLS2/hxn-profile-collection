@@ -1378,7 +1378,7 @@ def fly1dpd(dets, motor1, scan_start1, scan_end1, num1, exposure_time, panda_fly
             #     center1 = center1 + get_tomo_drift(tomo_angle)
 
 
-            range_min, range_max = -16, 16
+            range_min, range_max = -24, 24
             for pos in [start1_scan, start1_scan + range1_scan]:
                 if pos < range_min or pos > range_max:
                     raise ValueError(
