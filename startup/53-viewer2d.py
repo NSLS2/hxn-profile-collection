@@ -87,12 +87,15 @@ def normalize_with_monitor(spectrum, monitor_data, verbose=True):
 
 
 def plt_update_figure(fig=None):
-    if fig is None:
-        fig = plt.gcf()
-    
-    fig.canvas.manager.show()
-    fig.canvas.draw()
-    fig.canvas.flush_events()
+    try:
+        if fig is None:
+            fig = plt.gcf()
+        
+        fig.canvas.manager.show()
+        fig.canvas.draw()
+        fig.canvas.flush_events()
+    except Exception as plot_error:
+        print(f"Warning: Plot update failed (window may have been closed): {plot_error}")
 
 def plot_Dexela_data(scan_id):
     hd = db[scan_id]

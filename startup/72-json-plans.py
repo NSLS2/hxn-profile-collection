@@ -371,28 +371,43 @@ def make_tomo_plan(save_as = "/nsls2/data/hxn/legacy/user_macros/HXN_GUI/Scan/te
 
     fp.close()
 
-def align_scan(mtr,start,end,num,exp,elem_, align_with="line_center",
-               threshold = 0.5,move_coarse = False, neg_flag = False, offset = 0,
-               tomo_use_panda= True, reset_piezos_to_zero = False, initial_position=0, 
-               align_movement_limit=0, line_center_mode='binary'):
+def align_scan(mtr, start, end, num, exp, elem_, align_with="line_center",
+               threshold=0.5, move_coarse=False, neg_flag=False, offset=0,
+               tomo_use_panda=True, reset_piezos_to_zero=False, initial_position=0, 
+               align_movement_limit=0, line_center_mode='binary', on_fit_error=None):
 
     """
-    scan to align samples to field of view using using fly1d scan
+    Scan to align samples to field of view using fly1d scan
 
-    mtr--> scanning motor, dssx, dssy, dssz etc.
-    start,end,num,exp --> flyscan paramters
-    elem_ --> element to use for alignemnt
-    align_with --> choose bettween "edge" or "line_center"
-    threshold --> threshold for line centering
-
+    Parameters
+    ----------
+    mtr : Motor
+        Scanning motor (dssx, dssy, dssz, etc.)
+    start, end, num, exp : float
+        Flyscan parameters
+    elem_ : str
+        Element to use for alignment
+    align_with : str, optional
+        Choose between "edge" or "line_center" (default: "line_center")
+    on_fit_error : tuple or None, optional
+        Fallback value if edge fit fails. Must be 2-tuple (edge_pos, fwhm).
+        If None (default), skips motor movement on fit failure.
+        Pass (x_value, y_value) to move to that position on failure.
+    
+    Returns
+    -------
+    float
+        Final motor position set by alignment
     """
-    fly_to_coarse = {"zpssx":smarx,"zpssy":smary,"zpssz":smarz,
-                     "dssx":dsx,"dssy":dsy,"dssz":dsz}
-
+    fly_to_coarse = {"zpssx":smarx,
+                     "zpssy":smary,
+                     "zpssz":smarz,
+                     "dssx":dsx,
+                     "dssy":dsy,
+                     "dssz":dsz}
 
     if reset_piezos_to_zero:
             yield from bps.mov(mtr,0,wait=True)
-            # yield from piezos_to_zero(zp_flag = zp_flag)
 
     if not tomo_use_panda:
         yield from fly1d(dets_fs,
@@ -404,7 +419,6 @@ def align_scan(mtr,start,end,num,exp,elem_, align_with="line_center",
                         )
     else:
         print("uses panda scan")
-        #TODO swap xmotor programically 
         yield from fly1dpd([fs,xspress3],
                         mtr,
                         start,
@@ -414,19 +428,37 @@ def align_scan(mtr,start,end,num,exp,elem_, align_with="line_center",
                         )
     if align_with == "line_center":
         yield from bps.sleep(1)
-        xc = return_line_center(-1,elem_,threshold, neg_flag = neg_flag, mode=line_center_mode)
+        xc = return_line_center(-1,elem_,
+                                threshold, 
+                                neg_flag=neg_flag, 
+                                mode=line_center_mode)
         xc = xc+offset
         
     elif align_with == "edge":
         yield from bps.sleep(1)
-        xc,_ = erf_fit(-1,elem_,linear_flag=False)
-        print("xc", xc, "initial_position", initial_position, "align_movement_limit", align_movement_limit)
-        if abs(xc) - abs(initial_position) > align_movement_limit:
-            xc = mtr.position + offset
-            print("xc", xc, "mtr.position", mtr.position, "offset", offset)
+        xc, fwhm = erf_fit(-1,
+                           elem_,
+                           linear_flag=False)
+        
+        if xc is None:
+            print(f"Warning: Edge fit failed for alignment. on_fit_error={on_fit_error}")
+            if on_fit_error is not None:
+                # User provided fallback - unpack and use
+                xc, fwhm = on_fit_error
+                print(f"Using fallback value: xc={xc}, fwhm={fwhm}")
+                xc = xc + offset
+            else:
+                # No fallback provided - skip movement, return current position
+                print(f"Skipping motor movement. Motor remains at {mtr.position}")
+                return mtr.position
         else:
-            xc = xc + offset
-            print("xc", xc, "offset", offset)
+            print("xc", xc, "initial_position", initial_position, "align_movement_limit", align_movement_limit)
+            if abs(xc) - abs(initial_position) > align_movement_limit:
+                xc = mtr.position + offset
+                print("xc", xc, "mtr.position", mtr.position, "offset", offset)
+            else:
+                xc = xc + offset
+                print("xc", xc, "offset", offset)
          
     else:
         xc = mtr.position
@@ -435,9 +467,6 @@ def align_scan(mtr,start,end,num,exp,elem_, align_with="line_center",
         coarse_stage = fly_to_coarse[mtr.name]
         print(f"move {coarse_stage.name} relative {xc}")
         yield from bps.movr(coarse_stage,xc)
-        
-        # yield from bps.movr(eval(fly_to_coarse[mtr.name]),xc/uni_conv)
-        #yield from piezos_to_zero(zp_flag = zp_flag)
 
     else:
         yield from bps.sleep(1)
@@ -830,8 +859,9 @@ def tomo_scan_to_loop(angle,
                                       note = tomo_params["scan_label"])
                 plt.close()
 
-            except:
-                pass
+            except Exception as pdf_error:
+                print(f"Warning: Failed to insert XRF map to PDF: {pdf_error}")
+                print("Scan completed but PDF may not contain images. Check /nsls2/data/hxn/legacy/users/PDFCreator.log for details.")
         if tracking_file is not None:
             flog = open(tracking_file,'a')
             flog.write("%d %.3f\n"%(db[-1].start['scan_id'],angle))
@@ -1369,8 +1399,9 @@ def diff_scan_to_loop(angle, diff_params, ic_init,tracking_file = None):
                                       note = diff_params["scan_label"])
                 plt.close()
 
-            except:
-                pass
+            except Exception as pdf_error:
+                print(f"Warning: Failed to insert XRF map to PDF: {pdf_error}")
+                print("Scan completed but PDF may not contain images. Check /nsls2/data/hxn/legacy/users/PDFCreator.log for details.")
         if tracking_file is not None:
             flog = open(tracking_file,'a')
             flog.write("%d %.3f\n"%(db[-1].start['scan_id'],angle))

@@ -74,42 +74,71 @@ def get_xrf_data(h,elem ="Cr",mon ='sclr1_ch4'):
         
     return xdata,xrf
 
-def erf_fit(sid, elem, mon='sclr1_ch4', linear_flag=True,show_figure = True):
-    h = db[sid]
-    sid = h.start['scan_id']
-    xdata, ydata = get_xrf_data(h,
-                            elem = elem,
-                            mon = mon)
-    ydata[0] = ydata[1] #patch for drop point issue
-    ydata[-1] = ydata[-2]#patch for drop point issue
-    y_min=np.min(ydata)
-    y_max=np.max(ydata)
-    ydata=(ydata-y_min)/(y_max-y_min)
-    if show_figure:
-        plt.figure()
-        plt.plot(xdata,ydata,'bo')
-    y_mean = np.mean(ydata)
-    half_size = int (len(ydata)/2)
-    y_half_mean = np.mean(ydata[0:half_size])
-    edge_pos=find_edge(xdata,ydata,10)
-    if y_half_mean < y_mean:
-        if linear_flag == False:
-            popt,pcov=curve_fit(erfunc1,xdata,ydata, p0=[edge_pos,0.05,0.5])
-            fit_data=erfunc1(xdata,popt[0],popt[1],popt[2]);
+def erf_fit(sid, elem, mon='sclr1_ch4', linear_flag=True, 
+            show_figure=True, on_fit_error=None):
+    """Fit error function to edge data.
+    
+    Parameters
+    ----------
+    on_fit_error : tuple or None, optional
+        Value to return if fit fails. Must be a tuple matching return type.
+        Default None returns (None, None).
+        Pass a 2-tuple to return on error: e.g., (0.0, 0.0), (-1, -1), (2.5, 0.1)
+    
+    Returns
+    -------
+    tuple
+        (edge_position, FWHM) on success, or on_fit_error value on failure
+    
+    Examples
+    --------
+    >>> edge, fwhm = erf_fit(sid, 'Cr', on_fit_error=(-1, -1))  # Return (-1,-1) on failure
+    >>> edge, fwhm = erf_fit(sid, 'Cr')  # Default returns (None, None) on failure
+    """
+    try:
+        h = db[sid]
+        sid = h.start['scan_id']
+        xdata, ydata = get_xrf_data(h,
+                                elem = elem,
+                                mon = mon)
+        ydata[0] = ydata[1] #patch for drop point issue
+        ydata[-1] = ydata[-2]#patch for drop point issue
+        y_min=np.min(ydata)
+        y_max=np.max(ydata)
+        ydata=(ydata-y_min)/(y_max-y_min)
+        if show_figure:
+            plt.figure()
+            plt.plot(xdata,ydata,'bo')
+        y_mean = np.mean(ydata)
+        half_size = int (len(ydata)/2)
+        y_half_mean = np.mean(ydata[0:half_size])
+        edge_pos=find_edge(xdata,ydata,10)
+        if y_half_mean < y_mean:
+            if linear_flag == False:
+                popt,pcov=curve_fit(erfunc1,xdata,ydata, p0=[edge_pos,0.05,0.5])
+                fit_data=erfunc1(xdata,popt[0],popt[1],popt[2]);
+            else:
+                popt,pcov=curve_fit(erfunc3,xdata,ydata, p0=[edge_pos,0.05,0.5,0,0])
+                fit_data=erfunc3(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
         else:
-            popt,pcov=curve_fit(erfunc3,xdata,ydata, p0=[edge_pos,0.05,0.5,0,0])
-            fit_data=erfunc3(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
-    else:
-        if linear_flag == False:
-            popt,pcov=curve_fit(erfunc2,xdata,ydata,p0=[edge_pos,0.05,0.5])
-            fit_data=erfunc2(xdata,popt[0],popt[1],popt[2]);
+            if linear_flag == False:
+                popt,pcov=curve_fit(erfunc2,xdata,ydata,p0=[edge_pos,0.05,0.5])
+                fit_data=erfunc2(xdata,popt[0],popt[1],popt[2]);
+            else:
+                popt,pcov=curve_fit(erfunc4,xdata,ydata,p0=[edge_pos,0.05,0.5,0,0])
+                fit_data=erfunc4(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
+        if show_figure:
+            plt.plot(xdata,fit_data, 'r')
+            plt.title(f'{sid = }, edge = {popt[0] :.3f}, FWHM = {popt[1]*2354.8 :.2f} nm')
+        return (popt[0],popt[1]*2.3548*1000.0)
+    except Exception as fit_error:
+        print(f"Warning: Edge fit failed for scan {sid}: {fit_error}")
+        if on_fit_error is None:
+            error_return = (None, None)
         else:
-            popt,pcov=curve_fit(erfunc4,xdata,ydata,p0=[edge_pos,0.05,0.5,0,0])
-            fit_data=erfunc4(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
-    if show_figure:
-        plt.plot(xdata,fit_data, 'r')
-        plt.title(f'{sid = }, edge = {popt[0] :.3f}, FWHM = {popt[1]*2354.8 :.2f} nm')
-    return (popt[0],popt[1]*2.3548*1000.0)
+            error_return = on_fit_error
+        print(f"Returning on_fit_error value: {error_return}")
+        return error_return
 
 def erf_fit_to_delete(sid, elem, mon='sclr1_ch4', linear_flag=True):
     h = db[sid]
@@ -203,41 +232,69 @@ def get_knife_edge_data(sid,elem,z_mtr_name, mon='sclr1_ch4',linear_flag=True):
     return popt[0],popt[1]*2.3548*1000.0,xdata,ydata,fit_data, z_mtr_pos
 
 
-def sici_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
-    h=db[sid]
-    sid=h['start']['scan_id']
-    df=h.table()
-    mots=h.start['motors']
-    xdata=df[mots[0]]
-    xdata=np.array(xdata,dtype=float)
-    ydata=(df['Det1_'+elem]+df['Det2_'+elem]+df['Det3_'+elem])/df[mon]
-    ydata=np.array(ydata,dtype=float)
-    y_min=np.min(ydata)
-    y_max=np.max(ydata)
-    ydata=(ydata-y_min)/(y_max-y_min)
-    plt.figure()
-    plt.plot(xdata,ydata,'bo')
-    y_mean = np.mean(ydata)
-    half_size = int (len(ydata)/2)
-    y_half_mean = np.mean(ydata[0:half_size])
-    edge_pos=find_edge(xdata,ydata,10)
-    if y_half_mean < y_mean:
-        if linear_flag == False:
-            popt,pcov=curve_fit(sicifunc,xdata,ydata, p0=[edge_pos,0.05,1/np.pi])
-            fit_data=sicifunc(xdata,popt[0],popt[1],popt[2]);
+def sici_fit(sid, elem, mon='sclr1_ch4', linear_flag=True, on_fit_error=None):
+    """Fit sine/cosine integral function to edge data.
+    
+    Parameters
+    ----------
+    on_fit_error : tuple or None, optional
+        Value to return if fit fails. Must be a tuple matching return type.
+        Default None returns (None, None).
+        Pass a 2-tuple to return on error: e.g., (0.0, 0.0), (-1, -1), (2.5, 0.1)
+    
+    Returns
+    -------
+    tuple
+        (edge_position, FWHM) on success, or on_fit_error value on failure
+    
+    Examples
+    --------
+    >>> edge, fwhm = sici_fit(sid, 'Cr', on_fit_error=(-1, -1))  # Return (-1,-1) on failure
+    >>> edge, fwhm = sici_fit(sid, 'Cr')  # Default returns (None, None) on failure
+    """
+    try:
+        h=db[sid]
+        sid=h['start']['scan_id']
+        df=h.table()
+        mots=h.start['motors']
+        xdata=df[mots[0]]
+        xdata=np.array(xdata,dtype=float)
+        ydata=(df['Det1_'+elem]+df['Det2_'+elem]+df['Det3_'+elem])/df[mon]
+        ydata=np.array(ydata,dtype=float)
+        y_min=np.min(ydata)
+        y_max=np.max(ydata)
+        ydata=(ydata-y_min)/(y_max-y_min)
+        plt.figure()
+        plt.plot(xdata,ydata,'bo')
+        y_mean = np.mean(ydata)
+        half_size = int (len(ydata)/2)
+        y_half_mean = np.mean(ydata[0:half_size])
+        edge_pos=find_edge(xdata,ydata,10)
+        if y_half_mean < y_mean:
+            if linear_flag == False:
+                popt,pcov=curve_fit(sicifunc,xdata,ydata, p0=[edge_pos,0.05,1/np.pi])
+                fit_data=sicifunc(xdata,popt[0],popt[1],popt[2]);
+            else:
+                popt,pcov=curve_fit(sicifunc,xdata,ydata, p0=[edge_pos,0.05,1/np.pi,0,0])
+                fit_data=sicifunc(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
         else:
-            popt,pcov=curve_fit(sicifunc,xdata,ydata, p0=[edge_pos,0.05,1/np.pi,0,0])
-            fit_data=sicifunc(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
-    else:
-        if linear_flag == False:
-            popt,pcov=curve_fit(sicifunc,-xdata,ydata,p0=[-edge_pos,0.05,1/np.pi])
-            fit_data=sicifunc(-xdata,-popt[0],popt[1],popt[2]);
+            if linear_flag == False:
+                popt,pcov=curve_fit(sicifunc,-xdata,ydata,p0=[-edge_pos,0.05,1/np.pi])
+                fit_data=sicifunc(-xdata,-popt[0],popt[1],popt[2]);
+            else:
+                popt,pcov=curve_fit(sicifunc,-xdata,ydata,p0=[-edge_pos,0.05,1/np.pi,0,0])
+                fit_data=sicifunc(-xdata,-popt[0],popt[1],popt[2],popt[3],popt[4]);
+        plt.plot(xdata,fit_data)
+        plt.title('sid= %d edge = %.3f, FWHM = %.2f nm' % (sid,popt[0], 1.39156*2*1000.0/popt[1]))
+        return (popt[0],1.39156*2*1000.0/popt[1])
+    except Exception as fit_error:
+        print(f"Warning: Sici fit failed for scan {sid}: {fit_error}")
+        if on_fit_error is None:
+            error_return = (None, None)
         else:
-            popt,pcov=curve_fit(sicifunc,-xdata,ydata,p0=[-edge_pos,0.05,1/np.pi,0,0])
-            fit_data=sicifunc(-xdata,-popt[0],popt[1],popt[2],popt[3],popt[4]);
-    plt.plot(xdata,fit_data)
-    plt.title('sid= %d edge = %.3f, FWHM = %.2f nm' % (sid,popt[0], 1.39156*2*1000.0/popt[1]))
-    return (popt[0],1.39156*2*1000.0/popt[1])
+            error_return = on_fit_error
+        print(f"Returning on_fit_error value: {error_return}")
+        return error_return
 
 
 def find_double_edge2(xdata,ydata):
@@ -249,55 +306,82 @@ def find_double_edge2(xdata,ydata):
     ind2 = scipy.argmin(der)
     return(xdata[ind1],xdata[ind2])
 
-def square_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
-
-    h=db[sid]
-    sid=h['start']['scan_id']
-    df=h.table()
-    mots=h.start['motors']
-
-    #threshold = np.max(xrf)/10.0
-    x_motor = h.start['motors']
+def square_fit(sid, elem, mon='sclr1_ch4', linear_flag=True, on_fit_error=None):
+    """Fit square step function to double-edge data.
+    
+    Parameters
+    ----------
+    on_fit_error : tuple or None, optional
+        Value to return if fit fails. Must be a tuple matching return type.
+        Default None returns (None, None, None).
+        Pass a 3-tuple to return on error: e.g., (0.0, 0.0, 0.0), (-1, -1, -1), (1.5, 2.5, 2.0)
+    
+    Returns
+    -------
+    tuple
+        (edge1_pos, edge2_pos, center_pos) on success, or on_fit_error value on failure
+    
+    Examples
+    --------
+    >>> e1, e2, center = square_fit(sid, 'Cr', on_fit_error=(-1, -1, -1))  # Return (-1,-1,-1) on failure
+    >>> e1, e2, center = square_fit(sid, 'Cr')  # Default returns (None, None, None) on failure
+    """
     try:
-        xdata = np.array(df[x_motor[0]])
-    except:
-        xdata = get_scan_positions(h)
-        
-    #x = get_scan_positions(h)
-    #xdata=df[mots[0]]
-    #xdata=np.array(xdata,dtype=float)
-    #df[mon][df[mon]==np.inf] = np.mean(df[mon])
-    #ydata=(df['Det1_'+elem]+df['Det2_'+elem]+df['Det3_'+elem])/(df[mon]+1e-8)
+        h=db[sid]
+        sid=h['start']['scan_id']
+        df=h.table()
+        mots=h.start['motors']
 
-    channels = [1,2,3]
-    xrf = None
-    for i in channels:
-        fluo_data = np.array(list(h.data('Det%d_'%i+elem))).squeeze()
-        if xrf is None:
-            xrf = fluo_data.copy()
+        #threshold = np.max(xrf)/10.0
+        x_motor = h.start['motors']
+        try:
+            xdata = np.array(df[x_motor[0]])
+        except:
+            xdata = get_scan_positions(h)
+            
+        #x = get_scan_positions(h)
+        #xdata=df[mots[0]]
+        #xdata=np.array(xdata,dtype=float)
+        #df[mon][df[mon]==np.inf] = np.mean(df[mon])
+        #ydata=(df['Det1_'+elem]+df['Det2_'+elem]+df['Det3_'+elem])/(df[mon]+1e-8)
+
+        channels = [1,2,3]
+        xrf = None
+        for i in channels:
+            fluo_data = np.array(list(h.data('Det%d_'%i+elem))).squeeze()
+            if xrf is None:
+                xrf = fluo_data.copy()
+            else:
+                xrf = xrf + fluo_data
+        #xrf = np.array(df2['Det2_' + elem]+df2['Det1_' + elem] + df2['Det3_' + elem])
+
+        xrf[xrf==np.nan] = np.nanmean(xrf)#patch for ic3 returns zero
+        xrf[xrf==np.inf] = np.nanmean(xrf)#patch for ic3 returns zero
+        ydata=xrf
+        ydata=np.array(ydata,dtype=float)
+        y_min=np.min(ydata)
+        y_max=np.max(ydata)
+        ydata=(ydata-y_min)/(y_max-y_min)
+        plt.figure()
+        plt.plot(xdata,ydata,'bo')
+        edge_pos_1, edge_pos_2 = find_double_edge(xdata,ydata,10)
+        #print('sid={}  e1={}  e2={}'.format(sid,edge_pos_1,edge_pos_2))
+        popt,pcov=curve_fit(squarefunc,xdata,ydata,p0=[0.5,edge_pos_1,0.1,edge_pos_2,0.1])
+        fit_data=squarefunc(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
+
+        #print('a={} b={} c={}'.format(popt[0],popt[1],popt[2]))
+        plt.plot(xdata,fit_data)
+        plt.title('sid= %d cen = %.3f e1 = %.3f e2 = %.3f ' % (sid,(popt[1]+popt[3])*0.5, popt[1],popt[3]))
+        plt.xlabel(mots[0])
+        return (popt[1],popt[3],(popt[1]+popt[3])*0.5)
+    except Exception as fit_error:
+        print(f"Warning: Square fit failed for scan {sid}: {fit_error}")
+        if on_fit_error is None:
+            error_return = (None, None, None)
         else:
-            xrf = xrf + fluo_data
-    #xrf = np.array(df2['Det2_' + elem]+df2['Det1_' + elem] + df2['Det3_' + elem])
-
-    xrf[xrf==np.nan] = np.nanmean(xrf)#patch for ic3 returns zero
-    xrf[xrf==np.inf] = np.nanmean(xrf)#patch for ic3 returns zero
-    ydata=xrf
-    ydata=np.array(ydata,dtype=float)
-    y_min=np.min(ydata)
-    y_max=np.max(ydata)
-    ydata=(ydata-y_min)/(y_max-y_min)
-    plt.figure()
-    plt.plot(xdata,ydata,'bo')
-    edge_pos_1, edge_pos_2 = find_double_edge(xdata,ydata,10)
-    #print('sid={}  e1={}  e2={}'.format(sid,edge_pos_1,edge_pos_2))
-    popt,pcov=curve_fit(squarefunc,xdata,ydata,p0=[0.5,edge_pos_1,0.1,edge_pos_2,0.1])
-    fit_data=squarefunc(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
-
-    #print('a={} b={} c={}'.format(popt[0],popt[1],popt[2]))
-    plt.plot(xdata,fit_data)
-    plt.title('sid= %d cen = %.3f e1 = %.3f e2 = %.3f ' % (sid,(popt[1]+popt[3])*0.5, popt[1],popt[3]))
-    plt.xlabel(mots[0])
-    return (popt[1],popt[3],(popt[1]+popt[3])*0.5)
+            error_return = on_fit_error
+        print(f"Returning on_fit_error value: {error_return}")
+        return error_return
     #return(xdata, ydata, fit_data)
 
 
@@ -436,7 +520,11 @@ def mov_zpz1(pos):
 
 def mll_z_alignment(z_motor, z_start, z_end, z_num, mot, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4',lin_flag = False):
 
-    """usage: <mll_z_alignment(sbz,-20,20,10,dssy,-0.5,0.5,100,0.05, elem = 'Pt_L')"""
+    """usage: <mll_z_alignment(sbz,-20,20,10,dssy,-0.5,0.5,100,0.05, elem = 'Pt_L')
+    
+    Returns:
+        float: Position of z_motor that achieved minimum FWHM (best focus)
+    """
 
     z_pos=np.zeros(z_num+1)
     fit_size=np.zeros(z_num+1)
@@ -454,11 +542,18 @@ def mll_z_alignment(z_motor, z_start, z_end, z_num, mot, start, end, num, acq_ti
         if abs(edge_pos)<12:
             yield from bps.mov(mot, edge_pos)
         yield from bps.movr(z_motor, z_step)
-    yield from bps.mov(z_motor, init_sz)
+    
+    fit_size = np.abs(fit_size)
+    min_fwhm_idx = np.argmin(fit_size)
+    best_z_pos = z_pos[min_fwhm_idx]
+    
     yield from bps.mov(mot, mot_init)
     plt.figure()
     plt.plot(z_pos,fit_size,'bo')
     plt.xlabel(z_motor.name)
+    plt.title(f'Best focus at {z_motor.name}={best_z_pos:.2f} with FWHM={fit_size[min_fwhm_idx]:.4f}')
+    
+    return best_z_pos
 
 
 def hmll_z_alignment(z_start, z_end, z_num, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4'):
@@ -816,7 +911,7 @@ def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time,
         yield from bps.movr(zps.smarz, dz*1000)
 
 
-    # return dx,dz
+    return dx,dz
 
 def get_zp_rot_alignment_result(scans, elem='Pt_L', threshold=0.5,
                             neg_flag=0, edge_flag=0, skip_scans=None, plot_flag=True):
