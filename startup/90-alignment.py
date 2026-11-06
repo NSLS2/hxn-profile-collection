@@ -463,7 +463,6 @@ def mll_z_alignment(z_motor, z_start, z_end, z_num, mot, start, end, num, acq_ti
     min_fwhm_idx = np.argmin(fit_size)
     best_z_pos = z_pos[min_fwhm_idx]
     
-    yield from bps.mov(z_motor, best_z_pos)
     yield from bps.mov(mot, mot_init)
     plt.figure()
     plt.plot(z_pos,fit_size,'bo')
