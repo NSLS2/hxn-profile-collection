@@ -894,7 +894,7 @@ def set_panda_zebra(line_overhead, exposure_time, dead_time,
 def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, scan_end2, num2, exposure_time, panda_flyer = None, 
             pos_return = True, apply_tomo_drift = False,
             tomo_angle = None, auto_rescan = False, dead_time = 0.0005, 
-            line_overhead = [0.01,0.01], line_dwell = 0.1, return_speed = 100.0, position_supersample = 10,
+            line_overhead = [0.06,0.01], line_dwell = 0.1, return_speed = 100.0, position_supersample = 10,
             md = None, merlin_cont_mode = False, num_sclr_ch = None, strict_scan_checkup = True, **kwargs):
     """
     Relative scan
@@ -978,14 +978,12 @@ def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, sca
             #     center1 = center1 + get_tomo_drift(tomo_angle)
 
 
-            range_min, range_max = -16, 16
-                
+            range_min, range_max = -24.1, 24.1
             for pos in [start1_scan, start1_scan + range1_scan, start2, start2 + range2]:
                 if pos < range_min or pos > range_max:
-
                     raise ValueError(
                         f"Scan range exceed limits for the motors: "
-                        f"start1={scan_start1} end1={scan_end1} start2={scan_start2} end2={scan_end2}"
+                        f"actual start1={start1_scan} actual end1={start1_scan+range1_scan}, actual start2={start2} actual end2={start2+range2}"
                     )
                 
 
@@ -1314,7 +1312,7 @@ def fly2dpd_repeat(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_star
                 _finalize_scan_checks(panda)
 
 def fly1dpd(dets, motor1, scan_start1, scan_end1, num1, exposure_time, panda_flyer = None, pos_return = True, apply_tomo_drift = False,
-                tomo_angle = None, auto_rescan = False, dead_time = 0.0005, line_overhead = [0.01,0.01], line_dwell = 0.1, return_speed = 100.0, position_supersample = 10,
+                tomo_angle = None, auto_rescan = False, dead_time = 0.0005, line_overhead = [0.06,0.01], line_dwell = 0.1, return_speed = 100.0, position_supersample = 10,
                 md = None, merlin_cont_mode = False, strict_scan_checkup = True, **kwargs):
     """
     Relative scan
@@ -1378,12 +1376,12 @@ def fly1dpd(dets, motor1, scan_start1, scan_end1, num1, exposure_time, panda_fly
             #     center1 = center1 + get_tomo_drift(tomo_angle)
 
 
-            range_min, range_max = -24, 24
+            range_min, range_max = -24.1, 24.1
             for pos in [start1_scan, start1_scan + range1_scan]:
                 if pos < range_min or pos > range_max:
                     raise ValueError(
                         f"Scan range exceed limits for the motors: "
-                        f"start1={scan_start1} end1={scan_end1}"
+                        f"actual start={start1_scan}, actual end={start1_scan + range1_scan}"
                     )
             scan_input = [float(x) for x in [start1, start1+range1, num1]]
             # Metadata
@@ -1785,4 +1783,16 @@ def timescanpd(dets, num, exposure_time, panda_flyer = None, pos_return = True, 
             #yield from set_scanner_velocity(5)
         finally:
             pass
+def plot_stage_linearity(sid, y_shape=4):
+    x=get_scan_positions(db[sid])
+    if type(x) == tuple:
+        x = x[0]
+        x=x.reshape(-1,y_shape)
+    else:
+        x=np.array([x])    
+    x_diff=x[:,0:-1]-x[:,1:]
+    plt.scatter(x[:,1:], x_diff, label=f'sid {sid}', s=2)
+    plt.title("Linearity check")
+    plt.legend()
+    plt.show()
 
