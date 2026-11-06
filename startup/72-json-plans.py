@@ -859,8 +859,9 @@ def tomo_scan_to_loop(angle,
                                       note = tomo_params["scan_label"])
                 plt.close()
 
-            except:
-                pass
+            except Exception as pdf_error:
+                print(f"Warning: Failed to insert XRF map to PDF: {pdf_error}")
+                print("Scan completed but PDF may not contain images. Check /nsls2/data/hxn/legacy/users/PDFCreator.log for details.")
         if tracking_file is not None:
             flog = open(tracking_file,'a')
             flog.write("%d %.3f\n"%(db[-1].start['scan_id'],angle))
@@ -1398,8 +1399,9 @@ def diff_scan_to_loop(angle, diff_params, ic_init,tracking_file = None):
                                       note = diff_params["scan_label"])
                 plt.close()
 
-            except:
-                pass
+            except Exception as pdf_error:
+                print(f"Warning: Failed to insert XRF map to PDF: {pdf_error}")
+                print("Scan completed but PDF may not contain images. Check /nsls2/data/hxn/legacy/users/PDFCreator.log for details.")
         if tracking_file is not None:
             flog = open(tracking_file,'a')
             flog.write("%d %.3f\n"%(db[-1].start['scan_id'],angle))
