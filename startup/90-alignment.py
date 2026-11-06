@@ -436,7 +436,11 @@ def mov_zpz1(pos):
 
 def mll_z_alignment(z_motor, z_start, z_end, z_num, mot, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4',lin_flag = False):
 
-    """usage: <mll_z_alignment(sbz,-20,20,10,dssy,-0.5,0.5,100,0.05, elem = 'Pt_L')"""
+    """usage: <mll_z_alignment(sbz,-20,20,10,dssy,-0.5,0.5,100,0.05, elem = 'Pt_L')
+    
+    Returns:
+        float: Position of z_motor that achieved minimum FWHM (best focus)
+    """
 
     z_pos=np.zeros(z_num+1)
     fit_size=np.zeros(z_num+1)
@@ -454,11 +458,19 @@ def mll_z_alignment(z_motor, z_start, z_end, z_num, mot, start, end, num, acq_ti
         if abs(edge_pos)<12:
             yield from bps.mov(mot, edge_pos)
         yield from bps.movr(z_motor, z_step)
-    yield from bps.mov(z_motor, init_sz)
+    
+    fit_size = np.abs(fit_size)
+    min_fwhm_idx = np.argmin(fit_size)
+    best_z_pos = z_pos[min_fwhm_idx]
+    
+    yield from bps.mov(z_motor, best_z_pos)
     yield from bps.mov(mot, mot_init)
     plt.figure()
     plt.plot(z_pos,fit_size,'bo')
     plt.xlabel(z_motor.name)
+    plt.title(f'Best focus at {z_motor.name}={best_z_pos:.2f} with FWHM={fit_size[min_fwhm_idx]:.4f}')
+    
+    return best_z_pos
 
 
 def hmll_z_alignment(z_start, z_end, z_num, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4'):
@@ -816,7 +828,7 @@ def zp_rot_alignment(a_start, a_end, a_num, start, end, num, acq_time,
         yield from bps.movr(zps.smarz, dz*1000)
 
 
-    # return dx,dz
+    return dx,dz
 
 def get_zp_rot_alignment_result(scans, elem='Pt_L', threshold=0.5,
                             neg_flag=0, edge_flag=0, skip_scans=None, plot_flag=True):
