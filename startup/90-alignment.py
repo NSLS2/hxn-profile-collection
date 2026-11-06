@@ -74,7 +74,20 @@ def get_xrf_data(h,elem ="Cr",mon ='sclr1_ch4'):
         
     return xdata,xrf
 
-def erf_fit(sid, elem, mon='sclr1_ch4', linear_flag=True,show_figure = True):
+def erf_fit(sid, elem, mon='sclr1_ch4', linear_flag=True, show_figure=True, on_fit_error=None):
+    """Fit error function to edge data.
+    
+    Parameters
+    ----------
+    on_fit_error : None, float, or tuple, optional
+        Value to return if fit fails. Default None returns (None, None).
+        Pass a specific value to return on error (e.g., 0 for zero, -1 for skip marker).
+    
+    Returns
+    -------
+    tuple
+        (edge_position, FWHM) on success, or on_fit_error value on failure
+    """
     try:
         h = db[sid]
         sid = h.start['scan_id']
@@ -113,8 +126,12 @@ def erf_fit(sid, elem, mon='sclr1_ch4', linear_flag=True,show_figure = True):
         return (popt[0],popt[1]*2.3548*1000.0)
     except Exception as fit_error:
         print(f"Warning: Edge fit failed for scan {sid}: {fit_error}")
-        print("Returning default values: edge_pos=0.0, FWHM=0.0")
-        return (0.0, 0.0)
+        if on_fit_error is None:
+            error_return = (None, None)
+        else:
+            error_return = on_fit_error
+        print(f"Returning on_fit_error value: {error_return}")
+        return error_return
 
 def erf_fit_to_delete(sid, elem, mon='sclr1_ch4', linear_flag=True):
     h = db[sid]
@@ -208,7 +225,20 @@ def get_knife_edge_data(sid,elem,z_mtr_name, mon='sclr1_ch4',linear_flag=True):
     return popt[0],popt[1]*2.3548*1000.0,xdata,ydata,fit_data, z_mtr_pos
 
 
-def sici_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
+def sici_fit(sid, elem, mon='sclr1_ch4', linear_flag=True, on_fit_error=None):
+    """Fit sine/cosine integral function to edge data.
+    
+    Parameters
+    ----------
+    on_fit_error : None, float, or tuple, optional
+        Value to return if fit fails. Default None returns (None, None).
+        Pass a specific value to return on error (e.g., 0 for zero, -1 for skip marker).
+    
+    Returns
+    -------
+    tuple
+        (edge_position, FWHM) on success, or on_fit_error value on failure
+    """
     try:
         h=db[sid]
         sid=h['start']['scan_id']
@@ -246,8 +276,12 @@ def sici_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
         return (popt[0],1.39156*2*1000.0/popt[1])
     except Exception as fit_error:
         print(f"Warning: Sici fit failed for scan {sid}: {fit_error}")
-        print("Returning default values: edge_pos=0.0, FWHM=0.0")
-        return (0.0, 0.0)
+        if on_fit_error is None:
+            error_return = (None, None)
+        else:
+            error_return = on_fit_error
+        print(f"Returning on_fit_error value: {error_return}")
+        return error_return
 
 
 def find_double_edge2(xdata,ydata):
@@ -259,7 +293,20 @@ def find_double_edge2(xdata,ydata):
     ind2 = scipy.argmin(der)
     return(xdata[ind1],xdata[ind2])
 
-def square_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
+def square_fit(sid, elem, mon='sclr1_ch4', linear_flag=True, on_fit_error=None):
+    """Fit square step function to double-edge data.
+    
+    Parameters
+    ----------
+    on_fit_error : None, float, or tuple, optional
+        Value to return if fit fails. Default None returns (None, None, None).
+        Pass a specific value to return on error (e.g., (0,0,0) for zeros, -1 for skip).
+    
+    Returns
+    -------
+    tuple
+        (edge1_pos, edge2_pos, center_pos) on success, or on_fit_error value on failure
+    """
     try:
         h=db[sid]
         sid=h['start']['scan_id']
@@ -310,8 +357,12 @@ def square_fit(sid,elem,mon='sclr1_ch4',linear_flag=True):
         return (popt[1],popt[3],(popt[1]+popt[3])*0.5)
     except Exception as fit_error:
         print(f"Warning: Square fit failed for scan {sid}: {fit_error}")
-        print("Returning default values: (0.0, 0.0, 0.0)")
-        return (0.0, 0.0, 0.0)
+        if on_fit_error is None:
+            error_return = (None, None, None)
+        else:
+            error_return = on_fit_error
+        print(f"Returning on_fit_error value: {error_return}")
+        return error_return
     #return(xdata, ydata, fit_data)
 
 
