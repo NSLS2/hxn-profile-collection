@@ -518,7 +518,9 @@ def mov_zpz1(pos):
     dz = pos - c_zpz1
     yield from movr_zpz1(dz)
 
-def mll_z_alignment(z_motor, z_start, z_end, z_num, mot, start, end, num, acq_time, elem='Pt_L',mon='sclr1_ch4',lin_flag = False):
+def mll_z_alignment(z_motor, z_start, z_end, z_num, mot, 
+                    start, end, num, acq_time, elem='Pt_L',
+                    mon='sclr1_ch4',lin_flag = False):
 
     """usage: <mll_z_alignment(sbz,-20,20,10,dssy,-0.5,0.5,100,0.05, elem = 'Pt_L')
     
@@ -547,7 +549,7 @@ def mll_z_alignment(z_motor, z_start, z_end, z_num, mot, start, end, num, acq_ti
     min_fwhm_idx = np.argmin(fit_size)
     best_z_pos = z_pos[min_fwhm_idx]
     
-    yield from bps.mov(mot, mot_init)
+    yield from bps.mov(z_motor, init_sz)
     plt.figure()
     plt.plot(z_pos,fit_size,'bo')
     plt.xlabel(z_motor.name)
@@ -2512,7 +2514,7 @@ def update_xrf_elem_list(roi_elems = ['Cr', 'Ge', 'W_L', 'Se', 'Si', 'Cl', 'Ga',
         reload_bsui()
 
 
-def mll_sample_out(move_lens_upstream = True):
+def mll_sample_out(move_lens_upstream = False):
 
     if fdet1.x.position>-50:
         raise ValueError("XRF detector is not in OUT position. Move it out <-50 and try again")
@@ -2530,7 +2532,7 @@ def mll_sample_out(move_lens_upstream = True):
     if move_lens_upstream:
         yield from mll_to_upstream()
 
-def mll_sample_in(move_sbz = False, move_lens_downstream = True):
+def mll_sample_in(move_sbz = False, move_lens_downstream = False):
 
         if sbz.position>4800:
             yield from bps.movr(sbx,4000)
@@ -2882,6 +2884,7 @@ def mll_to_nanobeam():
                          message_string = "This script works only when the optics are in IN position for safety")
      #close c shutter
     caput("XF:03IDC-ES{Zeb:2}:SOFT_IN:B0", 0)
+    yield from bps.movr(ssa2.hgap,-2,ssa2.vgap,-2,s5.hgap,-3.5,s5.vgap,-3.5)
 
     for mtr, pos in rel_target_positions.items():
         if not math.isclose(mtr.position,pos,rel_tol = 0.3):
@@ -2893,8 +2896,6 @@ def mll_to_nanobeam():
 
     else:
         raise ValueError("HMLL HX motion failed")
-
-    yield from bps.movr(ssa2.hgap,-2,ssa2.vgap,-2,s5.hgap,-3.5,s5.vgap,-3.5)
 
     do_motor_position_checks(check_list_after,abs_tol = 5, message_string ="Failed to go to nanobeam position")
 

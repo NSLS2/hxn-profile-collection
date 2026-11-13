@@ -438,7 +438,8 @@ def align_scan(mtr, start, end, num, exp, elem_, align_with="line_center",
         yield from bps.sleep(1)
         xc, fwhm = erf_fit(-1,
                            elem_,
-                           linear_flag=False)
+                           linear_flag=False,
+                           )
         
         if xc is None:
             print(f"Warning: Edge fit failed for alignment. on_fit_error={on_fit_error}")
@@ -452,7 +453,8 @@ def align_scan(mtr, start, end, num, exp, elem_, align_with="line_center",
                 print(f"Skipping motor movement. Motor remains at {mtr.position}")
                 return mtr.position
         else:
-            print("xc", xc, "initial_position", initial_position, "align_movement_limit", align_movement_limit)
+            print("xc", xc, "initial_position", initial_position, 
+                  "align_movement_limit", align_movement_limit)
             if abs(xc) - abs(initial_position) > align_movement_limit:
                 xc = mtr.position + offset
                 print("xc", xc, "mtr.position", mtr.position, "offset", offset)
