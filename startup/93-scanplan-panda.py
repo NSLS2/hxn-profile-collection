@@ -979,11 +979,17 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
         if "xspress3_det2" in dets_by_name:
             print(0)
             dpc = dets_by_name["xspress3_det2"]
+<<<<<<< HEAD
+            dpc.hdf5.filestore_spec = dpc.hdf5.filestore_spec_restore
+            dpc.mode_settings.scan_type.put('step')
+            scan_counter.append(dpc.cam.array_counter)
+=======
             dpc.hdf5.spec = dpc.hdf5.spec_restore
             dpc.mode_settings.scan_type.put('step')
             # scan_counter.append(dpc.cam.array_counter)
             scan_counter.append(dpc.hdf5.num_captured)
             print(f"{scan_counter = }")
+>>>>>>> refs/remotes/origin/xspress3mk2-detector
             del dpc
 
 
