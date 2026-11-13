@@ -526,7 +526,7 @@ class CommunityHxnXspress3Detector(CommunityXspress3_4Channel):
             print(3)
             s = self.trigger_internal()  # IS IT CORRECT WAY TO TRIGGER ACQUISITION?
 
-            while (self.settings.acquire.get() == 1):
+            while (self.cam.acquire.get() == 1):
                 time.sleep(0.5)
 
             sts._finished()
