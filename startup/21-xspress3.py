@@ -298,6 +298,8 @@ class HXNXspress3HDF5Plugin(Xspress3HDF5Plugin):
     For now, those attributes are hardcoded.
     """
 
+    file_write_mode = Cpt(EpicsSignal, "FileWriteMode")
+
     def __init__(self, *args, **kwargs):
         # TODO - this will change after data security is done
         self.root_path_str = "/nsls2/data/hxn/legacy/"
@@ -459,6 +461,7 @@ class CommunityHxnXspress3Detector(CommunityXspress3_4Channel):
         if total_points < 1:
             raise RuntimeError("You must set the total points")
         spec_per_point = self.spectra_per_point.get()
+        print(f"{spec_per_point=}")
         total_capture = total_points * spec_per_point
         return total_points, spec_per_point, total_capture
 
@@ -503,10 +506,21 @@ class CommunityHxnXspress3Detector(CommunityXspress3_4Channel):
                 self.generate_datum(ch.name, trigger_time, {})
         self._abs_trigger_count += 1
 
+    def trigger_external(self):
+        if self._staged != Staged.yes:
+            raise RuntimeError("not staged")
+        self._status = DeviceStatus(self)
+        self._status._finished()
+        if self.mode_settings.scan_type.get() != 'fly':
+            self._dispatch_channels(trigger_time=time.time())
+            # fly-scans take care of dispatching on their own
+        return self._status
+
     def trigger_internal(self):
         if self._staged != Staged.yes:
             raise RuntimeError("not staged")
         self._status = DeviceStatus(self)
+        
         self._acquisition_signal.put(1, wait=True)
         self._dispatch_channels(trigger_time=time.time())
         return self._status
@@ -529,12 +543,14 @@ class CommunityHxnXspress3Detector(CommunityXspress3_4Channel):
             return sts
         else:
             print(3)
+            #self.hdf5.file_write_mode.put(1,wait=True)
             s = self.trigger_internal()  # IS IT CORRECT WAY TO TRIGGER ACQUISITION?
 
             while (self.cam.acquire.get() == 1):
                 time.sleep(0.5)
 
             sts._finished()
+            print(self.spectra_per_point.get())
             return sts
 
 

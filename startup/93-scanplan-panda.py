@@ -798,9 +798,8 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
         dpc = dets_by_name["xspress3_det2"]
         dpc.total_points.set(total_points)
         dpc.mode_settings.total_points.set(total_points)
-        # dpc.mode_settings.mode.set('external')
-        dpc.mode_settings.mode.set('internal')
-        dpc.external_trig.put(False)
+        dpc.mode_settings.mode.set('ttl_both')
+        dpc.external_trig.put(True)
         dpc.hdf5.spec_restore = dpc.hdf5.spec # 'XSP3'
         dpc.hdf5.spec = 'XSP3_BULK'
         del dpc
@@ -979,17 +978,11 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
         if "xspress3_det2" in dets_by_name:
             print(0)
             dpc = dets_by_name["xspress3_det2"]
-<<<<<<< HEAD
-            dpc.hdf5.filestore_spec = dpc.hdf5.filestore_spec_restore
-            dpc.mode_settings.scan_type.put('step')
-            scan_counter.append(dpc.cam.array_counter)
-=======
             dpc.hdf5.spec = dpc.hdf5.spec_restore
             dpc.mode_settings.scan_type.put('step')
             # scan_counter.append(dpc.cam.array_counter)
             scan_counter.append(dpc.hdf5.num_captured)
             print(f"{scan_counter = }")
->>>>>>> refs/remotes/origin/xspress3mk2-detector
             del dpc
 
 
@@ -1061,7 +1054,8 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
             counter +=1
             yield from bps.sleep(0.5)
             if 'xspress3' in dets_by_name or 'xspress3_det2' in dets_by_name:
-                panda_live_plot.update_plot()
+                pass
+                #panda_live_plot.update_plot()
 
             # if counter>3600:
             #     break
@@ -1074,7 +1068,8 @@ def flyscan_pd(detectors, start_signal, total_points, dwell, *,
             print('Waiting for detector(s) to finish all frames...')
             yield from bps.sleep(1)
             if 'xspress3' in dets_by_name or 'xspress3_det2' in dets_by_name:
-                panda_live_plot.update_plot()
+                pass
+                #panda_live_plot.update_plot()
         # we still know about ion from above
         if ion:
             yield from abs_set(ion.stop_all, 1)  # stop acquiring scaler
