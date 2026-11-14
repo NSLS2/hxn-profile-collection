@@ -587,7 +587,12 @@ def run_diff_json_qserver_plan(path_to_json, tracking_file=None, do_confirm=Fals
         Whether to confirm before running the scan (default: False for QServer compatibility).
         Set to False to prevent the plan from hanging in automated queue execution.
     """
-    yield from run_diff_json(path_to_json, tracking_file=tracking_file, do_confirm=do_confirm)
+    if do_confirm:
+        raise ValueError(
+            "Interactive confirmation is not supported by QServer plans. "
+            "Confirm before submission and use do_confirm=False."
+        )
+    yield from run_diff_json(path_to_json, tracking_file=tracking_file, do_confirm=False)
 
 
 def send_align_and_scan_to_queue(
