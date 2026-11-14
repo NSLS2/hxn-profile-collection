@@ -541,11 +541,11 @@ class HXNFlyerPanda(Device):
             self._document_cache.extend(("datum", d) for d in roi_datum)
 
         for d in self._dets:
-            if d.name != 'fs' and d.name != 'bshutter' and d.name != 'xspress3':
+            if d.name != 'fs' and d.name != 'bshutter' and d.name != 'xspress3' and d.name !='xspress3_det2':
                 #print (f"{'='*30}")
                 #print (d)
                 self._document_cache.extend(d.collect_asset_docs())
-            if d.name == 'xspress3':
+            if d.name == 'xspress3' or d.name == 'xspress3_det2':
                 doc_cnt = 0
                 for doc in d.collect_asset_docs():
                     self._document_cache.append(doc)
@@ -1776,6 +1776,7 @@ def fly1dpd(dets, motor1, scan_start1, scan_end1, num1, exposure_time, panda_fly
             # yield from bps.sleep(2)
             for d in dets:
                 if d.name == 'xspress3' or d.name == 'xspress3_det2':
+                    print("setting panda_live_plot: ", scan_input, d, panda_flyer.sclr)
                     panda_live_plot.setup_plot(scan_input,d,panda_flyer.sclr)
             yield from flyscan_pd(dets, '&6begin41r', num1*num2, exposure_time, dead_time = dead_time, md=md, scan_dim = [num1,num2], position_supersample = position_supersample, merlin_cont_mode=merlin_cont_mode, **kwargs)
 

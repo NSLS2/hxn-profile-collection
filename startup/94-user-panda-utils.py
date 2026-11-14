@@ -225,16 +225,21 @@ class PandaLivePlot():
         for i in range(self.ntotal):
             fluo_data = np.zeros(self.total_points)
             set_nan = False
+            print("self.elems:", self.elems)
             for roi in self.elems[i]:
+                print("roi:", roi)
                 if roi.name.startswith('sclr'):
+                    print("not starting with sclr")
                     fluo_tmp = roi.spectrum.get()
                     set_nan = True
                 else:
+                    print("not starting with sclr")
                     fluo_tmp = roi.settings.array_data.get()
                 if len(fluo_tmp) > self.total_points:
                     return
                 fluo_data[:len(fluo_tmp)] += fluo_tmp
             if finished:
+                print("fluo_data:", fluo_data)
                 fluo_data[len(fluo_tmp):] = fluo_data[len(fluo_tmp)-1]
                 self.do_plot = False
             if set_nan:
