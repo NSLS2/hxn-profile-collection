@@ -61,7 +61,7 @@ class PlanLogger:
         
         Example:
             {"timestamp": "2026-11-04T15:30:45.123456", "event": "started", 
-             "json_path": "/data/users/current_user/diff_params.json"}
+             "json_path": "/nsls2/data/hxn/legacy/users/current_user/diff_params.json"}
             {"timestamp": "2026-11-04T15:45:30.654321", "event": "completed", 
              "data": {"angles_completed": 45}}
     
@@ -136,7 +136,7 @@ class PlanLogger:
         Example:
             PlanLogger.log_plan_start(
                 plan_name="run_repeat_2d_json",
-                json_path="/data/users/current/diff_params.json",
+                json_path="/nsls2/data/hxn/legacy/users/current/diff_params.json",
                 extra_params={"n_repeat": 10, "scan_angle": 45.5}
             )
         """
@@ -1071,7 +1071,7 @@ def run_tomo_json(path_to_json,tracking_file = None):
 
             # save the DF in the loop so quitting a scan won't affect
             filename = f"{tomo_params.get('scan_label','')}_startID{first_sid}"
-            angle_list.to_csv(os.path.join(tomo_params.get("save_log_to", "/data/users/current_user"), filename+'.csv'),
+            angle_list.to_csv(os.path.join(tomo_params.get("save_log_to", "/nsls2/data/hxn/legacy/users/current_user"), filename+'.csv'),
                               float_format= '%.5f')
             
             flog = open(os.path.join(tomo_params.get("save_log_to", "/data/users/current_user"), filename+'.txt'),'a')
@@ -1751,7 +1751,7 @@ def run_diff_json(path_to_json,tracking_file = None,do_confirm =True):
                 scan_id_val = angle_list['scan_id'].iloc[0]
                 scan_id_str = str(int(scan_id_val)) if not pd.isna(scan_id_val) else "unknown"
                 filename = f"{diff_params.get('scan_label','')}_startID{scan_id_str}.csv"
-                angle_list.to_csv(os.path.join(diff_params.get("save_log_to", "/data/users/current_user"), filename),
+                angle_list.to_csv(os.path.join(diff_params.get("save_log_to", "/nsls2/data/hxn/legacy/users/current_user"), filename),
                 float_format= '%.5f')
             else:
                 print(f"{angle} skipped")
@@ -1807,7 +1807,7 @@ def run_diff_json(path_to_json,tracking_file = None,do_confirm =True):
 
                     # save the DF in the loop so quitting a scan won't affect
                     filename = f"hxn_zp_diff_{diff_params.get('scan_label','')}_startID{int(angle_list['scan_id'][0])}.csv"
-                    angle_list.to_csv(os.path.join(diff_params.get("save_log_to", "/data/users/current_user"), filename),
+                    angle_list.to_csv(os.path.join(diff_params.get("save_log_to", "/nsls2/data/hxn/legacy/users/current_user"), filename),
                                     float_format= '%.5f')
 
                 else:
@@ -2010,7 +2010,7 @@ def run_repeat_2d_json(path_to_json, n_repeat=10, tracking_file=None, do_confirm
 
         # Save after each repeat
         filename = f"{diff_params.get('scan_label','repeat_diff')}_n{n_repeat}_startID{int(repeat_list['scan_id'][0])}.csv"
-        repeat_list.to_csv(os.path.join(diff_params.get("save_log_to", "/data/users/current_user"), filename),
+        repeat_list.to_csv(os.path.join(diff_params.get("save_log_to", "/nsls2/data/hxn/legacy/users/current_user"), filename),
                            float_format='%.5f')
 
         print(f"Repeat scan {n+1}/{n_repeat} done and logged.")

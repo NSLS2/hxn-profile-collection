@@ -245,58 +245,6 @@ def erf_fit(sid, elem, mon='sclr1_ch4', linear_flag=True,
         print(f"Returning on_fit_error value: {error_return}")
         return error_return
 
-def erf_fit_to_delete(sid, elem, mon='sclr1_ch4', linear_flag=True):
-    h = db[sid]
-    sid = h.start['scan_id']
-    df2 = h.table()
-    channels = [1,2,3]
-    xrf = None
-    for i in channels:
-        fluo_data = np.array(list(h.data('Det%d_'%i+elem))).squeeze()
-        if xrf is None:
-            xrf = fluo_data.copy()
-        else:
-            xrf = xrf + fluo_data
-    #xrf = np.array(df2['Det2_' + elem]+df2['Det1_' + elem] + df2['Det3_' + elem])
-
-    xrf[xrf==np.nan] = np.nanmean(xrf)#patch for ic3 returns zero
-    xrf[xrf==np.inf] = np.nanmean(xrf)#patch for ic3 returns zero
-
-    #threshold = np.max(xrf)/10.0
-    x_motor = h.start['motors']
-    try:
-        xdata = np.array(df2[x_motor[0]])
-    except:
-        xdata = get_scan_positions(h)
-    ydata = xrf
-    ydata[0] = ydata[1] #patch for drop point issue
-    ydata[-1] = ydata[-2]#patch for drop point issue
-    y_min=np.min(ydata)
-    y_max=np.max(ydata)
-    ydata=(ydata-y_min)/(y_max-y_min)
-    plt.figure()
-    plt.plot(xdata,ydata,'bo')
-    y_mean = np.mean(ydata)
-    half_size = int (len(ydata)/2)
-    y_half_mean = np.mean(ydata[0:half_size])
-    edge_pos=find_edge(xdata,ydata,10)
-    if y_half_mean < y_mean:
-        if linear_flag == False:
-            popt,pcov=curve_fit(erfunc1,xdata,ydata, p0=[edge_pos,0.05,0.5])
-            fit_data=erfunc1(xdata,popt[0],popt[1],popt[2]);
-        else:
-            popt,pcov=curve_fit(erfunc3,xdata,ydata, p0=[edge_pos,0.05,0.5,0,0])
-            fit_data=erfunc3(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
-    else:
-        if linear_flag == False:
-            popt,pcov=curve_fit(erfunc2,xdata,ydata,p0=[edge_pos,0.05,0.5])
-            fit_data=erfunc2(xdata,popt[0],popt[1],popt[2]);
-        else:
-            popt,pcov=curve_fit(erfunc4,xdata,ydata,p0=[edge_pos,0.05,0.5,0,0])
-            fit_data=erfunc4(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
-    plt.plot(xdata,fit_data)
-    plt.title(f'{sid = }, edge = {popt[0] :.3f}, FWHM = {popt[1]*2354.8 :.2f} nm')
-    return (popt[0],popt[1]*2.3548*1000.0)
 
 
 def get_knife_edge_data(sid,elem,z_mtr_name, mon='sclr1_ch4',linear_flag=True):
@@ -2102,7 +2050,7 @@ def update_det_pos(det = "merlin", do_confirm = True):
 
         read_file.close()
         ext = datetime.now().strftime('%Y-%m-%d')
-        json_path_backup = f"/data/users/backup_params/diff_pos/{ext}_diff_det_pos.json"
+        json_path_backup = f"/nsls2/data/hxn/legacy/users/backup_params/diff_pos/{ext}_diff_det_pos.json"
 
         with open(json_path, "w") as out_file:
             json.dump(diff_pos, out_file, indent = 6)

@@ -16,7 +16,7 @@ from ophyd.areadetector.plugins import HDF5Plugin
 import time
 
 import os
-if os.path.isfile('/data/users/startup_parameters/USE_RASMI'):
+if os.path.isfile('/nsls2/data/hxn/legacy/users/startup_parameters/USE_RASMI'):
     USE_RASMI = True
 else:
     USE_RASMI = False

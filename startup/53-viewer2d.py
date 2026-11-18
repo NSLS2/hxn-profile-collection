@@ -113,7 +113,7 @@ def plot_Dexela_data(scan_id):
 
     return plot3D(data,0,titles=titles)
 
-def save_Dexela_data_as_tiff(scan_id, output_dir='/data/users/current_user/'):
+def save_Dexela_data_as_tiff(scan_id, output_dir='/nsls2/data/hxn/legacy/users/current_user/'):
     hd = db[scan_id]
     data = np.array(list(hd.data('dexela1_image')))
     num_points = data.shape[0]
@@ -400,7 +400,7 @@ def plot(scan_id, elem='Pt', norm=None,
     data_out[:,0] = x
     data_out[:,1] = data
     data_out[:,2] = norm_v
-    np.savetxt('/data/users/2019Q3/Huang_2019Q3/F17_zp_ry_rocking_12keV.txt',data_out)
+    np.savetxt('/nsls2/data/hxn/legacy/users/2019Q3/Huang_2019Q3/F17_zp_ry_rocking_12keV.txt',data_out)
     '''
 
 def plot_all(scan_id, namex=None, diff=False, channels=None,
@@ -808,7 +808,7 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
 
 
 def export_diff(sid_start, sid_end, interval=1,
-           export_folder='/data/users/2023Q1/Cao_2023Q1/diff_data_all',det='merlin1',
+           export_folder='/nsls2/data/hxn/legacy/users/2023Q1/Cao_2023Q1/diff_data_all',det='merlin1',
            fields_excluded=['xspress3_ch1', 'xspress3_ch2','xspress3_ch3', 'merlin1']):
     print('saving {}'.format(det))
     for sid in range(sid_start,sid_end+1,interval):

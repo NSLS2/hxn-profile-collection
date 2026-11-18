@@ -451,7 +451,7 @@ def run_zp_xanes(path_to_parameter_file, do_confirm  =True,
       "pdf_log":true,
       "pdf_elems:["Cu"],
       "peak_flux":true,
-      "save_log_to":"/data/users/current_user"
+      "save_log_to":"/nsls2/data/hxn/legacy/users/current_user"
     
     """   
     
@@ -985,7 +985,7 @@ def run_mll_xanes(path_to_parameter_file,do_confirm =True):
            13. Save important information in CSV format to selected forlder 
            14. The user can turn on and off alignemnt scans
            
-    usage: <run_mll_xanes(As_MLL_XANES,"/data/users/current_user/mll_xanes_2d_as-sid-pristine.json")
+    usage: <run_mll_xanes(As_MLL_XANES,"/nsls2/data/hxn/legacy/users/current_user/mll_xanes_2d_as-sid-pristine.json")
 
     
     
@@ -1295,13 +1295,13 @@ def run_mll_xanes(path_to_parameter_file,do_confirm =True):
 '''
 
 def batch_xanes2():
-    yield from run_mll_xanes("/data/users/current_user/mll_xanes_sample5_roi2.json", do_confirm = False)
+    yield from run_mll_xanes("/nsls2/data/hxn/legacy/users/current_user/mll_xanes_sample5_roi2.json", do_confirm = False)
                              
     yield from recover_scan_pos_and_find_com(298422, 
                                              elem = "Hg_L", 
                                              fly_scan_plan = [dssx,-2,2,50,dssy,-2,2,50,0.1],
                                              com_threshold = 0.7)
-    yield from run_mll_xanes("/data/users/current_user/mll_xanes_sample5_roi3.json", 
+    yield from run_mll_xanes("/nsls2/data/hxn/legacy/users/current_user/mll_xanes_sample5_roi3.json", 
                              sample_name= "A",
                              do_confirm = False)
 
@@ -1310,7 +1310,7 @@ def batch_xanes2():
                                              elem = "Hg_L", 
                                              fly_scan_plan = [dssx,-1.5,1.5,50,dssy,-1.5,1.5,50,0.1],
                                              com_threshold = 0.7)
-    yield from run_mll_xanes("/data/users/current_user/mll_xanes_sample6_roi1.json", 
+    yield from run_mll_xanes("/nsls2/data/hxn/legacy/users/current_user/mll_xanes_sample6_roi1.json", 
                              sample_name= "B",
                              do_confirm = False)
         
@@ -1322,11 +1322,11 @@ def batch_xanes2():
 def zp_batch_xanes():
 
     #yield from recover_zp_scan_pos(313235,0,1,0)
-    yield from run_zp_xanes("/data/users/current_user/zp_xanes_Cu_MOF_p2.json", 
+    yield from run_zp_xanes("/nsls2/data/hxn/legacy/users/current_user/zp_xanes_Cu_MOF_p2.json", 
                              do_confirm = False,add_low_res_scan=True)
     
     yield from recover_zp_scan_pos(313224,0,1,0)
-    yield from run_zp_xanes("/data/users/current_user/zp_xanes_Cu_MOF.json", 
+    yield from run_zp_xanes("/nsls2/data/hxn/legacy/users/current_user/zp_xanes_Cu_MOF.json", 
                              do_confirm = False,add_low_res_scan=True)
     
 

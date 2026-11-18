@@ -61,7 +61,7 @@ def make_zp_tomo_plan(save_as = "/nsls2/data/hxn/legacy/user_macros/HXN_GUI/Scan
                     "test":False,
                     "ic_threshold":0.9,
                     "scan_label":"HXN_Tomo_Scan",
-                    "save_log_to":"/data/users/current_user/"
+                    "save_log_to":"/nsls2/data/hxn/legacy/users/current_user/"
 
                 }
 

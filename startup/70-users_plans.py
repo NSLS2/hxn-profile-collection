@@ -720,7 +720,7 @@ def mll_tomo_scan(angle_start, angle_end, angle_num, x_start, x_end, x_num,
         scanid_list.append(int(last_sid))
         th_pos = dsth.position
         real_th_list.append(th_pos)
-        user_folder = '/data/users/2020Q2/Huang_2020Q2/'
+        user_folder = '/nsls2/data/hxn/legacy/users/2020Q2/Huang_2020Q2/'
         sid_dsth_list = np.column_stack([scanid_list,real_th_list])
         np.savetxt(os.path.join(user_folder, 'Tomo_theta_list_firstsid_{}'.format(scanid_list[0])+'.txt'),sid_dsth_list, fmt = '%5f')
         '''
@@ -3318,7 +3318,7 @@ def recover_zp_scan_pos(scan_id,zp_move_flag=0,
 def export_merlin(sid,num=1):
     for i in range(num):
         sid, df = _load_scan(sid, fill_events=False)
-        path = os.path.join('/data/users/2019Q1/Robinson_2019Q1/raw_data/', 'scan_{}.txt'.format(sid))
+        path = os.path.join('/nsls2/data/hxn/legacy/users/2019Q1/Robinson_2019Q1/raw_data/', 'scan_{}.txt'.format(sid))
         print('Scan {}. Saving to {}'.format(sid, path))
         #non_objects = [name for name, col in df.iteritems() if col.dtype.name not in ('object', )]
         #dump all data
@@ -3326,7 +3326,7 @@ def export_merlin(sid,num=1):
         df.to_csv(path, float_format='%1.5e', sep='\t',
                   columns=sorted(non_objects))
 
-        path = os.path.join('/data/users/2019Q1/Robinson_2019Q1/raw_data/', 'scan_{}_scaler.txt'.format(sid))
+        path = os.path.join('/nsls2/data/hxn/legacy/users/2019Q1/Robinson_2019Q1/raw_data/', 'scan_{}_scaler.txt'.format(sid))
         #np.savetxt(path, (df['sclr1_ch3'], df['p_ssx'], df['p_ssy']), fmt='%1.5e')
         #np.savetxt(path, (df['sclr1_ch4'], df['zpssx'], df['zpssy']), fmt='%1.5e')
         filename = get_all_filenames(sid,'merlin1')
@@ -3334,13 +3334,13 @@ def export_merlin(sid,num=1):
         if num_subscan == 1:
             for fn in filename:
                 break
-            path = os.path.join('/data/users/2019Q1/Robinson_2019Q1/raw_data/', 'scan_{}.h5'.format(sid))
+            path = os.path.join('/nsls2/data/hxn/legacy/users/2019Q1/Robinson_2019Q1/raw_data/', 'scan_{}.h5'.format(sid))
             mycmd = ''.join(['scp', ' ', fn, ' ', path])
             os.system(mycmd)
         else:
             h = db[sid]
             images = db.get_images(h,name='merlin1')
-            path = os.path.join('/data/users/2019Q1/Robinson_2019Q1/raw_data/', 'scan_{}.h5'.format(sid))
+            path = os.path.join('/nsls2/data/hxn/legacy/users/2019Q1/Robinson_2019Q1/raw_data/', 'scan_{}.h5'.format(sid))
             f = h5py.File(path, 'w')
             dset = f.create_dataset('/entry/instrument/detector/data', data=images)
             f.close()
@@ -4521,7 +4521,7 @@ def export_diff_data_as_h5(sid_list,
 
     im_title = "scan_id="+ str(h.start["scan_id"])
     fig.suptitle(im_title)
-    fig.savefig(f"/data/users/current_user/{im_title}.png")
+    fig.savefig(f"/nsls2/data/hxn/legacy/users/current_user/{im_title}.png")
     '''
 
 

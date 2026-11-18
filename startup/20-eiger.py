@@ -243,7 +243,7 @@ class HxnEigerDetector(HxnModalTrigger, EigerDetector):
 #         cam.stage_sigs[cam.image_mode] = 0  # 'Multiple'
 #         cam.stage_sigs[cam.trigger_mode] = 3  # 'External Enable'
 
-if os.path.isfile('/data/users/startup_parameters/USE_RASMI'):
+if os.path.isfile('/nsls2/data/hxn/legacy/users/startup_parameters/USE_RASMI'):
     USE_RASMI = True
 else:
     USE_RASMI = False

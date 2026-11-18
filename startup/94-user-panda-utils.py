@@ -1,7 +1,7 @@
 import re 
 
 def export_scan_header(scan_id,motorx,rangex,numx,motory,rangey,numy,angle,detectors):
-    with open('/data/users/startup_parameters/scan_header.txt','w') as f:
+    with open('/nsls2/data/hxn/legacy/users/startup_parameters/scan_header.txt','w') as f:
         f.write('[scan]\n')
         f.write('scan_num = %d\n'%scan_id)
         f.write('xmotor = %s\n'%motorx.name)

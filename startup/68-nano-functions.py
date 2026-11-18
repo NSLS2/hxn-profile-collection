@@ -222,7 +222,7 @@ def rotate_rasmi_sample_tomo_roty(abs_angle):
     yield from align_sample_tomo()
     yield from bps.sleep(0.5)
 
-def rasmi_tomo(anglist,startx,endx,stepx,starty,endy,stepy,exposure_time,logfile="/data/users/current_user/rasmi_tomo.txt",close_shutter_after_scan = False):
+def rasmi_tomo(anglist,startx,endx,stepx,starty,endy,stepy,exposure_time,logfile="/nsls2/data/hxn/legacy/users/current_user/rasmi_tomo.txt",close_shutter_after_scan = False):
 
     # Use the tweak input box for both stages for manual correction offset
     caput('XF:03IDC-ES{PT:Smpl-Ax:ssx}Mtr.TWV',0)
@@ -265,7 +265,7 @@ def parse_newscan_rois(filename):
 
 def rasmi_auto_2d_scan_demo(startx,endx,stepx,starty,endy,stepy,exposure_time):
 
-    roi_filename = '/data/users/current_user/test/roi_ranges_bsui.txt'
+    roi_filename = '/nsls2/data/hxn/legacy/users/current_user/test/roi_ranges_bsui.txt'
     max_roi_num = 8
 
     try:

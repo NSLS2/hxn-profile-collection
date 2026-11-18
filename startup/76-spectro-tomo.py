@@ -8,7 +8,7 @@ ReadMe:
 
 EXAMPLE OF USAGE:
 
-<zp_spectro_tomo_scan(MnXANES,path_to_json,pdfElem = ['Mn'],pdfLog = True, peakBeam = True,saveLogFolder = '/data/users/current_user/cycled_nmc_mn_spectro-tomo/)
+<zp_spectro_tomo_scan(MnXANES,path_to_json,pdfElem = ['Mn'],pdfLog = True, peakBeam = True,saveLogFolder = '/nsls2/data/hxn/legacy/users/current_user/cycled_nmc_mn_spectro-tomo/)
 
 
 """
@@ -294,7 +294,7 @@ def run_zp_spectro_tomo_scan(path_to_json):
 
     """ 
     Usage:
-    path_to_json  = "/data/users/current_user/spectro_tomo_ni_golden.json"
+    path_to_json  = "/nsls2/data/hxn/legacy/users/current_user/spectro_tomo_ni_golden.json"
 <run_zp_spectro_tomo_scan(path_to_json)
 
 

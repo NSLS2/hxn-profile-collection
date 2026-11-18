@@ -15,7 +15,7 @@ from pathlib import Path
 import threading
 
 import os
-if os.path.isfile('/data/users/startup_parameters/TILED_OFF'):
+if os.path.isfile('/nsls2/data/hxn/legacy/users/startup_parameters/TILED_OFF'):
     TILED_OFF = True
 else:
     TILED_OFF = False
