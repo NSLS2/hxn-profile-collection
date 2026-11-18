@@ -39,16 +39,20 @@ def is_close_to_reference(value, reference, rel_tol=0.05):
         raise ValueError(f"{value} is not within 5% of {reference}")
     
 
-def get_xrf_data(h,elem ="Cr",mon ='sclr1_ch4'):
+def get_xrf_data_1d(h,elem ="Cr",mon ='sclr1_ch4'):
 
     """returns scan positions and xrf data of 1d scans
-        useful for line fitting, erf etc."""
+        useful for line fitting, erf etc.
+        Raises ValueError for scans with more than one motor."""
     
     sid = h.start['scan_id']
     df2 = h.table()
 
         
     x_motor = h.start['motors']
+    if len(x_motor) > 1:
+        raise ValueError(f"Require a 1D line scan: scan {sid} has {len(x_motor)} motors")
+
     try:
         xdata = np.array(df2[x_motor[0]])
     except:
@@ -113,7 +117,7 @@ def erf_fit(sid, elem, mon='sclr1_ch4', linear_flag=True,
     try:
         h = db[sid]
         sid = h.start['scan_id']
-        xdata, ydata = get_xrf_data(h,
+        xdata, ydata = get_xrf_data_1d(h,
                                 elem = elem,
                                 mon = mon)
         ydata[0] = ydata[1] #patch for drop point issue
@@ -220,7 +224,7 @@ def get_knife_edge_data(sid,elem,z_mtr_name, mon='sclr1_ch4',linear_flag=True):
     h = db[sid]
     bl = h.table('baseline')
     z_mtr_pos = bl[z_mtr_name].to_numpy()[0]
-    xdata, ydata = get_xrf_data(h,
+    xdata, ydata = get_xrf_data_1d(h,
                                 elem = elem,
                                 mon = mon)
     
@@ -818,12 +822,7 @@ def return_line_center(sid,elem='Cr',threshold=0.5, neg_flag=0,
     """
     h = db[sid]
 
-    x_motor = h.start['motors']
-
-    if len(x_motor)>1:
-        raise ValueError (f"Require a Line Scan: num motors = {len(x_motor)}")
-
-    x, xrf = get_xrf_data(h, elem=elem, mon=mon)
+    x, xrf = get_xrf_data_1d(h, elem=elem, mon=mon)
 
     xrf[xrf==np.nan] = np.nanmean(xrf)#patch for ic3 returns zero
     xrf[xrf==np.inf] = np.nanmean(xrf)#patch for ic3 returns zero
@@ -858,7 +857,7 @@ def return_line_center(sid,elem='Cr',threshold=0.5, neg_flag=0,
                  label=f'used ({mode})')
         plt.axhline(threshold, color='gray', linestyle=':', label='threshold')
         plt.axvline(mc, color='g', linestyle='--', label='center')
-        plt.xlabel(x_motor[0])
+        plt.xlabel(h.start['motors'][0])
         plt.ylabel('norm. intensity')
         plt.legend(loc='best')
         plt.title(f"sid = {h.start['scan_id']}, {elem}, center = {mc :.3f}")
