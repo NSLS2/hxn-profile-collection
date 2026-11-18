@@ -37,7 +37,88 @@ def is_close_to_reference(value, reference, rel_tol=0.05):
     # Check if the value is within 5% (default) relative tolerance of the reference
     if not math.isclose(value, reference, rel_tol=rel_tol):
         raise ValueError(f"{value} is not within 5% of {reference}")
-    
+
+def get_flyscan_dimensions_(hdr):
+    start_doc = hdr.start
+    # 2D_FLY_PANDA: prefer 'dimensions', fallback to 'shape'
+    if 'scan' in start_doc and start_doc['scan'].get('type') == '2D_FLY_PANDA':
+        if 'dimensions' in start_doc:
+            dim = start_doc['dimensions']
+        elif 'shape' in start_doc:
+            dim = start_doc['shape']
+        else:
+            raise ValueError("No dimensions or shape found for 2D_FLY_PANDA scan")
+
+        return dim[::-1]
+    # rel_scan: use 'shape' or 'num_points'
+    elif start_doc.get('plan_name') == 'rel_scan':
+        if 'shape' in start_doc:
+            dim = start_doc['shape']
+        elif 'num_points' in start_doc:
+            dim = [start_doc['num_points']]
+        else:
+            raise ValueError("No shape or num_points found for rel_scan")
+
+        return dim[::-1]
+    else:
+        raise ValueError("Unknown scan type for get_flyscan_dimensions")
+
+# TODO: Merge with _get_flyscan_dimensions (74-qserver_automap_plans.py) and
+#   get_flyscan_dimensions (53-viewer2d.py). This version returns dims reversed
+#   (ny, nx) for reshape; the 74 version does not. Verify the correct order with
+#   a non-square scan before merging. Also update the error message above to use
+#   this function's name (get_flyscan_dimensions_).
+
+def get_all_scalar_data(hdr):
+
+    keys = list(hdr.table().keys())
+    scalar_keys = [k for k in keys if k.startswith('sclr1') ]
+    #print(f"{scalar_keys = }")
+    print(f"[DATA] fetching scalar data")
+    scan_dim = get_flyscan_dimensions_(hdr)
+    scalar_stack_list = []
+
+    for sclr in sorted(scalar_keys):
+        
+        scalar = np.array(list(hdr.data(sclr))).squeeze()
+        sclr_img = scalar.reshape(scan_dim)
+        scalar_stack_list.append(sclr_img)
+
+    # Stack all the 2D images along a new axis (axis=0).
+    scalar_stack = np.stack(scalar_stack_list, axis=0)
+
+    #print("3D Stack shape:", xrf_stack.shape)
+
+    return  scalar_stack, sorted(scalar_keys)
+
+def get_all_xrf_roi_data(hdr):
+
+    channels = [1, 2, 3]
+    keys = list(hdr.table().keys())
+    roi_keys = [k for k in keys if k.startswith('Det')]
+    det1_keys = [k for k in keys if k.startswith('Det1')]
+    elem_list = [k.replace("Det1_", "") for k in det1_keys]
+
+    #print(f"{elem_list = }")
+    print(f"[DATA] fetching XRF ROIs")
+    try:
+        scan_dim = get_flyscan_dimensions_(hdr)
+    except Exception as e:
+        print(f"[DATA ERROR] cannot get scan dimensions, defaulting to (1, n_events). Error: {e}")
+        scan_dim = (1, len(hdr.table()))
+    xrf_stack_list = []
+
+    for elem in sorted(elem_list):
+        roi_keys = [f'Det{chan}_{elem}' for chan in channels]
+        spectrum = np.sum([np.array(list(hdr.data(roi)), dtype=np.float32).squeeze() for roi in roi_keys], axis=0)
+        xrf_img = spectrum.reshape(scan_dim)
+        xrf_stack_list.append(xrf_img)
+
+    # Stack all the 2D images along a new axis (axis=0).
+    xrf_stack = np.stack(xrf_stack_list, axis=0)
+
+    #print("3D Stack shape:", xrf_stack.shape)
+    return xrf_stack, sorted(elem_list)
 
 def get_xrf_data_1d(h,elem ="Cr",mon ='sclr1_ch4'):
 
