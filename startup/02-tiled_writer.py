@@ -62,9 +62,9 @@ def patch_resource(doc):
     if doc["resource_path"].startswith(doc["root"]):
         doc["resource_path"] = doc["resource_path"].replace(doc["root"], '')
     if doc["root"].startswith("/data"):
-        doc["root"] = doc["root"].replace("/data", "/nsls2/nsls2/data/hxn/legacy/hxn/legacy")
-    # doc["root"] = re.sub(r"^/data", "/nsls2/nsls2/data/hxn/legacy/hxn/legacy", doc["root"])
-    doc["resource_path"] = doc["resource_path"].replace("nsls2/data2/hxn", "nsls2/nsls2/data/hxn/legacy/hxn")
+        doc["root"] = doc["root"].replace("/data", "/nsls2/data/hxn/legacy")
+    # doc["root"] = re.sub(r"^/data", "/nsls2/data/hxn/legacy", doc["root"])
+    doc["resource_path"] = doc["resource_path"].replace("nsls2/data2/hxn", "nsls2/data/hxn")
     
     # Replace 'frame_per_point' with 'multiplier'
     if frame_per_point := doc["resource_kwargs"].pop("frame_per_point", None):
@@ -76,7 +76,7 @@ def patch_resource(doc):
 
     spec = doc["spec"]
     if spec in ["MERLIN_FLY_STREAM_V2", "TPX3", "TPX_HDF5", "EIGER2_STREAM", "MERLIN_HDF5_BULK"]:
-        doc["resource_kwargs"].update({"dataset": '/entry/nsls2/data/hxn/legacy/data', "chunk_shape": (1, ), "join_method": "concat"})
+        doc["resource_kwargs"].update({"dataset": '/entry/data/data', "chunk_shape": (1, ), "join_method": "concat"})
     elif spec == "PANDA":
         doc["resource_kwargs"].update({"chunk_shape": (1024, ), "join_method": "concat"})
     elif spec == "ROI_HDF5_FLY":

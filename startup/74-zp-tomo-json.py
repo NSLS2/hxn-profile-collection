@@ -1,7 +1,7 @@
 print(f"Loading {__file__!r} ...")
 
 
-def make_zp_tomo_plan(save_as = "/nsls2/nsls2/data/hxn/legacy/hxn/legacy/user_macros/HXN_GUI/Scan/temp_files/zp_tomo_params.json" ):
+def make_zp_tomo_plan(save_as = "/data/user_macros/HXN_GUI/Scan/temp_files/zp_tomo_params.json" ):
 
     zp_tomo_scan = {   
                     "angle_info":{"start":-90, 

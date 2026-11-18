@@ -131,8 +131,8 @@ if num_elem > 48:
 #            name="hdf5",
 #            resource_kwargs={},
 #            # These are overriden by properties.
-#            path_template='/nsls2/nsls2/data/hxn/legacy/hxn/legacy/%Y/%m/%d/',
-#            root_path='/nsls2/nsls2/data/hxn/legacy/hxn/legacy',
+#            path_template='/data/%Y/%m/%d/',
+#            root_path='/nsls2/data/hxn/legacy',
 #        )
 #    }
 #

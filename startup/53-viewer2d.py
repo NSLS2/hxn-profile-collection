@@ -726,7 +726,7 @@ def plot2dfly(scan_id, elem='Pt', norm=None, *, x=None, y=None, clim=None,
         extent = None
 
     dt = datetime.utcnow()
-    folder = os.path.join('/nsls2/data/hxn/legacy/output/',
+    folder = os.path.join('/data/output/',
                           '{}{:0>2}{:0>2}/'.format(dt.year, dt.month, dt.day))
 
     if not os.path.exists(folder):

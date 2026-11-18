@@ -8,7 +8,7 @@ import subprocess
 import shutil
 from pathlib import Path
 
-with open("/nsls2/nsls2/data/hxn/legacy/hxn/shared/config/bluesky/profile_collection/startup/plot_elems.json", "r") as fp:
+with open("/nsls2/data/hxn/shared/config/bluesky/profile_collection/startup/plot_elems.json", "r") as fp:
     xrf_elems = json.load(fp)
     fp.close()
 
@@ -45,7 +45,7 @@ def create_user_dir(users_name):
         os.chmod(dir_name, 0o777)
         return dir_name
 
-def create_user_symlink(src_dir = "/nsls2/data/hxn/legacy/2023Q1/"):
+def create_user_symlink(src_dir = "/data/2023Q1/"):
 
     if os.path.exists(src_dir):
         
@@ -155,7 +155,7 @@ def create_user_dir_globus(users_name, date_obj = None):
 def copy_user_data_for_globus(users_name, proposal_number, exp_month=None, dry_run=False):
     """
     Copy user data from /nsls2/data/hxn/legacy/users/... to:
-        /nsls2/nsls2/data/hxn/legacy/hxn/proposals/<cycle>/pass-<proposal_number>/<username>_<cycle>/
+        /nsls2/data/hxn/proposals/<cycle>/pass-<proposal_number>/<username>_<cycle>/
 
     Parameters
     ----------
@@ -196,7 +196,7 @@ def copy_user_data_for_globus(users_name, proposal_number, exp_month=None, dry_r
     src_dir = create_user_dir_globus(users_name, date_obj)
     cycle = get_cycle_from_date(date_obj)
 
-    base_dst_dir = f"/nsls2/nsls2/data/hxn/legacy/hxn/proposals/{cycle}/pass-{proposal_number}"
+    base_dst_dir = f"/nsls2/data/hxn/proposals/{cycle}/pass-{proposal_number}"
     user_dst_dir = os.path.join(base_dst_dir, f"{users_name}_{cycle}")
 
     # Ensure proposal directory exists
@@ -287,8 +287,8 @@ def copy_folder(
 
 def copy_diff_analysis():
     return copy_folder(
-        "/nsls2/nsls2/data/hxn/legacy/hxn/legacy/users/data_analysis/Nanodiffraction",
-        "/nsls2/nsls2/data/hxn/legacy/hxn/legacy/users/current_user/Nanodiffraction",
+        "/nsls2/data/hxn/legacy/users/data_analysis/Nanodiffraction",
+        "/nsls2/data/hxn/legacy/users/current_user/Nanodiffraction",
         overwrite=False,
         ignore_dirs=["__pycache__", "pycdc"],
         ignore_exts=[".pyc", ".pyo"],

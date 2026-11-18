@@ -156,7 +156,7 @@ class HxnEigerDetector(HxnModalTrigger, EigerDetector):
     hdf5 = Cpt(HDF5PluginWithFileStoreEiger, 'HDF1:',
                read_attrs=[],
                configuration_attrs=[],
-               write_path_template='/nsls2/data/hxn/legacy/%Y/%m/%d/',
+               write_path_template='/data/%Y/%m/%d/',
                root='/data',
                reg=db.reg)
 
@@ -221,7 +221,7 @@ class HxnEigerDetector(HxnModalTrigger, EigerDetector):
 #     hdf5 = Cpt(_mhdf, 'HDF1:',
 #                read_attrs=[],
 #                configuration_attrs=[],
-#                write_path_template='/nsls2/data/hxn/legacy/%Y/%m/%d/',
+#                write_path_template='/data/%Y/%m/%d/',
 #                root='/data',
 #                reg=db.reg)
 

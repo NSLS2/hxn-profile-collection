@@ -129,7 +129,7 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
     # channel8 = Cpt(Xspress3Channel, 'C8_', channel_num=8)
 
     #hdf5 = Cpt(Xspress3FileStore, 'HDF1:',
-    #           write_path_template='/nsls2/data/hxn/legacy/%Y/%m/%d/',
+    #           write_path_template='/data/%Y/%m/%d/',
     #           mds_key_format='xspress3_ch{chan}',
     #           reg=db.reg,
     #           root='/data',
@@ -137,7 +137,7 @@ class HxnXspress3Detector(HxnXspress3DetectorBase):
 
     array_counter = Cpt(EpicsSignal,'ArrayCounter_RBV')
     hdf5 = Cpt(Xspress3FileStoreHXN, 'HDF5:',
-               write_path_template='/nsls2/data/hxn/legacy/%Y/%m/%d/',
+               write_path_template='/data/%Y/%m/%d/',
                mds_key_format='xspress3_ch{chan}',
                reg=db.reg,
                root='/data',
@@ -302,7 +302,7 @@ class HxnXspress3Mk2Detector(HxnXspress3Detector):
     settings = Cpt(Xspress3DetectorSettings, 'det1:')
 
     hdf5 = Cpt(Xspress3FileStore, 'HDF1:',
-              write_path_template='/nsls2/data/hxn/legacy/%Y/%m/%d/',
+              write_path_template='/data/%Y/%m/%d/',
               mds_key_format='xspress3_ch{chan}',
               reg=db.reg,
               root='/data',

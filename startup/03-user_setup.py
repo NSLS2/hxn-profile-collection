@@ -84,7 +84,7 @@ def create_local_user_dir(proposal_id):
     Fetches proposal info to determine PI last name and cycle, then checks 
     for existing directories in both old and new formats:
         Old: /nsls2/data/hxn/legacy/users/<cycle>/<pi_lastname>_<cycle>/  (e.g., 2026Q1)
-        New: /nsls2/nsls2/data/hxn/legacy/hxn/legacy/users/<cycle>/<pi_lastname>-<cycle>/  (e.g., 2025-3)
+        New: /nsls2/data/hxn/legacy/users/<cycle>/<pi_lastname>-<cycle>/  (e.g., 2025-3)
 
     If a directory exists in either format, returns that path.
     If neither exists, creates a new directory using the new format.
@@ -125,7 +125,7 @@ def create_local_user_dir(proposal_id):
         return old_dir
 
     # Check for new format directory
-    new_dir = f"/nsls2/nsls2/data/hxn/legacy/hxn/legacy/users/{cycle}/{pi_lastname}-{cycle}"
+    new_dir = f"/nsls2/data/hxn/legacy/users/{cycle}/{pi_lastname}-{cycle}"
     
     if os.path.exists(new_dir):
         print(f"Found existing directory (new format): {new_dir}")
@@ -192,7 +192,7 @@ def get_proposal_paths(proposal_id):
 
     Directory structure:
         Local:    /nsls2/data/hxn/legacy/users/<cycle>/<pi_lastname>-<cycle>/
-        Proposal: /nsls2/nsls2/data/hxn/legacy/hxn/proposals/<cycle>/pass-<proposal_id>/
+        Proposal: /nsls2/data/hxn/proposals/<cycle>/pass-<proposal_id>/
 
     Parameters
     ----------
@@ -218,7 +218,7 @@ def get_proposal_paths(proposal_id):
     if not local_path:
         return None
         
-    proposal_path = f"/nsls2/nsls2/data/hxn/legacy/hxn/proposals/{cycle}/pass-{proposal_id}"
+    proposal_path = f"/nsls2/data/hxn/proposals/{cycle}/pass-{proposal_id}"
 
     return local_path, proposal_path
 

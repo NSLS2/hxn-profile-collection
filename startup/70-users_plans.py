@@ -2309,7 +2309,7 @@ def save_wh_pos(print_flag=False):
                 f.flush()
 
     now = datetime.now()
-    fn = '/nsls2/data/hxn/legacy/motor_positions/log-'+str(now.year)+'-'+str(now.month)+'-'+str(now.day)+'-'+str(now.hour)+'-'+str(now.minute)+'.log'
+    fn = '/data/motor_positions/log-'+str(now.year)+'-'+str(now.month)+'-'+str(now.day)+'-'+str(now.hour)+'-'+str(now.minute)+'.log'
     f = open(fn,'w')
     original = sys.stdout
     sys.stdout = Tee(sys.stdout, f)
@@ -2317,8 +2317,8 @@ def save_wh_pos(print_flag=False):
     sys.stdout = original
     f.close()
     if print_flag:
-        shutil.copyfile(fn,'/nsls2/data/hxn/legacy/motor_positions/tmp.log')
-        os.system("lp -o cpi=20 -o lpi=8 -o media='letter' -d HXN-printer-1 /nsls2/data/hxn/legacy/motor_positions/tmp.log")
+        shutil.copyfile(fn,'/data/motor_positions/tmp.log')
+        os.system("lp -o cpi=20 -o lpi=8 -o media='letter' -d HXN-printer-1 /data/motor_positions/tmp.log")
 
 
 def zps_kill_piezos():

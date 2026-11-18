@@ -1913,7 +1913,7 @@ def go_det(det, disable_checks = False, mll = True):
         
     else:
 
-        with open("/nsls2/nsls2/data/hxn/legacy/hxn/shared/config/bluesky/profile_collection/startup/diff_det_pos.json") as fp:
+        with open("/nsls2/data/hxn/shared/config/bluesky/profile_collection/startup/diff_det_pos.json") as fp:
 
             diff_pos = json.load(fp)
             #print(diff_pos)
@@ -2036,7 +2036,7 @@ def update_det_pos(det = "merlin", do_confirm = True):
 
 
 
-        json_path = "/nsls2/nsls2/data/hxn/legacy/hxn/shared/config/bluesky/profile_collection/startup/diff_det_pos.json"
+        json_path = "/nsls2/data/hxn/shared/config/bluesky/profile_collection/startup/diff_det_pos.json"
 
         with open(json_path, "r") as read_file:
             diff_pos = json.load(read_file)
@@ -2148,16 +2148,16 @@ def find_45_degree(th_mtr,start_angle,end_angle,num, x_start, x_end, x_num, exp_
         yield from bps.sleep(1)
         yield from bps.movr(th_mtr,step)
 
-        np.savetxt(f"/nsls2/nsls2/data/hxn/legacy/hxn/legacy/users/Beamline_Performance/find_45_scans/{save_name}.txt",
+        np.savetxt(f"/nsls2/data/hxn/legacy/users/Beamline_Performance/find_45_scans/{save_name}.txt",
                    np.column_stack([th,w_x,w_z,x_sid]), header = header)
     plt.figure()
     plt.plot(th,w_x,'r+',th,w_z,'g-')
 
-    find_45_offset(f"/nsls2/nsls2/data/hxn/legacy/hxn/legacy/users/Beamline_Performance/find_45_scans/{save_name}.txt")
+    find_45_offset(f"/nsls2/data/hxn/legacy/users/Beamline_Performance/find_45_scans/{save_name}.txt")
     return th,w_x,w_z
 
 
-def find_45_offset(data_path = "/nsls2/nsls2/data/hxn/legacy/hxn/legacy/users/Beamline_Performance/find_45_scans/45deg_calib.txt"):
+def find_45_offset(data_path = "/nsls2/data/hxn/legacy/users/Beamline_Performance/find_45_scans/45deg_calib.txt"):
 
     """ usage :find_45_offset() """
 
@@ -2261,7 +2261,7 @@ def rot_stage_calib_scan(th_mtr,start_angle,end_angle,angle_step, \
         th[i]=th_mtr.position
         yield from bps.sleep(1)
         
-    save_file = f"/nsls2/nsls2/data/hxn/legacy/hxn/legacy/users/Beamline_Performance/find_45_scans/{save_name}.txt"
+    save_file = f"/nsls2/data/hxn/legacy/users/Beamline_Performance/find_45_scans/{save_name}.txt"
     np.savetxt(save_file, np.column_stack([np.array(scan_motor),th,w_x,x_sid]), header = header, fmt = '%s')
     
     ############### added for fitting ##############
@@ -2359,7 +2359,7 @@ def xz_rod_fitting(x, motor,sx, sz,  b, c):
         out[motor == 'dssx'] = x_rod_fitting(x[motor=='dssx'], sx, b, c)
     return out
 
-def find_45_offset_scaling(data_path = "/nsls2/nsls2/data/hxn/legacy/hxn/legacy/users/Beamline_Performance/45deg_calib.txt"):
+def find_45_offset_scaling(data_path = "/nsls2/data/hxn/legacy/users/Beamline_Performance/45deg_calib.txt"):
 
     """ usage :find_45_offset() """
 
@@ -2628,7 +2628,7 @@ def update_xrf_elem_list(roi_elems = ['Cr', 'Ge', 'W_L', 'Se', 'Si', 'Cl', 'Ga',
         xrf_elems["roi_elems"] = roi_elems
         xrf_elems["live_plot_elems"] = live_plot_elems
         xrf_elems["line_plot_elem"] = line_plot_elem
-        json_param_file = "/nsls2/nsls2/data/hxn/legacy/hxn/shared/config/bluesky/profile_collection/startup/plot_elems.json"
+        json_param_file = "/nsls2/data/hxn/shared/config/bluesky/profile_collection/startup/plot_elems.json"
 
         with open(json_param_file, "w") as fp:
             json.dump(xrf_elems, fp, indent = 6)

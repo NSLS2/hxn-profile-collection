@@ -40,7 +40,7 @@ import numpy as np
 #    hdf5 = Cpt(_thdf, 'HDF1:',
 #               read_attrs=[],
 #               configuration_attrs=[],
-#               write_path_template='/nsls2/data/hxn/legacy/%Y/%m/%d/',
+#               write_path_template='/data/%Y/%m/%d/',
 #               root='/data',
 #               reg=db.reg)
 
@@ -69,7 +69,7 @@ class HxnMerlinDetector(_HMD):
     hdf5 = Cpt(_mhdf, 'HDF1:',
                read_attrs=[],
                configuration_attrs=[],
-               write_path_template='/nsls2/data/hxn/legacy/%Y/%m/%d/',
+               write_path_template='/data/%Y/%m/%d/',
                root='/data',
                reg=db.reg)
 
@@ -175,7 +175,7 @@ class HxnDexelaDetector(AreaDetector,HxnModalBase):
     image1 = Cpt(ImagePlugin, 'image1:')
 
     fs = Cpt(DexelaSimulatedHDF5Plugin,'',
-               write_path_template='/nsls2/data/hxn/legacy/%Y/%m/%d/',
+               write_path_template='/data/%Y/%m/%d/',
                root='/data',
                reg=db.reg)
     
@@ -229,7 +229,7 @@ class HxnDexelaDetector(_HDD):
                read_attrs=[],
                configuration_attrs=[],
                write_path_template='Z:\\%Y\\%m\\%d',
-               read_path_template='/nsls2/data/hxn/legacy/%Y/%m/%d/',
+               read_path_template='/data/%Y/%m/%d/',
                root='/data',
                path_semantics='windows',
                reg=db.reg)

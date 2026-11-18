@@ -12,7 +12,7 @@ from hxntools.motor_info import motor_table
 # PLAN LOGGING SYSTEM
 # ============================================================================
 # Tracks execution of run_* plans to enable recovery if interrupted.
-# Logs are saved to /nsls2/nsls2/data/hxn/legacy/hxn/legacy/users/json_plans_log/ in JSONL 
+# Logs are saved to /nsls2/data/hxn/legacy/users/json_plans_log/ in JSONL 
 # format with monthly rotation (plan_name_MMYYYY.jsonl) to prevent files 
 # from becoming too large.
 # ============================================================================
@@ -66,7 +66,7 @@ class PlanLogger:
              "data": {"angles_completed": 45}}
     
     File Organization:
-        /nsls2/nsls2/data/hxn/legacy/hxn/legacy/users/json_plans_log/
+        /nsls2/data/hxn/legacy/users/json_plans_log/
         ├── run_tomo_json_112026.jsonl         (November 2026)
         ├── run_diff_json_112026.jsonl
         ├── run_repeat_2d_json_112026.jsonl
@@ -75,7 +75,7 @@ class PlanLogger:
     
     Recovery Workflow:
         1. Check logs to identify failure point:
-           tail /nsls2/nsls2/data/hxn/legacy/hxn/legacy/users/json_plans_log/run_diff_json_*.jsonl
+           tail /nsls2/data/hxn/legacy/users/json_plans_log/run_diff_json_*.jsonl
         
         2. Review parameters and last completed event
         
@@ -84,7 +84,7 @@ class PlanLogger:
         4. Re-run plan - new entries will be appended to the same month's file
     """
     
-    LOG_BASE_PATH = "/nsls2/nsls2/data/hxn/legacy/hxn/legacy/users/json_plans_log"
+    LOG_BASE_PATH = "/nsls2/data/hxn/legacy/users/json_plans_log"
     
     @classmethod
     def ensure_log_directory(cls):
@@ -112,8 +112,8 @@ class PlanLogger:
             str: Full path to the JSONL log file
         
         Examples:
-            run_diff_json -> /nsls2/nsls2/data/hxn/legacy/.../run_diff_json_112026.jsonl (Nov 2026)
-            run_tomo_json -> /nsls2/nsls2/data/hxn/legacy/.../run_tomo_json_112026.jsonl
+            run_diff_json -> /nsls2/data/.../run_diff_json_112026.jsonl (Nov 2026)
+            run_tomo_json -> /nsls2/data/.../run_tomo_json_112026.jsonl
         """
         now = datetime.now()
         month_year = now.strftime("%m%Y")  # Format: MMYYYY
@@ -251,12 +251,12 @@ else:
 # TESTING:
 #   1. Verify syntax: python3 -m py_compile startup/72-json-plans.py
 #   2. Run a test plan
-#   3. Check logs: ls -la /nsls2/nsls2/data/hxn/legacy/hxn/legacy/users/json_plans_log/
+#   3. Check logs: ls -la /nsls2/data/hxn/legacy/users/json_plans_log/
 #   4. View logs: tail run_diff_json_*.jsonl
 #   5. Verify JSON: python3 -c "import json; [json.loads(l) for l in open('run_diff_json_*.jsonl')]"
 #
 # RECOVERY WORKFLOW:
-#   1. Check logs: tail /nsls2/nsls2/data/hxn/legacy/hxn/legacy/users/json_plans_log/run_diff_json_*.jsonl
+#   1. Check logs: tail /nsls2/data/hxn/legacy/users/json_plans_log/run_diff_json_*.jsonl
 #   2. Review parameters and identify failure point
 #   3. Modify JSON config if needed (e.g., change start angle)
 #   4. Re-run plan - new entries will be appended to same month's file
@@ -285,7 +285,7 @@ zp_th_motor= "zpsth"
 
 #tomo_use_panda = False
 
-def make_tomo_plan(save_as = "/nsls2/nsls2/data/hxn/legacy/hxn/legacy/user_macros/HXN_GUI/Scan/temp_files/tomo_params.json" ):
+def make_tomo_plan(save_as = "/data/user_macros/HXN_GUI/Scan/temp_files/tomo_params.json" ):
 
     tomo_scan =     {"flying_panda":True,
                      "fly_motors":["dssx", "dssy","dssz"],
@@ -863,7 +863,7 @@ def tomo_scan_to_loop(angle,
 
             except Exception as pdf_error:
                 print(f"Warning: Failed to insert XRF map to PDF: {pdf_error}")
-                print("Scan completed but PDF may not contain images. Check /nsls2/nsls2/data/hxn/legacy/hxn/legacy/users/PDFCreator.log for details.")
+                print("Scan completed but PDF may not contain images. Check /nsls2/data/hxn/legacy/users/PDFCreator.log for details.")
         if tracking_file is not None:
             flog = open(tracking_file,'a')
             flog.write("%d %.3f\n"%(db[-1].start['scan_id'],angle))
@@ -1198,7 +1198,7 @@ def run_tomo_json(path_to_json,tracking_file = None):
 
 ###################Diffraction######################
 
-def make_diff_plan(save_as = "/nsls2/nsls2/data/hxn/legacy/hxn/legacy/user_macros/HXN_GUI/Scan/temp_files/diff_params.json" ):
+def make_diff_plan(save_as = "/data/user_macros/HXN_GUI/Scan/temp_files/diff_params.json" ):
 
     diff_scan =     {"flying_panda":False,
                      "fly_motors":["dssx", "dssy"],
@@ -1439,7 +1439,7 @@ def diff_scan_to_loop(angle, diff_params, ic_init,tracking_file = None):
 
             except Exception as pdf_error:
                 print(f"Warning: Failed to insert XRF map to PDF: {pdf_error}")
-                print("Scan completed but PDF may not contain images. Check /nsls2/nsls2/data/hxn/legacy/hxn/legacy/users/PDFCreator.log for details.")
+                print("Scan completed but PDF may not contain images. Check /nsls2/data/hxn/legacy/users/PDFCreator.log for details.")
         if tracking_file is not None:
             flog = open(tracking_file,'a')
             flog.write("%d %.3f\n"%(db[-1].start['scan_id'],angle))
