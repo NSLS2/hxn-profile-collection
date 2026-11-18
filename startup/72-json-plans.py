@@ -1113,6 +1113,10 @@ def run_tomo_json(path_to_json,tracking_file = None):
             if tomo_params["remove_angles"]==None:
                 tomo_params["remove_angles"] = []
 
+            if angle in np.array(tomo_params["remove_angles"]):
+                print(f"{angle} skipped")
+                continue
+
             #look for beam dump and ic3 threshold, ignores for code tests using json
             if not tomo_params["test"]:
                 if sclr2_ch2.get()<1000:
