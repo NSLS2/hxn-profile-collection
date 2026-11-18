@@ -351,13 +351,13 @@ class HXNEnergy():
             yield from bps.sleep(5)
 
 
-            df["Time Stamp"].at[i] = pd.Timestamp.now()
-            df['harmonic'].at[i] = hrm
-            df['ugap'].at[i] = ugap.position
-            df['dcmPitch'].at[i] = dcm.p.position
-            df['dcmRoll'].at[i] = dcm.r.position
-            df['hfmPitch'].at[i] = m2.p.position
-            df['IC1'].at[i] = sclr2_ch2.get()
+            df.loc[i, "Time Stamp"] = pd.Timestamp.now()
+            df.loc[i, 'harmonic'] = hrm
+            df.loc[i, 'ugap'] = ugap.position
+            df.loc[i, 'dcmPitch'] = dcm.p.position
+            df.loc[i, 'dcmRoll'] = dcm.r.position
+            df.loc[i, 'hfmPitch'] = m2.p.position
+            df.loc[i, 'IC1'] = sclr2_ch2.get()
             df.to_csv(wd+f"ugap_calib{save_suffix}.csv",float_format= '%.5f')
             plt.close('all')
 
@@ -566,8 +566,8 @@ def foil_calib_scan_list(elem_line = "Mn_K", saveLogFolder =  "/data/users/curre
     e_list['TimeStamp'] = pd.Timestamp.now()
     e_list['energy'] = energies
     e_list['E Readback'] = energies
-    e_list['IC3'] = sclr2_ch4.get()
-    e_list['IC0'] = sclr2_ch2.get()
+    e_list['IC3'] = float(sclr2_ch4.get())
+    e_list['IC0'] = float(sclr2_ch2.get())
 
     print(e_list.head())
     
@@ -579,10 +579,10 @@ def foil_calib_scan_list(elem_line = "Mn_K", saveLogFolder =  "/data/users/curre
 
         yield from Energy.move(en, moveMonoPitch=False, moveMirror = "ignore")
         yield from bps.sleep(2)
-        e_list['TimeStamp'].at[i] = pd.Timestamp.now()
-        e_list['IC3'].at[i] = sclr2_ch4.get() 
-        e_list['IC0'].at[i] = sclr2_ch2.get()
-        e_list['E Readback'].at[i] = e.position #add real energy to the dataframe
+        e_list.loc[i, 'TimeStamp'] = pd.Timestamp.now()
+        e_list.loc[i, 'IC3'] = sclr2_ch4.get() 
+        e_list.loc[i, 'IC0'] = sclr2_ch2.get()
+        e_list.loc[i, 'E Readback'] = e.position #add real energy to the dataframe
 
         filename = f'HXN_nanoXANES_{elem_line}_calib_{time_}.csv'
         #filename = f'HXN_nanoXANES_calib.csv'

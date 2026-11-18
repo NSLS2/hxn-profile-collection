@@ -340,10 +340,10 @@ def run_zp_spectro_tomo_scan(path_to_json):
     e_list['TimeStamp'] = pd.Timestamp.now()
     
     #Ic values are useful for calibration
-    e_list['IC3'] = sclr2_ch4.get() 
-    e_list['IC0'] = sclr2_ch2.get()
-    e_list['IC3_before_peak'] = sclr2_ch4.get()
-    e_list["zpsth"] = zpsth.position
+    e_list['IC3'] = float(sclr2_ch4.get()) 
+    e_list['IC0'] = float(sclr2_ch2.get())
+    e_list['IC3_before_peak'] = float(sclr2_ch4.get())
+    e_list["zpsth"] = float(zpsth.position)
     
     
     #record if peak beam happed before the scan   
@@ -517,14 +517,14 @@ def run_zp_spectro_tomo_scan(path_to_json):
             e_pos = e.position
             
             #Add more info to the dataframe
-            e_list['E Readback'].at[i] = e_pos #add real energy to the dataframe
-            e_list["zpsth"].at[i] = zpsth.position
-            e_list['Scan ID'].at[i] = int(last_sid) #add scan id to the dataframe
-            e_list['TimeStamp'].at[i] = pd.Timestamp.now()
-            e_list['IC3'].at[i] = ic_3 #Ic values are useful for calibration
-            e_list['IC0'].at[i] = ic_0 #Ic values are useful for calibration
-            e_list['Peak Flux'].at[i] = fluxPeaked # recoed if peakflux was excecuted
-            e_list['IC3_before_peak'].at[i] = ic3_ #ic3 right after e change, no peaking
+            e_list.loc[i, 'E Readback'] = e_pos #add real energy to the dataframe
+            e_list.loc[i, "zpsth"] = zpsth.position
+            e_list.loc[i, 'Scan ID'] = int(last_sid) #add scan id to the dataframe
+            e_list.loc[i, 'TimeStamp'] = pd.Timestamp.now()
+            e_list.loc[i, 'IC3'] = ic_3 #Ic values are useful for calibration
+            e_list.loc[i, 'IC0'] = ic_0 #Ic values are useful for calibration
+            e_list.loc[i, 'Peak Flux'] = fluxPeaked # recoed if peakflux was excecuted
+            e_list.loc[i, 'IC3_before_peak'] = ic3_ #ic3 right after e change, no peaking
             fluxPeaked = False #reset
             
             if scan_params["pdf_log"]:

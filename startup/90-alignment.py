@@ -37,18 +37,103 @@ def is_close_to_reference(value, reference, rel_tol=0.05):
     # Check if the value is within 5% (default) relative tolerance of the reference
     if not math.isclose(value, reference, rel_tol=rel_tol):
         raise ValueError(f"{value} is not within 5% of {reference}")
-    
 
-def get_xrf_data(h,elem ="Cr",mon ='sclr1_ch4'):
+def get_flyscan_dimensions_(hdr):
+    start_doc = hdr.start
+    # 2D_FLY_PANDA: prefer 'dimensions', fallback to 'shape'
+    if 'scan' in start_doc and start_doc['scan'].get('type') == '2D_FLY_PANDA':
+        if 'dimensions' in start_doc:
+            dim = start_doc['dimensions']
+        elif 'shape' in start_doc:
+            dim = start_doc['shape']
+        else:
+            raise ValueError("No dimensions or shape found for 2D_FLY_PANDA scan")
+
+        return dim[::-1]
+    # rel_scan: use 'shape' or 'num_points'
+    elif start_doc.get('plan_name') == 'rel_scan':
+        if 'shape' in start_doc:
+            dim = start_doc['shape']
+        elif 'num_points' in start_doc:
+            dim = [start_doc['num_points']]
+        else:
+            raise ValueError("No shape or num_points found for rel_scan")
+
+        return dim[::-1]
+    else:
+        raise ValueError("Unknown scan type for get_flyscan_dimensions")
+
+# TODO: Merge with _get_flyscan_dimensions (74-qserver_automap_plans.py) and
+#   get_flyscan_dimensions (53-viewer2d.py). This version returns dims reversed
+#   (ny, nx) for reshape; the 74 version does not. Verify the correct order with
+#   a non-square scan before merging. Also update the error message above to use
+#   this function's name (get_flyscan_dimensions_).
+
+def get_all_scalar_data(hdr):
+
+    keys = list(hdr.table().keys())
+    scalar_keys = [k for k in keys if k.startswith('sclr1') ]
+    #print(f"{scalar_keys = }")
+    print(f"[DATA] fetching scalar data")
+    scan_dim = get_flyscan_dimensions_(hdr)
+    scalar_stack_list = []
+
+    for sclr in sorted(scalar_keys):
+        
+        scalar = np.array(list(hdr.data(sclr))).squeeze()
+        sclr_img = scalar.reshape(scan_dim)
+        scalar_stack_list.append(sclr_img)
+
+    # Stack all the 2D images along a new axis (axis=0).
+    scalar_stack = np.stack(scalar_stack_list, axis=0)
+
+    #print("3D Stack shape:", xrf_stack.shape)
+
+    return  scalar_stack, sorted(scalar_keys)
+
+def get_all_xrf_roi_data(hdr):
+
+    channels = [1, 2, 3]
+    keys = list(hdr.table().keys())
+    roi_keys = [k for k in keys if k.startswith('Det')]
+    det1_keys = [k for k in keys if k.startswith('Det1')]
+    elem_list = [k.replace("Det1_", "") for k in det1_keys]
+
+    #print(f"{elem_list = }")
+    print(f"[DATA] fetching XRF ROIs")
+    try:
+        scan_dim = get_flyscan_dimensions_(hdr)
+    except Exception as e:
+        print(f"[DATA ERROR] cannot get scan dimensions, defaulting to (1, n_events). Error: {e}")
+        scan_dim = (1, len(hdr.table()))
+    xrf_stack_list = []
+
+    for elem in sorted(elem_list):
+        roi_keys = [f'Det{chan}_{elem}' for chan in channels]
+        spectrum = np.sum([np.array(list(hdr.data(roi)), dtype=np.float32).squeeze() for roi in roi_keys], axis=0)
+        xrf_img = spectrum.reshape(scan_dim)
+        xrf_stack_list.append(xrf_img)
+
+    # Stack all the 2D images along a new axis (axis=0).
+    xrf_stack = np.stack(xrf_stack_list, axis=0)
+
+    #print("3D Stack shape:", xrf_stack.shape)
+    return xrf_stack, sorted(elem_list)
+
+def get_xrf_data_1d(h,elem ="Cr",mon ='sclr1_ch4'):
 
     """returns scan positions and xrf data of 1d scans
-        useful for line fitting, erf etc."""
+        useful for line fitting, erf etc.
+        Raises ValueError for scans with more than one motor."""
     
     sid = h.start['scan_id']
     df2 = h.table()
 
         
     x_motor = h.start['motors']
+    if len(x_motor) > 1:
+        raise ValueError(f"Require a 1D line scan: scan {sid} has {len(x_motor)} motors")
+
     try:
         xdata = np.array(df2[x_motor[0]])
     except:
@@ -67,9 +152,24 @@ def get_xrf_data(h,elem ="Cr",mon ='sclr1_ch4'):
             xrf = xrf + fluo_data
     
     if mon is not None:
-        mon_data = np.array(list(h.data(mon))).squeeze()
-        xrf = xrf/mon_data
-        xrf[xrf==np.nan] = np.nanmean(xrf)#patch for ic3 returns zero
+        mon_data = np.atleast_1d(np.array(list(h.data(mon)), dtype=float).squeeze())
+        n_xrf = len(xrf)
+        if mon_data.size == 0:
+            print(f"Warning: no {mon} data for scan {sid}; skipping normalization")
+        else:
+            # patch for dropped monitor frames at the end of the scan
+            if len(mon_data) < n_xrf:
+                fill_value = np.nanmean(mon_data[-3:])
+                print(f"Warning: {mon} has {len(mon_data)} points, xrf has {n_xrf}; "
+                      f"filling the last {n_xrf - len(mon_data)} with the mean of the "
+                      f"last 3 {mon} values ({fill_value:.4g})")
+                mon_data = np.pad(mon_data, (0, n_xrf - len(mon_data)),
+                                  mode='constant', constant_values=fill_value)
+            elif len(mon_data) > n_xrf:
+                mon_data = mon_data[:n_xrf]
+            xrf = xrf/mon_data
+            
+        xrf[np.isnan(xrf)] = np.nanmean(xrf)#patch for ic3 returns zero
         xrf[xrf==np.inf] = np.nanmean(xrf)#patch for ic3 returns zero
         
     return xdata,xrf
@@ -98,7 +198,7 @@ def erf_fit(sid, elem, mon='sclr1_ch4', linear_flag=True,
     try:
         h = db[sid]
         sid = h.start['scan_id']
-        xdata, ydata = get_xrf_data(h,
+        xdata, ydata = get_xrf_data_1d(h,
                                 elem = elem,
                                 mon = mon)
         ydata[0] = ydata[1] #patch for drop point issue
@@ -196,12 +296,16 @@ def erf_fit_to_delete(sid, elem, mon='sclr1_ch4', linear_flag=True):
 
 def get_knife_edge_data(sid,elem,z_mtr_name, mon='sclr1_ch4',linear_flag=True):
     
-    """ returns knife edge scan data and fit along with z_motor position """
+    """ returns knife edge scan data and fit along with z_motor position
+
+    If the fit fails, edge position, FWHM and the fit curve are returned as NaN
+    so the scan data and z position are still available.
+    """
 
     h = db[sid]
     bl = h.table('baseline')
     z_mtr_pos = bl[z_mtr_name].to_numpy()[0]
-    xdata, ydata = get_xrf_data(h,
+    xdata, ydata = get_xrf_data_1d(h,
                                 elem = elem,
                                 mon = mon)
     
@@ -213,21 +317,25 @@ def get_knife_edge_data(sid,elem,z_mtr_name, mon='sclr1_ch4',linear_flag=True):
     y_mean = np.mean(ydata)
     half_size = int (len(ydata)/2)
     y_half_mean = np.mean(ydata[0:half_size])
-    edge_pos=find_edge(xdata,ydata,10)
-    if y_half_mean < y_mean:
-        if linear_flag == False:
-            popt,pcov=curve_fit(erfunc1,xdata,ydata, p0=[edge_pos,0.05,0.5])
-            fit_data=erfunc1(xdata,popt[0],popt[1],popt[2]);
+    try:
+        edge_pos=find_edge(xdata,ydata,10)
+        if y_half_mean < y_mean:
+            if linear_flag == False:
+                popt,pcov=curve_fit(erfunc1,xdata,ydata, p0=[edge_pos,0.05,0.5])
+                fit_data=erfunc1(xdata,popt[0],popt[1],popt[2]);
+            else:
+                popt,pcov=curve_fit(erfunc3,xdata,ydata, p0=[edge_pos,0.05,0.5,0,0])
+                fit_data=erfunc3(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
         else:
-            popt,pcov=curve_fit(erfunc3,xdata,ydata, p0=[edge_pos,0.05,0.5,0,0])
-            fit_data=erfunc3(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
-    else:
-        if linear_flag == False:
-            popt,pcov=curve_fit(erfunc2,xdata,ydata,p0=[edge_pos,0.05,0.5])
-            fit_data=erfunc2(xdata,popt[0],popt[1],popt[2]);
-        else:
-            popt,pcov=curve_fit(erfunc4,xdata,ydata,p0=[edge_pos,0.05,0.5,0,0])
-            fit_data=erfunc4(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
+            if linear_flag == False:
+                popt,pcov=curve_fit(erfunc2,xdata,ydata,p0=[edge_pos,0.05,0.5])
+                fit_data=erfunc2(xdata,popt[0],popt[1],popt[2]);
+            else:
+                popt,pcov=curve_fit(erfunc4,xdata,ydata,p0=[edge_pos,0.05,0.5,0,0])
+                fit_data=erfunc4(xdata,popt[0],popt[1],popt[2],popt[3],popt[4]);
+    except (RuntimeError, ValueError, TypeError) as fit_error:
+        print(f"Warning: Knife edge fit failed for scan {sid}, returning NaN: {fit_error}")
+        return np.nan, np.nan, xdata, ydata, np.full(np.shape(xdata), np.nan), z_mtr_pos
 
     return popt[0],popt[1]*2.3548*1000.0,xdata,ydata,fit_data, z_mtr_pos
 
@@ -782,37 +890,30 @@ def get_fluo_data(sid,elem):
     return get_scan_positions(h),xrf
 
 
-def return_line_center(sid,elem='Cr',threshold=0.2, neg_flag=0, mode='binary'):
+def return_line_center(sid,elem='Cr',threshold=0.5, neg_flag=0, 
+                       mode='binary', mon='sclr1_ch4', show_plot=False):
+    """Return the center of mass of a 1D XRF line scan.
+
+    mon : str or None, optional
+        Monitor channel name to normalize the XRF signal (default 'sclr1_ch4').
+        None uses the raw summed XRF counts.
+    show_plot : bool, optional
+        If True, plot the scan data, the thresholded signal used for the
+        center of mass, and the center position. Default False.
+    """
     h = db[sid]
 
-    df2 = h.table()
-
-    channels = [1,2,3]
-    xrf = None
-    for i in channels:
-        fluo_data = np.array(list(h.data('Det%d_'%i+elem))).squeeze()
-        if xrf is None:
-            xrf = fluo_data.copy()
-        else:
-            xrf = xrf + fluo_data
-    #xrf = np.array(df2['Det2_' + elem]+df2['Det1_' + elem] + df2['Det3_' + elem])
+    x, xrf = get_xrf_data_1d(h, elem=elem, mon=mon)
 
     xrf[xrf==np.nan] = np.nanmean(xrf)#patch for ic3 returns zero
     xrf[xrf==np.inf] = np.nanmean(xrf)#patch for ic3 returns zero
 
     #threshold = np.max(xrf)/10.0
-    x_motor = h.start['motors']
-
-    if len(x_motor)>1:
-        raise ValueError (f"Require a Line Scan: num motors = {len(x_motor)}")
-
-    try:
-        x = np.array(df2[x_motor])
-    except:
-        x = get_scan_positions(h)
     if neg_flag == 1:
         xrf = xrf * -1
         xrf = xrf - np.min(xrf)
+
+    raw_xrf = np.array(xrf, dtype=float)
 
     #print(x)
     #print(xrf)
@@ -826,6 +927,22 @@ def return_line_center(sid,elem='Cr',threshold=0.2, neg_flag=0, mode='binary'):
     else:
         xrf[xrf>=(np.max(xrf)*threshold)] = 1.
     mc = find_mass_center_1d(xrf[:-2],x[:-2])
+
+    if show_plot:
+        raw_max = np.nanmax(raw_xrf)
+        used = np.array(xrf[:-2], dtype=float)
+        used_max = np.nanmax(used)
+        plt.figure()
+        plt.plot(x, raw_xrf/raw_max if raw_max else raw_xrf, 'bo', label='data')
+        plt.plot(x[:-2], used/used_max if used_max else used, 'r-',
+                 label=f'used ({mode})')
+        plt.axhline(threshold, color='gray', linestyle=':', label='threshold')
+        plt.axvline(mc, color='g', linestyle='--', label='center')
+        plt.xlabel(h.start['motors'][0])
+        plt.ylabel('norm. intensity')
+        plt.legend(loc='best')
+        plt.title(f"sid = {h.start['scan_id']}, {elem}, center = {mc :.3f}")
+
     return mc
 
 
