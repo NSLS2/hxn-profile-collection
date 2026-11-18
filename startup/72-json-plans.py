@@ -1172,7 +1172,8 @@ def make_diff_plan(save_as = "/nsls2/data/hxn/legacy/user_macros/HXN_GUI/Scan/te
                      "th_motor":"dsth",
                     "angle_info":{"start":70,
                                 "end":71,
-                                "angle_step":0.025},
+                                "angle_step":0.025,
+                                "custom_angle_list":[]},
 
                     "fly2d_scan":{'det':'dets4',
                                 "x_start":-1,
@@ -1197,7 +1198,8 @@ def make_diff_plan(save_as = "/nsls2/data/hxn/legacy/user_macros/HXN_GUI/Scan/te
                         "offset": 0,
                         "zero_before_scan": False,
                         "initial_position": 0,
-                        "align_movement_limit": 1.5
+                        "align_movement_limit": 1.5,
+                        "line_center_mode": "as-is"
                     },
                     "yalign": {
                         "do_align": True,
@@ -1213,7 +1215,8 @@ def make_diff_plan(save_as = "/nsls2/data/hxn/legacy/user_macros/HXN_GUI/Scan/te
                         "offset": 0,
                         "zero_before_scan": False,
                         "initial_position": 0,
-                        "align_movement_limit": 1.5
+                        "align_movement_limit": 1.5,
+                        "line_center_mode": "as-is"
                     },
                     "align_2d_com": {
                         "do_align": False,
@@ -1435,32 +1438,43 @@ def run_diff_json(path_to_json,tracking_file = None,do_confirm =True):
     fp.close()
     print("json file loaded")
 
+    
+
     #create angle list for iteration
     angle_info = diff_params["angle_info"]
     print(angle_info)
-    angles = np.arange(angle_info["start"],
-                         angle_info["end"]+(angle_info["angle_step"]/2),
-                         angle_info["angle_step"]
-                         )
-    
-    print(f"{angles = }")
 
-    #angles = np.linspace(angle_info["start"],
-    #                   angle_info["end"],
-    #                    int(1+abs(angle_info["end"] - angle_info["start"])/angle_info["angle_step"])
-    #                   )
-    if "split_diff" in angle_info:
-        split = int(angle_info["split_diff"])
-        angles0 = angles.copy()
-        angles = angles0[0::split]
-        for i in range(1,split):
-            angles = np.concatenate((angles,angles0[i::split]))
-    if "start_angle" in angle_info:
-        angst = angle_info["start_angle"]
-        for i,ang in enumerate(angles):
-            if abs(ang-angst)<1e-3:
-                angles = angles[i:]
-                break
+    # A non-empty custom_angle_list (in angle_info or top level) takes priority
+    # over generating angles from start/end/angle_step
+    custom_angles = angle_info.get("custom_angle_list") or diff_params.get("custom_angle_list")
+
+    if custom_angles:
+        angles = np.array(custom_angles, dtype=float)
+        print(f"Using custom angle list: {angles = }")
+    else:
+        angles = np.arange(angle_info["start"],
+                             angle_info["end"]+(angle_info["angle_step"]/2),
+                             angle_info["angle_step"]
+                             )
+
+        print(f"{angles = }")
+
+        #angles = np.linspace(angle_info["start"],
+        #                   angle_info["end"],
+        #                    int(1+abs(angle_info["end"] - angle_info["start"])/angle_info["angle_step"])
+        #                   )
+        if "split_diff" in angle_info:
+            split = int(angle_info["split_diff"])
+            angles0 = angles.copy()
+            angles = angles0[0::split]
+            for i in range(1,split):
+                angles = np.concatenate((angles,angles0[i::split]))
+        if "start_angle" in angle_info:
+            angst = angle_info["start_angle"]
+            for i,ang in enumerate(angles):
+                if abs(ang-angst)<1e-3:
+                    angles = angles[i:]
+                    break
 
     angle_list = pd.DataFrame(columns= ['scan_id', 'angle'])
 
@@ -1580,7 +1594,9 @@ def run_diff_json(path_to_json,tracking_file = None,do_confirm =True):
                                 xalign["zero_before_scan"],
                                 xalign["initial_position"],
                                 xalign["align_movement_limit"],
-                                xalign["center_with"]
+                                line_center_mode=xalign.get(
+                                    "line_center_mode",
+                                    diff_params.get("line_center_mode", "as-is"))
                                 )
 
                 #2d alignemnt using center of mass if condition is true
@@ -1620,7 +1636,9 @@ def run_diff_json(path_to_json,tracking_file = None,do_confirm =True):
                                         yalign["zero_before_scan"],
                                         yalign["initial_position"],
                                         yalign["align_movement_limit"],
-                                        yalign["center_with"]
+                                        line_center_mode=yalign.get(
+                                            "line_center_mode",
+                                            diff_params.get("line_center_mode", "as-is"))
                     )
 
                 
