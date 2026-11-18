@@ -961,8 +961,8 @@ def run_tomo_json(path_to_json,tracking_file = None):
     angle_list['TimeStamp'] = pd.Timestamp.now()
     #record if peak beam happed before the scan
     angle_list['Peak Flux'] = False
-    angle_list['IC3'] = ic_3_init
-    angle_list['IC0'] = ic_0
+    angle_list['IC3'] = float(ic_3_init)
+    angle_list['IC0'] = float(ic_0)
     angle_list[fly_motors[1].name] = np.nan
     caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0)
 
@@ -1145,24 +1145,22 @@ def run_tomo_json(path_to_json,tracking_file = None):
 
                 last_sid = int(caget('XF:03IDC-ES{Status}ScanID-I'))
 
-                # append a new row after the main-loop rows
-                row = len(angle_list)
-
-                            # Add more info to the dataframe
-                angle_list.loc[row, 'energy_rbv'] = e.position #add real energy to the dataframe
                 angle_rbv = th_motor.position
-                angle_list.loc[row, "angle"] = angle_rbv
-                angle_list.loc[row, 'scan_id'] = int(last_sid) #add scan_id to the dataframe
-                angle_list.loc[row, 'TimeStamp'] = pd.Timestamp.now()
                 ic_3 = sclr2_ch4.get()
                 ic_0 = sclr2_ch2.get()
-                angle_list.loc[row, 'IC3'] = ic_3 #Ic values are useful for calibration
-                angle_list.loc[row, 'IC0'] = ic_0 #Ic values are useful for calibration
-                angle_list.loc[row, 'Peak Flux'] = fluxPeaked # record if peakflux was excecuted
-                #angle_list.at[n, 'IC3_before_peak'] = ic3 #ic3 right after e change, no peaking
+                print("name", fly_motors[1].name, "position", fly_motors[1].position)
+
+                # append one complete row after the main-loop rows
+                new_row = {'energy_rbv': e.position,
+                           'angle': angle_rbv,
+                           'scan_id': int(last_sid),
+                           'TimeStamp': pd.Timestamp.now(),
+                           'IC3': float(ic_3),
+                           'IC0': float(ic_0),
+                           'Peak Flux': fluxPeaked,
+                           fly_motors[1].name: fly_motors[1].position}
+                angle_list = pd.concat([angle_list, pd.DataFrame([new_row])], ignore_index=True)
                 fluxPeaked = False #reset
-                print("name", fly_motors[1].name, "row", row, "position", fly_motors[1].position)
-                angle_list.loc[row, fly_motors[1].name] = fly_motors[1].position
 
                 #close c shutter
                 caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0)
@@ -1545,8 +1543,8 @@ def run_diff_json(path_to_json,tracking_file = None,do_confirm =True):
     angle_list['TimeStamp'] = pd.Timestamp.now()
     #record if peak beam happed before the scan
     angle_list['Peak Flux'] = False
-    angle_list['IC3'] = ic_3_init
-    angle_list['IC0'] = ic_0
+    angle_list['IC3'] = float(ic_3_init)
+    angle_list['IC0'] = float(ic_0)
     angle_list[fly_motors[1].name] = np.nan
     caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0)
 
@@ -1745,7 +1743,6 @@ def run_diff_json(path_to_json,tracking_file = None,do_confirm =True):
 
                 logger.info("Recorded scan_id=%s at row=%s", last_sid, n)
 
-                angle_list[fly_motors[1].name].at[n] = fly_motors[1].position
                 
                 #close c shutter
                 caput('XF:03IDC-ES{Zeb:2}:SOFT_IN:B0',0)
@@ -1792,22 +1789,20 @@ def run_diff_json(path_to_json,tracking_file = None,do_confirm =True):
 
                     last_sid = int(caget('XF:03IDC-ES{Status}ScanID-I'))
 
-                    # append a new row after the main-loop rows
-                    row = len(angle_list)
-
-                    #Add more info to the dataframe
-                    angle_list.loc[row, 'energy_rbv'] = e.position #add real energy to the dataframe
-                    angle_list.loc[row, "angle"] = th_motor.position
-                    angle_list.loc[row, 'scan_id'] = int(last_sid) #add scan_id to the dataframe
-                    angle_list.loc[row, 'TimeStamp'] = pd.Timestamp.now()
                     ic_3 = sclr2_ch4.get()
                     ic_0 = sclr2_ch2.get()
-                    angle_list.loc[row, 'IC3'] = ic_3 #Ic values are useful for calibration
-                    angle_list.loc[row, 'IC0'] = ic_0 #Ic values are useful for calibration
-                    angle_list.loc[row, 'Peak Flux'] = fluxPeaked # recoed if peakflux was excecuted
-                    #angle_list['IC3_before_peak'].at[n] = ic3 #ic3 right after e change, no peaking
+
+                    # append one complete row after the main-loop rows
+                    new_row = {'energy_rbv': e.position,
+                               'angle': th_motor.position,
+                               'scan_id': int(last_sid),
+                               'TimeStamp': pd.Timestamp.now(),
+                               'IC3': float(ic_3),
+                               'IC0': float(ic_0),
+                               'Peak Flux': fluxPeaked,
+                               fly_motors[1].name: fly_motors[1].position}
+                    angle_list = pd.concat([angle_list, pd.DataFrame([new_row])], ignore_index=True)
                     fluxPeaked = False #reset
-                    angle_list.loc[row, fly_motors[1].name] = fly_motors[1].position
 
                     # save the DF in the loop so quitting a scan won't affect
                     filename = f"hxn_zp_diff_{diff_params.get('scan_label','')}_startID{int(angle_list['scan_id'][0])}.csv"

@@ -824,12 +824,12 @@ def get_complete_log(history_file):
         scan_num, scan_label,scan_plan, status = get_scan_num_label(plan)
         print("additng to log")
         if scan_num:
-            log_sheet["scan_num"].at[n] = scan_num[0]
+            log_sheet.loc[n, "scan_num"] = scan_num[0]
         else:
-            log_sheet["scan_num"].at[n] = None
-        log_sheet["scan_label"].at[n] = scan_label
-        log_sheet["scan_plan"].at[n] = scan_plan
-        log_sheet["exit_status"].at[n] = status
+            log_sheet.loc[n, "scan_num"] = None
+        log_sheet.loc[n, "scan_label"] = scan_label
+        log_sheet.at[n, "scan_plan"] = scan_plan
+        log_sheet.loc[n, "exit_status"] = status
         
 
     print(log_sheet)
