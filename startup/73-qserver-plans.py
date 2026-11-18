@@ -729,10 +729,13 @@ def send_diff_json_to_queue(path_to_json, tracking_file=None, do_confirm=False, 
     path_to_json : str
         Path to the JSON configuration file for the diffraction scan.
         The JSON file should contain:
-        - angle_info: dict with keys "start", "end", "angle_step"
+        - angle_info: dict with keys "start", "end", "angle_step", and optionally
+          "custom_angle_list" (a non-empty list overrides start/end/angle_step)
         - fly_motors: list of motor names as strings
         - th_motor: name of rotation motor as string
         - detector_names: list of detector names
+        - xalign/yalign: may include "line_center_mode" ("as-is" or "binary",
+          default "as-is")
         - Other scan parameters (ic_threshold, test, axis_switch_angle, etc.)
     tracking_file : str, optional
         Path to a tracking file for logging scan progress. If None, no tracking
