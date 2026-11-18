@@ -156,7 +156,7 @@ class HxnEigerDetector(HxnModalTrigger, EigerDetector):
     hdf5 = Cpt(HDF5PluginWithFileStoreEiger, 'HDF1:',
                read_attrs=[],
                configuration_attrs=[],
-               write_path_template='/data/%Y/%m/%d/',
+               write_path_template='/nsls2/data/hxn/legacy/%Y/%m/%d/',
                root='/data',
                reg=db.reg)
 
@@ -221,7 +221,7 @@ class HxnEigerDetector(HxnModalTrigger, EigerDetector):
 #     hdf5 = Cpt(_mhdf, 'HDF1:',
 #                read_attrs=[],
 #                configuration_attrs=[],
-#                write_path_template='/data/%Y/%m/%d/',
+#                write_path_template='/nsls2/data/hxn/legacy/%Y/%m/%d/',
 #                root='/data',
 #                reg=db.reg)
 
@@ -243,7 +243,7 @@ class HxnEigerDetector(HxnModalTrigger, EigerDetector):
 #         cam.stage_sigs[cam.image_mode] = 0  # 'Multiple'
 #         cam.stage_sigs[cam.trigger_mode] = 3  # 'External Enable'
 
-if os.path.isfile('/data/users/startup_parameters/USE_RASMI'):
+if os.path.isfile('/nsls2/data/hxn/legacy/users/startup_parameters/USE_RASMI'):
     USE_RASMI = True
 else:
     USE_RASMI = False

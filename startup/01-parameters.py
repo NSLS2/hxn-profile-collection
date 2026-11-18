@@ -8,7 +8,7 @@ import subprocess
 import shutil
 from pathlib import Path
 
-with open("/nsls2/data/hxn/shared/config/bluesky/profile_collection/startup/plot_elems.json", "r") as fp:
+with open("/nsls2/nsls2/data/hxn/legacy/hxn/shared/config/bluesky/profile_collection/startup/plot_elems.json", "r") as fp:
     xrf_elems = json.load(fp)
     fp.close()
 
@@ -34,7 +34,7 @@ def create_user_dir(users_name):
                         5:"Q2",6:"Q2",7:"Q2",8:"Q2",
                         9:"Q3",10:"Q3",11:"Q3",12:"Q3"}
     year_quarter = f"{year}{month_to_quarter[month]}"
-    dir_name = f"/data/users/{year_quarter}/{users_name}_{year_quarter}"
+    dir_name = f"/nsls2/data/hxn/legacy/users/{year_quarter}/{users_name}_{year_quarter}"
 
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)
@@ -45,11 +45,11 @@ def create_user_dir(users_name):
         os.chmod(dir_name, 0o777)
         return dir_name
 
-def create_user_symlink(src_dir = "/data/2023Q1/"):
+def create_user_symlink(src_dir = "/nsls2/data/hxn/legacy/2023Q1/"):
 
     if os.path.exists(src_dir):
         
-        dest = "/data/users/current_user"
+        dest = "/nsls2/data/hxn/legacy/users/current_user"
 
         #recreate symlink
         if os.path.exists(dest):
@@ -68,7 +68,7 @@ def setup_new_user(name = "Lastname",
                    experimenters = "HX,NU,SER",
                    sample = "Gold",
                    pdf_file_name = "elog",
-                   sample_image = "/data/users/hxn_logo.png"):
+                   sample_image = "/nsls2/data/hxn/legacy/users/hxn_logo.png"):
 
     RE.md["PI"] = name
     RE.md["experimenters"] = experimenters
@@ -136,12 +136,12 @@ def get_year_quarter_from_date(date_obj):
 def create_user_dir_globus(users_name, date_obj = None):
     """
     Create or return the user directory under:
-        /data/users/<year_quarter>/<username>_<year_quarter>
+        /nsls2/data/hxn/legacy/users/<year_quarter>/<username>_<year_quarter>
     """
     if not date_obj:
         date_obj = datetime.now()
     year_quarter = get_year_quarter_from_date(date_obj)
-    dir_name = f"/data/users/{year_quarter}/{users_name}_{year_quarter}"
+    dir_name = f"/nsls2/data/hxn/legacy/users/{year_quarter}/{users_name}_{year_quarter}"
 
     if not os.path.exists(dir_name):
         os.makedirs(dir_name, exist_ok=True)
@@ -154,8 +154,8 @@ def create_user_dir_globus(users_name, date_obj = None):
 
 def copy_user_data_for_globus(users_name, proposal_number, exp_month=None, dry_run=False):
     """
-    Copy user data from /data/users/... to:
-        /nsls2/data/hxn/proposals/<cycle>/pass-<proposal_number>/<username>_<cycle>/
+    Copy user data from /nsls2/data/hxn/legacy/users/... to:
+        /nsls2/nsls2/data/hxn/legacy/hxn/proposals/<cycle>/pass-<proposal_number>/<username>_<cycle>/
 
     Parameters
     ----------
@@ -196,7 +196,7 @@ def copy_user_data_for_globus(users_name, proposal_number, exp_month=None, dry_r
     src_dir = create_user_dir_globus(users_name, date_obj)
     cycle = get_cycle_from_date(date_obj)
 
-    base_dst_dir = f"/nsls2/data/hxn/proposals/{cycle}/pass-{proposal_number}"
+    base_dst_dir = f"/nsls2/nsls2/data/hxn/legacy/hxn/proposals/{cycle}/pass-{proposal_number}"
     user_dst_dir = os.path.join(base_dst_dir, f"{users_name}_{cycle}")
 
     # Ensure proposal directory exists
@@ -287,8 +287,8 @@ def copy_folder(
 
 def copy_diff_analysis():
     return copy_folder(
-        "/nsls2/data/hxn/legacy/users/data_analysis/Nanodiffraction",
-        "/nsls2/data/hxn/legacy/users/current_user/Nanodiffraction",
+        "/nsls2/nsls2/data/hxn/legacy/hxn/legacy/users/data_analysis/Nanodiffraction",
+        "/nsls2/nsls2/data/hxn/legacy/hxn/legacy/users/current_user/Nanodiffraction",
         overwrite=False,
         ignore_dirs=["__pycache__", "pycdc"],
         ignore_exts=[".pyc", ".pyo"],

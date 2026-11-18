@@ -17,7 +17,7 @@ import numpy as np
 from PyPDF2 import PdfMerger, PdfReader
 
 global PDF_FILE
-wd = "/data/users/startup_parameters/"
+wd = "/nsls2/data/hxn/legacy/users/startup_parameters/"
 #PDF_FILE = '/GPFS/XF03ID1/home/xf03id/startup/eLog_info.obj'
 PDF_FILE = wd+"eLog_info.obj"
 
@@ -172,7 +172,7 @@ class BlankPage:
 
 
 def setup_pdf_function(sample_name = "Precious", file_name = "elog",
-                       experimenters = "HX,NU,SER", img_to_add = "/data/users/hxn_logo.png"):
+                       experimenters = "HX,NU,SER", img_to_add = "/nsls2/data/hxn/legacy/users/hxn_logo.png"):
 #def setup_pdf():
     global G_INFO
 
@@ -185,7 +185,7 @@ def setup_pdf_function(sample_name = "Precious", file_name = "elog",
         new_info = exp_info()
     #print('Create a pdf eLog file and record experiment information. Press ENTER to accept existing values.')
     #tmp_file = input('Please enter file name '+'('+new_info.fname+')'+':')
-    tmp_file = f"/data/users/current_user/{file_name}.pdf"
+    tmp_file = f"/nsls2/data/hxn/legacy/users/current_user/{file_name}.pdf"
     if tmp_file != '':
         new_info.fname = tmp_file
     if os.path.isfile(new_info.fname):
@@ -231,7 +231,7 @@ def setup_pdf():
         new_info = exp_info()
     print('Create a pdf eLog file and record experiment information. Press ENTER to accept existing values.')
     tmp_file = input('Please enter file name '+'('+new_info.fname+')'+':')
-    #tmp_file = "/data/current_user/elog.pdf"
+    #tmp_file = "/nsls2/data/hxn/legacy/current_user/elog.pdf"
     if tmp_file != '':
         new_info.fname = tmp_file
     if os.path.isfile(new_info.fname):

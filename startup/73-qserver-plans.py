@@ -383,7 +383,7 @@ def send_recover_pos_and_zp_xanes_to_queue(
     send_recover_pos_and_zp_xanes_to_queue(
         label="Pt_xanes_1",
         roi_positions=roi,
-        json_file_path="/nsls2/data/hxn/legacy/users/2025-3/Smith-2025-3/xanes_config.json",
+        json_file_path="/nsls2/nsls2/data/hxn/legacy/hxn/legacy/users/2025-3/Smith-2025-3/xanes_config.json",
     )
     """
 

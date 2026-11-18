@@ -15,7 +15,7 @@ from pathlib import Path
 import threading
 
 import os
-if os.path.isfile('/data/users/startup_parameters/TILED_OFF'):
+if os.path.isfile('/nsls2/data/hxn/legacy/users/startup_parameters/TILED_OFF'):
     TILED_OFF = True
 else:
     TILED_OFF = False
@@ -108,7 +108,7 @@ kafka_publisher = Publisher(
 # Benchmark file
 #f_benchmark = open("/home/xf03id/benchmark.out", "a+")
 try:
-    f_benchmark = open("/nsls2/data/hxn/shared/config/bluesky/profile_collection/benchmark.out", "a+")
+    f_benchmark = open("/nsls2/nsls2/data/hxn/legacy/hxn/shared/config/bluesky/profile_collection/benchmark.out", "a+")
 except:
     f_benchmark = None
 datum_counts = {}

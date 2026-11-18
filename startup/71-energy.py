@@ -11,7 +11,7 @@ from epics import caget, caput
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
 
-wd = "/data/users/startup_parameters/"
+wd = "/nsls2/data/hxn/legacy/users/startup_parameters/"
 PLOT_FITS = False
 UGAP_OFFSET = 0
 
@@ -545,7 +545,7 @@ def plot_calib_results(csv_file):
     plt.title(f"Undulator Calib_{pd.Timestamp.now().month}_{pd.Timestamp.now().year}")
     plt.show()
 
-def foil_calib_scan_list(elem_line = "Mn_K", saveLogFolder =  "/data/users/current_user"):
+def foil_calib_scan_list(elem_line = "Mn_K", saveLogFolder =  "/nsls2/data/hxn/legacy/users/current_user"):
 
     """absolute energy
     Args: elem line: if L or M specifiy the edge like L3, M5
@@ -598,7 +598,7 @@ def foil_calib_scan_list(elem_line = "Mn_K", saveLogFolder =  "/data/users/curre
     plt.show()
 
 def foil_calib_scan(elem_line = "Cu_K", step_size_ev = 0.5, exp_time = 0.5,
-                       saveLogFolder = "/data/users/current_user", downstream_ic = 'sclr1_ch4'):
+                       saveLogFolder = "/nsls2/data/hxn/legacy/users/current_user", downstream_ic = 'sclr1_ch4'):
 
     """absolute start and end E
     
@@ -624,7 +624,7 @@ def foil_calib_scan(elem_line = "Cu_K", step_size_ev = 0.5, exp_time = 0.5,
     plot_foil_calib(sid=-1, saveLogFolder = saveLogFolder, save_as = elem_line,downstream_ic = downstream_ic)
 
     
-def plot_foil_calib(sid=-1, saveLogFolder = "/data/users/current_user",save_as = "Au_L3", downstream_ic = 'sclr1_ch4'):
+def plot_foil_calib(sid=-1, saveLogFolder = "/nsls2/data/hxn/legacy/users/current_user",save_as = "Au_L3", downstream_ic = 'sclr1_ch4'):
     
     h = db[int(sid)]
     sd = h.start["scan_id"]

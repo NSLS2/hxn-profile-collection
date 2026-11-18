@@ -11,7 +11,7 @@ def my_export(str_list, interval=1,det = 'merlin1', mon = 'sclr1_ch4'):
         df = h.table()
         mots = h.start['motors']
 
-        dir = os.path.join('/data/home/home/hyan/export','scan_{:06d}'.format((sid//10000)*10000))
+        dir = os.path.join('/nsls2/data/hxn/legacy/home/home/hyan/export','scan_{:06d}'.format((sid//10000)*10000))
         if os.path.exists(dir) == False:
             print('{} does not exist.'.format(dir))
             mycmd = ''.join(['mkdir',' ',dir])
@@ -69,7 +69,7 @@ def my_export(str_list, interval=1,det = 'merlin1', mon = 'sclr1_ch4'):
         '''
             j = 1
             for fn in filename:
-                path = os.path.join('/data/home/hyan/export/', 'scan_{}_{}.h5'.format(sid, j))
+                path = os.path.join('/nsls2/data/hxn/legacy/home/hyan/export/', 'scan_{}_{}.h5'.format(sid, j))
                 mycmd = ''.join(['scp', ' ', fn, ' ', path])
                 os.system(mycmd)
                 j = j + 1
@@ -85,7 +85,7 @@ def my_export_diffraction(str_list, interval, name_list,det = 'merlin1'):
         hdr = db[sid]
         df = hdr.table()
         #sid = hdr.start['scan_id']
-        dir = os.path.join('/data/home/home/hyan/export','scan_{:06d}'.format((sid//10000)*10000))
+        dir = os.path.join('/nsls2/data/hxn/legacy/home/home/hyan/export','scan_{:06d}'.format((sid//10000)*10000))
         if os.path.exists(dir) == False:
             print('{} does not exist.'.format(dir))
             mycmd = ''.join(['mkdir',' ',dir])
@@ -116,7 +116,7 @@ def my_export_angle(str_list,interval,rot_motor):
     angle = zeros((num,2))
     for sid in sid_list:
         sid = int(sid)
-        dir = os.path.join('/data/home/home/hyan/export','scan_{:06d}'.format((sid//10000)*10000))
+        dir = os.path.join('/nsls2/data/hxn/legacy/home/home/hyan/export','scan_{:06d}'.format((sid//10000)*10000))
         if os.path.exists(dir) == False:
             print('{} does not exist.'.format(dir))
             mycmd = ''.join(['mkdir',' ',dir])
