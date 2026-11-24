@@ -24,6 +24,32 @@ pixi install
 pixi shell
 ```
 
+### Kafka configuration
+
+Startup requires `/etc/bluesky/kafka.yml` to contain a non-empty list of
+`bootstrap_servers` and a `runengine_producer_config` mapping with a non-empty
+`sasl.password`. For example:
+
+```yaml
+bootstrap_servers:
+  - kafka1:9092
+  - kafka2:9092
+runengine_producer_config:
+  security.protocol: SASL_SSL
+  sasl.mechanisms: SCRAM-SHA-512
+  sasl.username: beamline
+  sasl.password: REPLACE_WITH_PASSWORD
+  ssl.ca.location: /path/to/ca.pem
+```
+
+Producer settings in the file override the existing publisher defaults; other
+defaults remain unchanged. Protect the file according to local credential
+handling requirements, and do not commit real passwords. Startup fails if the
+file or required settings are missing or invalid, including when
+`AZURE_TESTING` disables the publisher. The old
+`BLUESKY_KAFKA_BOOTSTRAP_SERVERS` and `BLUESKY_KAFKA_PASSWORD` environment
+variables are not used by this publisher.
+
 ### Running Experiments
 
 The startup sequence loads all beamline components in order:
