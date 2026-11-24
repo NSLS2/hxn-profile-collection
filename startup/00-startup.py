@@ -57,20 +57,6 @@ os.environ["PPMAC_HOST"] = "xf03idc-ppmac1"
 
 #### Setup CompositeRegistry for data submission ###
 
-bootstrap_servers = os.getenv("BLUESKY_KAFKA_BOOTSTRAP_SERVERS", None)
-if bootstrap_servers is None:
-    # https://github.com/NSLS-II/nslsii/blob/b332c34813adf798c38184292d21537ef4f653bb/nslsii/__init__.py#L710-L712
-    msg = ("The 'BLUESKY_KAFKA_BOOTSTRAP_SERVERS' environment variable must "
-           "be defined as a comma-delimited list of Kafka server addresses "
-           "or hostnames and ports as a string such as "
-           "``'kafka1:9092,kafka2:9092``")
-    raise RuntimeError(msg)
-
-kafka_password = os.getenv("BLUESKY_KAFKA_PASSWORD", None)
-if kafka_password is None:
-    msg = "The 'BLUESKY_KAFKA_PASSWORD' environment variable must be set."
-    raise RuntimeError(msg)
-
 # TODO clean up the import
 import certifi
 import ophyd
@@ -86,22 +72,53 @@ from databroker.headersource.core import doc_or_uid_to_uid
 from databroker.headersource.mongo import MDS
 from jsonschema import validate as js_validate
 from pymongo import MongoClient
+from ruamel.yaml import YAML, YAMLError
+
+
+def load_kafka_config(path):
+    try:
+        with path.open() as config_file:
+            config = YAML(typ="safe").load(config_file)
+    except OSError as exc:
+        raise RuntimeError(f"Cannot read Kafka configuration {path}: {exc.strerror}") from exc
+    except (YAMLError, UnicodeError):
+        raise RuntimeError(f"Invalid YAML in Kafka configuration {path}") from None
+
+    if not isinstance(config, dict):
+        raise RuntimeError(f"Kafka configuration {path} must be a mapping")
+    servers = config.get("bootstrap_servers")
+    if not isinstance(servers, list) or not servers or any(
+        not isinstance(server, str) or not server.strip() or "," in server
+        for server in servers
+    ):
+        raise RuntimeError(f"Kafka configuration {path} must define bootstrap_servers as a non-empty list of addresses")
+    producer = config.get("runengine_producer_config")
+    if not isinstance(producer, dict) or not all(isinstance(key, str) for key in producer):
+        raise RuntimeError(f"Kafka configuration {path} must define runengine_producer_config as a mapping")
+    password = producer.get("sasl.password")
+    if not isinstance(password, str) or not password.strip():
+        raise RuntimeError(f"Kafka configuration {path} must define a non-empty sasl.password")
+    return ",".join(server.strip() for server in servers), producer
+
+
+bootstrap_servers, kafka_producer_config = load_kafka_config(Path("/etc/bluesky/kafka.yml"))
+kafka_producer_config = {
+    "acks": 1,
+    "message.timeout.ms": 3000,
+    "queue.buffering.max.kbytes": 10 * 1048576,
+    "compression.codec": "snappy",
+    "ssl.ca.location": certifi.where(),
+    "security.protocol": "SASL_SSL",
+    "sasl.mechanisms": "SCRAM-SHA-512",
+    "sasl.username": "beamline",
+    **kafka_producer_config,
+}
 
 kafka_publisher = Publisher(
         topic="hxn.bluesky.datum.documents",
         bootstrap_servers=bootstrap_servers,
         key=str(uuid.uuid4()),
-        producer_config={
-                "acks": 1,
-                "message.timeout.ms": 3000,
-                "queue.buffering.max.kbytes": 10 * 1048576,
-                "compression.codec": "snappy",
-                "ssl.ca.location": certifi.where(),
-                "security.protocol": "SASL_SSL",
-                "sasl.mechanisms": "SCRAM-SHA-512",
-                "sasl.username": "beamline",
-                "sasl.password": kafka_password,
-                },
+        producer_config=kafka_producer_config,
         flush_on_stop_doc=True,
     ) if not os.environ.get('AZURE_TESTING') else None   # Disable on CI
 
