@@ -1139,6 +1139,7 @@ def run_tomo_json(path_to_json,tracking_file = None):
 
             #look for beam dump and ic3 threshold, ignores for code tests using json
             if not tomo_params["test"]:
+                mon='sclr1_ch4'
                 if sclr2_ch2.get()<1000:
                     yield from check_for_beam_dump()
                     yield from bps.sleep(60)
@@ -1151,6 +1152,8 @@ def run_tomo_json(path_to_json,tracking_file = None):
                     yield from peak_the_flux()
                     ic_0 = sclr2_ch2.get()
                     fluxPeaked = True
+            else:
+                mon=None
 
             # angle_bef is the last scanned angle, carried over from the main loop
             switch_angle = tomo_params['axis_switch_angle']
@@ -1163,7 +1166,8 @@ def run_tomo_json(path_to_json,tracking_file = None):
                                          tomo_params,ic_0,
                                          do_y_offset = do_y_offset,
                                          tracking_file = tracking_file,
-                                         axis_swap_flag = axis_swap_flag)
+                                         axis_swap_flag = axis_swap_flag,
+                                         mon=mon)
 
             last_sid = int(caget('XF:03IDC-ES{Status}ScanID-I'))
 
