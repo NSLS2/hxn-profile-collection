@@ -894,7 +894,7 @@ def set_panda_zebra(line_overhead, exposure_time, dead_time,
 def fly2dpd(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_start2, scan_end2, num2, exposure_time, panda_flyer = None, 
             pos_return = True, apply_tomo_drift = False,
             tomo_angle = None, auto_rescan = False, dead_time = 0.0005, 
-            line_overhead = [0.05,0.01], line_dwell = 0.1, return_speed = 100.0, position_supersample = 10,
+            line_overhead = [0.06,0.01], line_dwell = 0.1, return_speed = 100.0, position_supersample = 10,
             md = None, merlin_cont_mode = False, num_sclr_ch = None, strict_scan_checkup = True, **kwargs):
     """
     Relative scan
@@ -1312,7 +1312,7 @@ def fly2dpd_repeat(dets, motor1, scan_start1, scan_end1, num1, motor2, scan_star
                 _finalize_scan_checks(panda)
 
 def fly1dpd(dets, motor1, scan_start1, scan_end1, num1, exposure_time, panda_flyer = None, pos_return = True, apply_tomo_drift = False,
-                tomo_angle = None, auto_rescan = False, dead_time = 0.0005, line_overhead = [0.05,0.01], line_dwell = 0.1, return_speed = 100.0, position_supersample = 10,
+                tomo_angle = None, auto_rescan = False, dead_time = 0.0005, line_overhead = [0.06,0.01], line_dwell = 0.1, return_speed = 100.0, position_supersample = 10,
                 md = None, merlin_cont_mode = False, strict_scan_checkup = True, **kwargs):
     """
     Relative scan
