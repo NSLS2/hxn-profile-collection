@@ -2612,7 +2612,7 @@ def plot_fermat(scan_id,elem='Ga',norm=1):
     plt.show()
 
 
-def return_center_of_mass(scan_id = -1, elem = 'Cr',threshold=0.5):
+def return_center_of_mass(scan_id = -1, elem = 'Cr',threshold=0.5, mon='sclr1_ch4'):
     h = db[scan_id]
     df2 = h.table()
 
@@ -2633,12 +2633,14 @@ def return_center_of_mass(scan_id = -1, elem = 'Cr',threshold=0.5):
     except:
         x,y = get_scan_positions(h)
     #I0 = np.asfarray(df2.sclr1_ch4)
-    I0 = np.array(list(h.data('sclr1_ch4'))).squeeze()
-    if I0[0]==0:
-        I0[0]=I0[1]
+    if not mon == None:
+        I0 = np.array(list(h.data(mon))).squeeze()
+        if I0[0]==0:
+            I0[0]=I0[1]
 
-    if I0[-1]==0:
-        I0[-1]=I0[-2]
+        if I0[-1]==0:
+            I0[-1]=I0[-2]
+        xrf = xrf/I0
     #scan_info=db[scan_id]
     #tmp = scan_info['start']
     #nx=tmp['plan_args']['num1']
@@ -2646,16 +2648,18 @@ def return_center_of_mass(scan_id = -1, elem = 'Cr',threshold=0.5):
     nx = h.start['shape'][0]
     ny = h.start['shape'][1]
 
-    xrf = xrf/I0
     xrf = np.asarray(np.reshape(xrf,(ny,nx)))
     tth = threshold*np.max(xrf)
     xrf[xrf < tth] = 0
     #xrf[xrf >= threshold] = 1
-
-    b = ndimage.center_of_mass(xrf)
-
-    iy = int(np.round(b[0]))
-    ix = int(np.round(b[1]))
+    if np.sum(xrf) > 1E-6:
+        b = ndimage.center_of_mass(xrf)
+        iy = int(np.round(b[0]))
+        ix = int(np.round(b[1]))
+    else:
+        print("The image is empty, returning the center of the image")
+        iy = ny//2
+        ix = nx//2
     i_max = ix + iy * nx
 
     x_cen = x[i_max]
